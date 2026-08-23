@@ -31,17 +31,35 @@ Once, by hand. Everything after this is automatic.
    | Framework preset | Astro |
    | Build command | `npm run build` |
    | Build output directory | `dist` |
-   | Root directory | `web` |
+   | **Root directory** | **`web`** |
+
+   **The root directory is the one that actually catches people.** The site is
+   in a subfolder, and there is no `package.json` at the top of the repository.
+   Miss it and the build fails immediately with `Could not read package.json`
+   and a path ending `/repo/package.json` — that path, without `web` in it, is
+   the tell. In the dashboard it is under **Settings → Build → Build
+   configuration**, and during first setup it is sometimes folded away behind
+   the optional or advanced settings. Enter it as `web`, with no slashes.
+
+   Everything else is relative to it: the output directory really is `dist`, not
+   `web/dist`, and the contact form's function is found at `web/functions/`
+   because of this setting. Getting it wrong is also what would make the form
+   quietly 404 rather than fail loudly.
 
 3. **Environment variables** (Settings → Environment variables → Production).
    Add the same three to Preview if you want branch builds to work.
 
    | Name | Value | What it is |
    | --- | --- | --- |
-   | `NODE_VERSION` | `26` | Cloudflare defaults to an older Node than the build needs. |
    | `SANITY_PROJECT_ID` | `aur12nrf` | Which Sanity project to read. Not a secret. |
    | `SANITY_DATASET` | `production` | Which dataset. Not a secret. |
    | `ENQUIRY_ACCESS_KEY` | *see below* | Lets the contact form send mail. **Is** a secret — mark it encrypted. |
+
+   The Node version is not in this table on purpose. It is pinned in the
+   repository, in `web/.node-version` and `web/package.json`, so it travels with
+   the code and cannot drift out of step with a dashboard nobody has opened in
+   six months. If a host ever ignores that file, `NODE_VERSION=26` as an
+   environment variable does the same job.
 
 4. **Save and deploy.** The first build takes a few minutes because it installs
    from scratch. Later ones are quicker.
