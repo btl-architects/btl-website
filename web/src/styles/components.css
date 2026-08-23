@@ -1228,58 +1228,6 @@ body[data-preview] main { padding-top: var(--preview-h); }
   background: rgb(255 255 255 / 0.3);
 }
 
-/* --- press, on the home page ----------------------------------------------
-   A compact list was the wrong instrument for one credit: it read as a row in
-   a table when what it actually says is that a national magazine published
-   this practice. The masthead gets the scale that claim deserves. */
-
-.hpress { display: grid; gap: var(--s-7); }
-@media (min-width: 52rem) { .hpress { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-8); } }
-
-.hpress__i {
-  display: block; text-decoration: none; color: inherit;
-  padding-top: var(--s-5);
-  border-top: 1px solid var(--border-subtle);
-}
-/* The mark in front, the building it published behind and to the right. The
-   overlap is the whole point: it says these two things belong to each other,
-   which a caption underneath never quite does. */
-.hpress__plate {
-  display: block;
-  position: relative;
-  /* Tall enough to contain the photograph, which is positioned out of flow and
-     therefore contributes nothing to the height. Too short and it spilled over
-     the headline underneath and covered half of it. */
-  min-height: 12.5rem;
-}
-.hpress__mark { position: relative; z-index: 2; display: block; }
-.hpress__media {
-  position: absolute; z-index: 1;
-  right: 0; top: 0.5rem;
-  width: 56%; max-width: 14rem;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-}
-.hpress__media img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.85; }
-@media (hover: hover) {
-  .hpress__i:hover .hpress__media img { opacity: 1; }
-  .hpress__i:hover .masthead { color: var(--mark); }
-  .masthead { transition: color var(--dur-hover) var(--ease); }
-}
-.hpress__t {
-  display: block; margin-top: var(--s-4);
-  max-width: var(--measure);
-  color: var(--text-secondary);
-}
-.hpress__m {
-  display: block; margin-top: var(--s-4);
-  font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: var(--text-tertiary);
-}
-@media (hover: hover) {
-  .hpress__i:hover .hpress__pub { color: var(--mark); }
-}
-
 /* --- a publication's mark -------------------------------------------------
    The one place the site steps outside its single typeface, and it does so
    because it is quoting somebody else's identity rather than expressing btl's.
@@ -1308,4 +1256,70 @@ body[data-preview] main { padding-top: var(--preview-h); }
   letter-spacing: 0;
 }
 
-.masthead__img { display: block; width: 100%; height: auto; max-width: 20rem; }
+/* An uploaded logo has to carry the same weight as the type it replaces, or
+   supplying the real asset would make the credit quieter — the opposite of the
+   point. Sized against the composition, not left at its natural pixel size. */
+.masthead__img {
+  display: block;
+  width: clamp(9rem, 6rem + 14vw, 20rem);
+  height: auto;
+  filter: drop-shadow(0 2px 28px rgb(0 0 0 / 0.55));
+}
+
+/* --- a credit -------------------------------------------------------------
+   The same spread the rest of the site is built from, so the press section
+   belongs to the page rather than sitting on it. It used to be a bordered
+   two-column box dropped into the middle of a run of photograph-and-type
+   spreads, which is exactly why it read as a widget from another website.
+
+   The mark overlaps the work it published. That interlock is what a "seen in"
+   credit looks like when it means something — side by side with a gap they are
+   just two objects near each other. */
+
+.credit { text-decoration: none; color: inherit; display: grid; }
+
+.credit__media { position: relative; }
+/* Portrait, like the founders and the studio, so the three spreads on this page
+   share a shape. The photographs are landscape, so the crop is done here. */
+.credit__media img { aspect-ratio: 4 / 5; object-fit: cover; }
+
+.credit__body { position: relative; }
+
+/* The mark hangs back over the photograph's edge. Pulled with a negative
+   margin rather than absolute positioning, so it still occupies its own height
+   and can never land on the headline underneath. */
+.credit__mark { display: block; position: relative; z-index: 2; }
+@media (min-width: 60rem) {
+  /* Far enough over the photograph to read as one object rather than two near
+     each other. Pulled with a negative margin rather than positioned
+     absolutely, so it keeps its own height and can never land on the headline
+     below it. */
+  .credit__mark { margin-left: -48%; }
+}
+.credit__mark .masthead {
+  color: var(--btl-white);
+  /* It sits on a photograph, and the photograph is different every time — a
+     bright exterior here, a dark interior on the next credit. The shadow is
+     what stops the mark depending on the picture behind it being helpful. */
+  text-shadow: 0 2px 28px rgb(0 0 0 / 0.55);
+}
+
+.credit__t {
+  margin: var(--s-5) 0 0;
+  max-width: var(--measure);
+  font-size: var(--type-lead);
+  letter-spacing: var(--track-lead);
+  line-height: var(--lead-snug);
+  color: var(--text-secondary);
+}
+.credit__m {
+  margin: var(--s-4) 0 0;
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+
+@media (hover: hover) {
+  .credit .masthead,
+  .credit__media img { transition: opacity var(--dur-hover) var(--ease), color var(--dur-hover) var(--ease); }
+  .credit:hover .credit__media img { opacity: 0.82; }
+}

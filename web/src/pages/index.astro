@@ -101,50 +101,50 @@ const c = settings.contact;
       </div>
     </section>
 
-    {/* The outside world's verdict. A compact list was the wrong instrument
-        here — with one credit it read as a row in a table, when what it
-        actually says is that a national magazine published this practice. So
-        the masthead is set at the scale that claim deserves and the headline
-        sits under it. It stays a list on /press, where there will eventually be
-        several. */}
+    {/* The outside world's verdict, built from the same spread as Studio and
+        People — which is the point. It read as a bolted-on widget because it
+        was one: a bordered two-column box in the middle of a page that is
+        otherwise photograph-and-type spreads. Now it is one of them.
+
+        The magazine's mark overlaps the work it published. That interlock is
+        what a "seen in" credit looks like when it means something; set side by
+        side with a gap they are just two objects near each other. */}
     {press.length > 0 && (
-      <section class="home-sec home-press" id="press" data-ground="dark">
+      <section class="home-sec" id="press" data-ground="dark">
         <div class="container">
           <div class="home-sec__head">
             <h2 class="home-sec__k">Press</h2>
           </div>
-          <div class="hpress">
-            {press.map((item, i) => {
-              const rel = item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined;
-              return (
-                <a
-                  class="hpress__i rv"
-                  data-delay={i}
-                  href={item.url || "/press/"}
-                  rel={item.url ? "noopener" : undefined}
-                  target={item.url ? "_blank" : undefined}
-                >
-                  {/* The mark and the work overlap: the magazine's identity in
-                      front, the building it published behind it. */}
-                  <span class="hpress__plate">
-                    <span class="hpress__mark"><Masthead item={item} /></span>
-                    {rel && (
-                      <span class="hpress__media">
-                        <Figure image={rel.hook} sizes="260px" />
-                      </span>
-                    )}
-                  </span>
-                  <span class="hpress__t">{item.title}</span>
-                  <span class="hpress__m">
+
+          {press.map((item, i) => {
+            const rel = item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined;
+            const live = !!item.url && item.url !== "#";
+            const Tag = live ? "a" : "div";
+            return (
+              <Tag
+                class="spread credit"
+                href={live ? item.url : undefined}
+                rel={live ? "noopener" : undefined}
+                target={live ? "_blank" : undefined}
+              >
+                {rel && (
+                  <div class="spread__media credit__media rv">
+                    <Figure image={rel.hook} sizes="420px" />
+                  </div>
+                )}
+                <div class="spread__body credit__body rv" data-delay="1">
+                  <span class="credit__mark"><Masthead item={item} /></span>
+                  <p class="credit__t">{item.title}</p>
+                  <p class="credit__m">
                     {item.kind === "award" ? "Award" : "Feature"}
                     {item.date ? ` · ${item.date.slice(0, 4)}` : ""}
-                  </span>
-                </a>
-              );
-            })}
-          </div>
-          {/* After the items, like Studio and People. Press was the only
-              section still putting its link up in the heading row. */}
+                    {rel ? ` · ${rel.title}` : ""}
+                  </p>
+                </div>
+              </Tag>
+            );
+          })}
+
           <a class="onward onward--quiet ul" href="/press/">
             <span class="onward__k">More</span>
             Everywhere btl has appeared
