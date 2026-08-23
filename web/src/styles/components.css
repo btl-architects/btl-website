@@ -1423,7 +1423,19 @@ body[data-preview] main { padding-top: var(--preview-h); }
   position: absolute; top: 50%; left: 50%;
   max-width: 92vw; max-height: 88svh;
   width: auto; height: auto;
-  transform-origin: 0 0;
+  /* Scale about the centre, because that is what the JavaScript already
+     assumes. zoomAt and clamp both treat tx/ty as the offset of the image's
+     CENTRE from the stage's centre — the anchor formula is written that way,
+     and so are the pan bounds.
+
+     This said `0 0`, which scales from the top-left corner instead. The two
+     models disagreed silently: pinching at the middle of the screen left tx/ty
+     at zero, so the script believed the picture had not moved, while the
+     picture grew down and to the right out from its own corner. Anchoring a
+     zoom exactly on the stage centre drifted the image 190px right and 127px
+     down when it should not have moved at all. It read as the photograph
+     running away towards the bottom of the phone. */
+  transform-origin: 50% 50%;
   will-change: transform;
   user-select: none; -webkit-user-drag: none;
 }
