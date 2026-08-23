@@ -16,12 +16,16 @@
  * The provider is reached through one function at the bottom. Swapping it means
  * changing that, and nothing else in the site knows or cares.
  *
+ * WHERE ENQUIRIES LAND IS NOT SET HERE. Web3Forms has no recipient parameter —
+ * it delivers to whichever address the access key's account was registered
+ * with, and CC'ing anyone else is a paid feature. An earlier version of this
+ * file passed a `to` field, which read as though the destination were under our
+ * control; the API ignores it silently, which is the worst way to be wrong. To
+ * change the destination, change the email on the Web3Forms account.
+ *
  * Environment (set in the Cloudflare Pages dashboard, not in the repository):
  *   ENQUIRY_ACCESS_KEY  — required. The form provider's key.
- *   ENQUIRY_TO          — optional. Overrides where enquiries land.
  */
-
-const TO_DEFAULT = "admin@btldesigns.in";
 
 /* Deliberately loose. This is a sanity check, not an attempt to decide what a
  * valid address is — every strict email regex on the internet rejects somebody's
@@ -82,7 +86,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   try {
-    const ok = await send({ key, to: env.ENQUIRY_TO || TO_DEFAULT, name, email, phone, message });
+    const ok = await send({ key, name, email, phone, message });
     if (!ok) return plain(502, "The form could not be sent. Please email the studio directly.");
   } catch (err) {
     console.error("[enquiry] send failed:", err && err.message);
@@ -106,13 +110,12 @@ export async function onRequest({ request }) {
  * running and its MX, SPF and DKIM records are not ours to touch.
  *
  * Returns true when the provider accepted it. */
-async function send({ key, to, name, email, phone, message }) {
+async function send({ key, name, email, phone, message }) {
   const res = await fetch("https://api.web3forms.com/submit", {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json" },
     body: JSON.stringify({
       access_key: key,
-      to,
       subject: `Enquiry from ${name} — btldesigns.in`,
       from_name: "btldesigns.in",
       // reply_to so hitting reply in the studio's mail client reaches the person

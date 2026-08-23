@@ -81,9 +81,20 @@ else's spam. Posting to our own address keeps the policy shut and the key on the
 server.
 
 **To get the key:** sign up free at [web3forms.com](https://web3forms.com),
-give it `admin@btldesigns.in` as the destination, and it emails you an access
-key. Paste that into Cloudflare as `ENQUIRY_ACCESS_KEY`. The free tier covers
-250 enquiries a month, which is far more than this practice will receive.
+verify the email address, name the form, and it gives you an access key. Paste
+that into Cloudflare as `ENQUIRY_ACCESS_KEY`. The free tier covers 250 enquiries
+a month, which is far more than this practice will receive.
+
+> **Sign up with the address the enquiries should reach.** Web3Forms has no
+> recipient parameter: it delivers to whichever email the account was registered
+> with, and there is nothing in this repository that can override it. Sending
+> anywhere else — CC'ing a second address — is a paid feature. So the account
+> must be created as `admin@btldesigns.in`, because that is the address the
+> contact page promises. Signing up with a personal address quietly sends the
+> studio's enquiries somewhere the website says they do not go.
+>
+> If the account already exists on the wrong address, change the email on the
+> Web3Forms account rather than looking for a setting here.
 
 No DNS records are involved — deliberately. The studio's email is already
 running, and its MX, SPF and DKIM records are not ours to touch.

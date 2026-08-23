@@ -53,8 +53,16 @@ const c = (await getSettings()).contact;
             <textarea id="ms" name="message" required minlength="20"></textarea>
           </div>
           <button class="b b--solid" type="submit">Send enquiry</button>
+          {/* This said "Nothing is shared", which was true when the form posted
+              to the host and stopped being true the moment it started going
+              through a form service. The service holds a copy for 30 days,
+              which is a fact a visitor is entitled to before they type their
+              name into the box — and a promise a website cannot keep is worse
+              than no promise at all. If the delivery route changes, this
+              sentence changes with it. */}
           <p class="t-caption" style="margin-top:var(--s-4)">
-            Your name and email reach the studio at {c.formTo} and are kept only to reply. Nothing is shared.
+            Delivered to the studio at {c.formTo} by a form service, which holds a copy
+            for 30 days. Your details are used only to reply — never sold, never passed on.
           </p>
         </form>
 
