@@ -1,0 +1,47 @@
+---
+/* Where the enquiry form lands.
+ *
+ * A real page rather than a query string on /contact/, because the site is
+ * static: there is no server rendering the contact page to notice ?sent=1, and
+ * doing it in JavaScript would mean someone with a blocked script submits an
+ * enquiry and is shown the empty form again, with no way to tell whether it
+ * went. A page that exists cannot fail that way.
+ *
+ * Reached by a 303 from /api/enquiry, so it is a GET and can be reloaded
+ * without the browser offering to send the enquiry a second time.
+ */
+import Base from "../../layouts/Base.astro";
+import Onward from "../../components/Onward.astro";
+import { getSettings } from "../../lib/content";
+
+const c = (await getSettings()).contact;
+---
+
+<Base
+  title="Thank you — btl architects"
+  description="Your enquiry has reached the studio."
+  current="contact"
+  noindex
+>
+  <main id="main" data-ground="dark">
+    <div
+      class="container"
+      style="padding-top:calc(var(--header-h) + var(--s-8)); padding-bottom:var(--space-section)"
+    >
+      <h1 class="t-h1 rv">Thank you</h1>
+
+      <div class="spread__body rv" data-delay="1" style="margin-top:var(--s-8)">
+        <p class="spread__say spread__say--lead">
+          Your enquiry has reached the studio. Someone will read it and write
+          back — usually within a couple of working days.
+        </p>
+        <p class="spread__note">
+          If it is urgent, the studio is on <a class="tl" href={`tel:${c.phoneHref}`}>{c.phone}</a>,
+          or you can write directly to <a class="tl" href={`mailto:${c.email}`}>{c.email}</a>.
+        </p>
+      </div>
+
+      <Onward href="/projects/" kicker="Meanwhile">See the work</Onward>
+    </div>
+  </main>
+</Base>

@@ -3,8 +3,11 @@
  * stated once, on a light ground so the page reads as an ending rather than
  * another dark section.
  *
- * The form posts to Netlify. The honeypot is a real field hidden from people,
- * which catches most bots without putting a puzzle in front of a client.
+ * The form posts to /api/enquiry, this site's own origin, which is what lets
+ * the CSP keep form-action locked to 'self'. The honeypot is a real field
+ * hidden from people, which catches most bots without putting a puzzle in front
+ * of a client. Both the trap and the validation are enforced again on the
+ * server, because anything checked only in the browser is not checked.
  */
 import Base from "../layouts/Base.astro";
 import { getSettings } from "../lib/content";
@@ -22,13 +25,7 @@ const c = (await getSettings()).contact;
       <h1 class="t-h1 rv">Contact</h1>
 
       <div class="contact__grid">
-        <form name="enquiry" method="POST" data-netlify="true" netlify-honeypot="company" class="rv">
-          {/* Netlify matches a submission to a form by this field. It usually
-              injects it during post-processing, but not reliably for markup a
-              framework rendered — and the failure mode is the worst kind:
-              the form submits, the visitor sees success, and the enquiry never
-              arrives. Stating it explicitly costs nothing. */}
-          <input type="hidden" name="form-name" value="enquiry" />
+        <form name="enquiry" method="POST" action="/api/enquiry" class="rv">
           {/* Honeypot. Positioned off-screen rather than display:none, because
               a field that is not rendered is not submitted and the trap stops
               working. Off-screen alone is not enough though: a screen reader

@@ -23,9 +23,14 @@ interface Props {
   current?: string;
   /** Body-level ground, so the header knows what it is sitting on. */
   ground?: "dark" | "light" | "media";
+  /** Keep this page out of search results. For pages that are a step in a
+   *  process rather than a destination — a thank-you page has nothing to offer
+   *  someone arriving from a search, and ranking it would be a small
+   *  embarrassment on a practice's own name. */
+  noindex?: boolean;
 }
 
-const { title, description, current = "", ground = "dark" } = Astro.props;
+const { title, description, current = "", ground = "dark", noindex = false } = Astro.props;
 const settings = await getSettings();
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
@@ -38,7 +43,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#050505" />
-    {isPreview && <meta name="robots" content="noindex, nofollow" />}
+    {(isPreview || noindex) && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />

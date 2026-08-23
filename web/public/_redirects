@@ -1,0 +1,23 @@
+# Permanent redirects for the URLs the prototype shipped.
+#
+# The prototype served .html files. Anything already linked to them — including
+# anything a publication printed — must keep working, so these are 301s and they
+# are permanent commitments.
+#
+# Read by both Netlify and Cloudflare Pages, same format. First match wins,
+# which is why these sit here rather than being appended: tools/redirects.mjs
+# adds the per-project rules and the CMS's own redirects to dist/_redirects
+# after the build, below these.
+#
+# Written one rule per line rather than as a pattern. The pattern version —
+# /projects/:slug.html — does not mean what it looks like: a placeholder cannot
+# carry a suffix inside a segment, so it matched EVERY path under /projects/ and
+# sent it to the literal string "/projects/:slug/". Every project page on the
+# live site became a redirect loop. Explicit rules cannot do that.
+
+/index.html      /            301
+/projects.html   /projects/   301
+/studio.html     /studio/     301
+/people.html     /people/     301
+/press.html      /press/      301
+/contact.html    /contact/    301

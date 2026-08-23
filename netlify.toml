@@ -4,6 +4,16 @@
 # as a file. Content reaches production by rebuilding — a Sanity webhook fires a
 # build hook when something is published — not by a server querying at request
 # time. That is what makes the live site fast and unbreakable by a CMS outage.
+#
+# Headers and redirects are NOT here. They live in web/public/_headers and
+# web/public/_redirects, in the one format Netlify and Cloudflare Pages both
+# read. Keeping the security policy in a host's own config file meant that
+# changing host meant retyping the CSP, which is the last thing anybody should
+# be doing under time pressure. This file now carries only what is genuinely
+# Netlify's: how to run the build.
+#
+# The site currently deploys to Cloudflare Pages — see docs/deploying.md. This
+# file is kept, and kept working, so moving back is a matter of pointing DNS.
 
 [build]
   base    = "web"
@@ -31,121 +41,3 @@
 
 [context.deploy-preview.environment]
   SANITY_PREVIEW = "true"
-
-# --- security headers -------------------------------------------------------
-# Contract §5a. These apply to every response.
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    X-Content-Type-Options    = "nosniff"
-    Referrer-Policy           = "strict-origin-when-cross-origin"
-    Permissions-Policy        = "camera=(), microphone=(), geolocation=(), payment=()"
-    X-Frame-Options           = "DENY"
-
-    # Images come from this origin and from Sanity's CDN, which is where every
-    # photograph now lives. Nothing else is permitted to load anything:
-    # object-src none kills legacy plugin vectors, base-uri self stops a
-    # injected <base> redirecting every relative URL, and frame-ancestors none
-    # is the modern form of X-Frame-Options.
-    #
-    # script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's only
-    # script is /scripts/site.js, served from this origin, and that is the
-    # restriction that actually matters.
-    #
-    # style-src does allow 'unsafe-inline', which is a deliberate and recorded
-    # deviation from the contract's blanket "no unsafe-inline". The build emits
-    # 173 style attributes, 123 of which are the base64 blur placeholder each
-    # photograph is painted over while it loads. Blocking them does not degrade
-    # the page, it breaks it: the placeholders vanish and the layout attributes
-    # go with them.
-    #
-    # style-src-attr would be the precise instrument — it permits attributes
-    # while keeping <style> elements locked to 'self' — but it is not supported
-    # everywhere, and browsers that lack it fall back to style-src and break.
-    # The risk being accepted is CSS injection, which needs an injection point;
-    # this site renders no user input into any page, and there are zero inline
-    # <style> blocks and zero inline scripts for an attacker to aim at.
-    Content-Security-Policy = """
-      default-src 'self'; \
-      script-src 'self'; \
-      style-src 'self' 'unsafe-inline'; \
-      img-src 'self' data: https://cdn.sanity.io; \
-      media-src 'self' https://cdn.sanity.io; \
-      font-src 'self'; \
-      connect-src 'self' https://aur12nrf.api.sanity.io; \
-      form-action 'self'; \
-      object-src 'none'; \
-      base-uri 'self'; \
-      frame-ancestors 'none'; \
-      upgrade-insecure-requests"""
-
-# --- caching ----------------------------------------------------------------
-# Fingerprinted build assets never change under the same name, so they can be
-# cached forever. HTML must not be: it is how a publish reaches a returning
-# visitor.
-
-[[headers]]
-  for = "/_astro/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/assets/fonts/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-
-# --- redirects --------------------------------------------------------------
-# The prototype shipped .html URLs. Anything already linked to them — including
-# anything a publication printed — must keep working. 301, permanent.
-
-[[redirects]]
-  from = "/index.html"
-  to = "/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/projects.html"
-  to = "/projects/"
-  status = 301
-  force = true
-
-# NOTE: the per-project ".html" redirects are generated into dist/_redirects by
-# web/tools/redirects.mjs, one explicit rule per slug.
-#
-# They were written here first as `from = "/projects/:slug.html"`, which does not
-# mean what it looks like: a Netlify placeholder cannot carry a suffix inside a
-# segment, so that pattern matched EVERY path under /projects/ and sent it to the
-# literal string "/projects/:slug/". With force = true it beat the real pages, so
-# every project on the live site became a redirect loop.
-
-[[redirects]]
-  from = "/studio.html"
-  to = "/studio/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/people.html"
-  to = "/people/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/press.html"
-  to = "/press/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/contact.html"
-  to = "/contact/"
-  status = 301
-  force = true

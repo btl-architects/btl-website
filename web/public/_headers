@@ -1,0 +1,51 @@
+# Response headers. Contract §5a.
+#
+# This file is the single source of truth for headers, and it is written in the
+# one format both Netlify and Cloudflare Pages read. They used to live in
+# netlify.toml, which meant moving host meant rewriting the security policy —
+# the last thing that should have to be retyped under time pressure. Now the
+# host only supplies a build command.
+#
+# One rule: a value cannot span lines here, so the CSP is a single long line.
+# It is the same policy netlify.toml carried, character for character.
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io; font-src 'self'; connect-src 'self' https://aur12nrf.api.sanity.io; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+
+# Why style-src allows 'unsafe-inline' — a deliberate, recorded deviation from
+# the contract's blanket ban. The build emits 173 style attributes, 123 of them
+# the base64 blur placeholder each photograph is painted over while it loads.
+# Blocking them does not degrade the page, it breaks it: the placeholders
+# vanish and the layout attributes go with them. That is not a hypothetical —
+# it shipped once, and the whole production site came up unstyled.
+#
+# style-src-attr would be the precise instrument, permitting attributes while
+# keeping <style> elements locked to 'self', but it is not supported everywhere
+# and browsers lacking it fall back to style-src and break. The risk accepted is
+# CSS injection, which needs an injection point; this site renders no user input
+# into any page, and there are zero inline <style> blocks and zero inline
+# scripts to aim at.
+#
+# script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's only script
+# is /scripts/site.js from this origin, and that is the restriction that matters.
+#
+# form-action 'self' is what keeps the enquiry form posting to our own origin.
+# It is the reason the contact form goes through /api/enquiry here rather than
+# straight to a third-party endpoint.
+
+# Fingerprinted build assets never change under the same name, so they can be
+# cached forever.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML must not be cached: it is how a publish reaches a returning visitor.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
