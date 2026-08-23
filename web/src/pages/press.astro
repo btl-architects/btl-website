@@ -14,7 +14,14 @@ const projects = await getProjects();
 const projectFor = (slug: string | null) =>
   slug ? projects.find((p) => p.slug === slug) : undefined;
 
-const yearOf = (date: string) => (date ? date.trim().split(/\s+/).pop()! : "");
+/* Sanity stores a real date, so this arrives as "2026-08-04" — the old
+   split-on-spaces returned the whole ISO string and printed it on the page.
+   The design wants the year alone in the margin. */
+const yearOf = (date: string) => {
+  if (!date) return "";
+  const y = /^(\d{4})/.exec(date.trim());
+  return y ? y[1]! : date.trim().split(/\s+/).pop()!;
+};
 ---
 
 <Base

@@ -6,9 +6,14 @@
  * goes reads as a broken link, not as a clever one-pager. The home page is
  * still a one-pager: you scroll it, but the nav is navigation.
  *
- * Nav, social and contact are all settings content (contract §1 forbids
- * hard-coding any of them), so adding a destination is an edit in the CMS, not
- * a deploy.
+ * The social rail used to be fixed vertical chrome on every page. It came off:
+ * three links pinned to the edge of every screen compete with the photographs
+ * for attention on a site whose entire argument is the photographs, and they
+ * are not what anyone came for. Social lives in the footer and on Contact,
+ * where someone looking for it will actually look.
+ *
+ * Nav and contact are settings content (contract §1 forbids hard-coding any of
+ * them), so adding a destination is an edit in the CMS, not a deploy.
  */
 import Figure from "./Figure.astro";
 import type { Settings } from "../lib/content";
@@ -22,12 +27,6 @@ const hrefFor = (key: string) => (key === "index" ? "/" : `/${key}/`);
 
 const logo = LOGO_WHITE;
 ---
-
-<nav class="srail" aria-label="btl architects elsewhere">
-  {settings.social.map((s) => (
-    <a class="srail__i" href={s.url} rel="noopener" target="_blank">{s.label}</a>
-  ))}
-</nav>
 
 <header class="header" data-over="media">
   <div class="header__inner">

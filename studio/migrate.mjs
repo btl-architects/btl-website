@@ -47,8 +47,8 @@ if (!projectId || !token) {
 const client = createClient({ projectId, dataset, token, apiVersion: "2024-10-01", useCdn: false });
 
 /* --- helpers ------------------------------------------------------------ */
-const site = JSON.parse(readFileSync(resolve(REPO, "site/content/site.json"), "utf8"));
-const projects = JSON.parse(readFileSync(resolve(REPO, "site/content/projects.json"), "utf8"));
+const site = JSON.parse(readFileSync(resolve(REPO, "archive/original-content/site.json"), "utf8"));
+const projects = JSON.parse(readFileSync(resolve(REPO, "archive/original-content/projects.json"), "utf8"));
 
 const cache = existsSync(CACHE_PATH) ? JSON.parse(readFileSync(CACHE_PATH, "utf8")) : {};
 const saveCache = () => writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 1));
@@ -204,6 +204,13 @@ async function main() {
     "people/WhatsApp Image 2026-08-12 at 19.55.05.jpeg",
     "founders",
   );
+  // The studio entrance at dusk, with the practice's name etched into the
+  // glass. This is the Studio page's photograph and its absence left that page
+  // with no image at all.
+  const studioImgId = await uploadImage(
+    "Office/WhatsApp Image 2026-08-11 at 14.35.08.jpeg",
+    "studio",
+  );
   const c = site.contact ?? {};
   tx.createOrReplace({
     _id: "settings",
@@ -213,7 +220,17 @@ async function main() {
     tagline: site.tagline,
     statement: site.home?.statement,
     studioLead: site.studio?.lead,
+    // peopleLead is deliberately not seeded — it is copy only the practice can write.
     studioBody: (site.studio?.body ?? []).filter(real),
+    ...(studioImgId
+      ? {
+          studioImage: figure(studioImgId, {
+            alt: "The btl studio entrance at dusk, the practice's name etched into the glass",
+            rights: "owned",
+            kind: "photograph",
+          }),
+        }
+      : {}),
     ...(foundersId
       ? {
           foundersImage: figure(foundersId, {

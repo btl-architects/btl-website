@@ -238,12 +238,17 @@ export const getPublications = once(async (): Promise<Publication[]> => {
 
 export const getHome = once(async () => {
   const s = await sanity.fetch(`*[_type == "settings"][0]{
-    statement, studioLead, studioBody,
+    statement, studioLead, peopleLead, studioBody,
     "studioImage": studioImage ${FIGURE},
     "foundersImage": foundersImage ${FIGURE}
   }`);
   return {
     statement: s?.statement ?? "",
+    // The People page gets its own words when the practice writes them, and
+    // borrows the home statement until then — which is at least about who btl
+    // is, rather than repeating the Studio page's design philosophy back at the
+    // reader two pages later.
+    peopleLead: s?.peopleLead || s?.statement || "",
     studio: {
       lead: s?.studioLead ?? "",
       body: (s?.studioBody ?? []) as string[],

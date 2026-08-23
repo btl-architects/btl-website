@@ -29,6 +29,15 @@ export default defineType({
     }),
     defineField({ name: "studioLead", title: "Studio headline", type: "text", rows: 2, group: "studio" }),
     defineField({
+      name: "peopleLead",
+      title: "People headline",
+      type: "text",
+      rows: 2,
+      group: "studio",
+      description:
+        "One or two lines about the people rather than the work — what it is like to deal with this practice. Leave it empty and the People page borrows the home page statement, which is about the practice rather than about the two of you.",
+    }),
+    defineField({
       name: "studioBody",
       title: "Studio paragraphs",
       type: "array",

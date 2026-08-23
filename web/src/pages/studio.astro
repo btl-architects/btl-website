@@ -1,31 +1,53 @@
 ---
-/* Studio — the practice in its own voice. Statement at display scale, the room
- * full-bleed underneath it, then the working method as passages that step
- * inward across the grid.
+/* Studio — the one page where the practice speaks in its own voice.
+ *
+ * Same spread as People but mirrored, so the two read as a pair rather than as
+ * the same page twice: here the statement leads and the photograph answers it.
+ * The working method follows as short passages stepping inward across the grid.
+ *
+ * The photograph is the studio entrance at dusk with the practice's name etched
+ * into the glass — which is the single most useful thing this page can show,
+ * and it was missing entirely from the first version because the image had
+ * never been imported into the CMS.
  */
 import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
-import { getHome } from "../lib/content";
+import { getHome, getSettings } from "../lib/content";
 
 const st = (await getHome()).studio;
+const settings = await getSettings();
+const [lead, ...rest] = st.body;
 ---
 
 <Base title="Studio — btl architects" description={st.lead} current="studio">
-  <main id="main" data-ground="dark" style="padding-bottom:var(--space-section)">
-    <h1 class="sr-only">Studio — btl architects</h1>
+  <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+    <div class="container" style="padding-bottom:var(--space-section)">
+      <h1 class="sr-only">Studio — btl architects</h1>
 
-    <p class="t-display studio__lead rv">{st.lead}</p>
-
-    {st.image && (
-      <div class="studio__media rv" data-delay="1">
-        <Figure image={st.image} sizes="100vw" priority />
+      <div class="spread spread--flip" style="margin-top:var(--s-8)">
+        {st.image && (
+          <div class="spread__media rv">
+            <Figure image={st.image} sizes="(min-width:60rem) 34rem, 92vw" priority />
+          </div>
+        )}
+        <div class="spread__body rv" data-delay="1">
+          <p class="spread__say">{st.lead}</p>
+          {lead && <p class="spread__note">{lead}</p>}
+        </div>
       </div>
-    )}
 
-    <div class="studio__body">
-      {st.body.map((para: string, i: number) => (
-        <p class="t-body studio__p rv" data-delay={i % 3}>{para}</p>
-      ))}
+      {rest.length > 0 && (
+        <div class="passages">
+          {rest.map((para: string, i: number) => (
+            <p class="passage t-body rv" data-delay={i % 3}>{para}</p>
+          ))}
+        </div>
+      )}
+
+      <a class="onward ul" href="/contact/">
+        <span class="onward__k">Next</span>
+        Tell us what you want to build.
+      </a>
     </div>
   </main>
 </Base>
