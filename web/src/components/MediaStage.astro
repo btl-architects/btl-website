@@ -6,36 +6,40 @@
  * carousel. That is the explicit carve-out to R8: it is non-interactive, it
  * pauses off-screen, and it never runs under reduced motion.
  *
- * The poster carries the first frame so something is on screen immediately, and
- * the sources stay in data-src so that under reduced motion or Save-Data the
- * video is never fetched at all — the still is a designed alternative, not a
- * disabled site. site.js decides which of the two sources to load from the
- * viewport's orientation.
+ * The clips now come from the CMS rather than from files in the repository, so
+ * the most prominent thing on the site is something the practice can change.
+ * An empty sequence is a legitimate state — the landing simply has no film in
+ * it and every other part of the page is unaffected.
+ *
+ * Sources stay in data-src so that under reduced motion or Save-Data no video
+ * is ever fetched: the still is a designed alternative, not a disabled site.
+ * site.js picks which of the two encodings to load from the viewport's shape.
  */
-import manifest from "../lib/video-manifest.json";
+import { getHeroClips } from "../lib/content";
+import { requireImage } from "../lib/media";
 
-interface Clip { mp4: string; poster: string; key: string; label?: string }
-const landscape = manifest.landscape as Clip[];
-const portrait = manifest.portrait as Clip[];
+const clips = await getHeroClips();
 ---
 
-<div class="stage" data-stage-frames>
-  {landscape.map((clip, i) => {
-    const port = portrait.find((p) => p.key === clip.key) ?? clip;
-    return (
-      <figure class="stage__f" data-on={i === 0 ? "true" : "false"} data-label={clip.label ?? ""}>
-        <video
-          class="stage__v"
-          muted
-          loop
-          playsinline
-          preload={i === 0 ? "auto" : "none"}
-          poster={`/assets/${clip.poster}`}
-          data-src={`/assets/${clip.mp4}`}
-          data-src-portrait={`/assets/${port.mp4}`}
-        ></video>
-      </figure>
-    );
-  })}
-  <p class="stage__label" data-stage-label aria-live="off"></p>
-</div>
+{clips.length > 0 && (
+  <div class="stage" data-stage-frames>
+    {clips.map((clip, i) => {
+      const poster = clip.poster ? requireImage(clip.poster) : null;
+      return (
+        <figure class="stage__f" data-on={i === 0 ? "true" : "false"} data-label={clip.label}>
+          <video
+            class="stage__v"
+            muted
+            loop
+            playsinline
+            preload={i === 0 ? "auto" : "none"}
+            poster={poster?.src}
+            data-src={clip.video}
+            data-src-portrait={clip.videoPortrait}
+          ></video>
+        </figure>
+      );
+    })}
+    <p class="stage__label" data-stage-label aria-live="off"></p>
+  </div>
+)}

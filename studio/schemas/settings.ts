@@ -47,6 +47,16 @@ export default defineType({
       description: "Short editorial passages. Three reads best; more is fine.",
     }),
     defineField({ name: "studioImage", title: "Studio photograph", type: "figure", group: "studio" }),
+    defineField({
+      name: "heroClips",
+      title: "The opening sequence",
+      type: "array",
+      of: [{ type: "heroClip" }],
+      group: "studio",
+      description:
+        "What the home page opens with, in order. It cycles quietly and cannot be clicked — it is atmosphere, not a carousel. Three clips is the right number; one works, and more than four is a wait rather than an opening.",
+      validation: (r) => r.max(6),
+    }),
 
     /* --- page wording ------------------------------------------------------
        The lines that carry the practice's voice rather than label the

@@ -68,7 +68,11 @@ const say = (t: string) =>
           <h2 class="eyebrow roster__k">The principals</h2>
           {withBios.map((p, i) => (
             <p class="bio rv" data-delay={i}>
-              <span class="bio__n">{p.prefix} {p.name}</span>
+              {/* The name carries the link to the full profile. Without this the
+                  profile page exists and nothing on the site reaches it. */}
+              {p.slug
+                ? <a class="bio__n ul" href={`/people/${p.slug}/`}>{p.prefix} {p.name}</a>
+                : <span class="bio__n">{p.prefix} {p.name}</span>}
               {p.bio}
             </p>
           ))}
@@ -81,15 +85,28 @@ const say = (t: string) =>
           <ul class="team__list">
             {team.map((p) => (
               <li class="trow">
-                <span class="trow__link">
-                  {p.portrait && (
-                    <span class="trow__p">
-                      <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
-                    </span>
-                  )}
-                  <span class="trow__n">{p.prefix} {p.name}</span>
-                  <span class="trow__r">{p.role}</span>
-                </span>
+                {/* A row is only a link where there is a page worth reaching. */}
+                {p.slug && p.bio ? (
+                  <a class="trow__link" href={`/people/${p.slug}/`}>
+                    {p.portrait && (
+                      <span class="trow__p">
+                        <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
+                      </span>
+                    )}
+                    <span class="trow__n">{p.prefix} {p.name}</span>
+                    <span class="trow__r">{p.role}</span>
+                  </a>
+                ) : (
+                  <span class="trow__link">
+                    {p.portrait && (
+                      <span class="trow__p">
+                        <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
+                      </span>
+                    )}
+                    <span class="trow__n">{p.prefix} {p.name}</span>
+                    <span class="trow__r">{p.role}</span>
+                  </span>
+                )}
               </li>
             ))}
           </ul>

@@ -75,6 +75,23 @@ behind the masthead when someone hovers it.
 **A missing logo is fine.** The publication's name set large *is* the design,
 not a placeholder. Add the logo whenever it turns up and nothing else moves.
 
+### Change the opening film
+
+**Site settings → The practice → The opening sequence**
+
+The home page opens with three short clips that cycle quietly. Each one needs:
+
+- **Film (landscape)** — MP4, around nine seconds, under about 2 MB
+- **Film (portrait)** — optional, framed for a phone held upright. Without one,
+  phones get the landscape cut
+- **Still frame** — what shows before the film loads, *and* what anyone who has
+  asked their device to reduce motion sees instead of it. Pick a frame that
+  stands on its own
+- **Caption** — the quiet line in the corner
+
+Reorder them by dragging. Three is the right number; one works, more than four
+is a wait rather than an opening.
+
 ### Change the words
 
 **Site settings** holds everything that isn't a project or a person:
@@ -89,6 +106,39 @@ not a placeholder. Add the logo whenever it turns up and nothing else moves.
 Clear any of the **Page wording** fields and it goes back to the written
 default. You can't leave a blank space by emptying a box.
 
+### Give someone their own page
+
+Write a **bio** for them. That's the whole trigger — a person with a bio gets a
+page at `/people/their-name`, and their name on the People page becomes a link
+to it. Remove the bio and both disappear.
+
+A page holding only a name and a job title is worse than no page, which is why
+it works this way round.
+
+### Move a page without breaking links
+
+**Redirects → the pencil icon**
+
+If a page's address genuinely has to change, add a redirect from the old address
+to the new one. Anyone following an old link — including one printed in a
+magazine — lands in the right place.
+
+The site checks these when it builds and **refuses to publish a broken set**: a
+redirect pointing at a page that doesn't exist, a loop, a duplicate, or one that
+would shadow a real page all stop the build with a message saying which.
+
+---
+
+## Seeing a change before it goes live
+
+Publishing puts a change on the public site. To look at unpublished work first,
+open the **preview address** (your developer will give you one — it is a
+separate web address from the real site).
+
+Preview shows **drafts**: anything you have edited but not published. Every page
+there carries a red bar across the top saying so, and search engines are told to
+ignore it. If you can't see the red bar, you are looking at the live site.
+
 ---
 
 ## What the site does on its own
@@ -101,6 +151,8 @@ Nobody has to remember to switch these on.
 | **A new category** | Shows up when it has published work in it. You can create *Commercial* today and it waits quietly until next year. |
 | **The team list** | Appears when there are real names in it. |
 | **Empty sections** | Don't render. A section with nothing in it is never shown half-built. |
+| **Profile pages** | Appear when a person has a bio. |
+| **Locations** | Picked from a list, not typed — so one city can't arrive spelled two ways and split its work across two pages. |
 
 ---
 
@@ -163,3 +215,5 @@ The site is built and works. These are the gaps only you can close:
   the photographer
 - **Your LinkedIn and YouTube addresses** — they currently point at those sites'
   home pages
+- **A People headline** — the People page currently borrows the home page
+  statement. One or two lines about the two of you would be better

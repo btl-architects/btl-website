@@ -1025,7 +1025,7 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 .roster__k { margin-bottom: var(--s-5); }
 
 .bio { max-width: var(--measure); margin-top: var(--s-6); color: var(--text-secondary); }
-.bio__n { display: block; color: var(--text-primary); font-weight: 500; }
+.bio__n { display: inline-block; color: var(--text-primary); font-weight: 500; margin-bottom: var(--s-2); }
 
 .team { position: relative; }
 .team__list { list-style: none; margin: 0; padding: 0; }
@@ -1164,4 +1164,17 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .pw__media { transition: none; }
+}
+
+/* --- preview builds -------------------------------------------------------
+   A preview deployment looks exactly like the real site, which is the point and
+   also the danger: the expensive mistake is approving, or panicking about,
+   something you thought was live. So it says so, at the top, on every page,
+   and the build tells search engines to ignore it. */
+.preview-flag {
+  position: sticky; top: 0; z-index: 200;
+  margin: 0; padding: var(--s-2) var(--page-margin);
+  background: var(--btl-crimson, #ED2941); color: #fff;
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; text-align: center;
 }

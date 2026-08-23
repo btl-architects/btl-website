@@ -37,10 +37,14 @@ projects/
 #
 # So the rule is drawn by PATH, not by extension. The two folders above hold the
 # camera originals — 3.7 GB, single drone files over 500 MB — and neither ships.
-# Everything under web/public is a web-sized build asset the site needs, and it
-# ships. An earlier version of this file excluded *.MP4, which on a
-# case-insensitive filesystem also swallowed the 6.7 MB of transcoded .mp4 the
-# homepage opens with, so the deploy would have built a site with no film in it.
+# What remains under web/public is the logo, the typeface and one script: the
+# handful of files that are genuinely part of the code rather than the content.
+#
+# The photographs and the opening film both live in the CMS now, which is why
+# there is no longer a video folder here at all. An earlier version of this file
+# excluded *.MP4, and on a case-insensitive filesystem that also swallowed the
+# transcoded .mp4 the homepage opened with — so the deploy would have built a
+# site with no film in it.
 
 # packaged copies — rebuildable, and one holds the photographs inline
 *.zip

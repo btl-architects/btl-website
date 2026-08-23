@@ -18,6 +18,33 @@ if (!projectId) {
   );
 }
 
+/* Preview builds.
+ *
+ * A static site cannot show a draft, because the draft was never built. So
+ * preview is a second build of the same code against a different view of the
+ * dataset: SANITY_PREVIEW turns on Sanity's `drafts` perspective, which returns
+ * the unpublished version of any document that has one, and the published
+ * version of everything else.
+ *
+ * That needs a token, because drafts are not public — and this is the one place
+ * in the front end where a secret is involved. It is a **read-only Viewer**
+ * token, it exists only in the preview context's environment, and the preview
+ * deployment must never be the production site. A preview build with no token
+ * falls back to published content rather than failing: the worst case is a
+ * preview that shows you what is already live, not a broken deploy.
+ */
+const previewing = (import.meta.env.SANITY_PREVIEW ?? process.env.SANITY_PREVIEW) === "true";
+const previewToken = import.meta.env.SANITY_PREVIEW_TOKEN ?? process.env.SANITY_PREVIEW_TOKEN;
+const canPreview = previewing && !!previewToken;
+
+if (previewing && !previewToken) {
+  console.warn(
+    "[sanity] SANITY_PREVIEW is on but SANITY_PREVIEW_TOKEN is missing — building published content instead.",
+  );
+}
+
+export const isPreview = canPreview;
+
 export const sanity = createClient({
   projectId,
   dataset,
@@ -25,6 +52,9 @@ export const sanity = createClient({
   // The CDN serves a cached copy that can lag a publish by a few seconds. A
   // build should see exactly what the editor just published, so it is off.
   useCdn: false,
+  ...(canPreview
+    ? { token: previewToken, perspective: "drafts" as const }
+    : { perspective: "published" as const }),
 });
 
 const builder = imageUrlBuilder(sanity);

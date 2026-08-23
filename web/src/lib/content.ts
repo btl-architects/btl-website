@@ -50,6 +50,7 @@ export interface Project {
 
 export interface Person {
   prefix: string; name: string; role: string; bio: string;
+  slug: string;
   portrait: SiteImage | null;
   tier: Tier; order: number; active: boolean;
 }
@@ -253,11 +254,23 @@ export async function getLocations(): Promise<{ slug: string; label: string }[]>
 export const getPeople = once(async (): Promise<Person[]> => {
   const rows = await sanity.fetch(`*[_type == "person" && active == true] | order(order asc) {
     "prefix": coalesce(prefix, ""), name, role, "bio": coalesce(bio, ""),
+    "slug": coalesce(slug.current, ""),
     "portrait": portrait ${FIGURE},
     tier, "order": coalesce(order, 0), active
   }`);
   return (rows ?? []).map((p: any) => ({ ...p, portrait: p.portrait?.source?.asset ? p.portrait : null }));
 });
+
+/* Who gets a page of their own.
+ *
+ * Not everybody. A profile containing a name and a job title is a worse
+ * experience than no profile at all — it looks like a page that failed to
+ * load, and it puts a link on the People page that punishes anyone who follows
+ * it. So the route exists for people the practice has actually written about,
+ * and appears the day a bio is added (R16: the interface is earned). */
+export async function getProfiles(): Promise<Person[]> {
+  return (await getPeople()).filter((p) => p.slug && p.bio);
+}
 
 export const getPublications = once(async (): Promise<Publication[]> => {
   const rows = await sanity.fetch(`*[_type == "publication"] | order(date desc) {
@@ -271,6 +284,39 @@ export const getPublications = once(async (): Promise<Publication[]> => {
     logo: x.logo?.source?.asset ? x.logo : null,
     relatedProject: x.relatedProject ?? null,
   }));
+});
+
+export interface HeroClip {
+  key: string;
+  label: string;
+  video: string;
+  videoPortrait: string;
+  poster: SiteImage | null;
+}
+
+/** The opening sequence, straight from the CMS. Empty is a legitimate state:
+ *  the landing simply has no film in it and the page still works. */
+export const getHeroClips = once(async (): Promise<HeroClip[]> => {
+  const rows = await sanity.fetch(`*[_type == "settings"][0].heroClips[]{
+    "key": _key,
+    "label": coalesce(label, ""),
+    "video": video.asset->url,
+    "videoPortrait": videoPortrait.asset->url,
+    "poster": { "source": { "asset": poster.asset }, "alt": "",
+                "lqip": poster.asset->metadata.lqip,
+                "dimensions": poster.asset->metadata.dimensions{width, height} }
+  }`);
+  return (rows ?? [])
+    .filter((c: any) => c.video)
+    .map((c: any): HeroClip => ({
+      key: c.key,
+      label: c.label,
+      video: c.video,
+      // Without a portrait cut a phone gets the landscape one, which is the
+      // right fallback: a differently framed film, never a missing one.
+      videoPortrait: c.videoPortrait || c.video,
+      poster: c.poster?.source?.asset ? c.poster : null,
+    }));
 });
 
 export const getHome = once(async () => {

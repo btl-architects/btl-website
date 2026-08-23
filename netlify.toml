@@ -17,6 +17,21 @@
   # build should fail loudly on a fresh environment rather than silently use a
   # stale value committed months earlier.
 
+# --- preview -----------------------------------------------------------------
+# A branch deploy builds the same code against Sanity's draft perspective, so
+# the practice can look at unpublished work on a real URL before it goes live.
+#
+# SANITY_PREVIEW_TOKEN is a read-only Viewer token and lives ONLY in this
+# context's environment in the Netlify UI — never in the repository, and never
+# in the production context. Every preview page carries a banner and a noindex,
+# because the expensive mistake is not realising which one you are looking at.
+
+[context.branch-deploy.environment]
+  SANITY_PREVIEW = "true"
+
+[context.deploy-preview.environment]
+  SANITY_PREVIEW = "true"
+
 # --- security headers -------------------------------------------------------
 # Contract §5a. These apply to every response.
 
@@ -42,7 +57,7 @@
       script-src 'self'; \
       style-src 'self'; \
       img-src 'self' data: https://cdn.sanity.io; \
-      media-src 'self'; \
+      media-src 'self' https://cdn.sanity.io; \
       font-src 'self'; \
       connect-src 'self' https://aur12nrf.api.sanity.io; \
       form-action 'self'; \

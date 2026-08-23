@@ -1,0 +1,51 @@
+---
+/* One person's page.
+ *
+ * Only generated for people with a bio — see getProfiles. A page holding a name
+ * and a job title is worse than no page, and a link that leads to one is worse
+ * still.
+ */
+import type { GetStaticPaths } from "astro";
+import Base from "../../layouts/Base.astro";
+import Figure from "../../components/Figure.astro";
+import { getProfiles } from "../../lib/content";
+
+export const getStaticPaths = (async () => {
+  const profiles = await getProfiles();
+  return profiles.map((person) => ({ params: { slug: person.slug }, props: { person } }));
+}) satisfies GetStaticPaths;
+
+const { person } = Astro.props;
+const fullName = `${person.prefix} ${person.name}`.trim();
+---
+
+<Base
+  title={`${fullName} — btl architects`}
+  description={person.bio.slice(0, 155)}
+  current="people"
+>
+  <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+    <div class="container" style="padding-bottom:var(--space-section)">
+      <div class="spread spread--flip" style="margin-top:var(--s-8)">
+        {person.portrait && (
+          <div class="spread__media rv">
+            <Figure image={person.portrait} sizes="(min-width:60rem) 34rem, 92vw" priority />
+          </div>
+        )}
+        <div class="spread__body rv" data-delay="1">
+          <h1 class="spread__say spread__say--display">{fullName}</h1>
+          <p
+            class="eyebrow"
+            style="display:block; color:var(--text-tertiary); margin-top:var(--s-4)"
+          >{person.role}</p>
+          <p class="spread__note">{person.bio}</p>
+        </div>
+      </div>
+
+      <a class="onward ul" href="/people/">
+        <span class="onward__k">Back</span>
+        Everyone at btl.
+      </a>
+    </div>
+  </main>
+</Base>
