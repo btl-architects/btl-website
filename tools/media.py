@@ -67,7 +67,11 @@ CUT_PORTRAIT = [
         "key": "open-01-land",
         "src": "Nelly House/Drone/DJI_20260307071910_0053_D.MP4",
         "start": 2.0, "dur": 9.0,
-        "crop": "crop=ih*0.5625:ih:iw*0.28:0",     # centre-left of the 16:9 frame
+        # 0.378, not 0.28. Measured rather than judged: the sun is the
+        # brightest point in the frame and sits at 0.517 of its width, so an
+        # offset of 0.28 put it 85% of the way across the portrait crop —
+        # hard against the right edge. This centres it.
+        "crop": "crop=ih*0.5625:ih:iw*0.378:0",
     },
     {
         # Nelly House, cropped from the landscape drone frame rather than
