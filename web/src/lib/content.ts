@@ -30,7 +30,10 @@ export interface Project {
   title: string;
   slug: string;
   category: string[];
+  /** The place as it should be written. */
   location: string;
+  /** Its route segment, stated by the CMS rather than derived from the label. */
+  locationSlug: string;
   year: number | null;
   workStatus: WorkStatus;
   lifecycle: Lifecycle;
@@ -89,16 +92,28 @@ export interface Settings {
 
 // Fields are selected explicitly rather than with `...`, so a field added in
 // the studio cannot silently start flowing into the front end unnoticed.
+/* lqip is a ~550-byte base64 thumbnail Sanity generates for every upload. It
+ * travels inside the HTML, costs no request, and is what the visitor looks at
+ * while the real photograph is still coming down the wire. Dimensions come from
+ * metadata rather than being parsed out of the asset id — the same numbers, but
+ * stated by the CMS rather than inferred from a filename.
+ *
+ * GROQ has no block comments, so this note lives out here rather than inside
+ * the query, which is what broke the build the first time. */
 const FIGURE = `{
   "source": { "asset": asset, "hotspot": hotspot, "crop": crop },
-  alt, caption, credit, rights, kind
+  alt, caption, credit, rights, kind,
+  "lqip": asset->metadata.lqip,
+  "dimensions": asset->metadata.dimensions{width, height}
 }`;
 
 const PROJECT = `{
   title,
   "slug": slug.current,
   "category": coalesce(category[]->slug.current, []),
-  location, year, workStatus, lifecycle,
+  "location": coalesce(location->label, ""),
+  "locationSlug": coalesce(location->slug.current, ""),
+  year, workStatus, lifecycle,
   "description": coalesce(description, ""),
   "featured": coalesce(featured, false),
   "order": coalesce(order, 0),
@@ -221,18 +236,18 @@ export async function getEarnedCategories(): Promise<Category[]> {
   return qualifying.length >= EARNED_MIN_CATS ? qualifying : [];
 }
 
+/* Places that actually carry published work.
+ *
+ * These are documents now, not strings pulled off projects and slugified. When
+ * location was free text, "Calicut" and "Kozhikode" produced two routes for one
+ * city, each holding part of the work — and nothing stopped the next spelling
+ * arriving. A reference cannot be misspelled into a second place. */
 export async function getLocations(): Promise<{ slug: string; label: string }[]> {
   const seen = new Map<string, string>();
   for (const p of await getProjects()) {
-    if (p.location) seen.set(locationSlug(p.location), p.location);
+    if (p.locationSlug) seen.set(p.locationSlug, p.location);
   }
   return [...seen].map(([slug, label]) => ({ slug, label }));
-}
-
-export function locationSlug(location: string): string {
-  // The place, not the full address: "Thirunelly, Wayanad" files under wayanad.
-  const last = location.split(",").pop()!.trim();
-  return last.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 export const getPeople = once(async (): Promise<Person[]> => {

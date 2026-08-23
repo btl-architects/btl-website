@@ -34,7 +34,11 @@ export interface SiteImage {
   credit?: string;
   /** Licence provenance. Publishing is blocked without it (contract §3). */
   rights?: string;
-  /** Intrinsic size, parsed from the asset id so nothing reflows while loading. */
+  /** A ~550-byte base64 preview, shown while the real photograph loads. */
+  lqip?: string;
+  /** Stated by the CMS rather than inferred from the asset id. */
+  dimensions?: { width: number; height: number };
+  /** Fallback intrinsic size. */
   width?: number;
   height?: number;
 }
@@ -45,13 +49,19 @@ export interface ResolvedImage {
   width: number;
   height: number;
   ratio: number;
+  /** Inline base64 preview, if the CMS has one. */
+  lqip?: string;
 }
 
-/* The widths a photograph is offered at. Sanity generates each on demand and
- * caches it, so this is a menu rather than a build cost — but it is still a
- * finite menu, because an unbounded one means a cold render on unusual
- * viewports. */
-const LADDER = [480, 768, 1024, 1440, 1920, 2400];
+/* The widths a photograph is offered at.
+ *
+ * Sanity generates each width the first time it is asked for, which costs
+ * roughly half a second, and caches it afterwards. Every extra rung is
+ * therefore another cold generation that some unlucky visitor pays for, and
+ * six rungs across four projects is a hundred and sixty-odd first requests.
+ * Four rungs cover every real viewport at sensible density and quarter the
+ * number of images that have to exist. */
+const LADDER = [480, 900, 1400, 2000];
 
 /** Sanity encodes the original's dimensions in the asset id:
  *  `image-<hash>-3000x2000-jpg`. Reading them here avoids a second round trip
@@ -74,7 +84,9 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
   }
   const source = image?.source;
   if (!source) return null;
-  const dims = intrinsic(source) ?? { w: image.width ?? 1600, h: image.height ?? 1067 };
+  const dims = image.dimensions
+    ? { w: image.dimensions.width, h: image.dimensions.height }
+    : intrinsic(source) ?? { w: image.width ?? 1600, h: image.height ?? 1067 };
 
   // Never offer a width larger than the original — upscaling costs bytes and
   // buys nothing.
@@ -93,6 +105,7 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
     width: dims.w,
     height: dims.h,
     ratio: Number((dims.w / dims.h).toFixed(4)),
+    lqip: image.lqip,
   };
 }
 

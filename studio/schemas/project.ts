@@ -74,9 +74,11 @@ export default defineType({
     }),
     defineField({
       name: "location",
-      type: "string",
+      type: "reference",
+      to: [{ type: "location" }],
       group: "meta",
-      description: "Where it is — “Thirunelly, Wayanad”.",
+      description:
+        "Where it is. Picked from the list rather than typed, so the same place cannot arrive spelled two ways — Calicut and Kozhikode were generating two separate pages for one city.",
       validation: (r) => r.required(),
     }),
     defineField({ name: "year", type: "number", group: "meta", validation: (r) => r.min(1990).max(2100) }),
@@ -162,7 +164,7 @@ export default defineType({
   ],
 
   preview: {
-    select: { title: "title", location: "location", lifecycle: "lifecycle", media: "images.0.asset" },
+    select: { title: "title", location: "location.label", lifecycle: "lifecycle", media: "images.0.asset" },
     prepare: ({ title, location, lifecycle, media }) => ({
       title,
       subtitle: `${location ?? ""}${lifecycle !== "published" ? ` · ${lifecycle}` : ""}`,

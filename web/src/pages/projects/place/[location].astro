@@ -3,13 +3,13 @@
 import type { GetStaticPaths } from "astro";
 import Base from "../../../layouts/Base.astro";
 import ProjectIndex from "../../../components/ProjectIndex.astro";
-import { getLocations, getProjects, locationSlug } from "../../../lib/content";
+import { getLocations, getProjects } from "../../../lib/content";
 
 export const getStaticPaths = (async () => {
   const [locations, projects] = await Promise.all([getLocations(), getProjects()]);
   return locations.map((l) => ({
     params: { location: l.slug },
-    props: { place: l, projects: projects.filter((p) => locationSlug(p.location) === l.slug) },
+    props: { place: l, projects: projects.filter((p) => p.locationSlug === l.slug) },
   }));
 }) satisfies GetStaticPaths;
 

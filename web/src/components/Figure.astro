@@ -2,10 +2,25 @@
 /* The only <img> in the codebase (contract §1, design memory R13).
  *
  * Everything an image needs to behave — the width ladder, intrinsic dimensions
- * so nothing reflows as it loads, decoding hints, and the one high-priority
- * fetch a route is allowed — lives here once. A component that renders its own
- * <img> is how a site ends up with four different loading strategies and a
- * layout that jumps on three of them.
+ * so nothing reflows as it loads, decoding hints, the one high-priority fetch a
+ * route is allowed, and the placeholder — lives here once. A component that
+ * renders its own <img> is how a site ends up with four different loading
+ * strategies and a layout that jumps on three of them.
+ *
+ * The placeholder deserves a note, because the obvious answer was worse. The
+ * photographs come from Sanity's CDN, which generates each width the first time
+ * it is requested — around half a second — and caches it after. So the first
+ * visitor to any given size waits, and on a site that is almost entirely
+ * photographs that reads as a slow site.
+ *
+ * The usual reach here is a grey skeleton box. But a grey box tells the visitor
+ * nothing except that something is missing, and on an architecture site the
+ * thing that is missing is the entire point of the page. Sanity already ships a
+ * ~550-byte base64 preview of every image, so instead the real photograph
+ * arrives over a blurred version of itself. It costs no request — the bytes are
+ * in the HTML — needs no JavaScript, and cannot get out of step with loading
+ * state, because the browser simply paints the real image on top when it has
+ * it.
  *
  * priority — the single LCP candidate on the route: eager, fetchpriority high.
  * eager    — above the fold but not the LCP (the logo). Two high-priority
@@ -32,11 +47,16 @@ const r = requireImage(image);
 if (image.alt === undefined || image.alt === null) {
   throw new Error("[Figure] an image has no alt. Use \"\" only if decorative.");
 }
+
+const placeholder = r.lqip
+  ? `background-image:url('${r.lqip}');background-size:cover;background-position:center;`
+  : "";
+const inline = `${placeholder}${style ?? ""}`;
 ---
 
 <img
   class={cls}
-  style={style}
+  style={inline || undefined}
   src={r.src}
   srcset={r.srcset}
   sizes={sizes}
