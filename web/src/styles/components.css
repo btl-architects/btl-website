@@ -1178,20 +1178,28 @@ body[data-preview] main { padding-top: var(--preview-h); }
    Hidden on narrow screens: a vertical rail needs a margin to live in, and on a
    phone there isn't one. The same links are in the footer. */
 
+/* Shown on every size, not just wide desktops — a phone is where most people
+   will meet this practice, and the links were simply absent there. On a phone
+   there is no margin for a vertical rail, so they lie horizontally along the
+   bottom instead, beside the caption. */
 .landing .srail {
-  display: none;
   position: absolute;
-  left: 0; top: 50%;
-  transform: translateY(-50%);
   z-index: 3;
-  writing-mode: vertical-rl;
+  display: flex;
   align-items: center;
-  gap: var(--s-6);
-  padding-inline: var(--s-4);
+  gap: var(--s-5);
   pointer-events: auto;
+  left: var(--page-margin);
+  bottom: var(--s-5);
 }
 @media (min-width: 64rem) {
-  .landing .srail { display: flex; }
+  .landing .srail {
+    left: 0; bottom: auto; top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    gap: var(--s-6);
+    padding-inline: var(--s-4);
+  }
 }
 
 .landing .srail__i {
@@ -1199,7 +1207,12 @@ body[data-preview] main { padding-top: var(--preview-h); }
   letter-spacing: var(--track-meta);
   text-transform: uppercase;
   text-decoration: none;
-  color: rgb(255 255 255 / 0.66);
+  /* Was 0.66 white, which over a bright frame of sky was barely there. The
+     film is unpredictable — sunrise one clip, a dark interior the next — so
+     these carry their own small shadow rather than relying on the photograph
+     behind them being helpfully dark. */
+  color: rgb(255 255 255 / 0.92);
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
   transition: color var(--dur-hover) var(--ease);
 }
 .landing .srail__i:hover,

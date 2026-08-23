@@ -110,7 +110,6 @@ const c = settings.contact;
         <div class="container">
           <div class="home-sec__head">
             <h2 class="home-sec__k">Press</h2>
-            <a class="tl" href="/press/">Everything</a>
           </div>
           <div class="hpress">
             {press.slice(0, 2).map((item, i) => (
@@ -130,6 +129,12 @@ const c = settings.contact;
               </a>
             ))}
           </div>
+          {/* After the items, like Studio and People. Press was the only
+              section still putting its link up in the heading row. */}
+          <a class="onward onward--quiet ul" href="/press/">
+            <span class="onward__k">More</span>
+            Everywhere btl has appeared
+          </a>
         </div>
       </section>
     )}
