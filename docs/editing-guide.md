@@ -27,8 +27,9 @@ happen. There is no "save" button — it saves as you type.
 1. **Title** — the name. The web address is generated from it automatically.
 2. **About the project** — one short paragraph, in your voice. What the site
    asked for, and what the building does about it.
-3. **Category, location, year** — location is written as you'd say it,
-   `Thirunelly, Wayanad`.
+3. **Category, location, year** — location is picked from the **Locations**
+   list rather than typed. If the place isn't there yet, add it once and it's
+   available to every project after.
 4. **Photographs** — drag them in, in the order they should be seen. On each
    one:
    - **Alt text.** Describe the building for someone who can't see the picture.
