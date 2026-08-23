@@ -633,6 +633,12 @@
            slicing from the wrong index silently duplicated photographs. */
         var figs = [].slice.call(rail.querySelectorAll(".rail__f")).slice(PEEK);
 
+        /* Inject once. Expanding a card that is already expanded appended the
+           remaining frames a second time — the last photograph appearing twice
+           in the strip, and twice in the viewer. Reachable by clicking a card
+           that is already open, which nothing prevents. */
+        if (st.querySelector(".rail__f:not(.pcard__peek)")) figs = [];
+
         /* The note lands on the same side as the card's caption, so a card
            reads the same way round open as closed. The gesture is identical
            either way — the photographs never move, then the strip slides to
@@ -871,3 +877,359 @@
      matches how every other link on the site behaves. */
 
 })();
+
+  /* --- 6. the viewer --------------------------------------------------------
+     A photograph on its own, at whatever size the reader wants.
+
+     Three input languages, one model. A pointer zooms with the wheel and pans
+     by dragging; fingers zoom by pinching and pan by dragging; a keyboard steps
+     with the arrows and zooms with + and -. They all move the same two numbers
+     — a scale and an offset — so there is no separate touch mode to keep in
+     step with a separate mouse mode.
+
+     The one rule that makes zooming feel right: it anchors on the pointer, or
+     on the midpoint between two fingers, never on the centre of the image. Zoom
+     about the centre and the thing you were looking at slides away from you,
+     which is why so many viewers feel like wrestling.
+
+     Everything is transform-only, so nothing here touches layout. */
+  (function () {
+    var lb = null, stage = null, img = null, capEl = null, countEl = null;
+    var prevBtn = null, nextBtn = null;
+    var items = [], at = 0, lastFocus = null, scrollY = 0;
+    var scale = 1, tx = 0, ty = 0, natural = { w: 0, h: 0 };
+    var idleTimer = null;
+
+    /* The largest candidate in the srcset: the rail is showing a size chosen to
+       fit a strip, and the whole point of opening this is to see more than
+       that. */
+    function bestSrc(el) {
+      var ss = el.getAttribute("srcset");
+      if (!ss) return el.currentSrc || el.src;
+      var best = null, bestW = -1;
+      ss.split(",").forEach(function (part) {
+        var bits = part.trim().split(/\s+/);
+        var w = parseInt(bits[1], 10);
+        if (bits[0] && w > bestW) { bestW = w; best = bits[0]; }
+      });
+      return best || el.currentSrc || el.src;
+    }
+
+    function build() {
+      lb = document.createElement("div");
+      lb.className = "lb";
+      lb.setAttribute("role", "dialog");
+      lb.setAttribute("aria-modal", "true");
+      lb.setAttribute("aria-label", "Photograph viewer");
+      lb.setAttribute("data-open", "false");
+      lb.setAttribute("data-idle", "false");
+      lb.innerHTML =
+        '<div class="lb__stage" data-stage>' +
+          '<img class="lb__img" alt="" draggable="false">' +
+        '</div>' +
+        '<div class="lb__bar">' +
+          '<span class="lb__count" data-count aria-live="polite"></span>' +
+          '<button class="lb__x" type="button" data-close>Close' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<button class="lb__step lb__step--prev" type="button" data-prev aria-label="Previous photograph">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M15 4L7 12l8 8"/></svg></button>' +
+        '<button class="lb__step lb__step--next" type="button" data-next aria-label="Next photograph">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M9 4l8 8-8 8"/></svg></button>' +
+        '<p class="lb__cap" data-cap></p>';
+      document.body.appendChild(lb);
+
+      stage = lb.querySelector("[data-stage]");
+      img = lb.querySelector(".lb__img");
+      capEl = lb.querySelector("[data-cap]");
+      countEl = lb.querySelector("[data-count]");
+      prevBtn = lb.querySelector("[data-prev]");
+      nextBtn = lb.querySelector("[data-next]");
+
+      lb.querySelector("[data-close]").addEventListener("click", close);
+      prevBtn.addEventListener("click", function (e) { e.stopPropagation(); step(-1); });
+      nextBtn.addEventListener("click", function (e) { e.stopPropagation(); step(1); });
+      wireGestures();
+    }
+
+    /* --- the transform ----------------------------------------------------- */
+
+    function apply(settle) {
+      img.setAttribute("data-settling", settle ? "true" : "false");
+      img.style.transform =
+        "translate(-50%, -50%) translate(" + tx + "px, " + ty + "px) scale(" + scale + ")";
+      var z = scale > 1.01;
+      lb.setAttribute("data-zoomed", z ? "true" : "false");
+      stage.setAttribute("data-zoomed", z ? "true" : "false");
+    }
+
+    function reset(settle) { scale = 1; tx = 0; ty = 0; apply(settle); }
+
+    /* Keep the photograph from being dragged off into the dark. The bounds are
+       whatever the scaled image overhangs the stage by; below 1:1 there is
+       nothing to pan and it returns to centre. */
+    function clamp() {
+      var r = stage.getBoundingClientRect();
+      var w = natural.w * scale, h = natural.h * scale;
+      var maxX = Math.max(0, (w - r.width) / 2);
+      var maxY = Math.max(0, (h - r.height) / 2);
+      tx = Math.min(maxX, Math.max(-maxX, tx));
+      ty = Math.min(maxY, Math.max(-maxY, ty));
+    }
+
+    /* Zoom about a point, so whatever is under the pointer stays under it. */
+    function zoomAt(nextScale, cx, cy) {
+      nextScale = Math.min(6, Math.max(1, nextScale));
+      var r = stage.getBoundingClientRect();
+      var ox = cx - r.left - r.width / 2;
+      var oy = cy - r.top - r.height / 2;
+      var k = nextScale / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = nextScale;
+      clamp();
+      apply(false);
+    }
+
+    /* --- showing ----------------------------------------------------------- */
+
+    function show(i, settle) {
+      at = (i + items.length) % items.length;
+      var it = items[at];
+      reset(false);
+      img.src = it.src;
+      img.alt = it.alt || "";
+      capEl.textContent = it.caption || "";
+      countEl.textContent = (at + 1) + " / " + items.length;
+      var many = items.length > 1;
+      prevBtn.hidden = !many; nextBtn.hidden = !many;
+      img.onload = function () {
+        natural.w = img.clientWidth; natural.h = img.clientHeight;
+      };
+      if (img.complete) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
+      // the neighbours, so stepping is instant
+      if (many) {
+        [items[(at + 1) % items.length], items[(at - 1 + items.length) % items.length]]
+          .forEach(function (n) { var p = new Image(); p.src = n.src; });
+      }
+    }
+
+    function step(d) { if (items.length > 1) show(at + d, false); }
+
+    /* --- opening and closing ------------------------------------------------ */
+
+    function open(list, i) {
+      if (!lb) build();
+      items = list; lastFocus = document.activeElement;
+
+      /* Lock the page by pinning it, not by hiding its overflow. overflow:hidden
+         on <html> does nothing on iOS Safari — the page scrolls behind the
+         overlay and is somewhere else entirely when you close it. */
+      scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = -scrollY + "px";
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+
+      show(i, false);
+      lb.setAttribute("data-open", "true");
+      /* Focus once the panel is genuinely visible.
+         The overlay starts at visibility:hidden and transitions, and you cannot
+         focus something that is not visible — the call silently does nothing and
+         the keyboard is left behind on the page underneath. A single rAF is too
+         early: the transition has not flipped visibility yet. Wait for it, with
+         a timer behind it in case the transition never fires (reduced motion,
+         a backgrounded tab). */
+      var target = lb.querySelector("[data-close]");
+      var focused = false;
+      function grab() {
+        if (focused || !isOpen()) return;
+        if (getComputedStyle(lb).visibility !== "visible") return;
+        focused = true;
+        lb.removeEventListener("transitionend", grab);
+        target.focus();
+      }
+      lb.addEventListener("transitionend", grab);
+      requestAnimationFrame(function () { requestAnimationFrame(grab); });
+      setTimeout(grab, 400);
+      wake();
+    }
+
+    function close() {
+      lb.setAttribute("data-open", "false");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      window.scrollTo(0, scrollY);
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    function isOpen() { return lb && lb.getAttribute("data-open") === "true"; }
+
+    /* The chrome fades out while the photograph is being looked at, and comes
+       back the moment the pointer moves. */
+    function wake() {
+      lb.setAttribute("data-idle", "false");
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(function () {
+        if (isOpen()) lb.setAttribute("data-idle", "true");
+      }, 2200);
+    }
+
+    /* --- gestures ----------------------------------------------------------- */
+
+    function wireGestures() {
+      var pointers = new Map();
+      var startDist = 0, startScale = 1, startMid = null;
+      var panFrom = null;
+
+      stage.addEventListener("pointerdown", function (e) {
+        stage.setPointerCapture(e.pointerId);
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 2) {
+          var p = [...pointers.values()];
+          startDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+          startScale = scale;
+          startMid = { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
+          panFrom = null;
+        } else if (scale > 1.01) {
+          panFrom = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };
+          stage.setAttribute("data-dragging", "true");
+        } else {
+          panFrom = { x: e.clientX, y: e.clientY, tx: tx, ty: ty, swipe: true };
+        }
+      });
+
+      stage.addEventListener("pointermove", function (e) {
+        wake();
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (pointers.size === 2 && startDist) {
+          var p = [...pointers.values()];
+          var d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+          var mid = { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
+          zoomAt(startScale * (d / startDist), mid.x, mid.y);
+          return;
+        }
+        if (!panFrom) return;
+        var dx = e.clientX - panFrom.x, dy = e.clientY - panFrom.y;
+        if (panFrom.swipe) return;          // handled on release
+        tx = panFrom.tx + dx; ty = panFrom.ty + dy;
+        clamp(); apply(false);
+      });
+
+      function release(e) {
+        var was = pointers.get(e.pointerId);
+        pointers.delete(e.pointerId);
+        stage.removeAttribute("data-dragging");
+        if (pointers.size < 2) startDist = 0;
+
+        if (panFrom && panFrom.swipe && was) {
+          var dx = was.x - panFrom.x, dy = was.y - panFrom.y;
+          /* A swipe only counts if it is mostly sideways and went somewhere —
+             otherwise a slightly untidy tap becomes an accidental page turn. */
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+        }
+        panFrom = null;
+        if (scale < 1.02 && (tx || ty)) reset(true);
+      }
+      stage.addEventListener("pointerup", release);
+      stage.addEventListener("pointercancel", release);
+
+      /* A click on the photograph toggles between fit and a close look; a click
+         on the dark around it closes, which is what every viewer has taught
+         people to expect. */
+      stage.addEventListener("click", function (e) {
+        if (e.target === img) {
+          if (scale > 1.01) reset(true);
+          else zoomAt(2.5, e.clientX, e.clientY);
+        } else {
+          close();
+        }
+      });
+
+      stage.addEventListener("wheel", function (e) {
+        e.preventDefault();
+        wake();
+        zoomAt(scale * (e.deltaY < 0 ? 1.16 : 1 / 1.16), e.clientX, e.clientY);
+      }, { passive: false });
+    }
+
+    /* --- keyboard ------------------------------------------------------------ */
+
+    document.addEventListener("keydown", function (e) {
+      if (!isOpen()) return;
+      var r, cx, cy;
+      switch (e.key) {
+        case "Escape":     e.preventDefault(); close(); break;
+        case "ArrowRight": e.preventDefault(); step(1); break;
+        case "ArrowLeft":  e.preventDefault(); step(-1); break;
+        case "+": case "=":
+          e.preventDefault();
+          r = stage.getBoundingClientRect();
+          cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+          zoomAt(scale * 1.4, cx, cy); apply(true); break;
+        case "-": case "_":
+          e.preventDefault();
+          r = stage.getBoundingClientRect();
+          cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+          zoomAt(scale / 1.4, cx, cy); apply(true); break;
+        case "0":          e.preventDefault(); reset(true); break;
+        case "Tab": {
+          /* Focus stays inside while it is open. */
+          var f = lb.querySelectorAll("button:not([hidden])");
+          if (!f.length) return;
+          var first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+          break;
+        }
+      }
+    });
+
+    window.addEventListener("resize", function () { if (isOpen()) reset(false); });
+
+    /* --- what opens it -------------------------------------------------------
+       Delegated, because the rails that hold these photographs are fetched and
+       inserted long after this runs. Card strips are excluded: a click there
+       opens the project, which is a different intention entirely. */
+    document.addEventListener("click", function (e) {
+      var picture = e.target.closest && e.target.closest(".rail__f img");
+      if (!picture) return;
+
+      /* A closed card's photographs are a way in to the project, not something
+         to look at on their own — clicking one opens the card, and the viewer
+         must stay out of the way. Once the card is open they are simply the
+         project's photographs and behave like any other.
+
+         This turns on the card's STATE, not on a class. An open card keeps its
+         original six frames — still carrying .pcard__peek — and injects only
+         the seventh, so excluding by class was hiding six of the seven
+         photographs from the viewer and opening it on a set of one. */
+      var closedCard = picture.closest('.pcard:not([data-open="true"])');
+      if (closedCard) return;
+      /* The container is whichever of these the photograph is actually in.
+         `.pcard__strip` matters: when a rail is lifted into an open card its
+         [data-rail] wrapper is discarded and the figures become direct children
+         of the strip, so looking only for [data-rail] found nothing and the
+         viewer never opened from inside an expanded card — which is where most
+         people will meet these photographs. */
+      var rail = picture.closest("[data-rail]") || picture.closest(".pcard__strip")
+              || picture.closest(".rail") || picture.closest(".pj");
+      if (!rail) return;
+
+      e.preventDefault();
+      var figures = [].slice.call(rail.querySelectorAll(".rail__f"));
+      var list = figures.map(function (fig) {
+        var im = fig.querySelector("img");
+        var cap = fig.querySelector("figcaption");
+        return { src: bestSrc(im), alt: im.getAttribute("alt") || "",
+                 caption: cap ? cap.textContent.trim() : "" };
+      });
+      var i = figures.indexOf(picture.closest(".rail__f"));
+      open(list, i < 0 ? 0 : i);
+    });
+  })();

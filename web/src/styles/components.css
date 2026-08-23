@@ -1551,3 +1551,140 @@ body[data-preview] main { padding-top: var(--preview-h); }
   .burger__mark i, .burger__label { transition: none; }
 }
 
+
+/* ==========================================================================
+   The viewer
+   ==========================================================================
+   A photograph, on its own, as large as the screen allows — and then as large
+   as the reader wants.
+
+   The rail shows architecture at the size a page can afford. Sometimes that is
+   not enough: a detail, a junction, the way a shadow falls across a wall. This
+   is where someone goes to actually look, so everything that is not the
+   photograph gets out of the way and stays out until asked for.
+
+   Built on transforms only — translate and scale on one element — so panning
+   and zooming stay on the compositor and never touch layout. R10 holds: things
+   are uncovered, not moved.
+   ------------------------------------------------------------------------- */
+
+.lb {
+  position: fixed; inset: 0; z-index: 300;
+  display: grid; place-items: center;
+  background: rgb(4 4 4 / 0.97);
+  opacity: 0;
+  visibility: hidden;
+  /* visibility is stepped, not eased, and the delay carries the direction:
+     zero on the way in so the panel is genuinely visible the moment it opens,
+     and held for the length of the fade on the way out so it does not vanish
+     before it has finished going.
+
+     Written as one transition it stayed hidden for the whole opening fade,
+     which meant nothing inside could take focus — you cannot focus what is not
+     visible — and the keyboard was left behind on the page underneath. */
+  transition: opacity var(--dur-base) var(--ease),
+              visibility 0s linear var(--dur-base);
+}
+.lb[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-base) var(--ease),
+              visibility 0s linear 0s;
+}
+
+/* The surface that receives the gestures. touch-action none because the
+   browser's own pan and pinch would otherwise fight ours for the same
+   fingers. */
+.lb__stage {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+.lb__stage[data-zoomed="true"] { cursor: grab; }
+.lb__stage[data-dragging="true"] { cursor: grabbing; }
+
+.lb__img {
+  position: absolute; top: 50%; left: 50%;
+  max-width: 92vw; max-height: 88svh;
+  width: auto; height: auto;
+  transform-origin: 0 0;
+  will-change: transform;
+  user-select: none; -webkit-user-drag: none;
+}
+/* Only the settling is animated. While a finger or a wheel is driving it the
+   transform must track the input exactly, or it feels like rubber. */
+.lb__img[data-settling="true"] {
+  transition: transform var(--dur-base) var(--ease);
+}
+
+/* --- chrome --------------------------------------------------------------- */
+
+.lb__bar {
+  position: absolute; inset: 0 0 auto 0; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--s-5);
+  padding: var(--s-5) var(--page-margin);
+  padding-top: calc(var(--s-5) + env(safe-area-inset-top, 0));
+  pointer-events: none;
+}
+.lb__bar > * { pointer-events: auto; }
+
+.lb__count {
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: rgb(255 255 255 / 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+.lb__x {
+  appearance: none; background: none; border: 0; cursor: pointer;
+  display: flex; align-items: center; gap: var(--s-3);
+  padding: var(--s-2);
+  font: inherit;
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: rgb(255 255 255 / 0.82);
+}
+.lb__x:hover, .lb__x:focus-visible { color: #fff; }
+.lb__x svg { width: 16px; height: 16px; }
+
+.lb__cap {
+  position: absolute; inset: auto 0 0 0; z-index: 2;
+  padding: var(--s-5) var(--page-margin);
+  padding-bottom: calc(var(--s-5) + env(safe-area-inset-bottom, 0));
+  font-size: var(--type-caption);
+  color: rgb(255 255 255 / 0.72);
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Step controls. Hidden from a pointer until it moves, because a photograph
+   being looked at should not have two arrows sitting on it. */
+.lb__step {
+  position: absolute; top: 50%; z-index: 2;
+  transform: translateY(-50%);
+  appearance: none; background: none; border: 0; cursor: pointer;
+  width: 3.5rem; height: 3.5rem;
+  display: grid; place-items: center;
+  color: rgb(255 255 255 / 0.7);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease), color var(--dur-hover) var(--ease);
+}
+.lb__step--prev { left: var(--s-3); }
+.lb__step--next { right: var(--s-3); }
+.lb__step svg { width: 26px; height: 26px; }
+.lb__step:hover, .lb__step:focus-visible { color: #fff; }
+.lb[data-idle="false"] .lb__step,
+.lb__step:focus-visible { opacity: 1; }
+.lb__step[hidden] { display: none; }
+
+/* Nothing but the photograph while it is being examined. */
+.lb[data-zoomed="true"] .lb__step,
+.lb[data-zoomed="true"] .lb__cap { opacity: 0; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lb, .lb__img, .lb__step { transition: none; }
+}
+
+/* The photographs are clickable, so they should say so. */
+.rail__f img { cursor: zoom-in; }
+.pcard__peek img { cursor: inherit; }
