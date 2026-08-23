@@ -127,17 +127,25 @@ a { color: inherit; text-decoration: none; }
    Motion — one curve, five durations. Reveals are decoration, never delivery.
    ========================================================================== */
 
+/* Note the `.js` gate on every reveal below.
+ *
+ * These rules HIDE content and rely on script to bring it back. That is the
+ * wrong way round: if the observer does not fire — a background tab, an
+ * unusual browser, a script that failed to parse — the page is simply blank,
+ * and blank is indistinguishable from slow. Gating them on a class that script
+ * adds to <html> as its first act means the default state of the document is
+ * visible, and the reveal is an enhancement on top. */
 @media (prefers-reduced-motion: no-preference) {
-  .rv {
+  .js .rv {
     opacity: 0;
     transform: translateY(18px);
     transition: opacity var(--dur-slow) var(--ease),
                 transform var(--dur-slow) var(--ease);
   }
-  .rv.in { opacity: 1; transform: none; }
-  .rv[data-delay="1"] { transition-delay: 80ms; }
-  .rv[data-delay="2"] { transition-delay: 160ms; }
-  .rv[data-delay="3"] { transition-delay: 240ms; }
+  .js .rv.in { opacity: 1; transform: none; }
+  .js .rv[data-delay="1"] { transition-delay: 80ms; }
+  .js .rv[data-delay="2"] { transition-delay: 160ms; }
+  .js .rv[data-delay="3"] { transition-delay: 240ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {

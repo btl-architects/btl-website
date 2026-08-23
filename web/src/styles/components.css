@@ -370,8 +370,8 @@
    sliding, which is what the older .rv primitive does. Each waits until it is
    actually approaching the viewport, so the page below is never pre-animated. */
 @media (prefers-reduced-motion: no-preference) {
-  .rvc { clip-path: inset(0 0 100% 0); transition: clip-path var(--dur-slow) var(--ease); }
-  .rvc.in { clip-path: inset(0 0 0 0); }
+  .js .rvc { clip-path: inset(0 0 100% 0); transition: clip-path var(--dur-slow) var(--ease); }
+  .js .rvc.in { clip-path: inset(0 0 0 0); }
 }
 
 .pcard {
@@ -801,29 +801,29 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 .f textarea { resize: vertical; min-height: 6rem; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
-/* --- footer ---------------------------------------------------------------- */
+/* --- footer ---------------------------------------------------------------
+   One line. It used to be a full band with a display-scale call to action and a
+   row of links, which left every page ending in empty space and a second ask
+   the reader had not made. On a short page it was most of the screen. */
 
 .footer {
   background: var(--n-950); color: var(--n-0);
-  padding-block: var(--space-section) var(--s-6);
+  padding-block: var(--s-5);
+  border-top: 1px solid var(--border-subtle);
 }
 [data-ground="light"] .footer { background: var(--n-950); color: var(--n-0); }
-.footer__lead { margin-bottom: var(--s-8); }
-.footer__grid { display: grid; gap: var(--s-6); }
-@media (min-width: 44rem) { .footer__grid { grid-template-columns: repeat(3, 1fr); } }
-.footer__k {
-  display: block; font-size: var(--type-meta); font-weight: 500;
-  text-transform: uppercase; letter-spacing: var(--track-meta);
-  color: var(--n-450); margin-bottom: var(--s-3);
-}
-.footer address { font-style: normal; line-height: 1.7; color: var(--n-300); }
-.footer a { color: var(--n-0); }
+
 .footer__base {
-  margin-top: var(--s-8); padding-top: var(--s-4);
-  border-top: 1px solid var(--n-800);
-  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6);
-  font-size: var(--type-caption); color: var(--n-450);
+  display: flex; flex-wrap: wrap;
+  gap: var(--s-3) var(--s-5);
+  align-items: baseline;
+  font-size: var(--type-meta);
+  letter-spacing: var(--track-meta);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
+.footer__social { margin-left: auto; }
+@media (max-width: 48rem) { .footer__social { margin-left: 0; } }
 
 /* --- home sections ---------------------------------------------------------
    The page has a rhythm, not a list. Sections alternate between RELEASE
@@ -848,19 +848,6 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 }
 .home-sec--compress .home-sec__head { margin-bottom: var(--s-6); }
 
-/* Studio is the one place the page stops and speaks. Narrow measure, no image,
-   type doing the work — the compression between two image-led sections. */
-.home-studio { max-width: 46ch; }
-.home-studio p + p { margin-top: var(--s-5); }
-
-/* footer */
-.footer__row {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  justify-content: space-between; gap: var(--s-5);
-  padding-bottom: var(--s-6);
-}
-.footer__cta { display: inline-block; color: var(--n-0); }
-.footer__social { font-size: var(--type-body-sm); }
 
 
 /* --- small media grids ----------------------------------------------------- */

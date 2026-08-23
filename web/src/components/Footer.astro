@@ -1,6 +1,15 @@
 ---
-/* Deliberately thin. The address, email and phone belong to Contact — a footer
- * that repeats them in full makes every page end twice (design memory R9).
+/* One thin line, and nothing else.
+ *
+ * This used to open with a large "Let's build something that lasts." above a
+ * row of social links, which meant every page — however short — ended with a
+ * band of empty space and a second call to action the reader had not asked for.
+ * On a page with four lines of text it was most of what you saw.
+ *
+ * The address, email and phone belong to Contact; the practice's own line
+ * belongs on the pages that are actually saying something. What is left is the
+ * minimum a footer owes anyone: who this is, where they are, and where to find
+ * them.
  */
 import type { Settings } from "../lib/content";
 
@@ -10,22 +19,17 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="footer" data-ground="dark">
-  <div class="container">
-    <div class="footer__row">
-      <a class="footer__cta t-h2" href="/contact/">{settings.copy.footerCta}</a>
-      <p class="footer__social">
-        {settings.social.map((s, i) => (
-          <>
-            {i > 0 && " · "}
-            <a class="tl" href={s.url} rel="noopener">{s.label}</a>
-          </>
-        ))}
-      </p>
-    </div>
-    <div class="footer__base">
-      <span>© {year} {settings.name}</span>
-      <span>{settings.copy.locationLabel}</span>
-      <span>{settings.domain}</span>
-    </div>
+  <div class="container footer__base">
+    <span>© {year} {settings.name}</span>
+    <span>{settings.copy.locationLabel}</span>
+    <span>{settings.domain}</span>
+    <span class="footer__social">
+      {settings.social.map((s, i) => (
+        <>
+          {i > 0 && " · "}
+          <a class="tl" href={s.url} rel="noopener">{s.label}</a>
+        </>
+      ))}
+    </span>
   </div>
 </footer>

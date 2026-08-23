@@ -19,6 +19,11 @@
     }
   });
 
+  /* Claim the reveals. Until this line runs, the stylesheet leaves everything
+     visible — so a parse error, a blocked script or an old browser costs the
+     animation and nothing else. */
+  document.documentElement.classList.add("js");
+
   var reveals = document.querySelectorAll(".rv, .rvc, .line--draw");
   function revealAll() {
     reveals.forEach(function (el) {
@@ -42,6 +47,23 @@
       });
     }, { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
     reveals.forEach(function (el) { io.observe(el); });
+
+    /* Nothing stays hidden longer than this, whatever the observer does.
+       Anything already on screen when the page settles has plainly been
+       intersecting for a while, and if the observer has not said so by now it
+       is not going to. A missed reveal costs an animation; a permanently
+       clipped card costs the reader the entire page, and reads as a site that
+       never finished loading. */
+    setTimeout(function () {
+      reveals.forEach(function (el) {
+        if (el.classList.contains("in")) return;
+        var r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) {
+          el.classList.add("in");
+          if (el.classList.contains("rvc")) el.style.clipPath = "none";
+        }
+      });
+    }, 1200);
   }
 
   /* --- 1b. the opening sequence --------------------------------------------
