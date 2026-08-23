@@ -1,0 +1,48 @@
+---
+/* The horizontal rail: one project's writeup, then its photographs.
+ *
+ * Rendered once, into the project's own page. The index panel does not
+ * duplicate it — it fetches that page and lifts this element out. One source of
+ * truth, the page works with JavaScript off, and an index of two hundred
+ * projects ships no project markup at all until something is opened (P7: right
+ * is the room).
+ *
+ * The note travels INSIDE the strip rather than sitting in a fixed column
+ * beside it, so it scrolls away with the photographs instead of holding the
+ * screen for the whole project.
+ */
+import Figure from "./Figure.astro";
+import type { Project } from "../lib/content";
+
+interface Props { project: Project; priority?: boolean }
+const { project, priority = false } = Astro.props;
+
+// Title and location are dropped from the meta: the index row above the rail
+// already carries both, and repeating them was the loudest thing in the panel.
+// Architect is dropped too — it is btl on every project, so it says nothing.
+const meta: [string, string | number][] = [];
+if (project.year) meta.push(["Year", project.year]);
+if (project.credits.photographer) meta.push(["Photograph", project.credits.photographer]);
+---
+
+<div class="rail" data-rail data-slug={project.slug} data-title={project.title}>
+  <div class="rail__note">
+    <h2 class="rail__title">{project.title}</h2>
+    {project.description && <p class="rail__text">{project.description}</p>}
+    <dl class="rail__meta">
+      {meta.map(([k, v]) => (
+        <div class="rail__m"><dt>{k}</dt><dd>{v}</dd></div>
+      ))}
+    </dl>
+  </div>
+  {project.images.map((image, j) => (
+    <figure class="rail__f">
+      <Figure
+        image={image}
+        sizes="(min-width:52rem) 56vw, 88vw"
+        priority={priority && j === 0}
+      />
+      {image.caption && <figcaption>{image.caption}</figcaption>}
+    </figure>
+  ))}
+</div>

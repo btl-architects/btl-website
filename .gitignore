@@ -1,0 +1,49 @@
+# dependencies
+node_modules/
+.pnp*
+
+# build output
+dist/
+.astro/
+.netlify/
+studio/dist/
+studio/.sanity/
+
+# secrets — never commit
+.env
+.env.*
+!.env.example
+studio/.migrate-cache.json
+
+# ---------------------------------------------------------------------------
+# Photographs and source media do NOT live in git.
+#
+# Two reasons, and both are hard limits rather than preferences. GitHub rejects
+# any single file over 100 MB, and the Nelly House drone footage runs to 511 MB
+# a file — the whole reference folder is 3.7 GB. And the implementation contract
+# forbids committing photographs at all: the Nelly House images are Condé Nast's
+# and are licensed to btl, not to a public code host.
+#
+# The photographs' real home is Sanity, which is the entire point of putting a
+# CMS in. The untouched originals need their own backup — Drive, or the
+# practice's own storage — because git is not a photo archive and should not be
+# asked to be one.
+# ---------------------------------------------------------------------------
+references and inspirations/
+projects/*/images/
+site/assets/img/
+site/assets/video/
+web/public/assets/img/
+web/public/assets/video/
+*.mov
+*.mp4
+*.MP4
+*.webm
+
+# packaged copies — rebuildable, and one holds the photographs inline
+*.zip
+btl-projects.html
+_claude-design-upload/
+
+# os
+.DS_Store

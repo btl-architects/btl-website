@@ -1,0 +1,874 @@
+{
+ "logo-white": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/_claude-design-upload/logos/btl-architects-logo-white.png",
+  "w": 4134,
+  "h": 3117,
+  "ratio": 1.3263,
+  "sizes": [
+   {
+    "w": 140,
+    "file": "img/logo-white-140.webp"
+   },
+   {
+    "w": 280,
+    "file": "img/logo-white-280.webp"
+   }
+  ]
+ },
+ "logo-dark": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/_claude-design-upload/logos/btl-architects-logo-darkgrey.png",
+  "w": 4134,
+  "h": 3117,
+  "ratio": 1.3263,
+  "sizes": [
+   {
+    "w": 140,
+    "file": "img/logo-dark-140.webp"
+   },
+   {
+    "w": 280,
+    "file": "img/logo-dark-280.webp"
+   }
+  ]
+ },
+ "office-01": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.03.jpeg",
+  "w": 1280,
+  "h": 720,
+  "ratio": 1.7778,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-01-640.webp"
+   },
+   {
+    "w": 1024,
+    "file": "img/office-01-1024.webp"
+   }
+  ]
+ },
+ "office-02": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.04 (1).jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-02-640.webp"
+   }
+  ]
+ },
+ "office-03": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.04.jpeg",
+  "w": 1280,
+  "h": 720,
+  "ratio": 1.7778,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-03-640.webp"
+   },
+   {
+    "w": 1024,
+    "file": "img/office-03-1024.webp"
+   }
+  ]
+ },
+ "office-04": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.05 (1).jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-04-640.webp"
+   }
+  ]
+ },
+ "office-05": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.05 (2).jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-05-640.webp"
+   }
+  ]
+ },
+ "office-06": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.05.jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-06-640.webp"
+   }
+  ]
+ },
+ "office-07": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.06 (1).jpeg",
+  "w": 1280,
+  "h": 720,
+  "ratio": 1.7778,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-07-640.webp"
+   },
+   {
+    "w": 1024,
+    "file": "img/office-07-1024.webp"
+   }
+  ]
+ },
+ "office-08": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.06.jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-08-640.webp"
+   }
+  ]
+ },
+ "office-09": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.07 (1).jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-09-640.webp"
+   }
+  ]
+ },
+ "office-10": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.07.jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-10-640.webp"
+   }
+  ]
+ },
+ "office-11": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Office/WhatsApp Image 2026-08-11 at 14.35.08.jpeg",
+  "w": 720,
+  "h": 1280,
+  "ratio": 0.5625,
+  "sizes": [
+   {
+    "w": 640,
+    "file": "img/office-11-640.webp"
+   }
+  ]
+ },
+ "person-01": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/people/588412564_18545581771041246_4859654510672750596_n.jpg",
+  "w": 576,
+  "h": 720,
+  "ratio": 0.8,
+  "sizes": [
+   {
+    "w": 400,
+    "file": "img/person-01-400.webp"
+   },
+   {
+    "w": 576,
+    "file": "img/person-01-576.webp"
+   }
+  ]
+ },
+ "person-02": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/people/714670814_18584245303062716_9143330805081727911_n.jpg",
+  "w": 864,
+  "h": 1080,
+  "ratio": 0.8,
+  "sizes": [
+   {
+    "w": 400,
+    "file": "img/person-02-400.webp"
+   },
+   {
+    "w": 576,
+    "file": "img/person-02-576.webp"
+   },
+   {
+    "w": 864,
+    "file": "img/person-02-864.webp"
+   }
+  ]
+ },
+ "nelly-house-hook": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/EXTERIOR VIEW(1).jpg",
+  "w": 6000,
+  "h": 4000,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 768,
+    "file": "img/nelly-house-hook-768.webp"
+   },
+   {
+    "w": 1280,
+    "file": "img/nelly-house-hook-1280.webp"
+   },
+   {
+    "w": 1920,
+    "file": "img/nelly-house-hook-1920.webp"
+   }
+  ]
+ },
+ "nelly-house-01": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/EXTERIOR VIEW(1).jpg",
+  "w": 6000,
+  "h": 4000,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-01-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-01-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-01-1200.webp"
+   }
+  ]
+ },
+ "nelly-house-02": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/AERIAL(2).jpg",
+  "w": 8064,
+  "h": 4536,
+  "ratio": 1.7778,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-02-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-02-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-02-1200.webp"
+   }
+  ]
+ },
+ "nelly-house-03": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/VERANDAH.jpg",
+  "w": 3992,
+  "h": 5988,
+  "ratio": 0.6667,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-03-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-03-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-03-1200.webp"
+   }
+  ]
+ },
+ "nelly-house-04": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/LIVING(1).jpg",
+  "w": 5994,
+  "h": 3996,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-04-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-04-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-04-1200.webp"
+   }
+  ]
+ },
+ "nelly-house-05": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/INSIDE COURTAYRD(1).jpg",
+  "w": 6000,
+  "h": 4000,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-05-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-05-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-05-1200.webp"
+   }
+  ]
+ },
+ "nelly-house-06": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/LIBRARY.jpg",
+  "w": 3991,
+  "h": 5987,
+  "ratio": 0.6666,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-06-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-06-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-06-1200.webp"
+   }
+  ]
+ },
+ "house-two-hook": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6289 copy.jpg",
+  "w": 8258,
+  "h": 5509,
+  "ratio": 1.499,
+  "sizes": [
+   {
+    "w": 768,
+    "file": "img/house-two-hook-768.webp"
+   },
+   {
+    "w": 1280,
+    "file": "img/house-two-hook-1280.webp"
+   },
+   {
+    "w": 1920,
+    "file": "img/house-two-hook-1920.webp"
+   }
+  ]
+ },
+ "house-two-01": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6289 copy.jpg",
+  "w": 8258,
+  "h": 5509,
+  "ratio": 1.499,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-01-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-01-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-01-1200.webp"
+   }
+  ]
+ },
+ "house-two-02": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6128-Edit copy.jpg",
+  "w": 8257,
+  "h": 5511,
+  "ratio": 1.4983,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-02-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-02-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-02-1200.webp"
+   }
+  ]
+ },
+ "house-two-03": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6163-Edit copy.jpg",
+  "w": 5505,
+  "h": 8257,
+  "ratio": 0.6667,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-03-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-03-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-03-1200.webp"
+   }
+  ]
+ },
+ "house-two-04": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6212 copy.jpg",
+  "w": 7709,
+  "h": 5504,
+  "ratio": 1.4006,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-04-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-04-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-04-1200.webp"
+   }
+  ]
+ },
+ "house-two-05": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6264-Edit copy.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-05-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-05-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-05-1200.webp"
+   }
+  ]
+ },
+ "house-two-06": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6528-Edit copy.jpg",
+  "w": 8257,
+  "h": 5506,
+  "ratio": 1.4996,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-06-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-06-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-06-1200.webp"
+   }
+  ]
+ },
+ "house-three-hook": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 1pg.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 768,
+    "file": "img/house-three-hook-768.webp"
+   },
+   {
+    "w": 1280,
+    "file": "img/house-three-hook-1280.webp"
+   },
+   {
+    "w": 1920,
+    "file": "img/house-three-hook-1920.webp"
+   }
+  ]
+ },
+ "house-three-01": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 1pg.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-01-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-01-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-01-1200.webp"
+   }
+  ]
+ },
+ "house-three-02": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 6.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-02-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-02-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-02-1200.webp"
+   }
+  ]
+ },
+ "house-three-03": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 3.jpg",
+  "w": 5504,
+  "h": 8256,
+  "ratio": 0.6667,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-03-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-03-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-03-1200.webp"
+   }
+  ]
+ },
+ "house-three-04": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 7.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-04-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-04-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-04-1200.webp"
+   }
+  ]
+ },
+ "house-three-05": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 13.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-05-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-05-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-05-1200.webp"
+   }
+  ]
+ },
+ "house-three-06": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 5.jpg",
+  "w": 5504,
+  "h": 8260,
+  "ratio": 0.6663,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-06-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-06-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-06-1200.webp"
+   }
+  ]
+ },
+ "house-four-hook": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01511.jpg",
+  "w": 6986,
+  "h": 4657,
+  "ratio": 1.5001,
+  "sizes": [
+   {
+    "w": 768,
+    "file": "img/house-four-hook-768.webp"
+   },
+   {
+    "w": 1280,
+    "file": "img/house-four-hook-1280.webp"
+   },
+   {
+    "w": 1920,
+    "file": "img/house-four-hook-1920.webp"
+   }
+  ]
+ },
+ "house-four-01": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01511.jpg",
+  "w": 6986,
+  "h": 4657,
+  "ratio": 1.5001,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-01-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-01-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-01-1200.webp"
+   }
+  ]
+ },
+ "house-four-02": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01444.jpg",
+  "w": 6563,
+  "h": 4597,
+  "ratio": 1.4277,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-02-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-02-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-02-1200.webp"
+   }
+  ]
+ },
+ "house-four-03": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01414.jpg",
+  "w": 4590,
+  "h": 6547,
+  "ratio": 0.7011,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-03-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-03-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-03-1200.webp"
+   }
+  ]
+ },
+ "house-four-04": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01502.jpg",
+  "w": 6740,
+  "h": 4493,
+  "ratio": 1.5001,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-04-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-04-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-04-1200.webp"
+   }
+  ]
+ },
+ "house-four-05": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01446.jpg",
+  "w": 4576,
+  "h": 6864,
+  "ratio": 0.6667,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-05-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-05-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-05-1200.webp"
+   }
+  ]
+ },
+ "house-four-06": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01560.jpg",
+  "w": 6619,
+  "h": 4374,
+  "ratio": 1.5133,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-06-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-06-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-06-1200.webp"
+   }
+  ]
+ },
+ "nelly-house-07": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Nelly House/ENTRANCE FOYER.jpg",
+  "w": 6000,
+  "h": 4000,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/nelly-house-07-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/nelly-house-07-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/nelly-house-07-1200.webp"
+   }
+  ]
+ },
+ "house-two-07": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 2/ARN_6620-Edit copy.jpg",
+  "w": 7861,
+  "h": 5421,
+  "ratio": 1.4501,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-two-07-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-two-07-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-two-07-1200.webp"
+   }
+  ]
+ },
+ "house-three-07": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 3/BTL 15.jpg",
+  "w": 8256,
+  "h": 5504,
+  "ratio": 1.5,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-three-07-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-three-07-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-three-07-1200.webp"
+   }
+  ]
+ },
+ "house-four-07": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/Home 4/Images/VK_01542.jpg",
+  "w": 6868,
+  "h": 4579,
+  "ratio": 1.4999,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/house-four-07-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/house-four-07-768.webp"
+   },
+   {
+    "w": 1200,
+    "file": "img/house-four-07-1200.webp"
+   }
+  ]
+ },
+ "founders": {
+  "src": "/Users/ousephpaul/Documents/Webapps/btl website/references and inspirations/people/WhatsApp Image 2026-08-12 at 19.55.05.jpeg",
+  "w": 960,
+  "h": 1280,
+  "ratio": 0.75,
+  "sizes": [
+   {
+    "w": 480,
+    "file": "img/founders-480.webp"
+   },
+   {
+    "w": 768,
+    "file": "img/founders-768.webp"
+   },
+   {
+    "w": 960,
+    "file": "img/founders-960.webp"
+   }
+  ]
+ }
+}

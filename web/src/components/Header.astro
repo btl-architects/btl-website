@@ -1,0 +1,85 @@
+---
+/* Masthead, primary nav, social rail and the mobile menu.
+ *
+ * The nav always navigates to a page — never to an anchor on the home page. A
+ * menu item that scrolls you somewhere instead of taking you where it says it
+ * goes reads as a broken link, not as a clever one-pager. The home page is
+ * still a one-pager: you scroll it, but the nav is navigation.
+ *
+ * Nav, social and contact are all settings content (contract §1 forbids
+ * hard-coding any of them), so adding a destination is an edit in the CMS, not
+ * a deploy.
+ */
+import Figure from "./Figure.astro";
+import type { Settings } from "../lib/content";
+
+interface Props { settings: Settings; current: string }
+const { settings, current } = Astro.props;
+
+/** Settings still carry the prototype's page keys; routes are directories. */
+const hrefFor = (key: string) => (key === "index" ? "/" : `/${key}/`);
+
+const logo = { key: "logo-white", alt: "btl architects" };
+---
+
+<nav class="srail" aria-label="btl architects elsewhere">
+  {settings.social.map((s) => (
+    <a class="srail__i" href={s.url} rel="noopener" target="_blank">{s.label}</a>
+  ))}
+</nav>
+
+<header class="header" data-over="media">
+  <div class="header__inner">
+    <a class="header__logo" href="/" aria-label="btl architects — home">
+      <Figure image={logo} sizes="(min-width: 48rem) 4.4rem, 3.1rem" eager />
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        {settings.nav.map((n) => (
+          <li>
+            <a
+              class="nav__link"
+              href={hrefFor(n.href)}
+              aria-current={n.href === current ? "page" : undefined}
+            >{n.label}</a>
+          </li>
+        ))}
+        <span class="nav__ind" aria-hidden="true"></span>
+      </ul>
+    </nav>
+    <button class="burger" type="button" data-menu-open aria-expanded="false" aria-controls="menu">
+      Menu
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 8h16M4 16h16" />
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="menu" id="menu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="menu__top">
+    <Figure image={logo} sizes="3.4rem" />
+    <button class="burger" type="button" data-menu-close>
+      Close
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+  </div>
+  <ul class="menu__list">
+    {settings.nav.map((n) => (
+      <li>
+        <a
+          class="menu__link"
+          href={hrefFor(n.href)}
+          aria-current={n.href === current ? "page" : undefined}
+        >{n.label}</a>
+      </li>
+    ))}
+  </ul>
+  <div class="menu__media"><slot name="menu-media" /></div>
+  <div class="menu__foot">
+    <address style="font-style:normal" set:html={settings.contact.address.join("<br>")} />
+    <a class="tl" href={`tel:${settings.contact.phoneHref}`}>{settings.contact.phone}</a>
+  </div>
+</div>

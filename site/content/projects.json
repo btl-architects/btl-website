@@ -1,0 +1,358 @@
+[
+  {
+    "title": "Nelly House",
+    "slug": "nelly-house",
+    "category": [
+      "houses"
+    ],
+    "location": "Thirunelly, Wayanad",
+    "year": null,
+    "workStatus": "completed",
+    "lifecycle": "published",
+    "description": "Paddy fields to the front, a coffee plantation behind, the Brahmagiri Hills on the horizon. The house was sketched around the old trees rather than over them, its walls rammed from the earth dug out to make the pond.",
+    "featured": true,
+    "order": 0,
+    "credits": {
+      "architect": "btl architects",
+      "photographer": "Abhimanyu K V",
+      "collaborators": []
+    },
+    "images": [
+      {
+        "src": "Nelly House/EXTERIOR VIEW(1).jpg",
+        "alt": "Nelly House seen from the approach, rammed earth walls under a terracotta roof",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "cover",
+        "hotspot": null
+      },
+      {
+        "src": "Nelly House/AERIAL(2).jpg",
+        "alt": "The house among the trees, seen from above",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Nelly House/VERANDAH.jpg",
+        "alt": "The verandah, half indoors and half out",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Nelly House/LIVING(1).jpg",
+        "alt": "The living room, furnished from the owners' own collection",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Nelly House/INSIDE COURTAYRD(1).jpg",
+        "alt": "The inner courtyard, screened by bamboo grown on site",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Nelly House/LIBRARY.jpg",
+        "alt": "The library, framed by a salvaged window looking over the fields",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Nelly House/ENTRANCE FOYER.jpg",
+        "alt": "The entrance foyer and its reclaimed door",
+        "caption": null,
+        "credit": "Abhimanyu K V",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null
+    },
+    "related": []
+  },
+  {
+    "title": "House Two",
+    "slug": "house-two",
+    "category": [
+      "houses"
+    ],
+    "location": "Kozhikode",
+    "year": null,
+    "workStatus": "completed",
+    "lifecycle": "published",
+    "description": "PLACEHOLDER — one short paragraph about the project as a whole, written by the studio. Location is the only metadata shown; everything else stays in the record.",
+    "featured": true,
+    "order": 1,
+    "credits": {
+      "architect": "btl architects",
+      "photographer": "Photographer to be confirmed",
+      "collaborators": []
+    },
+    "images": [
+      {
+        "src": "Home 2/ARN_6289 copy.jpg",
+        "alt": "A living room in warm earth tones",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "cover",
+        "hotspot": null
+      },
+      {
+        "src": "Home 2/ARN_6128-Edit copy.jpg",
+        "alt": "Placeholder alt text — bedroom with a writing desk",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 2/ARN_6163-Edit copy.jpg",
+        "alt": "Placeholder alt text — a tall interior view",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 2/ARN_6212 copy.jpg",
+        "alt": "Placeholder alt text — the kitchen counter",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 2/ARN_6264-Edit copy.jpg",
+        "alt": "Placeholder alt text — panelled corridor",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 2/ARN_6528-Edit copy.jpg",
+        "alt": "Placeholder alt text — dining area",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 2/ARN_6620-Edit copy.jpg",
+        "alt": "Placeholder alt text — seating by the window",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null
+    },
+    "related": []
+  },
+  {
+    "title": "House Three",
+    "slug": "house-three",
+    "category": [
+      "houses"
+    ],
+    "location": "Kozhikode",
+    "year": null,
+    "workStatus": "completed",
+    "lifecycle": "published",
+    "description": "PLACEHOLDER — one short paragraph about the project as a whole, written by the studio.",
+    "featured": true,
+    "order": 2,
+    "credits": {
+      "architect": "btl architects",
+      "photographer": "Photographer to be confirmed",
+      "collaborators": []
+    },
+    "images": [
+      {
+        "src": "Home 3/BTL 1pg.jpg",
+        "alt": "A panelled living space with a timber screen",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "cover",
+        "hotspot": null
+      },
+      {
+        "src": "Home 3/BTL 6.jpg",
+        "alt": "Placeholder alt text — living area",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 3/BTL 3.jpg",
+        "alt": "Placeholder alt text — a tall interior",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 3/BTL 7.jpg",
+        "alt": "Placeholder alt text — kitchen in green",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 3/BTL 13.jpg",
+        "alt": "Placeholder alt text — dining",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 3/BTL 5.jpg",
+        "alt": "Placeholder alt text — bedroom",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 3/BTL 15.jpg",
+        "alt": "Placeholder alt text — planted corner",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null
+    },
+    "related": []
+  },
+  {
+    "title": "House Four",
+    "slug": "house-four",
+    "category": [
+      "interiors"
+    ],
+    "location": "Calicut",
+    "year": null,
+    "workStatus": "completed",
+    "lifecycle": "published",
+    "description": "PLACEHOLDER — one short paragraph about the project as a whole, written by the studio.",
+    "featured": false,
+    "order": 3,
+    "credits": {
+      "architect": "btl architects",
+      "photographer": "Photographer to be confirmed",
+      "collaborators": []
+    },
+    "images": [
+      {
+        "src": "Home 4/Images/VK_01511.jpg",
+        "alt": "A planted terrace above the city",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "cover",
+        "hotspot": null
+      },
+      {
+        "src": "Home 4/Images/VK_01444.jpg",
+        "alt": "Placeholder alt text — the study",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 4/Images/VK_01414.jpg",
+        "alt": "Placeholder alt text — a tall corner",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 4/Images/VK_01502.jpg",
+        "alt": "Placeholder alt text — living space",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 4/Images/VK_01446.jpg",
+        "alt": "Placeholder alt text — detail",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 4/Images/VK_01560.jpg",
+        "alt": "Placeholder alt text — dining",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      },
+      {
+        "src": "Home 4/Images/VK_01542.jpg",
+        "alt": "Placeholder alt text — the terrace",
+        "caption": null,
+        "credit": "Photographer to be confirmed",
+        "rights": "client-supplied",
+        "kind": "full",
+        "hotspot": null
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null
+    },
+    "related": []
+  }
+]

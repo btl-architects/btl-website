@@ -1,0 +1,60 @@
+---
+/* The page shell. Every route renders through this and no route writes its own
+ * <head>, so the font preload, the token order and the skip link cannot drift
+ * apart between pages.
+ *
+ * The three stylesheets are imported in cascade order — tokens define the
+ * vocabulary, base sets the elements, components build on both. That order is
+ * load-bearing; it is not alphabetical by accident.
+ */
+import "../styles/tokens.css";
+import "../styles/base.css";
+import "../styles/components.css";
+
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { getSettings } from "../lib/content";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Which nav item is the current page, by its settings href key. */
+  current?: string;
+  /** Body-level ground, so the header knows what it is sitting on. */
+  ground?: "dark" | "light" | "media";
+}
+
+const { title, description, current = "", ground = "dark" } = Astro.props;
+const settings = getSettings();
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#050505" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <link
+      rel="preload"
+      href="/assets/fonts/Satoshi-Variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  </head>
+  <body id="top" data-ground={ground}>
+    <a class="skip" href="#main">Skip to content</a>
+    <Header settings={settings} current={current} />
+    <slot />
+    <Footer settings={settings} />
+    <script src="/scripts/site.js" is:inline defer></script>
+  </body>
+</html>

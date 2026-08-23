@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Reset, elements, layout primitives
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: var(--lead-normal);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
+}
+
+/* height:auto is load-bearing: every <img> carries intrinsic width/height
+   attributes to reserve its box, and without this the attribute height wins
+   over any aspect-ratio we set later. */
+img, video { display: block; max-width: 100%; height: auto; }
+button { font: inherit; color: inherit; }
+
+h1, h2, h3, h4, h5, h6, p, figure, blockquote { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+a { color: inherit; text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection { background: var(--mark); color: var(--n-950); }
+
+/* --- skip link ------------------------------------------------------------ */
+.skip {
+  position: absolute; left: var(--s-4); top: var(--s-4);
+  z-index: 200;
+  padding: var(--s-3) var(--s-5);
+  background: var(--text-primary); color: var(--surface);
+  font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+  transform: translateY(-200%);
+}
+.skip:focus { transform: none; }
+
+/* Visually hidden but read aloud. Used for the home page's h1: the hero is
+   wordless by design, and a document still needs a heading. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ==========================================================================
+   Layout primitives — nothing else writes raw spacing
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-margin);
+}
+
+.bleed { width: 100%; }
+
+.stack > * + * { margin-top: var(--flow, var(--s-5)); }
+
+.section { padding-block: var(--space-section); }
+.section--lg { padding-block: var(--space-section-lg); }
+
+.ratio { position: relative; overflow: hidden; }
+.ratio > img, .ratio > video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+/* ==========================================================================
+   Type roles
+   ========================================================================== */
+
+.t-display {
+  font-size: var(--type-display); font-weight: 900;
+  line-height: 0.95; letter-spacing: var(--track-display);
+  text-wrap: balance;
+}
+.t-h1 {
+  font-size: var(--type-h1); font-weight: 900;
+  line-height: var(--lead-tight); letter-spacing: var(--track-h1);
+  text-wrap: balance;
+}
+.t-h2 {
+  font-size: var(--type-h2); font-weight: 700;
+  line-height: 1.05; letter-spacing: var(--track-h2);
+  text-wrap: balance;
+}
+.t-h3 {
+  font-size: var(--type-h3); font-weight: 700;
+  line-height: 1.15; letter-spacing: var(--track-h3);
+}
+.t-lead {
+  font-size: var(--type-lead); font-weight: 500;
+  line-height: var(--lead-snug); letter-spacing: var(--track-lead);
+  max-width: var(--measure-lead);
+}
+.t-body { max-width: var(--measure); }
+.t-body--wide { max-width: 74ch; }
+.t-caption {
+  font-size: var(--type-caption); line-height: 1.4;
+  color: var(--text-secondary);
+}
+.t-meta, .eyebrow {
+  font-size: var(--type-meta); font-weight: 500;
+  line-height: 1.2; text-transform: uppercase;
+  letter-spacing: var(--track-meta);
+  color: var(--text-tertiary);
+}
+
+.muted { color: var(--text-secondary); }
+
+/* ==========================================================================
+   Motion — one curve, five durations. Reveals are decoration, never delivery.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  .rv {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity var(--dur-slow) var(--ease),
+                transform var(--dur-slow) var(--ease);
+  }
+  .rv.in { opacity: 1; transform: none; }
+  .rv[data-delay="1"] { transition-delay: 80ms; }
+  .rv[data-delay="2"] { transition-delay: 160ms; }
+  .rv[data-delay="3"] { transition-delay: 240ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

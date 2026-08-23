@@ -1,0 +1,101 @@
+---
+/* People.
+ *
+ * The founders photograph carries the page and the names sit inside it. Below
+ * that: what the practice is, then everyone else as a typographic list that
+ * reveals a portrait on hover, then alumni as a second tier.
+ *
+ * Fully structured underneath — name, prefix, role, bio, portrait, tier, order,
+ * active. Adding a seventh person or retiring a third changes nothing about the
+ * composition.
+ */
+import Base from "../../layouts/Base.astro";
+import Figure from "../../components/Figure.astro";
+import { getPeople, getHome } from "../../lib/content";
+
+const people = getPeople();
+const principals = people.filter((p) => p.tier === "principal");
+const team = people.filter((p) => p.tier === "team");
+const alumni = people.filter((p) => p.tier === "alumni");
+const studio = getHome().studio;
+
+const founders = {
+  key: "founders",
+  alt: `${principals.map((p) => `${p.prefix} ${p.name}`).join(" and ")} outside the studio`,
+};
+---
+
+<Base
+  title="People — btl architects"
+  description="The people behind btl architects."
+  current="people"
+>
+  <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+    <h1 class="sr-only">People — btl architects</h1>
+
+    <div class="plead rv">
+      <Figure image={founders} sizes="(min-width:48rem) 44rem, 92vw" priority />
+      <div class="plead__names">
+        {principals.map((p) => (
+          <span class="plead__p">
+            <span class="plead__n">{p.prefix} {p.name}</span>
+            <span class="plead__r">{p.role}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <div class="container" style="padding-bottom:var(--space-section)">
+      <p class="t-lead rv" style="margin-top:var(--s-8); max-width:var(--measure-lead)">
+        {studio.lead}
+      </p>
+
+      {principals.some((p) => p.bio) && (
+        <div style="max-width:var(--measure)">
+          {principals.filter((p) => p.bio).map((p, i) => (
+            <p class="t-body rv" data-delay={i} style="margin-top:var(--s-5); color:var(--text-secondary)">
+              <strong style="color:var(--text-primary)">{p.name}</strong> — {p.bio}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {team.length > 0 && (
+        <section class="team">
+          <h2 class="eyebrow" style="margin-bottom:var(--s-5)">The team</h2>
+          <ul class="team__list">
+            {team.map((p) => (
+              <li class="trow">
+                <span class="trow__link">
+                  {p.portrait && (
+                    <span class="trow__p">
+                      <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
+                    </span>
+                  )}
+                  <span class="trow__n">{p.prefix} {p.name}</span>
+                  <span class="trow__r">{p.role}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {alumni.length > 0 && (
+        <section class="team">
+          <h2 class="eyebrow" style="margin-bottom:var(--s-5)">Previously at btl</h2>
+          <ul class="team__list">
+            {alumni.map((p) => (
+              <li class="trow">
+                <span class="trow__link">
+                  <span class="trow__n">{p.prefix} {p.name}</span>
+                  <span class="trow__r">{p.role}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  </main>
+</Base>

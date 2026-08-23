@@ -1,0 +1,15 @@
+---
+import Base from "../../layouts/Base.astro";
+import ProjectIndex from "../../components/ProjectIndex.astro";
+import { getProjects } from "../../lib/content";
+
+const projects = getProjects();
+---
+
+<Base
+  title="Projects — btl architects"
+  description="Selected work by btl architects."
+  current="projects"
+>
+  <ProjectIndex projects={projects} heading="Projects — btl architects" />
+</Base>

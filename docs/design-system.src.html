@@ -1,0 +1,2100 @@
+<title>btl architects — Design System &amp; Technical Architecture</title>
+
+<style>
+@font-face{
+  font-family:"Satoshi";
+  src:url(data:font/woff2;base64,__SATOSHI_B64__) format("woff2");
+  font-weight:300 900; font-style:normal; font-display:swap;
+}
+
+/* ============================================================
+   TOKENS — the same tokens this document specifies for the site
+   ============================================================ */
+:root{
+  color-scheme:light;
+  --ground:#FFFFFF; --ground-2:#F7F7F7; --ground-3:#EDEDED;
+  --ink:#050505; --ink-2:#5C5C5C; --ink-3:#8A8A8A;
+  --rule:#DCDCDC; --rule-2:#BFBFBF;
+  --accent:#0037FF; --accent-ink:#FFFFFF;
+  --mark:#ED2941;
+  --danger:#BD1644;
+  --code-bg:#F4F5F9; --code-ink:#151B3D;
+  --measure:66ch;
+  --gutter:clamp(1.25rem,0.6rem + 2.6vw,4rem);
+  --arch:clamp(1.5rem,3.5vw,3rem);
+  --s-1:0.25rem;--s-2:0.5rem;--s-3:0.75rem;--s-4:1rem;--s-5:1.5rem;
+  --s-6:2rem;--s-7:3rem;--s-8:4rem;--s-9:6rem;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --ground:#050505; --ground-2:#0E0E0E; --ground-3:#181818;
+    --ink:#FFFFFF; --ink-2:#BFBFBF; --ink-3:#8A8A8A;
+    --rule:#242424; --rule-2:#3A3A3A;
+    --accent:#00D0FF; --accent-ink:#050505;
+    --mark:#00FF66;
+    --danger:#FF5C7A;
+    --code-bg:#0C1020; --code-ink:#C4CFF0;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#050505; --ground-2:#0E0E0E; --ground-3:#181818;
+  --ink:#FFFFFF; --ink-2:#BFBFBF; --ink-3:#8A8A8A;
+  --rule:#242424; --rule-2:#3A3A3A;
+  --accent:#00D0FF; --accent-ink:#050505;
+  --mark:#00FF66;
+  --danger:#FF5C7A;
+  --code-bg:#0C1020; --code-ink:#C4CFF0;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --ground:#FFFFFF; --ground-2:#F7F7F7; --ground-3:#EDEDED;
+  --ink:#050505; --ink-2:#5C5C5C; --ink-3:#8A8A8A;
+  --rule:#DCDCDC; --rule-2:#BFBFBF;
+  --accent:#0037FF; --accent-ink:#FFFFFF;
+  --mark:#ED2941;
+  --danger:#BD1644;
+  --code-bg:#F4F5F9; --code-ink:#151B3D;
+}
+/* a photograph is always a dark ground */
+.on-media{--mark:#00FF66;}
+
+*,*::before,*::after{box-sizing:border-box;}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Satoshi",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-weight:400;font-size:clamp(1rem,0.97rem + 0.14vw,1.0625rem);
+  line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+}
+img{max-width:100%;display:block;}
+
+.wrap{max-width:104rem;margin-inline:auto;padding-inline:var(--gutter);}
+.cols{display:grid;grid-template-columns:1fr;}
+@media (min-width:66rem){
+  .cols{grid-template-columns:14rem minmax(0,1fr);gap:clamp(2rem,4vw,4.5rem);}
+}
+
+/* ---------- masthead ---------- */
+.top{padding-block:clamp(3rem,9vw,7rem) clamp(2rem,5vw,3.5rem);}
+.top__kicker{font-size:0.6875rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.18em;color:var(--ink-2);margin:0 0 var(--s-6);}
+.top h1{font-weight:900;font-size:clamp(2.75rem,0.8rem + 8.4vw,8rem);
+  line-height:0.92;letter-spacing:-0.04em;margin:0 0 var(--s-5);text-wrap:balance;}
+.top__sub{font-weight:500;font-size:clamp(1.125rem,1rem + 0.9vw,1.625rem);
+  line-height:1.3;letter-spacing:-0.014em;max-width:44ch;margin:0 0 var(--s-6);}
+.top__meta{display:flex;flex-wrap:wrap;gap:var(--s-2) var(--s-6);
+  font-size:0.6875rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.14em;color:var(--ink-3);}
+.top__nb{margin:var(--s-5) 0 0;padding-top:var(--s-3);border-top:1px solid var(--rule);
+  font-size:0.8125rem;line-height:1.45;color:var(--ink-2);max-width:52ch;}
+.top__nb em{font-style:italic;}
+
+/* hardcoded ground comparison — immune to this document's own theme */
+.grounds{display:grid;gap:var(--s-4);margin:var(--s-5) 0;}
+@media (min-width:44rem){ .grounds{grid-template-columns:1fr 1fr;} }
+.gr{padding:var(--s-6) var(--s-5) var(--s-5);border:1px solid var(--rule);}
+.gr--dark{background:#050505;}
+.gr--light{background:#FFFFFF;}
+.gr__ttl{font-weight:900;font-size:1.5rem;letter-spacing:-0.03em;line-height:1;margin:0 0 var(--s-3);}
+.gr--dark .gr__ttl{color:#FFFFFF;} .gr--light .gr__ttl{color:#050505;}
+.gr__bd{font-size:0.8125rem;line-height:1.5;margin:0 0 var(--s-4);max-width:none;}
+.gr--dark .gr__bd{color:#BFBFBF;} .gr--light .gr__bd{color:#5C5C5C;}
+.gr__lk{font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:0.14em;
+  text-decoration:none;display:inline-block;}
+.gr--dark .gr__lk{color:#00D0FF;} .gr--light .gr__lk{color:#0037FF;}
+.gr__rule{display:flex;align-items:flex-end;margin-top:var(--s-5);}
+.gr__rule span{flex:1 1 auto;height:4.05px;}
+.gr__rule svg{flex:0 0 auto;height:18px;display:block;}
+.gr--dark .gr__rule span{background:#00FF66;} .gr--dark .gr__rule path{fill:#00FF66;}
+.gr--light .gr__rule span{background:#ED2941;} .gr--light .gr__rule path{fill:#ED2941;}
+.gr__cap{font-size:0.625rem;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;
+  margin:0 0 var(--s-4);}
+.gr--dark .gr__cap{color:#8A8A8A;} .gr--light .gr__cap{color:#8A8A8A;}
+
+/* ---------- the real btl line ---------- */
+.line{display:flex;align-items:flex-end;width:100%;}
+.line__bar{flex:1 1 auto;background:var(--mark);}
+.line__fig{flex:0 0 auto;display:block;}
+.line__fig path{fill:var(--mark);}
+.line--xl .line__fig{height:52px;} .line--xl .line__bar{height:11.7px;}
+.line--m  .line__fig{height:30px;} .line--m  .line__bar{height:6.75px;}
+.line--s  .line__fig{height:18px;} .line--s  .line__bar{height:4.05px;}
+.line__bar--stub{flex:0 0 clamp(1.5rem,6vw,6rem);}
+
+/* ---------- contents ---------- */
+.toc{padding-block:var(--s-6) var(--s-7);}
+@media (min-width:66rem){
+  .toc{position:sticky;top:0;align-self:start;max-height:100dvh;overflow-y:auto;
+       padding-block:var(--s-8) var(--s-7);scrollbar-width:thin;}
+}
+.toc__h{display:none;font-size:0.625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.18em;color:var(--ink-3);margin:0 0 var(--s-4);}
+.toc ol{list-style:none;margin:0;padding:0;}
+.toc a{display:grid;grid-template-columns:1.9rem 1fr;gap:0.4rem;padding:0.36rem 0;
+  color:var(--ink-2);text-decoration:none;font-size:0.8125rem;line-height:1.3;
+  border-top:1px solid var(--rule);transition:color 160ms var(--ease);}
+.toc li:first-child a{border-top:0;}
+.toc a span{color:var(--ink-3);font-weight:500;font-size:0.625rem;letter-spacing:0.06em;padding-top:0.25em;}
+.toc a:hover,.toc a:focus-visible{color:var(--accent);}
+.toc a:hover span{color:var(--accent);}
+.toc summary{cursor:pointer;font-size:0.6875rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.16em;color:var(--ink-2);padding-block:var(--s-3);margin-bottom:var(--s-3);}
+@media (min-width:66rem){
+  .toc details{display:contents;} .toc summary{display:none;} .toc__h{display:block;}
+}
+
+main{padding-bottom:clamp(4rem,10vw,9rem);min-width:0;}
+
+/* ---------- parts & sections ---------- */
+.part{padding-top:clamp(3.5rem,8vw,7rem);}
+.part__id{display:flex;align-items:baseline;gap:var(--s-4);margin:var(--s-5) 0 var(--s-7);}
+.part__n{font-weight:900;font-size:clamp(3rem,2rem + 5vw,7rem);line-height:0.8;
+  letter-spacing:-0.05em;color:var(--mark);flex:0 0 auto;}
+.part__t{font-weight:900;font-size:clamp(1.5rem,1rem + 2.2vw,2.75rem);
+  line-height:1;letter-spacing:-0.03em;margin:0;}
+
+section[id]{padding-top:clamp(2.5rem,5vw,4rem);scroll-margin-top:1rem;}
+.sec__h{display:grid;gap:var(--s-2);margin:0 0 var(--s-5);
+  padding-bottom:var(--s-3);border-bottom:1px solid var(--ink);}
+@media (min-width:52rem){
+  .sec__h{grid-template-columns:3.5rem 1fr;gap:var(--s-4);align-items:baseline;}
+}
+.sec__n{font-weight:500;font-size:0.6875rem;letter-spacing:0.16em;color:var(--ink-3);}
+.sec__h h3{font-weight:700;font-size:clamp(1.25rem,1rem + 1.1vw,1.875rem);
+  line-height:1.08;letter-spacing:-0.024em;margin:0;}
+h4{font-weight:700;font-size:1rem;letter-spacing:-0.008em;margin:var(--s-6) 0 var(--s-3);}
+p{margin:0 0 var(--s-4);max-width:var(--measure);}
+.lead{font-weight:500;font-size:clamp(1.0625rem,1rem + 0.45vw,1.3125rem);
+  line-height:1.32;letter-spacing:-0.01em;max-width:48ch;margin-bottom:var(--s-5);}
+ul,ol.list{margin:0 0 var(--s-4);padding-left:1.1rem;max-width:var(--measure);}
+li{margin-bottom:var(--s-2);}
+li::marker{color:var(--ink-3);}
+strong{font-weight:700;}
+a{color:var(--accent);text-underline-offset:3px;text-decoration-thickness:1px;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:0.85em;background:var(--code-bg);color:var(--code-ink);
+  padding:0.1em 0.36em;border-radius:2px;}
+pre{background:var(--code-bg);color:var(--code-ink);padding:var(--s-5);
+  margin:0 0 var(--s-5);overflow-x:auto;font-size:0.8125rem;line-height:1.6;}
+pre code{background:none;padding:0;font-size:inherit;color:inherit;}
+
+/* ---------- marginalia ---------- */
+.aside{display:grid;gap:var(--s-2);margin:var(--s-6) 0;padding-top:var(--s-3);
+  border-top:2px solid var(--ink);max-width:var(--measure);}
+@media (min-width:52rem){
+  .aside{grid-template-columns:9rem 1fr;gap:var(--s-5);max-width:calc(var(--measure) + 9rem);}
+}
+.aside__k{font-size:0.625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.16em;color:var(--ink-3);line-height:1.4;}
+.aside--flag{border-top-color:var(--mark);}
+.aside--flag .aside__k{color:var(--mark);}
+.aside p{font-size:0.9375rem;line-height:1.5;margin-bottom:var(--s-3);max-width:60ch;}
+.aside p:last-child{margin-bottom:0;}
+
+/* ---------- tables ---------- */
+.scroll{overflow-x:auto;margin:0 0 var(--s-5);}
+table{border-collapse:collapse;width:100%;font-size:0.875rem;min-width:32rem;}
+th,td{text-align:left;padding:0.65rem 0.9rem 0.65rem 0;border-bottom:1px solid var(--rule);vertical-align:top;}
+th:last-child,td:last-child{padding-right:0;}
+thead th{font-size:0.625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.14em;color:var(--ink-3);white-space:nowrap;border-bottom:1px solid var(--ink);}
+tbody tr:last-child td{border-bottom:0;}
+td code{white-space:nowrap;}
+
+/* ---------- type specimens ---------- */
+.spec{border-top:1px solid var(--rule);padding-top:var(--s-4);margin-top:var(--s-5);}
+.spec:first-of-type{border-top:0;}
+.spec__k{font-size:0.625rem;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;
+  color:var(--ink-3);margin:0 0 var(--s-3);display:flex;flex-wrap:wrap;gap:var(--s-4);}
+.spec__k em{font-style:normal;text-transform:none;letter-spacing:0.03em;opacity:0.8;}
+.spec__s{margin:0;color:var(--ink);}
+.t-display{font-weight:900;font-size:clamp(2.75rem,1.5rem + 6.2vw,7.5rem);line-height:0.95;letter-spacing:-0.038em;max-width:16ch;}
+.t-h1{font-weight:900;font-size:clamp(2.25rem,1.4rem + 4vw,4.5rem);line-height:1;letter-spacing:-0.032em;max-width:18ch;}
+.t-h2{font-weight:700;font-size:clamp(1.75rem,1.2rem + 2.4vw,3rem);line-height:1.05;letter-spacing:-0.026em;max-width:22ch;}
+.t-h3{font-weight:700;font-size:clamp(1.375rem,1.1rem + 1.2vw,2rem);line-height:1.15;letter-spacing:-0.02em;max-width:26ch;}
+.t-lead{font-weight:500;font-size:clamp(1.125rem,1rem + 0.9vw,1.625rem);line-height:1.3;letter-spacing:-0.012em;max-width:34ch;}
+.t-body{font-weight:400;font-size:clamp(1rem,0.97rem + 0.15vw,1.125rem);line-height:1.5;max-width:52ch;}
+.t-caption{font-weight:400;font-size:0.8125rem;line-height:1.4;color:var(--ink-2);max-width:52ch;}
+.t-meta{font-weight:500;font-size:0.75rem;line-height:1.2;text-transform:uppercase;letter-spacing:0.14em;color:var(--ink-2);max-width:none;}
+
+/* ---------- swatches / scales / grid ---------- */
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(8rem,1fr));gap:var(--s-4);margin-bottom:var(--s-5);}
+.sw__c{height:5rem;border-radius:0 0 var(--arch) var(--arch);border:1px solid var(--rule);margin-bottom:var(--s-2);}
+.sw__n{font-size:0.75rem;font-weight:500;display:block;line-height:1.3;}
+.sw__x{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.6875rem;color:var(--ink-3);}
+.scale{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:var(--s-5);}
+.scale__r{display:grid;grid-template-columns:4rem 3.25rem 1fr;gap:var(--s-3);align-items:center;font-size:0.75rem;}
+.scale__b{height:0.55rem;background:var(--accent);}
+.scale__t{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);}
+.scale__v{color:var(--ink-3);}
+.gdemo{display:grid;grid-template-columns:repeat(12,1fr);gap:0.35rem;height:4rem;margin-bottom:var(--s-5);}
+.gdemo i{background:var(--accent);opacity:0.14;}
+.gdemo i:nth-child(-n+4){opacity:0.4;}
+
+/* ---------- block catalogue ---------- */
+.blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr));gap:var(--s-5) var(--s-4);margin-bottom:var(--s-5);}
+.blk h5{margin:0 0 var(--s-1);font-size:0.8125rem;font-weight:700;}
+.blk p{margin:0;font-size:0.75rem;line-height:1.4;color:var(--ink-2);max-width:none;}
+.blk__d{display:grid;gap:3px;height:2.5rem;margin-bottom:var(--s-3);border-top:1px solid var(--ink);padding-top:var(--s-3);}
+.blk__d i{background:var(--rule-2);}
+.blk__d i.on{background:var(--mark);}
+.d1{grid-template-columns:1fr;} .d2{grid-template-columns:1fr 1fr;}
+.d3{grid-template-columns:1fr 1fr 1fr;} .dit{grid-template-columns:1.5fr 1fr;}
+.dtx{grid-template-columns:1fr;align-content:center;gap:5px;}
+.dtx i{height:3px;} .dtx i:nth-child(3){width:52%;}
+.dgal{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;}
+.dq{grid-template-columns:1fr;align-content:center;gap:6px;}
+.dq i{height:5px;} .dq i:nth-child(1){width:72%;} .dq i:nth-child(2){width:42%;}
+
+/* ============================================================
+   INTERFACE — buttons, links, fields, icons, states
+   ============================================================ */
+.demo{border-top:1px solid var(--ink);padding-top:var(--s-4);margin:0 0 var(--s-6);}
+.demo__k{font-size:0.625rem;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;
+  color:var(--ink-3);margin:0 0 var(--s-4);}
+.demo__row{display:flex;flex-wrap:wrap;gap:var(--s-4);align-items:center;margin-bottom:var(--s-4);}
+.demo__note{font-size:0.8125rem;color:var(--ink-2);margin:0;max-width:58ch;line-height:1.45;}
+
+/* buttons — the real specs */
+.b{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+  min-height:44px;padding:0.7rem 1.4rem;font:inherit;font-size:0.75rem;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.14em;text-decoration:none;
+  border-radius:999px;cursor:pointer;
+  transition:background 260ms var(--ease),color 260ms var(--ease),border-color 260ms var(--ease);}
+.b-solid{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);}
+.b-solid:hover{background:var(--ink);border-color:var(--ink);color:var(--ground);}
+.b-outline{background:none;color:var(--ink);border:1px solid var(--ink);}
+.b-outline:hover{background:var(--ink);color:var(--ground);}
+.b-quiet{background:none;color:var(--ink-2);border:1px solid var(--rule);}
+.b-quiet:hover{color:var(--ink);border-color:var(--ink);}
+.b[disabled],.b[aria-disabled="true"]{opacity:0.42;cursor:not-allowed;pointer-events:none;}
+.b svg{width:16px;height:16px;flex:0 0 auto;}
+.b-load{position:relative;color:transparent;pointer-events:none;}
+.b-load::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;
+  border:1.5px solid var(--accent-ink);border-top-color:transparent;animation:spin 700ms linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* text link — the brand hover */
+.tl{color:var(--ink);text-decoration:none;position:relative;padding-bottom:0.22em;
+  font-weight:500;display:inline-block;}
+.tl::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:100%;
+  background:var(--mark);transform:scaleX(0);transform-origin:left;
+  transition:transform 420ms var(--ease);}
+.tl:hover::after,.tl:focus-visible::after{transform:scaleX(1);}
+.tl-inline{color:var(--accent);text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:1px;}
+.tl-ext{display:inline-flex;align-items:center;gap:0.35em;}
+.tl-ext svg{width:13px;height:13px;}
+
+/* icons */
+.ico-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(5rem,1fr));gap:var(--s-4);margin-bottom:var(--s-5);}
+.ico{display:flex;flex-direction:column;align-items:center;gap:var(--s-2);text-align:center;}
+.ico svg{width:24px;height:24px;color:var(--ink);}
+.ico span{font-size:0.625rem;color:var(--ink-3);letter-spacing:0.06em;}
+.i-s{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;}
+
+/* form fields — underline only, no boxes */
+.f{display:grid;gap:0.4rem;margin-bottom:var(--s-5);max-width:26rem;}
+.f label{font-size:0.6875rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.14em;color:var(--ink-3);}
+.f input,.f textarea,.f select{
+  font:inherit;font-size:1rem;color:var(--ink);background:none;
+  border:0;border-bottom:1px solid var(--rule-2);border-radius:0;
+  padding:0.55rem 0;width:100%;
+  transition:border-color 220ms var(--ease);}
+.f input:hover,.f textarea:hover,.f select:hover{border-bottom-color:var(--ink-2);}
+.f input:focus,.f textarea:focus,.f select:focus{
+  outline:none;border-bottom-color:var(--accent);border-bottom-width:2px;padding-bottom:calc(0.55rem - 1px);}
+.f input:focus-visible,.f textarea:focus-visible{outline:none;}
+.f textarea{resize:vertical;min-height:5rem;}
+.f__hint{font-size:0.75rem;color:var(--ink-3);}
+.f--err input,.f--err textarea{border-bottom-color:var(--danger);border-bottom-width:2px;}
+.f--err label{color:var(--danger);}
+.f__err{font-size:0.75rem;color:var(--danger);display:flex;align-items:center;gap:0.35rem;}
+.f__err svg{width:13px;height:13px;flex:0 0 auto;}
+.f--ok input{border-bottom-color:var(--ink);}
+.f input[disabled]{color:var(--ink-3);border-bottom-style:dashed;cursor:not-allowed;}
+
+/* state demos */
+.st{border-top:1px solid var(--rule);padding:var(--s-4) 0;display:grid;gap:var(--s-3);}
+@media (min-width:52rem){ .st{grid-template-columns:9rem 1fr;gap:var(--s-5);} }
+.st:first-of-type{border-top:1px solid var(--ink);}
+.st__k{font-size:0.625rem;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-3);}
+.st__b{background:var(--ground-2);padding:var(--s-5);}
+.st__b p{margin:0 0 var(--s-3);max-width:none;}
+.st__b p:last-child{margin-bottom:0;}
+.st__ttl{font-weight:700;font-size:1.125rem;letter-spacing:-0.015em;}
+.st__sub{font-size:0.875rem;color:var(--ink-2);}
+.skel{height:0.65rem;background:var(--rule);width:70%;}
+
+/* ============================================================
+   MOCKUPS
+   ============================================================ */
+.mock{margin:0 0 var(--s-6);}
+.mock__k{display:flex;flex-wrap:wrap;gap:var(--s-2) var(--s-4);align-items:baseline;
+  font-size:0.625rem;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;
+  color:var(--ink-3);margin-bottom:var(--s-3);padding-bottom:var(--s-2);border-bottom:1px solid var(--ink);}
+.mock__k b{color:var(--ink);font-weight:500;}
+.mock__f{background:var(--ground-2);overflow:hidden;container-type:inline-size;}
+.mock__c{font-size:0.75rem;color:var(--ink-2);margin-top:var(--s-3);max-width:56ch;line-height:1.45;}
+
+.mk-hero{position:relative;aspect-ratio:16/9;min-height:15rem;background:#111;}
+.mk-hero img.bg{width:100%;height:100%;object-fit:cover;}
+.mk-hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,0) 34%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%);}
+.mk-hero > *:not(img){position:absolute;z-index:2;}
+.mk-nav{top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:3.2cqw 3.6cqw;}
+.mk-nav img{width:7.5cqw;min-width:44px;}
+.mk-nav ul{list-style:none;display:flex;gap:2.4cqw;margin:0;padding:0;}
+.mk-nav li{margin:0;font-size:max(9px,1.15cqw);font-weight:500;color:#fff;
+  text-transform:uppercase;letter-spacing:0.16em;}
+.mk-nav li:first-child{position:relative;}
+.mk-nav li:first-child::after{content:"";position:absolute;left:0;right:0;bottom:-0.5em;height:1.5px;background:#00FF66;}
+.mk-hero__ttl{left:3.6cqw;bottom:3.4cqw;right:16cqw;}
+.mk-hero__ttl .ey{font-size:max(8px,1.05cqw);font-weight:500;color:#fff;opacity:.82;
+  text-transform:uppercase;letter-spacing:0.18em;margin:0 0 0.7em;}
+.mk-hero__ttl .h{font-size:max(20px,5.2cqw);font-weight:900;color:#fff;line-height:0.95;
+  letter-spacing:-0.035em;margin:0;}
+.mk-hero__scr{right:3.6cqw;bottom:3.4cqw;width:9cqw;}
+
+.mk-idx{padding:3cqw;}
+.mk-idx__bar{display:flex;flex-wrap:wrap;gap:1.6cqw;align-items:baseline;
+  border-bottom:1px solid var(--rule);padding-bottom:1.4cqw;margin-bottom:2.6cqw;}
+.mk-idx__bar b{font-size:max(13px,2.2cqw);font-weight:900;letter-spacing:-0.03em;margin-right:auto;}
+.mk-idx__bar span{font-size:max(8px,1.1cqw);font-weight:500;text-transform:uppercase;
+  letter-spacing:0.14em;color:var(--ink-3);}
+.mk-idx__bar span.on{color:var(--ink);position:relative;}
+.mk-idx__bar span.on::after{content:"";position:absolute;left:0;right:0;bottom:-0.45em;height:1.5px;background:var(--mark);}
+.mk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.2cqw;}
+@container (max-width:34rem){ .mk-grid{grid-template-columns:repeat(2,1fr);} }
+.mk-card{display:block;color:var(--ink);text-decoration:none;}
+.mk-card figure{margin:0;overflow:hidden;background:var(--ground-3);}
+.mk-card img{width:100%;aspect-ratio:2/3;object-fit:cover;transition:transform 700ms var(--ease);}
+.mk-card:hover img,.mk-card:focus-within img{transform:scale(1.035);}
+.mk-card h6{margin:1.1cqw 0 0.35cqw;font-size:max(10px,1.5cqw);font-weight:700;letter-spacing:-0.015em;}
+.mk-card p{margin:0;font-size:max(8px,1.05cqw);font-weight:500;text-transform:uppercase;
+  letter-spacing:0.13em;color:var(--ink-3);max-width:none;}
+
+.mk-pp{padding:0 0 3cqw;}
+.mk-pp__hero{width:100%;aspect-ratio:16/9;object-fit:cover;}
+.mk-pp__head{display:grid;gap:1.6cqw;padding:3cqw 3cqw 0;}
+@container (min-width:36rem){ .mk-pp__head{grid-template-columns:1.35fr 1fr;gap:3cqw;} }
+.mk-pp__head h6{margin:0 0 0.9cqw;font-size:max(18px,4.2cqw);font-weight:900;line-height:0.98;letter-spacing:-0.035em;}
+.mk-pp__head .ey{font-size:max(8px,1.05cqw);font-weight:500;text-transform:uppercase;
+  letter-spacing:0.17em;color:var(--ink-3);margin:0 0 1cqw;}
+.mk-pp__head .bd{font-size:max(9px,1.25cqw);line-height:1.5;color:var(--ink-2);margin:0;max-width:none;}
+.mk-fact{list-style:none;margin:0;padding:0;}
+.mk-fact li{display:flex;justify-content:space-between;gap:1rem;margin:0;padding:0.75cqw 0;
+  border-top:1px solid var(--rule);font-size:max(8px,1.1cqw);}
+.mk-fact li:first-child{border-top:1px solid var(--ink);}
+.mk-fact b{font-weight:500;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.12em;}
+.mk-pair{display:grid;grid-template-columns:1fr 1fr;gap:2cqw;padding:3cqw;}
+.mk-pair img{width:100%;aspect-ratio:2/3;object-fit:cover;}
+.mk-quote{padding:1cqw 3cqw 3cqw;}
+.mk-quote p{font-size:max(13px,2.6cqw);font-weight:700;line-height:1.16;letter-spacing:-0.025em;margin:0 0 1.2cqw;max-width:20ch;}
+.mk-quote cite{font-style:normal;font-size:max(8px,1.05cqw);font-weight:500;
+  text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-3);}
+.mk-full{padding:0 3cqw 3cqw;}
+.mk-full img{width:100%;aspect-ratio:3/2;object-fit:cover;}
+.mk-cap{font-size:max(7px,0.95cqw);color:var(--ink-3);margin:0.9cqw 0 0;line-height:1.4;}
+
+/* phones */
+.phones{display:flex;flex-wrap:wrap;gap:var(--s-5);margin-bottom:var(--s-5);}
+.phone{flex:0 0 15rem;max-width:100%;}
+.phone__f{background:var(--ground-2);border:1px solid var(--rule);
+  height:30rem;overflow:hidden;container-type:inline-size;position:relative;}
+.phone__k{font-size:0.625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.14em;color:var(--ink-3);margin:var(--s-3) 0 0;}
+
+.ph-nav{position:absolute;inset:0;background:var(--ground);display:flex;flex-direction:column;padding:1.4rem 1.2rem;}
+.ph-nav__top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2.2rem;}
+.ph-nav__top img{width:3rem;}
+.ph-nav__x{font-size:0.625rem;font-weight:500;letter-spacing:0.14em;color:var(--ink);text-transform:uppercase;}
+.ph-nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.55rem;}
+.ph-nav li{margin:0;font-size:1.25rem;font-weight:900;letter-spacing:-0.03em;line-height:1;}
+.ph-nav__img{margin:0.9rem 0;overflow:hidden;height:7.5rem;}
+.ph-nav__img img{width:100%;height:100%;object-fit:cover;}
+.ph-nav li:first-child{color:var(--ink);}
+.ph-nav li:not(:first-child){color:var(--ink-3);}
+.ph-nav__foot{border-top:1px solid var(--rule);padding-top:0.9rem;font-size:0.6875rem;
+  color:var(--ink-2);line-height:1.5;}
+
+.ph-pp{position:absolute;inset:0;overflow:hidden;background:var(--ground);}
+.ph-pp img.h{width:100%;aspect-ratio:4/3;object-fit:cover;}
+.ph-pp__b{padding:1rem;}
+.ph-pp__b .ey{font-size:0.5625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.16em;color:var(--ink-3);margin:0 0 0.45rem;}
+.ph-pp__b h6{margin:0 0 0.6rem;font-size:1.5rem;font-weight:900;line-height:0.98;letter-spacing:-0.035em;}
+.ph-pp__b .bd{font-size:0.75rem;line-height:1.5;color:var(--ink-2);margin:0 0 0.9rem;max-width:none;}
+.ph-fact{list-style:none;margin:0;padding:0;}
+.ph-fact li{margin:0;padding:0.4rem 0;border-top:1px solid var(--rule);
+  display:grid;grid-template-columns:5.9rem 1fr;gap:0.5rem;font-size:0.6875rem;}
+.ph-fact li:first-child{border-top:1px solid var(--ink);}
+.ph-fact b{font-weight:500;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em;}
+
+.ph-foot{position:absolute;inset:0;background:var(--ink);color:var(--ground);padding:1.3rem 1.1rem;
+  display:flex;flex-direction:column;gap:1rem;overflow:hidden;}
+.ph-foot h6{margin:0;font-size:1.5rem;font-weight:900;letter-spacing:-0.035em;line-height:0.95;}
+.ph-foot__g{display:grid;gap:0.85rem;font-size:0.6875rem;line-height:1.5;}
+.ph-foot__g b{display:block;font-size:0.5625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.15em;opacity:0.55;margin-bottom:0.2rem;}
+.ph-foot__g a{color:var(--ground);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3);}
+.ph-foot__base{margin-top:auto;font-size:0.5625rem;opacity:0.5;letter-spacing:0.06em;}
+
+/* ratio study */
+.ratios{display:grid;grid-template-columns:repeat(auto-fit,minmax(5.5rem,1fr));gap:var(--s-3);margin-bottom:var(--s-4);}
+.ratios figure{margin:0;}
+.ratios img{width:100%;object-fit:cover;background:var(--ground-3);}
+.r23 img{aspect-ratio:2/3;} .r32 img{aspect-ratio:3/2;} .r169 img{aspect-ratio:16/9;}
+.r11 img{aspect-ratio:1/1;} .r45 img{aspect-ratio:4/5;}
+.ratios figcaption{font-size:0.625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.13em;color:var(--ink-3);margin-top:0.5rem;}
+
+/* motion demos */
+.mo{display:grid;gap:var(--s-5);grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));margin-bottom:var(--s-5);}
+.mo__i{border-top:1px solid var(--ink);padding-top:var(--s-3);}
+.mo__k{font-size:0.625rem;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;
+  color:var(--ink-3);margin:0 0 var(--s-3);}
+.mo__stage{height:6rem;display:flex;align-items:center;justify-content:center;
+  background:var(--ground-2);overflow:hidden;margin-bottom:var(--s-3);}
+.mo__n{font-size:0.75rem;color:var(--ink-2);margin:0;max-width:none;line-height:1.4;}
+.demo-mask{width:70%;aspect-ratio:3/2;overflow:hidden;}
+.demo-mask img{width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 100% 0);transition:clip-path 900ms var(--ease);}
+.demo-mask.go img{clip-path:inset(0 0 0 0);}
+.demo-card{width:64%;}
+.demo-card div{overflow:hidden;background:var(--ground-3);}
+.demo-card img{width:100%;aspect-ratio:2/3;object-fit:cover;transition:transform 700ms var(--ease);}
+.demo-card:hover img{transform:scale(1.04);}
+.demo-line{width:80%;}
+.demo-fade{text-align:center;}
+.demo-fade span{display:block;font-weight:700;font-size:1.25rem;letter-spacing:-0.02em;
+  opacity:0;transform:translateY(14px);transition:opacity 640ms var(--ease),transform 640ms var(--ease);}
+.demo-fade.go span{opacity:1;transform:none;}
+
+/* decisions */
+.dl{margin:0 0 var(--s-5);}
+.dl__i{border-top:1px solid var(--rule);padding:var(--s-4) 0;display:grid;gap:var(--s-2);}
+@media (min-width:52rem){ .dl__i{grid-template-columns:11rem 1fr;gap:var(--s-5);} }
+.dl__i:first-child{border-top:1px solid var(--ink);}
+.dl__q{font-size:0.8125rem;font-weight:700;letter-spacing:-0.005em;line-height:1.3;}
+.dl__a{font-size:0.9375rem;line-height:1.5;margin:0;max-width:58ch;}
+.dl__a em{font-style:normal;color:var(--ink-3);}
+.tag{display:inline-block;font-size:0.5625rem;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.13em;padding:0.18em 0.5em;border:1px solid currentColor;border-radius:999px;
+  vertical-align:0.15em;margin-left:0.4em;}
+.tag--set{color:var(--accent);} .tag--open{color:var(--mark);} .tag--later{color:var(--ink-3);}
+.tag--new{color:var(--accent);}
+
+.end{margin-top:clamp(3rem,8vw,6rem);padding-top:var(--s-5);font-size:0.8125rem;color:var(--ink-2);}
+
+
+/* ===== v0.5 — nav line, bands, horizontal sequence, press scatter ===== */
+.navline{display:flex;align-items:flex-end;width:100%;height:7px;margin-top:0.45em;}
+.navline span{flex:1 1 auto;height:1.6px;background:var(--mark);}
+.navline svg{flex:0 0 auto;height:7px;display:block;}
+.navline path{fill:var(--mark);}
+
+/* landing — no text */
+.mk-land{position:relative;aspect-ratio:16/9;min-height:14rem;background:#0a0a0a;}
+.mk-land img{width:100%;height:100%;object-fit:cover;}
+.mk-land__nav{position:absolute;inset:0 0 auto 0;display:flex;align-items:flex-start;
+  justify-content:space-between;padding:3cqw 3.4cqw;z-index:2;}
+.mk-land__nav img{width:7cqw;min-width:42px;height:auto;object-fit:contain;}
+.mk-land__nav ul{list-style:none;display:flex;gap:2.4cqw;margin:0;padding:0;}
+.mk-land__nav li{margin:0;font-size:max(8px,1.1cqw);font-weight:500;color:#fff;
+  text-transform:uppercase;letter-spacing:0.16em;}
+.mk-land::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 28%);}
+
+/* project hook bands */
+.mk-bands{display:flex;flex-direction:column;gap:2px;background:var(--ground-3);}
+.mk-band{position:relative;display:block;overflow:hidden;color:#fff;text-decoration:none;}
+.mk-band img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;
+  transition:transform 900ms var(--ease);}
+.mk-band:hover img{transform:scale(1.03);}
+.mk-band::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,.05) 55%);}
+.mk-band__t{position:absolute;z-index:2;bottom:2.4cqw;left:3cqw;right:3cqw;}
+.mk-band__t b{display:block;font-size:max(14px,2.9cqw);font-weight:900;letter-spacing:-0.03em;line-height:1;}
+.mk-band__t i{display:block;font-style:normal;font-size:max(7px,0.95cqw);font-weight:500;
+  text-transform:uppercase;letter-spacing:0.16em;opacity:.8;margin-top:0.5em;}
+.mk-band--xl{height:30cqw;} .mk-band--l{height:23cqw;}
+.mk-band--m{height:18cqw;}  .mk-band--s{height:14cqw;}
+.mk-band--right .mk-band__t{text-align:right;}
+.mk-band--right::after{background:linear-gradient(270deg,rgba(0,0,0,.5),rgba(0,0,0,.05) 55%);}
+
+/* horizontal sequence */
+.mk-seqwrap{background:var(--ground-2);padding:2.6cqw 0 2cqw;}
+.mk-seqhead{padding:0 3cqw 2cqw;display:grid;gap:1.2cqw;}
+@container (min-width:34rem){ .mk-seqhead{grid-template-columns:1fr 1.15fr;gap:3cqw;align-items:end;} }
+.mk-seqhead h6{margin:0;font-size:max(17px,3.6cqw);font-weight:900;line-height:0.98;letter-spacing:-0.035em;}
+.mk-seqhead .ey{font-size:max(7px,0.98cqw);font-weight:500;text-transform:uppercase;
+  letter-spacing:0.17em;color:var(--ink-3);margin:0 0 0.7cqw;}
+.mk-seqhead p{margin:0;font-size:max(9px,1.2cqw);line-height:1.55;color:var(--ink-2);max-width:none;}
+.mk-seq{display:flex;gap:1.4cqw;overflow-x:auto;padding:0 3cqw 1.4cqw;
+  scroll-snap-type:x mandatory;scrollbar-width:thin;}
+.mk-seq figure{margin:0;flex:0 0 auto;scroll-snap-align:center;}
+.mk-seq img{height:26cqw;min-height:9rem;width:auto;display:block;}
+.mk-seqfoot{display:flex;align-items:center;gap:1.4cqw;padding:0 3cqw;}
+.mk-seqfoot .bar{flex:1 1 auto;height:1.6px;background:var(--rule);position:relative;}
+.mk-seqfoot .bar i{position:absolute;inset:0 62% 0 0;background:var(--mark);}
+.mk-seqfoot span{font-size:max(7px,0.95cqw);font-weight:500;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--ink-3);}
+
+.ph-seq{display:flex;gap:0.5rem;overflow-x:auto;padding:0 1rem;scroll-snap-type:x mandatory;}
+.ph-seq img{height:11rem;width:auto;flex:0 0 auto;scroll-snap-align:center;}
+.ph-seqfoot{display:flex;align-items:center;gap:0.6rem;padding:0.7rem 1rem 0;}
+.ph-seqfoot .bar{flex:1;height:1.5px;background:var(--rule);position:relative;}
+.ph-seqfoot .bar i{position:absolute;inset:0 78% 0 0;background:var(--mark);}
+.ph-seqfoot span{font-size:0.5625rem;font-weight:500;letter-spacing:0.14em;color:var(--ink-3);}
+
+/* press scatter */
+.mk-press{position:relative;padding:3cqw;min-height:34cqw;}
+.mk-press h6{margin:0 0 1cqw;font-size:max(16px,3.2cqw);font-weight:900;letter-spacing:-0.035em;line-height:1;}
+.mk-press__c{position:relative;height:30cqw;}
+.mk-press__i{position:absolute;background:var(--ground);box-shadow:0 1px 0 var(--rule);}
+.mk-press__i img{width:100%;height:100%;object-fit:cover;display:block;}
+.mk-press__l{position:absolute;font-weight:900;letter-spacing:-0.02em;color:var(--ink);
+  font-size:max(9px,1.5cqw);line-height:1;}
+
+/* reveal */
+@media (prefers-reduced-motion:no-preference){
+  .line__fig path{transform-box:fill-box;transform-origin:left center;
+    transform:scaleX(0);transition:transform 780ms var(--ease) 120ms;}
+  .line.in .line__fig path{transform:scaleX(1);}
+  .line__bar{transform:scaleX(0);transform-origin:left;transition:transform 700ms var(--ease);}
+  .line.in .line__bar{transform:scaleX(1);}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="top__kicker">Design system &amp; technical architecture · v0.5 · for approval</p>
+    <h1>btl architects</h1>
+    <p class="top__sub">A content system for an architecture practice, built so the studio's thirtieth project is as easy to publish as its first.</p>
+    <div class="top__meta">
+      <span>btldesigns.in</span><span>11 August 2026</span><span>Implementation not started</span>
+    </div>
+    <p class="top__nb"><strong>This document is a specification, not a visual reference for the website.</strong> Its numbered parts, tables, tags, code blocks, contents rail and editorial chrome are documentation furniture. None of it belongs in the production site. What the site looks like is §24 and §25; everything else here describes it rather than demonstrating it.</p>
+    <p class="top__nb">It also follows <em>your</em> system theme, so both colour grounds can be checked against the brand rules. The site does not — see §03.</p>
+  </header>
+</div>
+
+<div class="wrap"><div class="cols">
+
+  <nav class="toc" aria-label="Contents">
+    <p class="toc__h">Contents</p>
+    <details open>
+      <summary>Contents</summary>
+      <ol>
+        <li><a href="#philosophy"><span>01</span>Design philosophy</a></li>
+        <li><a href="#challenges"><span>02</span>Changes to the brief</a></li>
+        <li><a href="#theme"><span>03</span>Theme strategy</a></li>
+        <li><a href="#ia"><span>04</span>Information architecture</a></li>
+        <li><a href="#sitemap"><span>05</span>Sitemap &amp; routing</a></li>
+        <li><a href="#navigation"><span>06</span>Navigation</a></li>
+        <li><a href="#model"><span>07</span>Content model</a></li>
+        <li><a href="#project-data"><span>08</span>Project data structure</a></li>
+        <li><a href="#blocks"><span>09</span>Project block system</a></li>
+        <li><a href="#formatting"><span>10</span>Formatting conventions</a></li>
+        <li><a href="#cms"><span>11</span>CMS approach</a></li>
+        <li><a href="#type"><span>12</span>Typography</a></li>
+        <li><a href="#colour"><span>13</span>Colour</a></li>
+        <li><a href="#spacing"><span>14</span>Spacing</a></li>
+        <li><a href="#grid"><span>15</span>Grid</a></li>
+        <li><a href="#responsive"><span>16</span>Responsive strategy</a></li>
+        <li><a href="#shape"><span>17</span>Shape &amp; the line</a></li>
+        <li><a href="#icons"><span>18</span>Icons</a></li>
+        <li><a href="#motion"><span>19</span>Motion system</a></li>
+        <li><a href="#buttons"><span>20</span>Buttons &amp; links</a></li>
+        <li><a href="#forms"><span>21</span>Forms</a></li>
+        <li><a href="#states"><span>22</span>System states</a></li>
+        <li><a href="#components"><span>23</span>Component inventory</a></li>
+        <li><a href="#compositions"><span>24</span>Page compositions</a></li>
+        <li><a href="#mobile"><span>25</span>Mobile &amp; footer</a></li>
+        <li><a href="#images"><span>26</span>Image handling</a></li>
+        <li><a href="#performance"><span>27</span>Performance</a></li>
+        <li><a href="#accessibility"><span>28</span>Accessibility</a></li>
+        <li><a href="#seo"><span>29</span>SEO</a></li>
+        <li><a href="#stack"><span>30</span>Technical stack</a></li>
+        <li><a href="#files"><span>31</span>File architecture</a></li>
+        <li><a href="#editing"><span>32</span>Editing workflow</a></li>
+        <li><a href="#future"><span>33</span>Five-year stress test</a></li>
+        <li><a href="#review"><span>34</span>System review</a></li>
+        <li><a href="#decisions"><span>35</span>Decisions &amp; what's open</a></li>
+      </ol>
+    </details>
+  </nav>
+
+  <main>
+
+  <!-- ============ PART 1 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">01</span><h2 class="part__t">Direction</h2></div>
+
+    <section id="philosophy">
+      <div class="sec__h"><span class="sec__n">01</span><h3>Design philosophy</h3></div>
+      <p class="lead">The photography is the content. Everything else is scaffolding that should be felt and not noticed.</p>
+      <p>BTL's identity is unusually well resolved, and it is not the thin, quiet, luxury-serif language most architecture sites default to. The guide sets headers in Satoshi <strong>Black at 100% leading</strong> — heavy, tight, confident. It gives a signature device, the btl line, with hard rules about which colour it takes on which ground. It sanctions dark mode outright and mocks the website itself as a dark UI.</p>
+      <p>Four commitments follow:</p>
+      <ul>
+        <li><strong>Heavy type, quiet everything else.</strong> Display type is Black and tight. That is the one loud element. Around it: hairline rules, whitespace, no cards, no shadows, no gradients.</li>
+        <li><strong>The line is the only ornament.</strong> Section breaks, margin rules, hover underlines, scroll progress. Nowhere else. An ornament used everywhere stops being one.</li>
+        <li><strong>Photography is never boxed.</strong> No borders, no rounded corners, no drop shadows on any project image.</li>
+        <li><strong>Restraint is structural.</strong> The system's job is to make a bad page hard to build.</li>
+      </ul>
+      <p>Both reference sites agree. SCDA is a full-bleed photograph with an oversized wordmark and three links. BIG is a white page with a right-aligned title column beside each image and enormous vertical rhythm. Neither has a card, a shadow or a gradient anywhere.</p>
+    </section>
+
+    <section id="challenges">
+      <div class="sec__h"><span class="sec__n">02</span><h3>Changes to the brief</h3></div>
+      <p>Four deviations. The first is approved; the rest stand as decisions I have taken and would defend.</p>
+      <h4>Hybrid structure, not a pure one-pager <span class="tag tag--set">approved</span></h4>
+      <p>A single page with anchor navigation gives search engines one URL, gives you nothing to share but the homepage, and leaves no room for a Journal or Awards. The home page keeps its scrolling narrative — every section present, reachable by scroll — but each section is a curated summary linking to a real page at a real URL. Nav on the home page scrolls; nav everywhere else navigates.</p>
+      <h4>The carousel is replaced by a scroll-driven sequence <span class="tag tag--set">decided</span></h4>
+      <p>Content that moves on its own is hard to read, hard to operate by keyboard, and a known trigger for vestibular disorders. It also buries projects two through six — click-through past the first slide is consistently poor. Featured projects now arrive as you scroll: each takes the full viewport, the image revealing by mask, the title settling a beat later. Same drama, no accessibility debt, and every project gets seen because reaching the next one is the same gesture as reading.</p>
+      <h4>Publications is a page from day one</h4>
+      <p>Building it as a home section now and a page later means building it twice. Build the page now — the AD feature on Nelly House is already real content — and let the home page surface the two most recent items.</p>
+      <h4>Instagram stays a link</h4>
+      <p>A live grid means an access token that silently expires and a third-party script on every page load. The brief already says link, and the brief is right.</p>
+    </section>
+
+    <section id="theme">
+      <div class="sec__h"><span class="sec__n">03</span><h3>Theme strategy <span class="tag tag--new">new</span></h3></div>
+      <p class="lead">Recommendation: the site is <strong>dark by default and has no theme toggle</strong>. White is used as an editorial device, not as an alternative skin.</p>
+      <p>This was an unanswered question in the last draft and it affects nearly every other decision, so it is worth settling explicitly.</p>
+
+      <div class="grounds">
+        <div class="gr gr--dark">
+          <p class="gr__cap">The site — Home, Projects, every project page</p>
+          <p class="gr__ttl">Nelly House</p>
+          <p class="gr__bd">Rammed earth and reclaimed timber, built around the trees rather than over them.</p>
+          <a class="gr__lk" href="#theme">All projects</a>
+          <div class="gr__rule"><span></span><svg viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg></div>
+        </div>
+        <div class="gr gr--light">
+          <p class="gr__cap">The light register — Studio, Journal, drawings, Press</p>
+          <p class="gr__ttl">The practice</p>
+          <p class="gr__bd">Long-form reading, line drawings and supplied publication logos, where a light ground is genuinely better.</p>
+          <a class="gr__lk" href="#theme">Read more</a>
+          <div class="gr__rule"><span></span><svg viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg></div>
+        </div>
+      </div>
+      <p class="mock__c" style="max-width:60ch">Both panels above are hardcoded, so they look identical no matter which theme you are reading this document in. Note the accent and the line obeying the ground rules from §13 without being told: cyan and green on dark, blue and red on white.</p>
+
+      <div class="aside aside--flag">
+        <p class="aside__k">Why this document is not dark</p>
+        <div><p>You are most likely reading this on a white page, which looks like a contradiction. It is not. <strong>This document is a specification, not the site.</strong> It follows your system theme deliberately, so every token pairing in §13 can be checked on both grounds in one sitting — the swatches, the contrast figures and the accent rules all need to be verifiable in light and dark. The site has no such obligation and takes a position instead. If you want to see the document itself on dark, switch your OS appearance or use the viewer's theme toggle.</p></div>
+      </div>
+      <h4>Why dark</h4>
+      <ul>
+        <li>The identity guide mocks the website itself as a dark UI, and devotes a page to <em>"dark mode? we got that too."</em> It is sanctioned, not tolerated.</li>
+        <li>Photography reads better against dark. Galleries and museums paint their walls dark for a reason: it removes the ground from competition with the image.</li>
+        <li>The accent system already has a dark answer — green and cyan — and those are the colours the guide pairs with black.</li>
+        <li>Nelly House's photography is warm, earthy and low-key. On white it looks washed; on near-black the terracotta and oxide tones hold.</li>
+      </ul>
+      <h4>Why no toggle</h4>
+      <p>An architecture portfolio is art-directed. Letting a visitor invert it changes how every photograph reads, doubles the QA surface on every component forever, and adds a control to a navigation bar that should hold five items. Sites that need a toggle are tools people spend hours in. This is not that.</p>
+      <h4>Where white is used</h4>
+      <p>Deliberately, and as a change of register rather than a preference:</p>
+      <ul>
+        <li><strong>Studio</strong> and <strong>Journal</strong> — long-form reading, where a light ground is genuinely easier</li>
+        <li><strong>Drawings</strong> — plans and sections are line work on white and must stay that way</li>
+        <li><strong>Press</strong> — publication logos are supplied for light grounds</li>
+        <li>Any project block an editor sets to light ground</li>
+      </ul>
+      <div class="aside">
+        <p class="aside__k">Reversible by design</p>
+        <div><p>Every token in Part four already has both values, and this document renders in both — use your OS setting or the viewer's toggle to see it. Flipping the site's default is a one-line change. Committing now costs nothing later; not committing means every component gets designed twice for no reason.</p></div>
+      </div>
+      <h4>The site must not follow the OS setting <span class="tag tag--new">new</span></h4>
+      <p>A contradiction worth naming, because it is easy to build by accident. If the site is dark <em>by design</em>, it must not respond to <code>prefers-color-scheme</code>. Otherwise a visitor whose laptop is set to light gets a light site, and the art direction this section just argued for evaporates for half the audience.</p>
+      <p>So: the site ships <strong>one ground</strong>. The tokens keep both sets of values — that is what makes the decision reversible — but no media query selects between them at runtime. Light sections opt in explicitly with <code>data-ground="light"</code>, which is an editorial choice made in the CMS, not a preference read from the device.</p>
+      <p>This document is the exception, and deliberately so: it is a specification and needs both grounds checkable in one sitting.</p>
+      <p>Implementation notes: <code>color-scheme: dark</code> so form controls and scrollbars follow, a <code>theme-color</code> meta of <code>#050505</code> so mobile browser chrome matches, and the header reads <code>data-ground</code> off each section to invert its own contrast.</p>
+    </section>
+  </div>
+
+  <!-- ============ PART 2 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">02</span><h2 class="part__t">Architecture</h2></div>
+
+    <section id="ia">
+      <div class="sec__h"><span class="sec__n">04</span><h3>Information architecture</h3></div>
+      <p>Someone arriving is doing one of four things: judging whether the practice is any good, looking for a specific project, checking who the practice is, or trying to make contact.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Visitor</th><th>Wants</th><th>Path</th></tr></thead>
+        <tbody>
+          <tr><td>Prospective client</td><td>Is this practice right for me?</td><td>The studio, in one photograph → the work, as bands → one project, sideways → contact</td></tr>
+          <tr><td>Referred visitor</td><td>A specific project</td><td>Index → scan the bands → project. Filters only once there are enough projects to need them (§05)</td></tr>
+          <tr><td>Press / jury</td><td>Credentials, images, credits</td><td>Press wall → the original article. Credits are held in the model and supplied on request, not printed on the page</td></tr>
+          <tr><td>Prospective hire</td><td>Who works here</td><td>Studio → People</td></tr>
+          <tr><td>Search engine</td><td>Indexable, structured, linked</td><td>Every project a stable URL with its own metadata</td></tr>
+        </tbody>
+      </table></div>
+      <p>Categories and locations are real indexable pages, not just filter chips. "Residential architects in Wayanad" is a search someone actually makes, and a JavaScript filter does not answer it.</p>
+    </section>
+
+    <section id="sitemap">
+      <div class="sec__h"><span class="sec__n">05</span><h3>Sitemap &amp; routing</h3></div>
+      <p><code>type</code> and <code>place</code> are reserved segments so category routes can never collide with a project slug — enforced by CMS validation.</p>
+      <pre><code>btldesigns.in/
+/                           Home — the scrolling narrative
+/projects                   Index, filterable
+/projects/[slug]            A project              → /projects/nelly-house
+/projects/type/[category]   generated, but not linked until the site earns them
+/projects/place/[location]  same — see "growing into categories" below
+/studio                     The practice
+/people                     Team
+/people/[slug]              A profile
+/press                      Publications, awards, features
+/contact                    Address, map, form, socials
+/journal                    Editorial                        [later]
+/404                        Suggests recent projects
+/sitemap-index.xml          Generated
+/robots.txt                 Generated</code></pre>
+      <h4>Growing into categories <span class="tag tag--new">new</span></h4>
+      <p>The practice has four projects. Splitting four projects across Residential, Apartment and Commercial gives three pages, two of them nearly empty — which makes a young practice look thinner than it is. But the categories are coming, and nobody wants a developer involved on the day they arrive.</p>
+      <p>So the filter bar is <strong>earned, not switched on</strong>. It appears by itself when the content justifies it, on a rule the CMS evaluates at build:</p>
+      <pre><code>show the filter bar when
+    ≥ 2 categories each hold ≥ 3 published projects
+otherwise
+    show every project, unfiltered, and no bar at all</code></pre>
+      <p>Same for locations. Until then the index is simply all the work, which at four projects is the right answer anyway. The category routes are generated the whole time and carry their own metadata — they are just not linked from anywhere and are kept out of the sitemap until they hold enough to be worth landing on.</p>
+      <p>Nothing needs to be hidden, remembered or turned on. The studio adds its fifth Residential project and its third Commercial one, and the bar appears on the next publish. <strong>That is the answer to "can we hide it or something" — it hides and reveals itself, and no developer is involved either way.</strong></p>
+      <p><strong>Combined filters</strong> stay query parameters — <code>?place=wayanad</code> — filtered client-side and canonicalised to the base page. Six categories times eight locations is several hundred near-identical pages with two projects each, which is thin-content generation that damages the pages that matter.</p>
+
+      <div class="aside">
+        <p class="aside__k">Slug stability</p>
+        <div><p>A slug is generated from the title on first save and <strong>locked at publish</strong>. If the title changes, the URL does not. If a slug genuinely must change, the editor adds a redirect and the old URL 301s permanently. Nothing breaks and no inbound link dies — which matters more now that AD has published a feature that may eventually link here.</p></div>
+      </div>
+    </section>
+
+    <section id="navigation">
+      <div class="sec__h"><span class="sec__n">06</span><h3>Navigation</h3></div>
+      <p>Five items, and they stay five: <strong>Projects · Studio · People · Press · Contact</strong>. No project types in the navigation — the index is one list, and it stays one list until §05's threshold is met.</p>
+      <h4>The line belongs to the navigation, and only one at a time <span class="tag tag--new">changed</span></h4>
+      <p>A plain underline is what every site does. The btl line has an inflection in it, and at nav scale that inflection is legible — a small, specific mark that is unmistakably this practice. That is worth exactly one place on the screen.</p>
+      <p>Two things were tried and reverted, and both are worth recording because they are the obvious mistakes.</p>
+      <p><strong>Putting the line on every link.</strong> Nav, inline links, footer links all wearing the inflection. Several curves visible at once stops reading as a signature and starts reading as noise. Ordinary links now take a plain 2.25px rule in the mark colour — same colour, same left-to-right reveal, no inflection. The device stays rare.</p>
+      <p><strong>Letting two nav lines show at once.</strong> The current page held its line while a hovered item drew a second one beside it, and two of them side by side looked like a mistake rather than a state. The rule now: while the navigation is being hovered, the current page hands its line to whatever is under the cursor and takes it back on leave. <strong>Never more than one line in the bar.</strong></p>
+      <p><strong>It is drawn with markup, not a mask.</strong> A flat bar that stretches to the link width, plus the actual inflection vector at its natural aspect beside it. A CSS mask was tried and reverted: scaling the vector into a short box compressed the long rise into a tick, and it stopped being the supplied element. Markup keeps the curve's true proportions at any width. Revealed with <code>clip-path</code> rather than a horizontal scale, because scaling would squash it.</p>
+      <pre><code>&lt;a class="nav__link"&gt;Projects
+  &lt;span class="nav__line"&gt;&lt;span&gt;&lt;/span&gt;&lt;svg&gt;…&lt;/svg&gt;&lt;/span&gt;
+&lt;/a&gt;
+
+.nav__line      { display: flex; align-items: flex-end; height: 8px;
+                  clip-path: inset(0 100% 0 0);
+                  transition: clip-path var(--dur-hover) var(--ease); }
+.nav__line span { flex: 1 1 auto; height: 1.8px; background: var(--mark); }
+.nav__line svg  { flex: 0 0 auto; height: 8px; }   /* natural aspect, 18px wide */
+
+/* one line in the bar at a time */
+.nav:hover .nav__link[aria-current="page"] .nav__line {
+  animation-name: none;
+  clip-path: inset(0 100% 0 0);
+}
+.nav:hover .nav__link:hover .nav__line { clip-path: inset(0 0 0 0); }
+
+/* every other link — a plain rule, same colour, no inflection */
+.tl::after { height: 2px; background: var(--mark); }</code></pre>
+      <h4>Header</h4>
+      <ul>
+        <li>Fixed, transparent, no background plate. Logo and links invert against the section behind them using an <code>IntersectionObserver</code> reading a <code>data-ground</code> attribute off each section — not a scroll handler measuring pixels.</li>
+        <li>On the home page links smooth-scroll and the active section is marked <code>aria-current</code>. Everywhere else they are ordinary links.</li>
+        <li>Padding shrinks after the hero. No hide-on-scroll: it is disorienting and it hides the only exit from a long project page.</li>
+      </ul>
+      <h4>Mobile</h4>
+      <ul>
+        <li>Full-screen overlay from a labelled button, not a bare icon. Focus trapped, Esc closes, scroll locked, focus returned on close. Drawn in §25.</li>
+        <li>Links set around 28px with 56px targets. Address and phone at the bottom — on a phone, calling the studio is a top-three action.</li>
+      </ul>
+      <h4>Within the work</h4>
+      <ul>
+        <li>Every project ends with previous / next in the same category, then back to index. Never a dead end.</li>
+        <li>Related projects are editor-chosen, falling back to same-category automatically when empty.</li>
+        <li>Breadcrumbs on project pages only, marked up as <code>BreadcrumbList</code>. Elsewhere they are noise.</li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ============ PART 3 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">03</span><h2 class="part__t">Content</h2></div>
+
+    <section id="model">
+      <div class="sec__h"><span class="sec__n">07</span><h3>Content model</h3></div>
+      <p>Nine document types, two singletons, one deferred. Three corrections since the last draft, marked below.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Type</th><th>Purpose</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>project</code></td><td>The core entity</td><td>Structure in §08</td></tr>
+          <tr><td><code>projectCategory</code></td><td>Residential, Interiors, Commercial…</td><td>A document, not an enum — editors add categories without a developer</td></tr>
+          <tr><td><code>location</code></td><td>Settlement, district, state</td><td>Referenced, so projects group by place and place pages exist</td></tr>
+          <tr><td><code>person</code></td><td>Team</td><td>Prefix (Ar.), name, <strong>slug</strong>, role, bio, portrait, order, active flag <span class="tag tag--new">slug added</span></td></tr>
+          <tr><td><code>pressItem</code></td><td>Features, awards, interviews</td><td>Publication, <strong>publication logo</strong>, date, type, external URL, related project <span class="tag tag--new">logo added</span></td></tr>
+          <tr><td><code>studio</code> <em>singleton</em></td><td>Practice info</td><td>Tagline, addresses, contacts, socials, default SEO, <strong>plus a block array</strong> so the Studio page is composable <span class="tag tag--new">changed</span></td></tr>
+          <tr><td><code>siteSettings</code> <em>singleton</em></td><td>Nav, footer, featured list</td><td>Controls the home page's featured sequence</td></tr>
+          <tr><td><code>redirect</code></td><td>Old URL → new</td><td>Generates the host redirects file at build</td></tr>
+          <tr><td><code>journalPost</code></td><td>Editorial</td><td>Reuses the same block array <span class="tag tag--later">later</span></td></tr>
+        </tbody>
+      </table></div>
+      <p>The <code>person.slug</code> was a genuine bug — §05 routed <code>/people/[slug]</code> against a model that had no slug. The <code>studio</code> block array is reuse rather than addition: the same eleven blocks now compose project pages, the Studio page and, later, Journal articles. One renderer, one editing experience.</p>
+      <p>Deliberately not modelled: an arbitrary page builder, multi-language, a client portal, tags on top of categories. Each is a real cost in editor confusion and none is needed.</p>
+    </section>
+
+    <section id="project-data">
+      <div class="sec__h"><span class="sec__n">08</span><h3>Project data structure</h3></div>
+      <p>Field values shown are Nelly House's, so the model can be checked against something real rather than imagined.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Nelly House</th></tr></thead>
+        <tbody>
+          <tr><td><code>title</code></td><td>string</td><td>yes</td><td>Nelly House</td></tr>
+          <tr><td><code>slug</code></td><td>slug, locked</td><td>yes</td><td><code>nelly-house</code></td></tr>
+          <tr><td><code>summary</code></td><td>text ≤160</td><td>yes</td><td>A house of rammed earth and reclaimed timber, built around the trees rather than over them.</td></tr>
+          <tr><td><code>category</code></td><td>ref</td><td>yes</td><td>Residential</td></tr>
+          <tr><td><code>location</code></td><td>ref</td><td>yes</td><td>Thirunelly, Wayanad</td></tr>
+          <tr><td><code>completionYear</code></td><td>number</td><td>yes</td><td>2026 <span class="tag tag--new">renamed</span></td></tr>
+          <tr><td><code>workStatus</code></td><td>enum</td><td>yes</td><td>Completed · Under construction · Concept · Competition <span class="tag tag--new">renamed</span></td></tr>
+          <tr><td><code>areas[]</code></td><td>array {label, value, unit}</td><td>no</td><td>Site / built-up. Recorded, not displayed — see the note below</td></tr>
+          <tr><td><code>client</code></td><td>string</td><td>no</td><td>Vivek Menon &amp; Karthika VK</td></tr>
+          <tr><td><code>defaultCredit</code></td><td>string + handle</td><td>no</td><td>Abhimanyu K V · @abhimanyukv1 — inherited by every image unless overridden <span class="tag tag--new">changed</span></td></tr>
+          <tr><td><code>team</code></td><td>array {ref, role}</td><td>no</td><td>Ar. Thressia Paul, Ar. Faizan Hussain</td></tr>
+          <tr><td><code>collaborators</code></td><td>array {name, role}</td><td>no</td><td>Consultants, contractors</td></tr>
+          <tr><td><code>hookImage</code></td><td>image + hotspot + alt</td><td>yes</td><td>The one image that represents the project — its band on the index, its card everywhere else <span class="tag tag--new">renamed</span></td></tr>
+          <tr><td><code>bandHeight</code></td><td>enum</td><td>yes</td><td>XL · L · M · S — sets the rhythm of the index. Defaults sensibly; the editor can tune <span class="tag tag--new">new</span></td></tr>
+          <tr><td><code>intro</code></td><td>rich text, short</td><td>yes</td><td>The opening paragraph</td></tr>
+          <tr><td><code>sequence</code></td><td>array of slides, 3–12</td><td>yes</td><td>§09 <span class="tag tag--new">changed</span></td></tr>
+          <tr><td><code>credits</code></td><td>array {role, name}</td><td>no</td><td>Free-form. <em>Not shown on the page</em> — held for press enquiries and structured data</td></tr>
+          <tr><td><code>relatedProjects</code></td><td>array of refs, max 3</td><td>no</td><td>Falls back to same category</td></tr>
+          <tr><td><em>featured</em></td><td>—</td><td>—</td><td><em>Removed.</em> <code>siteSettings.featuredProjects[]</code> is the single source of truth — an ordered list of references. A boolean here plus a list there is two sources that drift apart the first time someone ticks one and forgets the other <span class="tag tag--new">removed</span></td></tr>
+          <tr><td><code>orderRank</code></td><td>string, hidden</td><td>—</td><td>Enables drag-to-reorder</td></tr>
+          <tr><td><code>seo</code></td><td>object</td><td>no</td><td>Falls back to title + summary + cover</td></tr>
+          <tr><td><code>publishedAt</code></td><td>datetime</td><td>yes</td><td>Records when it went live. <strong>Not</strong> a scheduling mechanism — see below</td></tr>
+          <tr><td><code>lifecycle</code></td><td>enum</td><td>yes</td><td>Draft · Published · Archived — editorial state, distinct from <code>workStatus</code> above <span class="tag tag--new">new</span></td></tr>
+        </tbody>
+      </table></div>
+      <div class="aside aside--flag">
+        <p class="aside__k">The fact sheet is gone <span class="tag tag--new">changed</span></p>
+        <div><p>Year, status, architects and area no longer appear on a project page. The client's instruction was blunt and correct — <em>"all this info not needed"</em> — and a table of five rows nobody reads is exactly the kind of thing that accumulates because a component exists to hold it. <strong>Location is the eyebrow. The photographer is credited once under the sequence.</strong> Everything else stays in the model, where structured data and future press enquiries can use it, and off the page.</p></div>
+      </div>
+
+      <h4>Every image is a structured object <span class="tag tag--new">changed</span></h4>
+      <p>The last draft put a single required <code>photographer</code> on the project. That was too coarse and I have corrected it. A mature project carries photographs by one or more photographers, studio drawings, consultant drawings, archival images and client-supplied shots — one project-level field cannot describe that honestly.</p>
+      <p>So credit and rights live on the <em>image</em>, inheriting the project default when left blank:</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Field</th><th>Req</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>asset</code> + <code>hotspot</code></td><td>yes</td><td>The file and its focal point</td></tr>
+          <tr><td><code>alt</code></td><td>yes*</td><td>Required unless <code>decorative</code> is ticked. Never auto-filled from the caption</td></tr>
+          <tr><td><code>caption</code></td><td>no</td><td>Rarely used. Project pages carry no per-image captions — this exists for the press page and for drawings</td></tr>
+          <tr><td><code>credit</code></td><td>inherited</td><td>Falls back to the project's <code>defaultCredit</code></td></tr>
+          <tr><td><code>rights</code></td><td><strong>yes</strong></td><td>Owned · Licensed · Client-supplied · Press-supplied · Archival · <strong>Unknown</strong></td></tr>
+          <tr><td><code>kind</code></td><td>yes</td><td>Photograph · Drawing · Render · Film still — drives the ratio and ground rules in §26</td></tr>
+          <tr><td><code>decorative</code></td><td>—</td><td>The only escape from required alt text</td></tr>
+        </tbody>
+      </table></div>
+      <div class="aside aside--flag">
+        <p class="aside__k">No scheduled publishing in v1 <span class="tag tag--new">changed</span></p>
+        <div><p>An earlier draft implied that a future-dated <code>publishedAt</code> would go live on its own. On a statically generated site it will not — the build happened yesterday and nothing wakes it up on the date. Making that real needs a scheduled rebuild or a release webhook, which is machinery for a requirement nobody has stated. An architecture studio publishes when the photographs are ready, not to a timetable. <strong>The editor presses publish.</strong> If a genuine embargo comes up later, a nightly build is a small addition.</p></div>
+      </div>
+
+      <div class="aside aside--flag">
+        <p class="aside__k">Rights is a publishing gate, not a checklist</p>
+        <div><p>An image whose <code>rights</code> is <strong>Unknown</strong> cannot be published — the CMS refuses, and the build fails if one reaches it. This is not bureaucracy: we already hit the problem. The eighteen Nelly House photographs came off AD's CDN and are licensed to Condé Nast, and AD credited nobody. A pre-launch checklist would not have caught that; a publishing constraint does. Alt text and rights are the two things the schema will not let an editor skip.</p></div>
+      </div>
+    </section>
+
+    <section id="blocks">
+      <div class="sec__h"><span class="sec__n">09</span><h3>Project block system</h3></div>
+      <p class="lead">A project is a fixed frame and an ordered sequence of slides. Five slide types, not nine blocks.</p>
+      <p>The previous draft specified nine block types for a vertically scrolling project page composed like an article. The page is no longer that. It is a title, one short text, and five or six photographs scrolled sideways — so most of those blocks had nothing to do. Keeping them would have meant an editor choosing between eleven options to build a page that has one shape.</p>
+
+      <h4>The frame — identical on every project</h4>
+      <div class="scroll"><table>
+        <thead><tr><th>Element</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr><td>Eyebrow</td><td>Location. Nothing else</td></tr>
+          <tr><td>Title</td><td>The project name</td></tr>
+          <tr><td>Text</td><td><strong>One short paragraph about the project as a whole.</strong> Not per image</td></tr>
+          <tr><td>Sequence</td><td>The slides below</td></tr>
+          <tr><td>Foot</td><td>Position, progress, photographer credit — once</td></tr>
+          <tr><td>Pager</td><td>Previous / next project, and back to the index</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>Five slide types</h4>
+      <div class="blocks">
+        <div class="blk"><div class="blk__d d1"><i class="on"></i></div><h5>Image</h5><p>One photograph at its own aspect ratio. The workhorse — most slides are this.</p></div>
+        <div class="blk"><div class="blk__d dtx"><i></i><i></i></div><h5>Stacked pair</h5><p>Two portraits sharing one slide width, one above the other.</p></div>
+        <div class="blk"><div class="blk__d d1"><i></i></div><h5>Video</h5><p>Poster required. Plays in place, or opens out.</p></div>
+        <div class="blk"><div class="blk__d d2"><i></i><i></i></div><h5>Drawing</h5><p>Plan or section. Light ground always, zoomable, never cropped.</p></div>
+        <div class="blk"><div class="blk__d dq"><i class="on"></i><i></i></div><h5>Text interlude</h5><p>A quote or a line of context, mid-sequence. Rare by design.</p></div>
+      </div>
+
+      <h4>Validation</h4>
+      <div class="scroll"><table>
+        <thead><tr><th>Rule</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><strong>3–12 slides</strong>, six the intended shape</td><td>The brief says five or six. The cap stops a project becoming a dumping ground; below three it is not a project page</td></tr>
+          <tr><td>The first slide must be an image or video</td><td>A sequence that opens on text has no hook</td></tr>
+          <tr><td>At most one text interlude per project</td><td>Two makes it an article</td></tr>
+          <tr><td>Stacked pair takes exactly two, both portrait</td><td>It exists to pair portraits; landscapes get their own slide</td></tr>
+          <tr><td>Video requires a poster</td><td>The facade in §26 has nothing to show otherwise</td></tr>
+          <tr><td>Drawing requires a title</td><td>"Ground floor plan" is not optional information</td></tr>
+          <tr><td>The hook image is not repeated in the sequence</td><td>It is already the band on the index</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="aside">
+        <p class="aside__k">What the editor actually does</p>
+        <div><p>Drag in six photographs, set a focal point on each, type alt text, write one paragraph. That is the whole job. There is no page to compose, no layout to choose, no caption to write six times. The constraint <em>is</em> the design — every project comes out looking like the practice rather than like whoever built that page.</p></div>
+      </div>
+
+      <div class="aside aside--flag">
+        <p class="aside__k">What this costs</p>
+        <div><p>Stated plainly: project pages can no longer be individually art-directed. A project that genuinely needs an essay, twenty drawings and a long photo essay cannot have one inside this system. That is the trade for an editor who never has to think about layout, and for a portfolio that stays coherent at thirty projects. If a monograph-style project ever becomes necessary, it is a new template — a deliberate piece of work, not a setting.</p></div>
+      </div>    </section>
+
+    <section id="formatting">
+      <div class="sec__h"><span class="sec__n">10</span><h3>Formatting conventions <span class="tag tag--new">new</span></h3></div>
+      <p>Small rules, but the kind that make a site look considered or careless. Centralised in <code>lib/format/</code> so nobody hand-types a date.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Thing</th><th>Convention</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Dates</td><td>Day, month name, year. No ordinals. Wrapped in <code>&lt;time datetime&gt;</code></td><td>5 August 2026</td></tr>
+          <tr><td>Year only</td><td>Bare, in metadata rows</td><td>2026</td></tr>
+          <tr><td>Area</td><td>sq ft primary, sq m in parentheses when both are known</td><td>2,400 sq ft (223 sq m)</td></tr>
+          <tr><td>Location</td><td>Settlement, then district. State only when outside Kerala</td><td>Thirunelly, Wayanad</td></tr>
+          <tr><td>Architect names</td><td>The <em>Ar.</em> prefix is kept — the practice uses it on its own invoices and cards</td><td>Ar. Thressia Paul</td></tr>
+          <tr><td>Project titles</td><td>Title case, no article</td><td>Nelly House</td></tr>
+          <tr><td>Captions</td><td>Sentence case. No full stop on a single fragment; full stops when it runs to sentences</td><td>The verandah, inside yet outside</td></tr>
+          <tr><td>Metadata labels</td><td>Uppercase, +0.14em tracking</td><td>LOCATION</td></tr>
+          <tr><td>Photographer</td><td>Name, then handle, on the project page and in the gallery footer</td><td>Photographs: Abhimanyu K V</td></tr>
+          <tr><td>Numbers</td><td>Tabular figures wherever digits stack in a column</td><td><span style="font-variant-numeric:tabular-nums">2026 / 2025 / 2024</span></td></tr>
+        </tbody>
+      </table></div>
+      <p>Locale is <code>en-IN</code>. Dates render through <code>Intl.DateTimeFormat</code> at build, so they are correct without shipping a date library.</p>
+    </section>
+
+    <section id="cms">
+      <div class="sec__h"><span class="sec__n">11</span><h3>CMS approach</h3></div>
+      <p class="lead">It is <strong>Sanity</strong>, with the schema versioned in the repository.</p>
+      <p>In plain terms: Sanity is a hosted editing app. You sign in on a web page, fill in fields, drag photographs in, hit publish, and the site rebuilds itself. The content lives on their servers; the design of the forms lives in our code, so we control exactly what an editor sees.</p>
+      <p>The deciding factor is images. The hard problem in an architecture portfolio is not storing photographs, it is <strong>cropping</strong> them. Sanity lets an editor click the important spot in a photograph once; every crop the site derives from it — wide hero, tall card, square thumbnail — keeps that spot in frame automatically. Without it, either someone hand-crops every image at every size forever, or heads get cut off on mobile.</p>
+      <p>Second: resizing happens on Sanity's servers when a visitor first asks for an image, not while the site is building. Adding five thousand photographs does not make deploys slower.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Alternative</th><th>Why not</th></tr></thead>
+        <tbody>
+          <tr><td>Payload</td><td>Excellent, but self-hosted: needs a database and a server the practice keeps running.</td></tr>
+          <tr><td>Keystatic / Tina</td><td>Free, no vendor, content in the repo. But photographs in a git repository fail badly past a few hundred, and you would add Cloudinary anyway.</td></tr>
+          <tr><td>Contentful / Storyblok</td><td>Capable; pricing escalates and block editing is less flexible than §09 needs.</td></tr>
+          <tr><td>WordPress</td><td>Maintenance and security burden is real, and its editing model fights the block system.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="aside aside--flag">
+        <p class="aside__k">The dependency, stated plainly</p>
+        <div><p>Sanity is a third party. If it vanished, content would need migrating. Mitigations: the schema is ours and lives in the repo; the whole dataset exports to documented JSON with one command; a monthly export runs to your own storage. The account is registered to BTL, not to me. The free tier covers a practice this size comfortably.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PART 4 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">04</span><h2 class="part__t">Tokens</h2></div>
+
+    <section id="type">
+      <div class="sec__h"><span class="sec__n">12</span><h3>Typography</h3></div>
+      <p>Satoshi only — the guide specifies one typeface and a second would dilute it. The variable font is a single 42 KB file covering 300–900, self-hosted and preloaded. Licence confirmed. This page is set in it, so what follows is the real thing at real sizes.</p>
+      <div class="spec"><p class="spec__k">Display <em>900 · lh 0.95 · −0.038em</em></p><p class="spec__s t-display">Built with you</p></div>
+      <div class="spec"><p class="spec__k">Heading 1 <em>900 · lh 1.0 · −0.032em</em></p><p class="spec__s t-h1">Nelly House</p></div>
+      <div class="spec"><p class="spec__k">Heading 2 <em>700 · lh 1.05 · −0.026em</em></p><p class="spec__s t-h2">Selected projects</p></div>
+      <div class="spec"><p class="spec__k">Heading 3 <em>700 · lh 1.15 · −0.02em</em></p><p class="spec__s t-h3">Rammed earth and reclaimed timber</p></div>
+      <div class="spec"><p class="spec__k">Lead <em>500 · lh 1.3 · −0.012em</em></p><p class="spec__s t-lead">We believe that structure is both a foundation and a reflection of identity.</p></div>
+      <div class="spec"><p class="spec__k">Body <em>400 · lh 1.5</em></p><p class="spec__s t-body">The walls are rammed earth — quite literally the earth of the site, dug out while carving a pond into the compound. Bamboo grown on the property became sunscreens and gable detailing.</p></div>
+      <div class="spec"><p class="spec__k">Caption <em>400 · 13px · lh 1.4</em></p><p class="spec__s t-caption">The verandah, where oxide flooring runs unbroken from inside to out</p></div>
+      <div class="spec"><p class="spec__k">Meta <em>500 · 12px · uppercase · +0.14em</em></p><p class="spec__s t-meta">Residential · Thirunelly, Wayanad · 2026</p></div>
+      <h4>The scale</h4>
+      <div class="scroll"><table>
+        <thead><tr><th>Token</th><th>Fluid</th><th>Wt</th><th>LH</th><th>Tracking</th><th>Used for</th></tr></thead>
+        <tbody>
+          <tr><td><code>--type-display</code></td><td>44 → 120px</td><td>900</td><td>0.95</td><td>−0.038em</td><td>Hero, project title</td></tr>
+          <tr><td><code>--type-h1</code></td><td>36 → 72px</td><td>900</td><td>1.0</td><td>−0.032em</td><td>Page titles</td></tr>
+          <tr><td><code>--type-h2</code></td><td>28 → 48px</td><td>700</td><td>1.05</td><td>−0.026em</td><td>Section heads</td></tr>
+          <tr><td><code>--type-h3</code></td><td>22 → 32px</td><td>700</td><td>1.15</td><td>−0.02em</td><td>Sub-sections</td></tr>
+          <tr><td><code>--type-lead</code></td><td>18 → 26px</td><td>500</td><td>1.3</td><td>−0.012em</td><td>Intros, quotes</td></tr>
+          <tr><td><code>--type-body</code></td><td>16 → 18px</td><td>400</td><td>1.5</td><td>0</td><td>Running text</td></tr>
+          <tr><td><code>--type-body-sm</code></td><td>15px</td><td>400</td><td>1.5</td><td>0</td><td>Footer, dense areas</td></tr>
+          <tr><td><code>--type-caption</code></td><td>13px</td><td>400</td><td>1.4</td><td>0</td><td>Image captions</td></tr>
+          <tr><td><code>--type-meta</code></td><td>12px</td><td>500</td><td>1.2</td><td>+0.14em</td><td>Labels, eyebrows, tags</td></tr>
+          <tr><td><code>--type-nav</code></td><td>14 → 15px</td><td>500</td><td>1.2</td><td>+0.02em</td><td>Navigation</td></tr>
+        </tbody>
+      </table></div>
+      <p>Ten tokens is the whole scale. Anything not on it does not get set. Measure caps at 66 characters for body, 48 for lead.</p>
+      <p><strong>If Satoshi fails to load</strong> the page must not lurch. <code>font-display: swap</code>, one preloaded woff2, and a metric-adjusted fallback so the swap is close to invisible:</p>
+      <pre><code>--font: "Satoshi", "Satoshi Fallback", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, sans-serif;
+
+@font-face &#123;                     /* metric-adjusted local fallback */
+  font-family: "Satoshi Fallback";
+  src: local("Helvetica Neue"), local("Arial");
+  size-adjust: 104%;  ascent-override: 96%;  descent-override: 24%;
+&#125;</code></pre>
+      <p>Only the variable file ships. No static weights, no italics — the system uses five weights from one 42 KB file and nothing outside 300–900.</p>
+    </section>
+
+    <section id="colour">
+      <div class="sec__h"><span class="sec__n">13</span><h3>Colour</h3></div>
+      <h4>Brand primitives</h4>
+      <div class="sw-grid">
+        <div><div class="sw__c" style="background:#050505"></div><span class="sw__n">Black</span><span class="sw__x">#050505</span></div>
+        <div><div class="sw__c" style="background:#424242"></div><span class="sw__n">Dark Grey</span><span class="sw__x">#424242</span></div>
+        <div><div class="sw__c" style="background:#BFBFBF"></div><span class="sw__n">Light Grey</span><span class="sw__x">#BFBFBF</span></div>
+        <div><div class="sw__c" style="background:#FFFFFF"></div><span class="sw__n">White</span><span class="sw__x">#FFFFFF</span></div>
+        <div><div class="sw__c" style="background:#0037FF"></div><span class="sw__n">Blue</span><span class="sw__x">#0037FF</span></div>
+        <div><div class="sw__c" style="background:#ED2941"></div><span class="sw__n">Red</span><span class="sw__x">#ED2941</span></div>
+        <div><div class="sw__c" style="background:#00FF66"></div><span class="sw__n">Green</span><span class="sw__x">#00FF66</span></div>
+        <div><div class="sw__c" style="background:#00D0FF"></div><span class="sw__n">Cyan</span><span class="sw__x">#00D0FF</span></div>
+        <div><div class="sw__c" style="background:#7D00F2"></div><span class="sw__n">Violet</span><span class="sw__x">#7D00F2</span></div>
+        <div><div class="sw__c" style="background:#048F7A"></div><span class="sw__n">Teal</span><span class="sw__x">#048F7A</span></div>
+        <div><div class="sw__c" style="background:#BD1644"></div><span class="sw__n">Crimson</span><span class="sw__x">#BD1644</span></div>
+      </div>
+      <p>Red is <code>#E81313</code> on the guide's colour page but <code>#ED2941</code> in the shipped line assets. The assets win — that is what has actually been printed.</p>
+      <h4>Derived neutrals</h4>
+      <p>The guide gives four. A UI needs borders, secondary text and hover grounds between them, so these are interpolated — derived, not brand canon.</p>
+      <div class="sw-grid">
+        <div><div class="sw__c" style="background:#F7F7F7"></div><span class="sw__n">n-50</span><span class="sw__x">#F7F7F7</span></div>
+        <div><div class="sw__c" style="background:#EDEDED"></div><span class="sw__n">n-100</span><span class="sw__x">#EDEDED</span></div>
+        <div><div class="sw__c" style="background:#DCDCDC"></div><span class="sw__n">n-200</span><span class="sw__x">#DCDCDC</span></div>
+        <div><div class="sw__c" style="background:#9A9A9A"></div><span class="sw__n">n-400</span><span class="sw__x">#9A9A9A</span></div>
+        <div><div class="sw__c" style="background:#8A8A8A"></div><span class="sw__n">n-450</span><span class="sw__x">#8A8A8A</span></div>
+        <div><div class="sw__c" style="background:#5C5C5C"></div><span class="sw__n">n-600</span><span class="sw__x">#5C5C5C</span></div>
+        <div><div class="sw__c" style="background:#242424"></div><span class="sw__n">n-800</span><span class="sw__x">#242424</span></div>
+        <div><div class="sw__c" style="background:#141414"></div><span class="sw__n">n-900</span><span class="sw__x">#141414</span></div>
+      </div>
+      <h4>Semantic tokens</h4>
+      <div class="scroll"><table>
+        <thead><tr><th>Token</th><th>Dark <em>(default)</em></th><th>Light</th><th>Contrast D / L</th></tr></thead>
+        <tbody>
+          <tr><td><code>--surface</code></td><td>#050505</td><td>#FFFFFF</td><td>—</td></tr>
+          <tr><td><code>--surface-sunken</code></td><td>#141414</td><td>#F7F7F7</td><td>—</td></tr>
+          <tr><td><code>--text-primary</code></td><td>#FFFFFF</td><td>#050505</td><td>19.9 / 20.1</td></tr>
+          <tr><td><code>--text-secondary</code></td><td>#BFBFBF</td><td>#5C5C5C</td><td>11.0 / 7.0</td></tr>
+          <tr><td><code>--text-tertiary</code></td><td>#8A8A8A</td><td>#767676</td><td>5.3 / 4.6</td></tr>
+          <tr><td><code>--border-subtle</code></td><td>#242424</td><td>#DCDCDC</td><td>—</td></tr>
+          <tr><td><code>--border-strong</code></td><td>#424242</td><td>#BFBFBF</td><td>—</td></tr>
+          <tr><td><code>--accent</code></td><td>#00D0FF</td><td>#0037FF</td><td>11.1 / 7.0</td></tr>
+          <tr><td><code>--line-mark</code></td><td>#00FF66 / #00D0FF</td><td>#ED2941 / #0037FF</td><td>15.0 / 4.1</td></tr>
+          <tr><td><code>--danger</code></td><td>#FF5C7A</td><td>#BD1644</td><td>7.4 / 6.9</td></tr>
+          <tr><td><code>--focus-ring</code></td><td>#00D0FF</td><td>#0037FF</td><td>11.1 / 7.0</td></tr>
+        </tbody>
+      </table></div>
+      <div class="aside aside--flag">
+        <p class="aside__k">Two contrast findings</p>
+        <div>
+          <p>Brand red measures <strong>4.1:1</strong> on white as shipped — below the 4.5:1 minimum for body text. Blue measures 7.0:1. So blue is the interactive and text accent; red is the line device and large display moments only. This matches how the guide actually applies colour.</p>
+          <p>Crimson <code>#BD1644</code> serves as the error colour on light grounds at 6.9:1, but is too dark on near-black. Dark mode uses a lightened <code>#FF5C7A</code> — derived, and the only colour in the system with no brand-book equivalent. Flagging it rather than quietly inventing it.</p>
+        </div>
+      </div>
+      <p>Ground rules, encoded rather than remembered:</p>
+      <ul>
+        <li>On white → the line is red or blue</li>
+        <li>On a solid brand colour → the line is white</li>
+        <li>On dark → the line is green or cyan</li>
+        <li><strong>On a photograph → treat it as a dark ground</strong>, whatever the page theme. Without this the hero cue turns red on a light page and vanishes into the foliage.</li>
+        <li>Violet, teal and crimson are background colours for occasional statement sections. Never text, never small elements.</li>
+      </ul>
+    </section>
+
+    <section id="spacing">
+      <div class="sec__h"><span class="sec__n">14</span><h3>Spacing</h3></div>
+      <p>Nine steps on a 4px base, plus two fluid tokens for the intervals between sections.</p>
+      <p><strong>The rule, stated precisely:</strong> component spacing comes from this scale. Prefer <code>gap</code> for relationships between siblings; use margins only where they express a deliberate component boundary. This does not govern <code>border-radius</code>, <code>aspect-ratio</code>, transforms or positional offsets, which have their own tokens or none. An earlier draft said "a value not on this list is a bug", which was too absolute to survive contact with real CSS.</p>
+      <div class="scale">
+        <div class="scale__r"><span class="scale__t">--s-1</span><span class="scale__v">4px</span><span class="scale__b" style="width:4px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-2</span><span class="scale__v">8px</span><span class="scale__b" style="width:8px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-3</span><span class="scale__v">12px</span><span class="scale__b" style="width:12px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-4</span><span class="scale__v">16px</span><span class="scale__b" style="width:16px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-5</span><span class="scale__v">24px</span><span class="scale__b" style="width:24px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-6</span><span class="scale__v">32px</span><span class="scale__b" style="width:32px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-7</span><span class="scale__v">48px</span><span class="scale__b" style="width:48px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-8</span><span class="scale__v">64px</span><span class="scale__b" style="width:64px"></span></div>
+        <div class="scale__r"><span class="scale__t">--s-9</span><span class="scale__v">96px</span><span class="scale__b" style="width:96px"></span></div>
+      </div>
+      <pre><code>--space-section:    clamp(4rem, 2rem + 7vw, 8rem);     /*  64 → 128px */
+--space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);   /*  96 → 224px */</code></pre>
+      <p>Spacing between siblings uses flex or grid <code>gap</code>, never per-element margins. That removes margin collapse and double-gap bugs as a category.</p>
+    </section>
+
+    <section id="grid">
+      <div class="sec__h"><span class="sec__n">15</span><h3>Grid</h3></div>
+      <p>Twelve columns is the <em>design</em> grid — the shared vocabulary for how wide things are and where they align. It holds at every viewport as a way of thinking.</p>
+      <p>The <em>implementation</em> is allowed to be sensible about it: below <code>md</code> almost everything spans the full width, so twelve 10px tracks would be notional rather than useful, and components collapse to four effective tracks. Nothing is laid out by counting tiny columns on a phone. Components declare semantic spans — <em>half</em>, <em>third</em>, <em>full</em> — and the grid resolves them.</p>
+      <div class="gdemo"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Token</th><th>Value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>--grid-cols</code></td><td>12</td><td>Constant</td></tr>
+          <tr><td><code>--grid-gap</code></td><td>clamp(1rem, 0.5rem + 1.5vw, 1.5rem)</td><td>16 → 24px</td></tr>
+          <tr><td><code>--page-margin</code></td><td>clamp(1.25rem, 0.6rem + 2.8vw, 4.5rem)</td><td>20 → 72px</td></tr>
+          <tr><td><code>--max-width</code></td><td>96rem / 1536px</td><td>Canvas cap</td></tr>
+          <tr><td><code>--measure</code></td><td>66ch</td><td>Body</td></tr>
+          <tr><td><code>--measure-lead</code></td><td>48ch</td><td>Leads</td></tr>
+        </tbody>
+      </table></div>
+      <p>Above 1536px the canvas stops growing and margins take the excess. Full-bleed sections use the <code>Bleed</code> primitive.</p>
+      <div class="aside">
+        <p class="aside__k">Two hard rules</p>
+        <div>
+          <p><strong>Components must not reference column numbers.</strong> No <code>grid-column: 7 / 13</code> scattered through the codebase. Components declare a semantic span — <code>full</code>, <code>wide</code>, <code>two-thirds</code>, <code>half</code>, <code>third</code> — and the grid resolves it. Only a grid composition itself may talk in columns.</p>
+          <p><strong>Full bleed goes through <code>Bleed</code>.</strong> An earlier draft said "never negative margins", which was a preference dressed up as an invariant — negative margins are legitimate in plenty of places. The real rule is narrower: page-level negative-margin hacks to escape the container are prohibited, because the primitive already does it correctly and consistently.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="responsive">
+      <div class="sec__h"><span class="sec__n">16</span><h3>Responsive strategy</h3></div>
+      <p class="lead">Fluid by default; breakpoints only where the layout genuinely has to rearrange.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Name</th><th>Min</th><th>What changes</th></tr></thead>
+        <tbody>
+          <tr><td><code>sm</code></td><td>30rem / 480px</td><td>Project cards 1 → 2 up</td></tr>
+          <tr><td><code>md</code></td><td>48rem / 768px</td><td>Overlay nav → inline nav; image pairs side by side</td></tr>
+          <tr><td><code>lg</code></td><td>64rem / 1024px</td><td>Index 2 → 3 up; image + text side by side, text sticky</td></tr>
+          <tr><td><code>xl</code></td><td>90rem / 1440px</td><td>Optional 4-up index, larger gutters</td></tr>
+          <tr><td><code>2xl</code></td><td>120rem / 1920px</td><td>Canvas caps, margins absorb the rest</td></tr>
+        </tbody>
+      </table></div>
+      <h4>Container queries for anything reusable</h4>
+      <p>Cards, figures and metadata blocks size from their <em>container</em>, not the viewport. The mockups in §24 and §25 use exactly this — narrow the window and watch them reflow independently of the page around them.</p>
+      <h4>Device reality, not device widths</h4>
+      <ul>
+        <li><code>dvh</code> / <code>svh</code> so a full-height hero is not cut off by the iOS Safari address bar.</li>
+        <li><code>env(safe-area-inset-*)</code> on notched iPhones, both orientations.</li>
+        <li>Hover behind <code>@media (hover:hover)</code> so touch devices never stick in a hover state.</li>
+        <li>Tested on Safari, iOS Safari, Chrome, Android Chrome, Firefox, Edge. Mid-range Android on throttled 4G is the performance target.</li>
+      </ul>
+    </section>
+
+    <section id="shape">
+      <div class="sec__h"><span class="sec__n">17</span><h3>Shape &amp; the line</h3></div>
+      <h4>The arch</h4>
+      <p>The guide's Solid Colours page draws its blocks as rectangles with a large radius on <em>two corners only</em>. Reused for statement blocks: the press feature, the contact panel, occasional full-bleed colour sections. The swatch chips in §13 use it. Never on project photography.</p>
+      <pre><code>--radius-none: 0;                            /* default for everything */
+--radius-pill: 999px;                        /* buttons                */
+--radius-arch: clamp(1.5rem, 3.5vw, 3rem);   /* two corners only       */</code></pre>
+      <h4>The line</h4>
+      <p>The path is lifted directly out of <code>002 Element files/002 Short/PDF/S001.pdf</code> — the real vector, with its long asymmetric rise, sharp apex and tight hook back to the baseline. The bar is exactly 22.5% of the figure's height, which is what lets a flat rule butt against it seamlessly at any width.</p>
+      <div class="line line--xl" style="margin-bottom:1.5rem"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+      <div class="aside">
+        <p class="aside__k">One restraint, added</p>
+        <div><p>An earlier draft also used the line as a scroll-progress indicator. That has been dropped, along with the indicator itself. Scroll progress is a functional readout; the line is expressive. Using one visual language for both weakens each, and if the line appears everywhere it stops being a signature and becomes a UI component. A portfolio does not need a progress bar.</p></div>
+      </div>
+      <p><strong>At most one expressive line per viewport</strong>, unless a composition genuinely calls for more. This is the rule that stops the device becoming wallpaper: a signature used three times on one screen is a pattern, not a signature.</p>
+      <p>One component taking size, colour, direction and an animate flag. Flipped and rotated in multiples of 90° per the asset READ ME, and nothing else. It appears as: <strong>the navigation underline</strong> — one at a time, never two — plus section dividers and the progress rule beneath a project sequence. Ordinary links get a plain rule in the same colour. Nowhere else.</p>
+    </section>
+
+    <section id="icons">
+      <div class="sec__h"><span class="sec__n">18</span><h3>Icons <span class="tag tag--new">new</span></h3></div>
+      <p>Eight icons. No icon font, no library. An icon font would be a second typeface loaded for eight glyphs, and it breaks under reduced-data and for screen readers that read the private-use codepoints aloud.</p>
+      <div class="ico-grid">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M5 12h14M13 6l6 6-6 6"/></g></svg><span>arrow-right</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M19 12H5M11 6l-6 6 6 6"/></g></svg><span>arrow-left</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M7 17 17 7M9 7h8v8"/></g></svg><span>external</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M6 6l12 12M18 6L6 18"/></g></svg><span>close</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M4 8h16M4 16h16"/></g></svg><span>menu</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M8 5l11 7-11 7z"/></g></svg><span>play</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M12 5v14M5 12h14"/></g></svg><span>zoom-in</span></div>
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M6 9l6 6 6-6"/></g></svg><span>chevron</span></div>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Grid</td><td>24 × 24, drawn on whole pixels</td></tr>
+          <tr><td>Stroke</td><td>1.5px, <code>butt</code> caps, <code>miter</code> joins — matching the wordmark's terminals</td></tr>
+          <tr><td>Fill</td><td>None, except <code>play</code>. Colour is always <code>currentColor</code></td></tr>
+          <tr><td>Delivery</td><td>Inline SVG, one shared sprite. Total under 2 KB</td></tr>
+          <tr><td>Semantics</td><td><code>aria-hidden</code> when beside a text label; <code>role="img"</code> with a title when alone</td></tr>
+          <tr><td>Sizing</td><td>16px inside buttons, 24px standalone. Never scaled below 16</td></tr>
+        </tbody>
+      </table></div>
+      <p>Butt caps and mitred joins are not arbitrary — they match the flat terminals of the btl wordmark and the line device. Rounded caps would read as a different family.</p>
+    </section>
+
+    <section id="motion">
+      <div class="sec__h"><span class="sec__n">19</span><h3>Motion system</h3></div>
+      <p>One easing curve, five durations, six named behaviours. Everything below is live — hover the demos, scroll them into view.</p>
+      <pre><code>--ease:      cubic-bezier(0.16, 1, 0.3, 1);   /* the only curve      */
+--dur-fast:  180ms;   /* focus rings, small state changes             */
+--dur-base:  320ms;   /* menus, disclosure, filter changes            */
+--dur-hover: 420ms;   /* hover underlines                             */
+--dur-slow:  700ms;   /* section and card reveals                     */
+--dur-draw:  900ms;   /* the line, image masks                        */</code></pre>
+      <div class="mo">
+        <div class="mo__i">
+          <p class="mo__k">01 · Link underline · 420ms</p>
+          <div class="mo__stage"><a class="tl" href="#motion">Nelly House</a></div>
+          <p class="mo__n">The rule grows from the left under the label. In the navigation the same reveal carries the line device instead; everywhere else it is a plain rule. One hover idea, two weights.</p>
+        </div>
+        <div class="mo__i">
+          <p class="mo__k">02 · Image mask · 900ms</p>
+          <div class="mo__stage"><div class="demo-mask rv-mask"><img loading="lazy" decoding="async" alt="Reclaimed entrance door from an old Kerala mana" src="__IMG_entry__"></div></div>
+          <p class="mo__n">Images reveal by <code>clip-path</code>, not opacity. Reads as a curtain rather than a fade.</p>
+        </div>
+        <div class="mo__i">
+          <p class="mo__k">03 · Card hover · 700ms</p>
+          <div class="mo__stage"><div class="demo-card"><div><img loading="lazy" decoding="async" alt="The verandah at Nelly House" src="__IMG_verandah__"></div></div></div>
+          <p class="mo__n">The photograph scales 1.04 inside a fixed frame. The frame never moves, so the grid stays still.</p>
+        </div>
+        <div class="mo__i">
+          <p class="mo__k">04 · Line draw · 900ms</p>
+          <div class="mo__stage"><div class="demo-line"><div class="line line--s"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div></div></div>
+          <p class="mo__n">Bar first, inflection a beat behind. Every part divider in this document does it.</p>
+        </div>
+        <div class="mo__i">
+          <p class="mo__k">05 · Text settle · 700ms</p>
+          <div class="mo__stage"><div class="demo-fade rv-fade"><span>Wayanad, Kerala</span></div></div>
+          <p class="mo__n">18px rise and fade. Staggered 80ms per sibling so a metadata block arrives in sequence.</p>
+        </div>
+        <div class="mo__i">
+          <p class="mo__k">06 · Page transition · 320ms</p>
+          <div class="mo__stage"><span style="font-size:.75rem;color:var(--ink-3);text-align:center;padding:0 1rem;line-height:1.4">Cross-fade via the View&nbsp;Transitions API<br>with an instant fallback</span></div>
+          <p class="mo__n">Native browser transitions where supported, nothing where not. No JavaScript router either way.</p>
+        </div>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>Rule</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Only <code>transform</code>, <code>opacity</code>, <code>clip-path</code></td><td>The compositor handles these without repainting. Anything else drops frames on mid-range Android.</td></tr>
+          <tr><td><code>IntersectionObserver</code>, never scroll handlers</td><td>Scroll handlers fire dozens of times a second and are the classic cause of janky portfolio sites.</td></tr>
+          <tr><td>Content visible in the HTML, revealed by CSS</td><td>Present for search engines and with JavaScript off. Reveals are decoration, never delivery.</td></tr>
+          <tr><td>Reveal once, then unobserve</td><td>No re-animation on scroll back. Repeating reveals feel cheap and cost battery.</td></tr>
+          <tr><td>Nothing loops</td><td>The only continuously moving thing is the hero video, and it can be switched off.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="aside">
+        <p class="aside__k">Reduced motion</p>
+        <div><p>Under <code>prefers-reduced-motion: reduce</code>: reveals become instant, the line appears drawn, masks resolve immediately, the hero video is replaced by its poster, and the featured sequence becomes an ordinary scrolling list. A genuine alternative, not a kill switch.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PART 5 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">05</span><h2 class="part__t">Interface</h2></div>
+
+    <section id="buttons">
+      <div class="sec__h"><span class="sec__n">20</span><h3>Buttons &amp; links <span class="tag tag--new">new</span></h3></div>
+      <p class="lead">Three levels, and a hard rule: links navigate, buttons act.</p>
+      <p>This was the largest gap in the previous draft — the system specified a whole site without ever saying what a button looks like. Everything below is live.</p>
+
+      <div class="demo">
+        <p class="demo__k">Level 1 · text link — the default, used everywhere</p>
+        <div class="demo__row">
+          <a class="tl" href="#buttons">All projects</a>
+          <a class="tl" href="#buttons">Read about the studio</a>
+          <a class="tl-inline" href="#buttons">an inline link inside body copy</a>
+          <a class="tl tl-ext" href="#buttons">Architectural Digest<svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M7 17 17 7M9 7h8v8"/></g></svg></a>
+        </div>
+        <p class="demo__note">The btl line grows underneath on hover and focus. Inline links inside running text are the one exception — they carry a permanent underline, because a link buried in a paragraph has to be findable before you hover it. External links take the arrow.</p>
+      </div>
+
+      <div class="demo">
+        <p class="demo__k">Level 2 · outline button — section actions</p>
+        <div class="demo__row">
+          <a class="b b-outline" href="#buttons">View all projects</a>
+          <a class="b b-outline" href="#buttons">Read the feature<svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M7 17 17 7M9 7h8v8"/></g></svg></a>
+          <button class="b b-quiet" type="button">Load more</button>
+        </div>
+        <p class="demo__note">A pill, 1px border, filling with ink on hover. Used to close a home-page section: "view all projects", "read about the studio". <code>b-quiet</code> is the same shape at lower contrast, for secondary actions like pagination.</p>
+      </div>
+
+      <div class="demo">
+        <p class="demo__k">Level 3 · solid button — one per page, maximum</p>
+        <div class="demo__row">
+          <a class="b b-solid" href="#buttons">Start a conversation</a>
+          <button class="b b-solid b-load" type="button" aria-label="Sending">Sending</button>
+          <button class="b b-outline" type="button" disabled>Unavailable</button>
+        </div>
+        <p class="demo__note">Filled with the accent. Reserved for the single most important action on a page — the contact CTA, the form submit. Two solid buttons in one view means neither is primary. Loading state replaces the label with a spinner and blocks pointer events; disabled drops to 42% and is never the only signal.</p>
+      </div>
+
+      <div class="scroll"><table>
+        <thead><tr><th>Spec</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Minimum height</td><td>44px — the touch target floor, on every device</td></tr>
+          <tr><td>Padding</td><td>0.7rem vertical, 1.4rem horizontal</td></tr>
+          <tr><td>Type</td><td>12px, weight 500, uppercase, +0.14em</td></tr>
+          <tr><td>Radius</td><td><code>--radius-pill</code>. The only rounded thing in the system besides the arch</td></tr>
+          <tr><td>Transition</td><td>260ms on background, colour and border only</td></tr>
+          <tr><td>Focus</td><td>2px accent ring, 2px offset. Never removed, never replaced by the hover style</td></tr>
+          <tr><td>Icon</td><td>16px, trailing, optical gap 0.5rem</td></tr>
+        </tbody>
+      </table></div>
+      <div class="aside">
+        <p class="aside__k">The rule that keeps it clean</p>
+        <div><p>A control that changes the URL is a link and must be an <code>&lt;a&gt;</code> — it has to be middle-clickable and openable in a new tab. A control that changes state on the page is a <code>&lt;button&gt;</code>. Styling one to look like the other is how sites end up with buttons you cannot open in a new tab and links that do nothing on Enter.</p></div>
+      </div>
+    </section>
+
+    <section id="forms">
+      <div class="sec__h"><span class="sec__n">21</span><h3>Forms <span class="tag tag--new">new</span></h3></div>
+      <p>One form on the site: contact. It should still be specified properly, because a broken enquiry form costs the practice actual work.</p>
+      <p>Fields are <strong>underline only</strong> — no boxes, consistent with a system that has no cards anywhere. Labels sit above and stay visible. A placeholder is never used as a label: it disappears the moment someone types, and it fails for screen readers.</p>
+
+      <div class="demo">
+        <p class="demo__k">Field states — live, try focusing them</p>
+        <div style="display:grid;gap:0;max-width:26rem">
+          <div class="f">
+            <label for="d-name">Name</label>
+            <input id="d-name" type="text" autocomplete="name">
+          </div>
+          <div class="f">
+            <label for="d-email">Email</label>
+            <input id="d-email" type="email" autocomplete="email" value="karthika@westland.in">
+            <span class="f__hint">We reply within two working days.</span>
+          </div>
+          <div class="f f--err">
+            <label for="d-msg">Message</label>
+            <textarea id="d-msg" aria-invalid="true" aria-describedby="d-msg-err">Hi —</textarea>
+            <span class="f__err" id="d-msg-err"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-s"><path d="M12 7v7M12 17v.5M12 3 2 20h20z"/></g></svg>Please tell us a little more — at least 20 characters.</span>
+          </div>
+          <div class="f">
+            <label for="d-dis">Project type</label>
+            <input id="d-dis" type="text" value="Not currently taking enquiries" disabled>
+          </div>
+        </div>
+        <p class="demo__note">Rest is a hairline; hover darkens it; focus thickens it to 2px in the accent. Error turns the label and rule to <code>--danger</code> and adds an icon <em>and</em> text — colour is never the only signal.</p>
+      </div>
+
+      <div class="scroll"><table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Name</td><td>text</td><td>yes</td><td><code>autocomplete="name"</code></td></tr>
+          <tr><td>Email</td><td>email</td><td>yes</td><td><code>inputmode="email"</code> so phones show the right keyboard</td></tr>
+          <tr><td>Phone</td><td>tel</td><td>no</td><td><code>inputmode="tel"</code>. Optional — demanding a phone number loses enquiries</td></tr>
+          <tr><td>Project type</td><td>select</td><td>no</td><td>Options come from <code>projectCategory</code>, plus "Something else"</td></tr>
+          <tr><td>Message</td><td>textarea</td><td>yes</td><td>Minimum 20 characters, validated on blur not on keystroke</td></tr>
+          <tr><td><em>Honeypot</em></td><td>text</td><td>—</td><td>Hidden from sight and from the tab order, <code>autocomplete="off"</code>. Catches most bots without a CAPTCHA</td></tr>
+        </tbody>
+      </table></div>
+      <h4>Behaviour</h4>
+      <ul>
+        <li>Validation on <strong>blur</strong> and on submit, never on every keystroke — being told you are wrong while still typing is hostile.</li>
+        <li>On submit failure, focus moves to the first invalid field and the error is announced through a polite live region.</li>
+        <li>On success the form is <strong>replaced</strong> by a confirmation with the studio's email as a fallback — not a toast that vanishes before it is read.</li>
+        <li>Submissions go to <strong>admin@btldesigns.in</strong> via the host's native form handling. No third-party service, no CAPTCHA.</li>
+        <li>A one-line privacy note sits under the submit button. India's DPDP Act applies the moment a name and email are collected.</li>
+      </ul>
+      <div class="demo" style="margin-top:var(--s-6)">
+        <p class="demo__k">Success state</p>
+        <div class="st__b">
+          <p class="st__ttl">Thank you — we have your message.</p>
+          <p class="st__sub">Someone from the studio will reply within two working days. If it is urgent, call <a class="tl-inline" href="#forms">+91 99472 44424</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="states">
+      <div class="sec__h"><span class="sec__n">22</span><h3>System states <span class="tag tag--new">new</span></h3></div>
+      <p>What the site does when there is nothing to show, something is loading, or something has gone wrong. Specified now because these are always designed last and always look it.</p>
+
+      <div class="st">
+        <p class="st__k">Image loading</p>
+        <div><div class="st__b"><div class="skel" style="width:100%;height:3rem;margin-bottom:0.6rem"></div><p class="st__sub" style="margin:0">A ~20px blurred version of the photograph, cross-fading out as the real one arrives.</p></div></div>
+      </div>
+      <div class="st">
+        <p class="st__k">No results</p>
+        <div><div class="st__b">
+          <p class="st__ttl">No commercial projects in Wayanad yet.</p>
+          <p class="st__sub" style="margin-bottom:1rem">The studio's commercial work is mostly in Kozhikode.</p>
+          <a class="b b-outline" href="#states">Show all projects</a>
+        </div></div>
+      </div>
+      <div class="st">
+        <p class="st__k">404</p>
+        <div><div class="st__b">
+          <p class="st__ttl">That page has moved or never existed.</p>
+          <p class="st__sub" style="margin-bottom:1rem">Here is the recent work instead.</p>
+          <a class="b b-outline" href="#states">All projects</a>
+        </div></div>
+      </div>
+      <div class="st">
+        <p class="st__k">Server error</p>
+        <div><div class="st__b">
+          <p class="st__ttl">Something went wrong at our end.</p>
+          <p class="st__sub">Try again in a moment, or email <a class="tl-inline" href="#states">admin@btldesigns.in</a>.</p>
+        </div></div>
+      </div>
+      <div class="st">
+        <p class="st__k">Slow connection</p>
+        <div><div class="st__b"><p class="st__sub" style="margin:0">With <code>Save-Data</code> set: the hero serves its poster frame instead of video, and the image ladder caps at 1280px. No message, no prompt — it just costs less.</p></div></div>
+      </div>
+
+      <div class="aside aside--flag">
+        <p class="aside__k">One removal</p>
+        <div><p>The previous draft listed a <code>Skeleton</code> component. It should not exist. Pages are static HTML with the content already in them — there is no moment where text is absent and needs a grey placeholder. The only genuine loading state is the image blur above, and the lightbox fetching a full-resolution file. Shipping skeletons for a static site is cargo-culted from single-page apps and would be pure weight.</p></div>
+      </div>
+      <p>The 404 is a real page using the real layout, listing the three most recent projects — not a bare apology. The 500 page is deliberately plain and has <strong>no CMS dependency</strong>, because the CMS may be exactly what is broken.</p>
+    </section>
+
+    <section id="components">
+      <div class="sec__h"><span class="sec__n">23</span><h3>Component inventory</h3></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Layer</th><th>Components</th></tr></thead>
+        <tbody>
+          <tr><td>Primitives</td><td><code>Container</code> · <code>Grid</code> · <code>Stack</code> · <code>Cluster</code> · <code>Bleed</code> · <code>Ratio</code> · <code>Section</code></td></tr>
+          <tr><td>Brand</td><td><code>Logo</code> · <code>BtlLine</code> · <code>ArchPanel</code> · <code>Icon</code></td></tr>
+          <tr><td>Navigation</td><td><code>Header</code> · <code>NavDesktop</code> · <code>NavMobile</code> · <code>NavLine</code> · <code>SkipLink</code> · <code>Breadcrumb</code> · <code>ProjectPager</code> · <code>Footer</code></td></tr>
+          <tr><td>Media</td><td><code>Figure</code> · <code>Gallery</code> · <code>Lightbox</code> · <code>VideoEmbed</code> · <code>DrawingViewer</code> · <code>HeroMedia</code> · <code>BeforeAfter</code></td></tr>
+          <tr><td>Content</td><td><code>RichText</code> · <code>SlideRenderer</code> + 5 slides · <code>PullQuote</code> · <code>SectionHeader</code> · <code>Eyebrow</code></td></tr>
+          <tr><td>Cards</td><td><code>ProjectCard</code> · <code>PersonCard</code> · <code>PressCard</code></td></tr>
+          <tr><td>Collections</td><td><code>BandStack</code> · <code>ProjectBand</code> · <code>Sequence</code> · <code>SequenceSlide</code> · <code>PressWall</code> · <code>FilterBar</code> <em>(conditional — §05)</em> · <code>RelatedProjects</code></td></tr>
+          <tr><td>Controls</td><td><code>Button</code> · <code>TextLink</code> · <code>Tag</code> · <code>Field</code> · <code>ContactForm</code></td></tr>
+          <tr><td>States</td><td><code>EmptyState</code> · <code>ErrorState</code></td></tr>
+          <tr><td>Head</td><td><code>Seo</code> · <code>JsonLd</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>Two rules hold this together, both enforceable by lint. Nothing outside <code>Figure</code> renders an <code>&lt;img&gt;</code>. Nothing outside the primitives writes a raw pixel value for spacing.</p>
+      <p>Deliberately absent: a modal system, toasts, tabs, a slider library, skeletons. None is needed and each is a maintenance liability.</p>
+    </section>
+  </div>
+
+  <!-- ============ PART 6 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">06</span><h2 class="part__t">The site, drawn</h2></div>
+
+    <section id="compositions">
+      <div class="sec__h"><span class="sec__n">24</span><h3>Page compositions</h3></div>
+      <p class="lead">Live, responsive fragments built from the tokens above — not pictures of a design.</p>
+      <p>Real Nelly House photography, the actual type scale, spacing and grid. Each fragment is a container query context, so narrowing the browser reflows them the way the real components will. Hover the cards.</p>
+
+      <div class="mock">
+        <p class="mock__k"><b>A · Landing</b> <span>full viewport · no words · office film or photograph</span></p>
+        <div class="mock__f">
+          <div class="mk-land">
+            <img loading="lazy" decoding="async" alt="The btl studio in Kozhikode" src="__IMG_office__">
+            <div class="mk-land__nav">
+              <img loading="lazy" decoding="async" alt="btl architects" src="__IMG_logoW__">
+              <ul>
+                <li>Projects<span class="navline on-media"><span></span><svg viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg></span></li>
+                <li>Studio</li><li>People</li><li>Press</li><li>Contact</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <p class="mock__c">No headline, no eyebrow, no tagline. The studio's own room, the logo, five words of navigation. A practice that says "built with you to shape places that last" over a photograph is explaining itself; one that shows the room and says nothing is more confident. Everything the visitor needs is one scroll or one click away.</p>
+        <p class="mock__c"><strong>The active tab carries the line</strong>, not a plain rule — the inflection sits under the word, and it draws itself in.</p>
+        <p class="mock__c"><strong>Below the landing the page keeps going.</strong> Projects, Studio, People, Press and Contact follow one below the other, each a short summary that links to its own page — the scrolling one-pager the brief asked for, with real URLs behind it. On the home page the navigation scrolls to those sections and marks the one you are reading; on every other page the same navigation goes to pages. §02.</p>
+        <p class="mock__c">The Projects section there is a single hook image that cross-fades slowly between projects, with dots and a pause control, stopping when it leaves the screen and never starting at all under reduced motion. Clicking it goes to the index.</p>
+      </div>
+
+      <div class="mock">
+        <p class="mock__k"><b>B · Projects</b> <span>stacked hook bands · one per project</span></p>
+        <div class="mock__f">
+          <div class="mk-bands">
+            <a class="mk-band mk-band--xl" href="#compositions"><img loading="lazy" decoding="async" alt="Nelly House, rammed earth exterior" src="__IMG_bNelly__"><span class="mk-band__t"><b>Nelly House</b><i>Thirunelly, Wayanad</i></span></a>
+            <a class="mk-band mk-band--m mk-band--right" href="#compositions"><img loading="lazy" decoding="async" alt="A living room in warm earth tones" src="__IMG_bHome2__"><span class="mk-band__t"><b>House Two</b><i>Kozhikode</i></span></a>
+            <a class="mk-band mk-band--l" href="#compositions"><img loading="lazy" decoding="async" alt="A panelled living space" src="__IMG_bHome3__"><span class="mk-band__t"><b>House Three</b><i>Kozhikode</i></span></a>
+            <a class="mk-band mk-band--s mk-band--right" href="#compositions"><img loading="lazy" decoding="async" alt="A planted terrace" src="__IMG_bHome4__"><span class="mk-band__t"><b>House Four</b><i>Calicut</i></span></a>
+          </div>
+        </div>
+        <p class="mock__c">One hook image per project, full width, stacked. Click a band, go to the project. No cards, no grid, no filters — the work is the interface.</p>
+        <p class="mock__c"><strong>"Not so linear"</strong> is the brief, and it is handled by a rhythm rather than by randomness: bands take one of four heights and the title alternates left and right. The pattern is set on the project's <code>bandHeight</code> field, so an editor can tune the sequence and it stays deliberate. Uniform 300px bands — the mk27 arrangement — would read as a list; this reads as a sequence.</p>
+      </div>
+
+      <div class="mock">
+        <p class="mock__k"><b>C · A project</b> <span>title, one text, then sideways</span></p>
+        <div class="mock__f">
+          <div class="mk-seqwrap">
+            <div class="mk-seqhead">
+              <div>
+                <p class="ey">Thirunelly, Wayanad</p>
+                <h6>Nelly House</h6>
+              </div>
+              <p>Paddy fields to the front, a coffee plantation behind, the Brahmagiri Hills on the horizon. The house was sketched around the old trees rather than over them, its walls rammed from the earth dug out to make the pond.</p>
+            </div>
+            <div class="mk-seq">
+              <figure><img loading="lazy" decoding="async" alt="The house among the trees, from above" src="__IMG_q1__"></figure>
+              <figure><img loading="lazy" decoding="async" alt="The verandah" src="__IMG_q2__"></figure>
+              <figure><img loading="lazy" decoding="async" alt="The living room" src="__IMG_q3__"></figure>
+              <figure><img loading="lazy" decoding="async" alt="The inner courtyard" src="__IMG_q4__"></figure>
+              <figure><img loading="lazy" decoding="async" alt="The library" src="__IMG_q5__"></figure>
+            </div>
+            <div class="mk-seqfoot"><span>01 / 05</span><span class="bar"><i></i></span><span>Abhimanyu K V</span></div>
+          </div>
+        </div>
+        <p class="mock__c">Five or six photographs, scrolled sideways, at their own aspect ratios — nothing is cropped to match a neighbour, which is why the portrait verandah and the wide aerial can sit next to each other without either being spoiled. Scroll-snap holds each one; arrow keys and a drag both work; the rule underneath is position, not decoration.</p>
+        <p class="mock__c"><strong>No captions.</strong> One short text about the project as a whole, above. The photographer's credit sits once, at the foot of the sequence. Location is the eyebrow. Year, status and the architects' names have been cut — they were filling a table because a table existed.</p>
+      </div>
+
+      <div class="mock">
+        <p class="mock__k"><b>D · Press</b> <span>everything, seen at once</span></p>
+        <div class="mock__f">
+          <div class="mk-press">
+            <h6>Where we've been</h6>
+            <div class="mk-press__c">
+              <div class="mk-press__i" style="left:2%;top:14%;width:22%;height:44%"><img loading="lazy" decoding="async" alt="Architectural Digest feature spread" src="__IMG_q3__"></div>
+              <span class="mk-press__l" style="left:2%;top:2%">AD</span>
+              <div class="mk-press__i" style="left:26%;top:22%;width:26%;height:38%"><img loading="lazy" decoding="async" alt="Feature spread" src="__IMG_bHome2__"></div>
+              <div class="mk-press__i" style="left:56%;top:8%;width:19%;height:34%"><img loading="lazy" decoding="async" alt="Magazine page" src="__IMG_q5__"></div>
+              <span class="mk-press__l" style="left:77%;top:22%;font-size:max(8px,1.1cqw)">ELLE DECOR</span>
+              <div class="mk-press__i" style="left:14%;top:62%;width:24%;height:32%"><img loading="lazy" decoding="async" alt="Interior feature" src="__IMG_bHome3__"></div>
+              <div class="mk-press__i" style="left:44%;top:56%;width:21%;height:36%"><img loading="lazy" decoding="async" alt="Project feature" src="__IMG_q2__"></div>
+              <span class="mk-press__l" style="left:40%;top:96%">A+D</span>
+              <div class="mk-press__i" style="left:70%;top:52%;width:23%;height:30%"><img loading="lazy" decoding="async" alt="Published spread" src="__IMG_bHome4__"></div>
+            </div>
+          </div>
+        </div>
+        <p class="mock__c">Not a list of press items with dates and publication names in a column. A wall — the way they would be pinned up in the studio. Everything links to the original article.</p><p class="mock__c">Two details carry it, and the built page gets both: each item is an <strong>open spread</strong> — two pages side by side with a gutter shadow down the middle and a drop shadow beneath, so it reads as a magazine rather than a cropped photograph — and each sits at a <strong>slight rotation</strong>, one to two degrees, straightening on hover. Publication mastheads are set large in the gaps between them, as type rather than logos. Flat rectangles on a grid was tried first and read like a search result.</p>
+        <p class="mock__c">The scatter is <strong>deterministic, not random</strong>: each item's position and size come from its index through a fixed sequence, so the page looks composed, renders identically every time, and an editor who adds a ninth item gets a sensible ninth position without choosing coordinates. Below <code>md</code> it becomes a simple two-column masonry — a scatter on a phone is just a mess. <em>(Real spreads pending; project photography stands in here.)</em></p>
+      </div>
+
+      <h4>What the real photography told us <span class="tag tag--new">corrected</span></h4>
+      <p>An earlier draft concluded that the studio's photography was overwhelmingly portrait — twelve of eighteen — and built a portrait card grid on that. The full sets have since arrived, and the finding was wrong.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Set</th><th>Landscape</th><th>Portrait</th></tr></thead>
+        <tbody>
+          <tr><td>Nelly House — AD's selection (18)</td><td>6</td><td>12</td></tr>
+          <tr><td>Nelly House — full set (60)</td><td><strong>28</strong></td><td>32</td></tr>
+          <tr><td>House Two (18)</td><td><strong>11</strong></td><td>7</td></tr>
+          <tr><td>House Three (15)</td><td>6</td><td>9</td></tr>
+          <tr><td>House Four (15)</td><td>6</td><td>9</td></tr>
+        </tbody>
+      </table></div>
+      <p>The skew was AD's edit, not the studio's eye. Across everything the practice actually shoots the mix is close to even, with a strong seam of 3:2 and 16:9 wides — aerials especially.</p>
+      <p>That is why the architecture above suits the material better than the grid did. <strong>Bands want wides</strong>, and there are plenty. <strong>A horizontal sequence does not care</strong> — each photograph keeps its own ratio and the row simply gets longer. A fixed-ratio card grid would have had to crop one orientation or the other on every single project, forever.</p>
+      <div class="aside aside--flag">
+        <p class="aside__k">A lesson worth keeping</p>
+        <div><p>The first finding came from a real sample and was still misleading, because the sample was somebody else's selection. It changed a layout decision on the strength of eighteen images that a magazine picture editor had chosen for a magazine. Worth remembering when the next confident number turns up.</p></div>
+      </div>
+    </section>
+
+    <section id="mobile">
+      <div class="sec__h"><span class="sec__n">25</span><h3>Mobile &amp; footer <span class="tag tag--new">new</span></h3></div>
+      <p>Mobile was described in prose and never drawn, which is how mobile ends up as an afterthought. These are the three surfaces that differ most from desktop.</p>
+      <div class="phones">
+        <div class="phone">
+          <div class="phone__f">
+            <div class="ph-nav">
+              <div class="ph-nav__top">
+                <img loading="lazy" decoding="async" alt="btl architects" src="__IMG_logoD__">
+                <span class="ph-nav__x">Close</span>
+              </div>
+              <ul>
+                <li>Projects<span class="navline"><span></span><svg viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg></span></li>
+                <li>Studio</li><li>People</li><li>Press</li><li>Contact</li>
+              </ul>
+              <div class="ph-nav__img"><img loading="lazy" decoding="async" alt="The studio" src="__IMG_office2__"></div>
+              <div class="ph-nav__foot">
+                4th floor, Chamayam Building<br>Mavoor Rd, Pottamal<br>Kozhikode, Kerala 673016<br>+91 99472 44424
+              </div>
+            </div>
+          </div>
+          <p class="phone__k">Navigation overlay</p>
+        </div>
+        <div class="phone">
+          <div class="phone__f">
+            <div class="ph-pp">
+              <div class="ph-pp__b">
+                <p class="ey">Thirunelly, Wayanad</p>
+                <h6>Nelly House</h6>
+                <p class="bd">The house was sketched around the old trees rather than over them, its walls rammed from the earth dug out to make the pond.</p>
+              </div>
+              <div class="ph-seq">
+                <img loading="lazy" decoding="async" alt="The verandah" src="__IMG_q2__">
+                <img loading="lazy" decoding="async" alt="The living room" src="__IMG_q3__">
+              </div>
+              <div class="ph-seqfoot"><span>01 / 05</span><span class="bar"><i></i></span></div>
+            </div>
+          </div>
+          <p class="phone__k">Project page</p>
+        </div>
+        <div class="phone">
+          <div class="phone__f">
+            <div class="ph-foot">
+              <h6>Let's build something that lasts.</h6>
+              <div class="ph-foot__g">
+                <div><b>Studio</b>4th floor, Chamayam Building<br>Mavoor Rd, Pottamal<br>Kozhikode, Kerala 673016</div>
+                <div><b>Contact</b><a href="#mobile">studio@btldesigns.in</a><br>+91 99472 44424</div>
+                <div><b>Elsewhere</b><a href="#mobile">Instagram</a> · <a href="#mobile">YouTube</a></div>
+              </div>
+              <div class="ph-foot__base">© 2026 btl architects · GSTIN 32ABBFB8726C1ZW</div>
+            </div>
+          </div>
+          <p class="phone__k">Footer</p>
+        </div>
+      </div>
+      <h4>What changes on a phone</h4>
+      <ul>
+        <li><strong>Nav links are set at 20px, not 28.</strong> The client is right that they were too big — at 28px five items filled the screen and the overlay read as a splash page. Smaller leaves room for a photograph of the studio, which is what makes the menu feel like the practice rather than a list.</li>
+        <li><strong>There is no fact sheet to reflow</strong> — location is the eyebrow and the credit sits under the sequence, so the problem was designed out rather than solved.</li>
+        <li><strong>The sequence stays horizontal.</strong> Swiping sideways through photographs is the one gesture every phone user already knows, and it keeps each image large. Scroll-snap holds each slide; the rule shows position.</li>
+        <li><strong>The landing crops to 4:5</strong> rather than 16:9 — a widescreen still on a portrait phone is a letterbox strip. The office film is re-cropped around its hotspot, not letterboxed.</li>
+        <li><strong>The footer is a full dark panel</strong> and the only place where the ink colour inverts on a light page. It is the site's closing statement and the last chance to make contact.</li>
+        <li><strong>No hover anywhere.</strong> Card scale, link underlines and the arrow all sit behind <code>@media (hover:hover)</code>.</li>
+      </ul>
+    </section>
+
+    <section id="images">
+      <div class="sec__h"><span class="sec__n">26</span><h3>Image handling</h3></div>
+      <p class="lead">The most important system on the site, and the one most likely to be got wrong.</p>
+      <p>Every image passes through one component taking a CMS reference, a <code>sizes</code> string derived from the grid, a ratio and a priority flag.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Concern</th><th>Handling</th></tr></thead>
+        <tbody>
+          <tr><td>Format</td><td>AVIF, then WebP, then JPEG by content negotiation at the CDN.</td></tr>
+          <tr><td>Responsive sizing</td><td>Width ladder 320 / 480 / 640 / 768 / 1024 / 1280 / 1536 / 1920 / 2560, filtered per component.</td></tr>
+          <tr><td><code>sizes</code></td><td>Computed from the grid definition, not guessed. A wrong <code>sizes</code> is the commonest cause of over-delivery on mobile.</td></tr>
+          <tr><td>Retina</td><td>Handled by the ladder, capped at 2×. 3× triples the bytes for no perceptible gain.</td></tr>
+          <tr><td>Cropping</td><td>One focal point per photograph; <em>where a crop is taken at all</em> it crops around that point. See the ratio policy below.</td></tr>
+          <tr><td>Layout shift</td><td>Intrinsic dimensions arrive with the content query; every image reserves its box before loading. That removes the largest source of shift — the budget in §27 is what holds the rest.</td></tr>
+          <tr><td>Loading state</td><td>A ~20px blurred placeholder from the CMS, cross-fading out. No JavaScript library.</td></tr>
+          <tr><td>Priority</td><td>The single LCP image gets <code>fetchpriority="high"</code> and a preload hint. Everything else <code>loading="lazy" decoding="async"</code>.</td></tr>
+          <tr><td>Full screen</td><td>Native <code>&lt;dialog&gt;</code> lightbox — focus trapped, Esc closes, arrows navigate, swipe on touch. ~4 KB, only on pages with galleries.</td></tr>
+          <tr><td>Drawings</td><td>Lossless, light ground regardless of page theme, pinch and pan.</td></tr>
+          <tr><td>Alt text</td><td>Required by the schema on every image, with an explicit "decorative" checkbox as the only escape.</td></tr>
+          <tr><td>Credit</td><td>The photographer's name renders in the project fact sheet and in the lightbox footer, from the required field in §08.</td></tr>
+        </tbody>
+      </table></div>
+      <h4>Do not crop by default <span class="tag tag--new">new</span></h4>
+      <p>Architecture photography is composed. <code>object-fit: cover</code> applied everywhere is the single easiest way to ruin it, and it is what a developer reaches for by default. The rule is per context, not global:</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Context</th><th>Ratio behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Cover image / hero</td><td><strong>Art-directed crop.</strong> A deliberate 16:9 or 4:3, respecting the hotspot</td></tr>
+          <tr><td>Card thumbnail</td><td><strong>Controlled crop</strong> to the card ratio, respecting the hotspot</td></tr>
+          <tr><td>Full image block</td><td><strong>Original ratio preserved.</strong> Never cropped</td></tr>
+          <tr><td>Gallery and lightbox</td><td><strong>Original ratio preserved.</strong> The grid absorbs the variation</td></tr>
+          <tr><td>Image pair / trio</td><td>Shared ratio within the row, chosen by the editor from a short list</td></tr>
+          <tr><td>Drawing</td><td><strong>Original ratio, always.</strong> A cropped plan is a wrong plan</td></tr>
+        </tbody>
+      </table></div>
+      <p>This is why <code>kind</code> exists on the image object in §08: a drawing and a photograph get different defaults without anyone having to remember.</p>
+
+      <h4>The markup contract</h4>
+      <p>Stated literally, because "we use a CDN" is compatible with still shipping a 1600px file to a 375px phone:</p>
+      <pre><code>&lt;img
+  src="…w_768"                     &lt;!-- fallback              --&gt;
+  srcset="…w_320 320w, …w_480 480w, …w_640 640w, …w_768 768w,
+          …w_1024 1024w, …w_1280 1280w, …w_1536 1536w,
+          …w_1920 1920w, …w_2560 2560w"
+  sizes="(min-width: 64rem) 33vw, (min-width: 48rem) 50vw, 100vw"
+  width="1600" height="2400"       &lt;!-- intrinsic, reserves the box --&gt;
+  alt="…"                          &lt;!-- from the CMS, required      --&gt;
+  loading="lazy" decoding="async"&gt;</code></pre>
+      <p><code>sizes</code> is generated from the grid definition for each component, never hand-written.</p>
+      <p><strong>Exactly one image per route</strong> swaps <code>loading="lazy"</code> for <code>fetchpriority="high"</code> and a preload hint — the LCP candidate, never more. And the preloaded URL must be the <em>same candidate the browser would pick</em> from the <code>srcset</code>, with matching <code>imagesizes</code>. Preloading a 2560px file while the page renders the 768px one is a common and expensive mistake: it doubles the download and delays the very metric it was meant to improve.</p>
+
+      <h4>Lightbox</h4>
+      <p>Native <code>&lt;dialog&gt;</code>. Beyond focus trapping and Esc: a labelled close button, visible previous / next controls (the image itself is never the only way to advance), position indicator, the caption, and the photographer's credit for that specific image. Focus returns to the thumbnail that opened it. Background scroll locked. A failed load shows the alt text rather than an empty frame.</p>
+
+      <h4>Video, with limits <span class="tag tag--new">new</span></h4>
+      <p>Video is the one place this performance philosophy can be destroyed by a single upload. One 800 MB architectural film undoes every budget in §27, so the constraints are part of the system rather than a matter of judgement.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Self-hosted ceiling</td><td><strong>20 MB</strong>. Above that it must go to YouTube or Vimeo — the CMS blocks the upload</td></tr>
+          <tr><td>Codec</td><td>H.264/MP4 baseline, with WebM where available</td></tr>
+          <tr><td>Poster</td><td>Required on every video, enforced by the block rules in §09</td></tr>
+          <tr><td>Preload</td><td><code>metadata</code> only. Never <code>auto</code></td></tr>
+          <tr><td>Autoplay</td><td>Hero loop only: muted, <code>playsinline</code>, loop. Never with sound, never elsewhere</td></tr>
+          <tr><td>Mobile / reduced motion / Save-Data</td><td>Poster served, video never fetched</td></tr>
+          <tr><td>Embeds</td><td>Facade only — poster is the page, player fetched on click. <code>youtube-nocookie.com</code> and Vimeo DNT</td></tr>
+          <tr><td>Failure</td><td>Poster remains with a visible play affordance and a direct link out</td></tr>
+          <tr><td>Captions</td><td>Required on any video carrying speech</td></tr>
+        </tbody>
+      </table></div>
+      <p>The facade alone keeps roughly 900 KB of third-party JavaScript off every page that has a video on it.</p>
+      <div class="aside">
+        <p class="aside__k">Why this scales</p>
+        <div><p>Transformations happen at the CDN on first request and cache thereafter. The build only fetches metadata. Ten photographs and ten thousand produce the same build time — the specific reason image-heavy static sites usually need rebuilding from scratch in year three.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PART 7 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">07</span><h2 class="part__t">Quality</h2></div>
+
+    <section id="performance">
+      <div class="sec__h"><span class="sec__n">27</span><h3>Performance</h3></div>
+      <p>Budgets, not aspirations. Enforced by <strong>Lighthouse CI</strong> with assertions in the pipeline, run against a production build on a throttled mobile profile. A budget breach fails the pull request. "Performance budget" written in a README is not an implementation.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Metric</th><th>Budget</th><th>Measured on</th></tr></thead>
+        <tbody>
+          <tr><td>Largest Contentful Paint</td><td>&lt; 2.0s</td><td>Mid-range Android, throttled 4G</td></tr>
+          <tr><td>Cumulative Layout Shift</td><td>&lt; 0.02</td><td>All pages</td></tr>
+          <tr><td>Interaction to Next Paint</td><td>&lt; 200ms</td><td>All pages</td></tr>
+          <tr><td>JavaScript, home</td><td>≤ 25 KB gzipped</td><td>Initial load</td></tr>
+          <tr><td>JavaScript, project page</td><td>≤ 15 KB, +5 KB lightbox on demand</td><td>Initial load</td></tr>
+          <tr><td>Fonts</td><td>1 file, 42 KB, preloaded</td><td>—</td></tr>
+          <tr><td>Icons</td><td>&lt; 2 KB, inline</td><td>—</td></tr>
+          <tr><td>Third-party scripts</td><td>Zero on load</td><td>All pages — see the allowlist below</td></tr>
+        </tbody>
+      </table></div>
+      <p>Static HTML from a CDN edge; JavaScript only for four small islands (mobile nav, featured sequence, lightbox, filters); no client router, no state library, no CSS framework, no animation library. No analytics, so no cookie banner.</p>
+      <h4>What "zero third-party" actually means <span class="tag tag--new">new</span></h4>
+      <p>The phrase is ambiguous on its own — the image CDN is a third party too. Stated as an allowlist so it cannot be read creatively:</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Permitted origins</th><th>Never permitted</th></tr></thead>
+        <tbody>
+          <tr><td>Sanity content API (build time only)</td><td>Google Fonts, or any hosted font</td></tr>
+          <tr><td>Sanity image CDN (image requests only)</td><td>Google Analytics, Tag Manager, Meta Pixel, Hotjar</td></tr>
+          <tr><td>Netlify infrastructure</td><td>Any CDN-hosted JavaScript or CSS</td></tr>
+          <tr><td>YouTube / Vimeo — <em>after</em> a click on a facade</td><td>Icon fonts or icon CDNs</td></tr>
+          <tr><td>—</td><td>Any embed loading on page load</td></tr>
+        </tbody>
+      </table></div>
+      <p>Fonts, icons, CSS and JavaScript are all served from our own origin. Nothing is fetched from another domain before a deliberate user action.</p>
+    </section>
+
+    <section id="accessibility">
+      <div class="sec__h"><span class="sec__n">28</span><h3>Accessibility</h3></div>
+      <p>WCAG 2.2 AA, built in from the first component.</p>
+      <ul>
+        <li><strong>Alt text is a required CMS field.</strong> The highest-leverage decision on the project — it makes the commonest failure impossible rather than unlikely.</li>
+        <li><strong>Semantic HTML.</strong> Real landmarks, one <code>h1</code> per page, headings in order. Block headings map to <code>h2</code>/<code>h3</code> automatically so an editor cannot break the outline.</li>
+        <li><strong>Keyboard.</strong> Everything operable in a logical order. Skip link. Focus trapped in the mobile nav and lightbox, returned to the trigger on close.</li>
+        <li><strong>Focus visible.</strong> 2px accent ring, 2px offset, every interactive element, both grounds, never removed. Tab through this document to see it.</li>
+        <li><strong>Contrast.</strong> Every pairing in §13 measured and listed; brand red restricted, error colour lightened for dark ground.</li>
+        <li><strong>Touch targets</strong> at least 44×44px with 8px between — enforced by the button minimum height in §20.</li>
+        <li><strong>Reduced motion</strong> as a genuine alternative — §19.</li>
+        <li><strong>No auto-advancing carousel</strong> — removed rather than mitigated.</li>
+        <li><strong>Forms</strong> — real labels, errors in text linked to the field, announced politely, never colour alone. §21.</li>
+        <li><strong>Icons</strong> — hidden from assistive technology when decorative, labelled when alone. §18.</li>
+      </ul>
+      <p>Two things usually missed, so they are named: the site must remain usable at <strong>200% browser zoom</strong> without horizontal scrolling or clipped controls, and must survive <strong>forced-colors mode</strong> — which means never conveying state by background colour alone, and letting system colours through rather than fighting them.</p>
+      <p>Verification: axe in CI on every route with the release gate set at <strong>zero known Level A or AA violations</strong>, plus manual passes before launch — keyboard only, screen reader (VoiceOver and NVDA), 200% zoom, forced colors, and the gallery and lightbox operated entirely from the keyboard. Automated tools catch about a third of real issues, so the manual passes are not optional.</p>
+    </section>
+
+    <section id="seo">
+      <div class="sec__h"><span class="sec__n">29</span><h3>SEO</h3></div>
+      <p>For a regional practice most of the value is in local and project-specific search.</p>
+      <ul>
+        <li><strong>Per-page metadata</strong> from the CMS with fallbacks — a project without an SEO description falls back to its summary, never to nothing.</li>
+        <li><strong>Canonicals</strong> everywhere; filtered views canonicalise to the base index.</li>
+        <li><strong>Open Graph and Twitter cards</strong>, share image generated from the cover photograph at 1200×630 through the same CDN.</li>
+        <li><strong>Structured data:</strong> <code>Organization</code> and <code>LocalBusiness</code> with the real Kozhikode address; <code>BreadcrumbList</code> on projects; <code>CreativeWork</code> per project with creator, location, completion date and — now that the field exists — the photographer as <code>image.creator</code>.</li>
+        <li><strong>Sitemap and robots</strong> generated at build.</li>
+        <li><strong>Stable slugs and permanent redirects</strong> — §05.</li>
+        <li><strong>Internal linking</strong> via related projects, category and location pages.</li>
+        <li><strong>Per-item overrides</strong> <span class="tag tag--new">new</span> — every project, person and press item carries optional <code>seoTitle</code>, <code>seoDescription</code>, <code>ogImage</code>, <code>canonicalOverride</code> and <code>noindex</code>. The <code>noindex</code> switch matters for press items that should not outrank the project they describe, and for anything temporary. Global defaults live on <code>siteSettings</code>.</li>
+      </ul>
+      <div class="aside">
+        <p class="aside__k">Launch checklist, not build work</p>
+        <div><p>Google Search Console and a Google Business Profile, both registered to the practice. For a firm whose enquiries are largely regional, the Business Profile is likely to outperform everything on this list. The AD feature is a strong inbound link — worth asking AD to link the studio name to btldesigns.in.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PART 8 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">08</span><h2 class="part__t">Build</h2></div>
+
+    <section id="stack">
+      <div class="sec__h"><span class="sec__n">30</span><h3>Technical stack</h3></div>
+      <p class="lead"><strong>Astro</strong>, statically generated, Sanity as the content source, deployed to a CDN edge.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Layer</th><th>Choice</th><th>Reasoning</th></tr></thead>
+        <tbody>
+          <tr><td>Framework</td><td><strong>Astro 7.2</strong> <span class="tag tag--new">corrected</span></td><td>Ships zero JavaScript by default; interactive pieces become isolated islands. Typed content collections validate the model at build, so a malformed project fails the build rather than the page. 7.1 added the finer-grained CSP controls the contract relies on; 7.2 added experimental incremental static builds — the escape hatch below.</td></tr>
+          <tr><td>Rendering</td><td>Static generation</td><td>200 project pages build in seconds because images are not processed locally.</td></tr>
+          <tr><td>Styling</td><td>Plain CSS, custom properties, cascade layers</td><td>The tokens in Part four <em>are</em> the stylesheet. No Tailwind — an identity this specific gains nothing from a utility framework and loses its single source of truth.</td></tr>
+          <tr><td>Content</td><td>Sanity</td><td>§11</td></tr>
+          <tr><td>Islands</td><td>Vanilla web components</td><td>Four small pieces. React for a lightbox and a menu would be 40 KB for no benefit.</td></tr>
+          <tr><td>Hosting</td><td><strong>Netlify</strong></td><td>Decided, not deferred. Edge CDN, atomic deploys, instant rollback, a preview URL per change — and native form handling, which is what §21 already assumes. Cloudflare Pages is equally good at the static part but has no form endpoint, which would mean adding a service back.</td></tr>
+          <tr><td>Forms</td><td>Host-native + honeypot → admin@btldesigns.in</td><td>No third-party form service, no CAPTCHA.</td></tr>
+          <tr><td>Types</td><td>TypeScript, strict</td><td>Generated from the CMS schema, so model and code cannot drift.</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Rejected:</strong> Next.js and Nuxt — a component runtime on every page for a site that barely needs one. WordPress — §11. A bespoke SPA — worse for SEO, performance and longevity.</p>
+      <div class="aside aside--flag">
+        <p class="aside__k">Version policy</p>
+        <div><p>An earlier draft of this document said "Astro 5", which was two majors stale by the time it was written. That is precisely the failure this rule exists to prevent: <strong>pin the latest stable major at project start, lock exact versions in the lockfile, never cross a major version automatically.</strong> Confirm the current release on day one rather than trusting a number in a document written weeks earlier — including this one. A major upgrade is deliberate work with a review, not a dependency bump.</p></div>
+      </div>
+      <div class="aside">
+        <p class="aside__k">Escape hatch</p>
+        <div><p>Astro can switch individual routes to on-demand rendering without restructuring anything. If builds ever exceed about three minutes, <code>/projects/[slug]</code> flips to on-demand with CDN caching.</p></div>
+      </div>
+    </section>
+
+    <section id="files">
+      <div class="sec__h"><span class="sec__n">31</span><h3>File architecture</h3></div>
+      <pre><code>btl-website/
+├── src/
+│   ├── components/
+│   │   ├── primitives/     Container, Grid, Stack, Cluster, Bleed, Ratio
+│   │   ├── brand/          Logo, BtlLine, NavLine, ArchPanel, Icon
+│   │   ├── navigation/     Header, NavDesktop, NavMobile, ProjectPager, Footer
+│   │   ├── media/          Figure, Gallery, Lightbox, VideoEmbed, DrawingViewer
+│   │   ├── content/        RichText, PullQuote, slides/*
+│   │   ├── cards/          ProjectCard, PersonCard, PressCard
+│   │   ├── collections/    BandStack, Sequence, PressWall, FilterBar
+│   │   ├── ui/             Button, TextLink, Tag, Field, EmptyState
+│   │   └── seo/            Seo, JsonLd
+│   ├── layouts/            Base, Page, Project
+│   ├── pages/              Routes — mirrors §05 exactly
+│   ├── styles/
+│   │   ├── tokens.css      ← single source of truth for every token
+│   │   ├── reset.css
+│   │   ├── typography.css
+│   │   └── utilities.css
+│   ├── lib/
+│   │   ├── sanity/         client, queries, image URL builder
+│   │   ├── seo/            metadata and structured data helpers
+│   │   └── format/         dates, areas, locations — §10
+│   └── scripts/            The four islands
+├── studio/                 Sanity Studio — schemas as code, versioned here
+├── public/fonts/           Satoshi variable woff2
+└── docs/
+    ├── design-system.src.html   source for this document
+    ├── design-system.html       built, self-contained
+    ├── build.py                 inlines font + photography
+    ├── content-guide.md         for editors, in plain language
+    └── decisions/               one short file per architectural decision</code></pre>
+      <p><code>tokens.css</code> is the only place a colour, size or duration is defined. Changing the brand blue is a one-line edit. Changing the display typeface is one <code>@font-face</code> block.</p>
+    </section>
+
+    <section id="editing">
+      <div class="sec__h"><span class="sec__n">32</span><h3>Editing workflow</h3></div>
+      <p>What publishing a project looks like for someone who has never opened a code editor:</p>
+      <ol class="list">
+        <li>Sign in to the studio — a normal web page, works on a laptop or an iPad.</li>
+        <li>Projects → New. Title, summary, category, location, year, status, photographer.</li>
+        <li>Drag the photographs in. Click the important spot in each to set the focal point. Type alt text — the form will not save without it.</li>
+        <li>Build the page by adding blocks from §09 and dragging them into order.</li>
+        <li>Preview on a private URL, on a phone if you like.</li>
+        <li>Publish. The site rebuilds and is live in about a minute.</li>
+      </ol>
+      <div class="scroll"><table>
+        <thead><tr><th>Task</th><th>Who</th><th>How long</th></tr></thead>
+        <tbody>
+          <tr><td>Add, edit or delete a project</td><td>Studio</td><td>Minutes</td></tr>
+          <tr><td>Reorder projects on the index</td><td>Studio</td><td>Drag and drop</td></tr>
+          <tr><td>Add a category or location</td><td>Studio</td><td>Minutes — index page generated automatically</td></tr>
+          <tr><td>Write the Studio and People pages</td><td>Studio</td><td>Minutes — placeholders ship, real copy replaces them without a developer</td></tr>
+          <tr><td>Add a team member or press item</td><td>Studio</td><td>Minutes</td></tr>
+          <tr><td>Update address, phone, socials</td><td>Studio</td><td>Minutes</td></tr>
+          <tr><td>Change any SEO field</td><td>Studio</td><td>Minutes</td></tr>
+          <tr><td>Add a new <em>type</em> of content</td><td>Developer</td><td>Hours — a schema file and a template</td></tr>
+          <tr><td>Change brand colour or typeface</td><td>Developer</td><td>Minutes — one token file</td></tr>
+        </tbody>
+      </table></div>
+      <p>Handover includes a plain-language guide written for the studio, plus a recorded walkthrough. Both are deliverables, not afterthoughts.</p>
+    </section>
+
+    <section id="future">
+      <div class="sec__h"><span class="sec__n">33</span><h3>Five-year stress test</h3></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Scenario</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>50 projects</td><td>Nothing. The index paginates at 24 with the rest on demand.</td></tr>
+          <tr><td>200 projects</td><td>Nothing structural. Filters become the primary way in; they already exist.</td></tr>
+          <tr><td>30–100 photographs per project</td><td>Handled. Transforms are on the CDN, so this does not touch build time.</td></tr>
+          <tr><td>A Journal is added</td><td>One schema file, one route, two templates, reusing the existing block system. Roughly a day.</td></tr>
+          <tr><td>Video becomes central</td><td>The block exists. Heavy use would justify a video host with adaptive streaming — a swap inside one component.</td></tr>
+          <tr><td>The team doubles</td><td>Nothing. People are content; the grid reflows.</td></tr>
+          <tr><td>Typography changes</td><td>One <code>@font-face</code> and ten size tokens. Under an hour.</td></tr>
+          <tr><td>Brand colours change</td><td>One token file.</td></tr>
+          <tr><td>Navigation changes</td><td>Edited in the CMS. No deployment.</td></tr>
+          <tr><td>A new category appears</td><td>Editor adds it; the index page and URL generate automatically.</td></tr>
+          <tr><td>The site goes light instead of dark</td><td>Change which token set the single ground uses. Every token already carries both values, so it is a small deliberate edit — not an automatic switch. §03.</td></tr>
+          <tr><td>Someone asks for search</td><td><strong>Do not build it below roughly 100 published projects.</strong> Category and location pages plus filters answer the question at this scale, and full-text search means an index to maintain or a third party on every page. Above that, revisit — on evidence that people are failing to find things, not because the number feels large.</td></tr>
+          <tr><td>A non-technical person must edit</td><td>The design centre of the whole system — §32.</td></tr>
+          <tr><td>A new developer inherits it</td><td>Plain CSS, standard Astro, tokens in one file, decisions in <code>docs/decisions/</code>.</td></tr>
+        </tbody>
+      </table></div>
+      <p>The one thing that would force a rebuild: becoming a fundamentally different kind of site — a shop, a client portal, a multi-language publication. Those change the shape of the problem, not its size.</p>
+    </section>
+  </div>
+
+  <!-- ============ PART 9 ============ -->
+  <div class="part">
+    <div class="line line--m"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+    <div class="part__id"><span class="part__n">09</span><h2 class="part__t">Review</h2></div>
+
+    <section id="review">
+      <div class="sec__h"><span class="sec__n">34</span><h3>System review</h3></div>
+      <p class="lead">Read end to end after three drafts, looking for what does not hold up.</p>
+      <p>Eight things were wrong or missing. All are fixed above; listing them because a system's credibility comes from what it admits, not what it claims.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Found</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><strong>No theme decision.</strong> The system supported light and dark without ever saying which the site <em>is</em>. Every component would have been designed twice with no answer at the end.</td><td>§03 — dark by default, no toggle, white as an editorial register.</td></tr>
+          <tr><td><strong>No buttons.</strong> An entire site specified without ever saying what a button looks like or when to use one.</td><td>§20 — three levels, live, with the link-versus-button rule.</td></tr>
+          <tr><td><strong>No forms.</strong> A contact form was routed, budgeted and given a recipient, but never designed.</td><td>§21 — field states, validation timing, success state.</td></tr>
+          <tr><td><strong>No empty, error or 404 states.</strong> Listed in the component inventory, never specified — which is how they end up as bare browser defaults.</td><td>§22.</td></tr>
+          <tr><td><strong>No icons.</strong> Nav arrows, close, play and external-link marks were implied everywhere and defined nowhere. Left alone, someone imports an icon font.</td><td>§18 — eight icons, drawn to match the wordmark's terminals.</td></tr>
+          <tr><td><strong><code>person</code> had no slug</strong> while routing already pointed at <code>/people/[slug]</code>. A real bug, caught by reading the two sections against each other.</td><td>§07.</td></tr>
+          <tr><td><strong>Photographer was buried</strong> inside <code>collaborators</code>, despite rendering in a fixed place on every project page.</td><td>§08 — its own required field.</td></tr>
+          <tr><td><strong>A <code>Skeleton</code> component that should not exist.</strong> Static HTML has no moment where text is missing. Cargo-culted from single-page apps.</td><td>§22 — removed.</td></tr>
+        </tbody>
+      </table></div>
+      <h4>What is holding up</h4>
+      <ul>
+        <li>The <strong>block system</strong> survived contact with a real project. Nelly House's eighteen photographs compose into the existing eleven blocks without needing a twelfth — and before/after landed as a variant rather than a new type, which is the test I set for it.</li>
+        <li>The <strong>ratio finding</strong> came from real photography and changed a real decision. That is the system working as intended rather than being asserted.</li>
+        <li>The <strong>colour ground rules</strong> generated a rule the brand guide never wrote down — photographs are dark grounds — which suggests the rules are a system and not a list.</li>
+        <li>The <strong>token count is still small</strong>: ten type sizes, nine spacing steps, one grid, one easing curve, eight icons. Nothing has quietly inflated across three drafts.</li>
+      </ul>
+      <h4>A second opinion, and what came of it <span class="tag tag--new">new</span></h4>
+      <p>This draft was reviewed independently. It scored the design thinking highly and production-readiness considerably lower, which was the right diagnosis: the visual architecture was more rigorous than the operational architecture. Eleven changes came out of it and are already in the document above.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Change</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td>Credit and rights moved from the project to the <em>image</em>, with rights as a publishing gate</td><td>§08</td></tr>
+          <tr><td>Blocks cut from eleven to nine; fact sheet and spacer are structural, not editorial</td><td>§09</td></tr>
+          <tr><td>Block validation rules — the CMS refuses the bad page</td><td>§09</td></tr>
+          <tr><td>"Do not crop by default" — ratio behaviour defined per context</td><td>§26</td></tr>
+          <tr><td>The literal <code>srcset</code>/<code>sizes</code> markup contract</td><td>§26</td></tr>
+          <tr><td>Lightbox controls, per-image credit, failure state</td><td>§26</td></tr>
+          <tr><td><code>areas[]</code> for site vs built-up area; <code>year</code> → <code>completionYear</code></td><td>§08</td></tr>
+          <tr><td>Combined filters stay query parameters — no thin-content generation</td><td>§05</td></tr>
+          <tr><td>Per-item <code>noindex</code> and canonical override</td><td>§29</td></tr>
+          <tr><td>Netlify chosen outright rather than left as a pair</td><td>§30</td></tr>
+          <tr><td>Scroll progress dropped; the line stops short of becoming a UI component</td><td>§17</td></tr>
+        </tbody>
+      </table></div>
+      <p>Two corrections of overstatement: "a value not on this list is a bug" (§14) and the literal twelve-column grid on a 320px phone (§15). Both were true in spirit and false as written; both now say what will actually be built.</p>
+      <p>The larger structural point was that operational rigour belonged somewhere. It now lives in a companion document — content lifecycle, preview, deployment, ownership, backups and restore testing, monitoring, form hardening, privacy, dependency policy and a definition of done — written as MUST / MUST NOT / SHOULD so it cannot be interpreted away.</p>
+      <p>Two suggestions I did not take. A five-way image-purpose taxonomy is more than WCAG needs and more than an editor will apply correctly; required alt with a decorative escape is the honest binary. And a full date model of commissioned / started / completed / photographed is real in a large practice but over-modelled for this one — <code>completionYear</code> covers it, and a fifth date can be added later without touching a published project.</p>
+
+      <h4>A second review pass <span class="tag tag--new">new</span></h4>
+      <p>A further independent review scored the engineering side lower than the design side again, and found four things that were genuinely wrong rather than merely thin.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Found</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><strong>The stack was two majors out of date.</strong> Astro 5 was specified; 7.2 is current. Verified, not taken on trust</td><td>§30, plus a version policy so it cannot recur</td></tr>
+          <tr><td><strong>The site would have followed the OS theme.</strong> Tokens switched on <code>prefers-color-scheme</code> while §03 argued for a fixed dark ground — a light-mode visitor would have got a light site and the art direction with it</td><td>§03 — one ground, no runtime switch</td></tr>
+          <tr><td><strong><code>status</code> meant two different things.</strong> Completed/Under construction and Draft/Published shared a field name — a bug waiting to happen</td><td>§08 — <code>workStatus</code> and <code>lifecycle</code></td></tr>
+          <tr><td><strong>Future-dated publishing did not work.</strong> A static build does not wake up on a date. The model implied behaviour the architecture could not deliver</td><td>§08 — scheduled publishing dropped from v1, and said so plainly</td></tr>
+          <tr><td>Two sources of truth for featured projects</td><td>§08 — <code>siteSettings</code> is authoritative, <code>featured</code> removed</td></tr>
+          <tr><td>"Zero third-party scripts" was ambiguous — the image CDN is a third party</td><td>§27 — explicit allowlist and denylist</td></tr>
+          <tr><td>Video had no ceiling. One large film undoes every budget</td><td>§26 — 20 MB self-hosted cap, codecs, preload, failure behaviour</td></tr>
+          <tr><td>Preload could have fetched the wrong candidate</td><td>§26 — one per route, matching the <code>srcset</code> pick</td></tr>
+          <tr><td>No font fallback defined</td><td>§12 — metric-adjusted stack</td></tr>
+          <tr><td>200% zoom and forced-colors were missing from testing</td><td>§28</td></tr>
+          <tr><td>"A regression fails the build" named no tool</td><td>§27 — Lighthouse CI with assertions</td></tr>
+          <tr><td>Nothing prevented search being bolted on at project 40</td><td>§33 — a stated threshold</td></tr>
+          <tr><td>The riskiest component was scheduled last</td><td>§35 — featured sequence built and measured first</td></tr>
+          <tr><td>Nothing stopped an implementer copying <em>this document's</em> chrome into the site</td><td>Stated at the top, before anything else</td></tr>
+        </tbody>
+      </table></div>
+      <p>A third overstatement went the same way as the previous two: <em>"CLS zero by construction"</em> is not something reserving image dimensions can promise — fonts, embeds and dynamic content all contribute. The budget in §27 stands; the certainty does not.</p>
+      <p>The review's headline finding was that the operational companion document did not exist. It does — <code>docs/implementation-contract.md</code>, written before this pass — which is why deployment, preview, ownership, backups and dependency policy are not repeated here. It has since been extended with security headers and CSP, webhook signature verification, redirect validation rules, a prohibition on touching DNS or mail records, email deliverability, and a route-level definition of done.</p>
+
+      <h4>Client round — a structural change, not a patch <span class="tag tag--new">v0.5</span></h4>
+      <p>The practice reviewed v0.4 and asked for a different site. Not different styling — a different shape. Taken seriously, it is a better fit for both the work and the studio, and most of the system underneath survived intact.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Asked for</th><th>What changed</th></tr></thead>
+        <tbody>
+          <tr><td>A landing page of the office, "no writing maybe"</td><td>§24 A — the studio's own room, logo, five links, nothing else. The tagline is gone from the hero</td></tr>
+          <tr><td>Projects as stacked hook images, "but maybe not so linear"</td><td>§24 B — full-width bands in four heights with alternating titles. Rhythm, not randomness</td></tr>
+          <tr><td>"Scroll to the side to see more images"</td><td>§24 C — a horizontal sequence at natural ratios, snap, keyboard, progress rule</td></tr>
+          <tr><td>Five or six photographs per project</td><td>§09 — sequence capped at 3–12, six the intended shape</td></tr>
+          <tr><td>"No image will have any write up"</td><td>§09 — captions removed from project pages; one paragraph about the whole project</td></tr>
+          <tr><td>"All this info not needed"</td><td>§08 — the fact sheet is gone. Location is the eyebrow; the photographer is credited once</td></tr>
+          <tr><td>"No need project type"</td><td>§05, §06 — no types in the navigation; the index is one list</td></tr>
+          <tr><td>Categories later, "can we hide it or something?"</td><td>§05 — the filter bar earns its way in at ≥2 categories × ≥3 projects. Nothing to switch on</td></tr>
+          <tr><td>The tab underline should use the brand line</td><td>§06, §17 — the inflection sits under the active item. Now the device's primary use</td></tr>
+          <tr><td>Press "just a place where everything is seen"</td><td>§24 D — a deterministic scatter wall, masonry below <code>md</code></td></tr>
+          <tr><td>Mobile menu titles too big, needs an image</td><td>§25 — 20px not 28, with a photograph of the studio in the overlay</td></tr>
+        </tbody>
+      </table></div>
+      <p>Two things were rebuilt rather than adjusted. <strong>The nine-block system became five slide types</strong>, because blocks were designed for a vertical article and the page is now a horizontal sequence — keeping them would have meant an editor choosing between nine options to build a page with one shape. And the <strong>portrait card grid was abandoned</strong>, which the corrected photography data in §24 says was built on a false reading anyway.</p>
+      <p>What did not move: the tokens, the type scale, the colour rules, the image pipeline, the rights gate, the accessibility and performance budgets, and every operational rule in the contract. A structural change to the front of the site did not disturb the system underneath it, which is roughly the test a design system exists to pass.</p>
+
+      <h4>What I would still watch</h4>
+      <ul>
+        <li><strong>The featured sequence is the riskiest component.</strong> Full-viewport scroll-driven sections are easy to make feel sluggish on mid-range Android. It should be built early and measured on a real device, not last.</li>
+        <li><strong>Eleven blocks is a lot to learn.</strong> If the studio only ever uses four, cut the rest. Watch what actually gets used in the first three projects.</li>
+        <li><strong>Dark ground and warm photography</strong> want checking on a calibrated screen. The Nelly House images are low-key and earthy; on some phone displays the shadow detail will close up.</li>
+      </ul>
+    </section>
+
+    <section id="decisions">
+      <div class="sec__h"><span class="sec__n">35</span><h3>Decisions &amp; what's open</h3></div>
+      <h4>Settled</h4>
+      <div class="dl">
+        <div class="dl__i"><p class="dl__q">Structure</p><p class="dl__a"><strong>Hybrid.</strong> Scrolling home page, real pages and real URLs behind every section.</p></div>
+        <div class="dl__i"><p class="dl__q">CMS</p><p class="dl__a"><strong>Sanity.</strong> Account in BTL's name, schema in the repo, monthly export to your own storage.</p></div>
+        <div class="dl__i"><p class="dl__q">Domain</p><p class="dl__a"><strong>btldesigns.in.</strong> <em>If btlarchitects.in is also owned, 301 it here rather than letting it sit.</em></p></div>
+        <div class="dl__i"><p class="dl__q">Theme</p><p class="dl__a"><strong>Dark, no toggle</strong>, white for Studio, Journal, drawings and press — §03. <em>To be confirmed against the built Nelly House page before it is locked: every token already carries both values, so the test costs nothing, and the decision should rest on a real page rather than the argument for one.</em></p></div>
+        <div class="dl__i"><p class="dl__q">Landing</p><p class="dl__a"><strong>The office, no words.</strong> A film or a still. §24 A.</p></div>
+        <div class="dl__i"><p class="dl__q">First project</p><p class="dl__a"><strong>Nelly House</strong>, Thirunelly, Wayanad. Slug <code>nelly-house</code>. Photographs by <strong>Abhimanyu K V</strong> (@abhimanyukv1), credited in the fact sheet, the lightbox and the structured data.</p></div>
+        <div class="dl__i"><p class="dl__q">Other projects</p><p class="dl__a"><strong>Four real projects</strong> — Nelly House plus three houses, all now photographed and supplied. No demo entries needed. The index is genuine from day one.</p></div>
+        <div class="dl__i"><p class="dl__q">Studio &amp; People copy</p><p class="dl__a"><strong>Placeholders ship.</strong> Yes — all of it is editable from the studio: bios, headshots, philosophy, addresses, every SEO field. Nothing here needs a developer to replace.</p></div>
+        <div class="dl__i"><p class="dl__q">Categories</p><p class="dl__a"><strong>Not shown at four projects.</strong> Modelled and generated throughout; the filter bar reveals itself at ≥2 categories × ≥3 projects. §05.</p></div>
+        <div class="dl__i"><p class="dl__q">Contact form</p><p class="dl__a">To <strong>admin@btldesigns.in</strong>, host-native, honeypot, privacy line. §21.</p></div>
+        <div class="dl__i"><p class="dl__q">Analytics</p><p class="dl__a"><strong>None.</strong> No cookie banner, genuine zero third-party budget.</p></div>
+        <div class="dl__i"><p class="dl__q">Satoshi licence</p><p class="dl__a">Confirmed. Self-hosted variable woff2, 42 KB, preloaded.</p></div>
+      </div>
+      <h4>Open</h4>
+      <div class="dl">
+        <div class="dl__i"><p class="dl__q">Image licence <span class="tag tag--open">before launch</span></p><p class="dl__a">The eighteen photographs came off AD's CDN and are licensed to Condé Nast. Get the originals and a written licence from Abhimanyu before any of them ship. Everything built until then treats them as layout reference.</p></div>
+        <div class="dl__i"><p class="dl__q">The Instagram post <span class="tag tag--open">need from you</span></p><p class="dl__a">The link you sent is behind a login wall — I could not read the caption or the images. Paste the caption if there is copy worth using.</p></div>
+        <div class="dl__i"><p class="dl__q">Nelly House details <span class="tag tag--later">nice to have</span></p><p class="dl__a">Built area and completion date are not in the AD piece. The fields are optional and the page reads fine without them.</p></div>
+      </div>
+      <div class="aside">
+        <p class="aside__k">Companion document</p>
+        <div><p><strong><code>docs/implementation-contract.md</code></strong> carries the engineering rules this document deliberately does not: content lifecycle and preview, deployment and rollback, account ownership and roles, backup and restore testing, monitoring, form hardening, privacy and DPDP, dependency policy, and the definition of done. Read that one before writing code; read this one to know what to build.</p></div>
+      </div>
+
+      <div class="aside">
+        <p class="aside__k">Next</p>
+        <div>
+          <p>Nothing above blocks starting. First: <code>tokens.css</code>, the layout primitives and <code>Figure</code> — the foundation everything stands on.</p>
+          <p>Then, before anything else, <strong>the featured sequence and one complete Nelly House page</strong> — hero, scroll sequence, image reveals, gallery, lightbox, mobile. §34 calls the sequence the riskiest component in the system, and full-viewport scroll-driven sections are exactly the thing that feels wonderful on a MacBook and sluggish on a mid-range Android. It gets measured on real devices <em>before</em> thirty components are built around it. If it does not feel excellent there, it gets redesigned then rather than after.</p>
+          <p>The index, the remaining routes and the rest of the schema follow once that page is signed off.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="line line--xl" style="margin-top:4rem"><span class="line__bar"></span><svg class="line__fig" viewBox="190 0 300 132.35" aria-hidden="true"><path d="M0 132.345L0 102.571L221.624 102.568C311.591 102.568 398.81 1.025 399.682 0L423.631 17.564C404.409 48.058 397.644 71.776 404.58 84.353C414.633 102.568 454.428 102.568 471.422 102.568L653.617 102.568L653.617 132.342L471.543 132.342C447.283 132.342 397.055 132.342 378.512 98.735C373.474 89.605 371.383 79.225 372.255 67.489C334.636 98.262 279.832 132.342 221.624 132.342Z"/></svg><span class="line__bar line__bar--stub"></span></div>
+
+  <footer class="end">
+    <p>btl architects · design system and technical architecture · draft 0.5 · 11 August 2026<br>
+    Set in Satoshi. Colour, type roles, the arch and the line are taken from the BTL Visual Identity Guide v1.00; the line is the vector from the supplied element files, not a redraw. Photography of Nelly House by Abhimanyu K V, via the Architectural Digest India feature of 5 August 2026, reproduced here for layout study only.</p>
+  </footer>
+
+  </main>
+</div></div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var groups = [
+    [document.querySelectorAll(".line"), "in", 0.35],
+    [document.querySelectorAll(".rv-mask"), "go", 0.5],
+    [document.querySelectorAll(".rv-fade"), "go", 0.6]
+  ];
+  if (reduce) {
+    groups.forEach(function(g){ g[0].forEach(function(el){ el.classList.add(g[1]); }); });
+    return;
+  }
+  groups.forEach(function(g){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add(g[1]); io.unobserve(e.target); }
+      });
+    }, { threshold: g[2] });
+    g[0].forEach(function(n){ io.observe(n); });
+  });
+})();
+</script>

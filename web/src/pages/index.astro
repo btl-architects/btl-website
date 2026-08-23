@@ -1,0 +1,136 @@
+---
+/* The home page is a composition of the site's systems, not imitations of them.
+ *
+ * The work section runs the same ProjectCard the index runs; press runs the same
+ * PressIndex the press page runs. It used to have its own hover-list — a second
+ * way of presenting projects that had to be learned separately and then
+ * re-learned on /projects.
+ *
+ * Rhythm alternates release (full-bleed, image-led) and compression (the page
+ * stops and speaks) — P5. The order is statement → projects → studio → press →
+ * people → contact: the work first, then the practice, then the outside world's
+ * verdict, then the faces behind the credibility that verdict just established,
+ * and finally the page resolves once into contact.
+ */
+import Base from "../layouts/Base.astro";
+import BrandLine from "../components/BrandLine.astro";
+import MediaStage from "../components/MediaStage.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import PressIndex from "../components/PressIndex.astro";
+import Figure from "../components/Figure.astro";
+import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
+
+const settings = getSettings();
+const home = getHome();
+const projects = getProjects();
+const featured = projects.filter((p) => p.featured).slice(0, 3);
+const work = featured.length ? featured : projects.slice(0, 3);
+const press = getPublications().slice(0, 3);
+// The home preview shows the principals only; the full team lives on /people.
+const principals = getPeople().filter((p) => p.tier === "principal");
+const c = settings.contact;
+---
+
+<Base title="btl architects" description={settings.tagline} current="index" ground="media">
+  <main id="main">
+    <section class="landing" data-ground="media" data-stage>
+      <h1 class="sr-only">btl architects — architecture and interiors, Kozhikode</h1>
+      <MediaStage />
+      <div class="landing__cue" data-on-media>
+        <BrandLine size="s" />
+      </div>
+    </section>
+
+    {/* COMPRESSION — one line, a lot of air */}
+    <section class="home-sec home-sec--compress" id="statement" data-ground="dark">
+      <div class="container">
+        <p class="home-statement rv">{home.statement}</p>
+      </div>
+    </section>
+
+    {/* RELEASE — the work, in the same cards the projects page uses */}
+    <section class="home-sec home-sec--release" id="projects" data-ground="dark">
+      <div class="container">
+        <div class="home-sec__head">
+          <h2 class="home-sec__k">Selected work</h2>
+          <a class="tl" href="/projects/">All projects</a>
+        </div>
+      </div>
+      <div class="pindex" data-pindex>
+        {work.map((p, i) => <ProjectCard project={p} index={i} />)}
+      </div>
+    </section>
+
+    {/* COMPRESSION — the page stops and speaks */}
+    <section class="home-sec home-sec--compress" id="studio" data-ground="dark">
+      <div class="container">
+        <div class="home-sec__head">
+          <h2 class="home-sec__k">Studio</h2>
+          <a class="tl" href="/studio/">More about us</a>
+        </div>
+        <div class="home-studio">
+          <p class="t-lead rv">{home.studio.lead}</p>
+          <p class="rv" data-delay="1" style="color:var(--text-secondary)">{home.studio.body[0]}</p>
+        </div>
+      </div>
+    </section>
+
+    {/* RELEASE */}
+    <section class="home-sec home-press" id="press" data-ground="dark">
+      <div class="container">
+        <div class="home-sec__head">
+          <h2 class="home-sec__k">Press</h2>
+          <a class="tl" href="/press/">Everything</a>
+        </div>
+        <PressIndex items={press} compact />
+      </div>
+    </section>
+
+    {/* RELEASE — the faces behind the credibility just established */}
+    <section class="home-sec" id="people" data-ground="dark">
+      <div class="container">
+        <div class="home-sec__head">
+          <h2 class="home-sec__k">People</h2>
+          <a class="tl" href="/people/">The team</a>
+        </div>
+        <div class="mini mini--2">
+          {principals.map((p, i) => (
+            <figure class="rv" data-delay={i}>
+              {p.portrait && (
+                <Figure image={p.portrait} sizes="(min-width:44rem) 22rem, 92vw" />
+              )}
+              <figcaption>
+                <span class="t-h3">{p.prefix} {p.name}</span>
+                <span class="eyebrow" style="display:block;margin-top:var(--s-2)">{p.role}</span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* COMPRESSION — the page resolves */}
+    <section class="home-sec home-sec--compress" id="contact" data-ground="dark">
+      <div class="container">
+        <div class="home-sec__head">
+          <h2 class="home-sec__k">Contact</h2>
+          <a class="tl" href="/contact/">Send an enquiry</a>
+        </div>
+        <div class="mini mini--2">
+          <div class="rv">
+            <address
+              style="font-style:normal; line-height:1.7; color:var(--text-secondary)"
+              set:html={c.address.join("<br>")}
+            />
+          </div>
+          <div class="rv" data-delay="1">
+            <p>
+              <a class="tl" href={`mailto:${c.email}`}>{c.email}</a><br />
+              <a class="tl" href={`tel:${c.phoneHref}`}>{c.phone}</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>

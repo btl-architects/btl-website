@@ -1,0 +1,26 @@
+---
+/* Not found — offers the way back into the work rather than an apology. */
+import Base from "../layouts/Base.astro";
+import { getProjects } from "../lib/content";
+
+const recent = getProjects().slice(0, 3);
+---
+
+<Base title="Not found — btl architects" description="That page does not exist.">
+  <main id="main" data-ground="dark" class="nf">
+    <div class="container">
+      <h1 class="t-h1">That page isn't here.</h1>
+      <p class="t-lead" style="margin-top:var(--s-5); color:var(--text-secondary); max-width:var(--measure-lead)">
+        It may have moved. The recent work is below, or start from the beginning.
+      </p>
+      <ul style="list-style:none; padding:0; margin:var(--s-7) 0 0">
+        {recent.map((p) => (
+          <li style="margin-top:var(--s-4)">
+            <a class="tl t-h3" href={`/projects/${p.slug}/`}>{p.title}</a>
+          </li>
+        ))}
+      </ul>
+      <p style="margin-top:var(--s-7)"><a class="tl" href="/">Back to the start</a></p>
+    </div>
+  </main>
+</Base>

@@ -1,0 +1,26 @@
+---
+/* Category routes. Generated the whole time, linked only once the filter bar is
+ * earned — `type` is a reserved segment, so a project slugged "houses" can
+ * never collide with the Houses category (design system §05).
+ */
+import type { GetStaticPaths } from "astro";
+import Base from "../../../layouts/Base.astro";
+import ProjectIndex from "../../../components/ProjectIndex.astro";
+import { getLiveCategories, getProjects } from "../../../lib/content";
+
+export const getStaticPaths = (() =>
+  getLiveCategories().map((c) => ({
+    params: { category: c.slug },
+    props: { category: c, projects: getProjects().filter((p) => p.category.includes(c.slug)) },
+  }))) satisfies GetStaticPaths;
+
+const { category, projects } = Astro.props;
+---
+
+<Base
+  title={`${category.label} — btl architects`}
+  description={`${category.label} by btl architects.`}
+  current="projects"
+>
+  <ProjectIndex projects={projects} active={category.slug} heading={`${category.label} — btl architects`} />
+</Base>

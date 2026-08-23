@@ -1,0 +1,29 @@
+---
+/* Studio — the practice in its own voice. Statement at display scale, the room
+ * full-bleed underneath it, then the working method as passages that step
+ * inward across the grid.
+ */
+import Base from "../layouts/Base.astro";
+import Figure from "../components/Figure.astro";
+import { getHome } from "../lib/content";
+
+const st = getHome().studio;
+---
+
+<Base title="Studio — btl architects" description={st.lead} current="studio">
+  <main id="main" data-ground="dark" style="padding-bottom:var(--space-section)">
+    <h1 class="sr-only">Studio — btl architects</h1>
+
+    <p class="t-display studio__lead rv">{st.lead}</p>
+
+    <div class="studio__media rv" data-delay="1">
+      <Figure image={{ key: st.image, alt: st.imageAlt }} sizes="100vw" priority />
+    </div>
+
+    <div class="studio__body">
+      {st.body.map((para: string, i: number) => (
+        <p class="t-body studio__p rv" data-delay={i % 3}>{para}</p>
+      ))}
+    </div>
+  </main>
+</Base>

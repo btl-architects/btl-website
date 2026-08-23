@@ -1,0 +1,18 @@
+---
+/* The btl line as itself — a real vector at a size that can carry the drawing.
+ *
+ * `line__fig` is not decoration: the height, the fill and the draw animation all
+ * hang off that class. Without it the vector renders unsized, which is exactly
+ * what went wrong in the prototype for a long time.
+ */
+import { LINE_PATH, LINE_VIEWBOX } from "../lib/brand";
+
+interface Props { size?: "xs" | "s" | "m" | "xl"; draw?: boolean; stub?: boolean }
+const { size = "s", draw = true, stub = true } = Astro.props;
+---
+
+<div class:list={["line", `line--${size}`, draw && "line--draw"]}>
+  <span class="line__bar"></span>
+  <svg class="line__fig" viewBox={LINE_VIEWBOX} aria-hidden="true"><path d={LINE_PATH} /></svg>
+  {stub && <span class="line__bar line__bar--stub"></span>}
+</div>

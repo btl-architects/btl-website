@@ -1,0 +1,55 @@
+---
+/* One card per line: a wide, shallow photograph strip with the name on it.
+ *
+ * The card *is* the project. Opening does not summon a second element — the
+ * card grows and its own strip starts scrolling, with the cover photograph
+ * staying exactly where it is and un-cropping itself as its siblings arrive.
+ * Nothing is replaced, so there is nothing to replace it with, and the document
+ * only ever grows on open (design memory P10).
+ *
+ * Several frames are rendered, not one. A single photograph across the full
+ * width of a shallow card is a 5:1 crop, which ruins most architectural images
+ * and makes every card the same flat letterbox. Six are rendered and the card
+ * clips whatever runs past its edge: three fill a laptop, six fill a maximised
+ * window, and the clipped frame is the affordance saying it continues.
+ *
+ * Every data-* attribute here is read by site.js. They are the contract between
+ * markup and behaviour — renaming one silently breaks the expansion.
+ */
+import Figure from "./Figure.astro";
+import type { Project } from "../lib/content";
+
+interface Props { project: Project; index: number; priority?: boolean }
+const { project, index, priority = false } = Astro.props;
+
+const peek = project.images.slice(0, 6);
+const total = String(project.images.length).padStart(2, "0");
+---
+
+<article class="pcard rvc" data-card={project.slug}>
+  <div class="pcard__strip" data-strip>
+    {peek.map((image, k) => (
+      <figure class="rail__f pcard__peek">
+        <Figure
+          image={image}
+          sizes="(min-width:52rem) 40vw, 80vw"
+          priority={priority && k === 0}
+        />
+      </figure>
+    ))}
+  </div>
+  <div class="pcard__nav" data-nav hidden>
+    <span class="pcard__pos" data-pos>01 / {total}</span>
+    <span class="pcard__bar"><i data-bar></i></span>
+  </div>
+  <a
+    class="pcard__t"
+    href={`/projects/${project.slug}/`}
+    data-project={project.slug}
+    aria-expanded="false"
+  >
+    <span class="pcard__n">{String(index + 1).padStart(2, "0")}</span>
+    <span class="pcard__name">{project.title}</span>
+    <span class="pcard__place">{project.location}</span>
+  </a>
+</article>

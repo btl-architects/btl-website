@@ -1,0 +1,39 @@
+---
+/* The index, shared by /projects and every category and place route.
+ *
+ * One component rather than a family of near-identical ones: the only thing
+ * that varies between those routes is which projects are in the list and which
+ * chip is current, so that is all this takes as props.
+ */
+import ProjectCard from "./ProjectCard.astro";
+import { getEarnedCategories, type Project } from "../lib/content";
+
+interface Props { projects: Project[]; active?: string; heading: string }
+const { projects, active = "", heading } = Astro.props;
+
+// Empty until the work earns it — see getEarnedCategories.
+const chips = getEarnedCategories();
+---
+
+<main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+  <h1 class="sr-only">{heading}</h1>
+
+  {chips.length > 0 && (
+    <nav class="chips" aria-label="Project categories">
+      <a class="chip" href="/projects/" aria-current={active === "" ? "page" : undefined}>All</a>
+      {chips.map((c) => (
+        <a
+          class="chip"
+          href={`/projects/type/${c.slug}/`}
+          aria-current={active === c.slug ? "page" : undefined}
+        >{c.label}</a>
+      ))}
+    </nav>
+  )}
+
+  <div class="pindex" data-pindex>
+    {projects.map((p, i) => (
+      <ProjectCard project={p} index={i} priority={i === 0} />
+    ))}
+  </div>
+</main>

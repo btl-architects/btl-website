@@ -1,0 +1,23 @@
+---
+/* Place routes. Same reserved-segment reasoning as `type`. */
+import type { GetStaticPaths } from "astro";
+import Base from "../../../layouts/Base.astro";
+import ProjectIndex from "../../../components/ProjectIndex.astro";
+import { getLocations, getProjects, locationSlug } from "../../../lib/content";
+
+export const getStaticPaths = (() =>
+  getLocations().map((l) => ({
+    params: { location: l.slug },
+    props: { place: l, projects: getProjects().filter((p) => locationSlug(p.location) === l.slug) },
+  }))) satisfies GetStaticPaths;
+
+const { place, projects } = Astro.props;
+---
+
+<Base
+  title={`${place.label} — btl architects`}
+  description={`Work by btl architects in ${place.label}.`}
+  current="projects"
+>
+  <ProjectIndex projects={projects} heading={`${place.label} — btl architects`} />
+</Base>

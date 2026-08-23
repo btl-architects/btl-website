@@ -1,0 +1,60 @@
+{
+  "landscape": [
+    {
+      "mp4": "video/open-01-land.mp4",
+      "poster": "video/open-01-land.jpg",
+      "mp4Bytes": 407717,
+      "posterBytes": 12067,
+      "dur": 9.0,
+      "key": "open-01-land",
+      "label": "Wayanad, first light",
+      "note": "the land before the building"
+    },
+    {
+      "mp4": "video/open-02-house.mp4",
+      "poster": "video/open-02-house.jpg",
+      "mp4Bytes": 1741653,
+      "posterBytes": 164825,
+      "dur": 9.0,
+      "key": "open-02-house",
+      "label": "Nelly House",
+      "note": "the building in the land"
+    },
+    {
+      "mp4": "video/open-03-rooms.mp4",
+      "poster": "video/open-03-rooms.jpg",
+      "mp4Bytes": 1480917,
+      "posterBytes": 29162,
+      "dur": 10.0,
+      "key": "open-03-rooms",
+      "label": "Interiors",
+      "note": "the rooms"
+    }
+  ],
+  "portrait": [
+    {
+      "mp4": "video/open-01-land-p.mp4",
+      "poster": "video/open-01-land-p.jpg",
+      "mp4Bytes": 239988,
+      "posterBytes": 28953,
+      "dur": 9.0,
+      "key": "open-01-land"
+    },
+    {
+      "mp4": "video/open-02-house-p.mp4",
+      "poster": "video/open-02-house-p.jpg",
+      "mp4Bytes": 1712705,
+      "posterBytes": 297213,
+      "dur": 9.0,
+      "key": "open-02-house"
+    },
+    {
+      "mp4": "video/open-03-rooms-p.mp4",
+      "poster": "video/open-03-rooms-p.jpg",
+      "mp4Bytes": 842051,
+      "posterBytes": 55082,
+      "dur": 10.5,
+      "key": "open-03-rooms"
+    }
+  ]
+}

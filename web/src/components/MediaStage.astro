@@ -1,0 +1,41 @@
+---
+/* The opening: atmosphere before information.
+ *
+ * A full-bleed stage cycling a short authored sequence — the land, the building
+ * in the land, the rooms. No arrows, no dots, no counter; it is ambient, not a
+ * carousel. That is the explicit carve-out to R8: it is non-interactive, it
+ * pauses off-screen, and it never runs under reduced motion.
+ *
+ * The poster carries the first frame so something is on screen immediately, and
+ * the sources stay in data-src so that under reduced motion or Save-Data the
+ * video is never fetched at all — the still is a designed alternative, not a
+ * disabled site. site.js decides which of the two sources to load from the
+ * viewport's orientation.
+ */
+import manifest from "../lib/video-manifest.json";
+
+interface Clip { mp4: string; poster: string; key: string; label?: string }
+const landscape = manifest.landscape as Clip[];
+const portrait = manifest.portrait as Clip[];
+---
+
+<div class="stage" data-stage-frames>
+  {landscape.map((clip, i) => {
+    const port = portrait.find((p) => p.key === clip.key) ?? clip;
+    return (
+      <figure class="stage__f" data-on={i === 0 ? "true" : "false"} data-label={clip.label ?? ""}>
+        <video
+          class="stage__v"
+          muted
+          loop
+          playsinline
+          preload={i === 0 ? "auto" : "none"}
+          poster={`/assets/${clip.poster}`}
+          data-src={`/assets/${clip.mp4}`}
+          data-src-portrait={`/assets/${port.mp4}`}
+        ></video>
+      </figure>
+    );
+  })}
+  <p class="stage__label" data-stage-label aria-live="off"></p>
+</div>

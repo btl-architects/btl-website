@@ -1,0 +1,49 @@
+---
+/* The only <img> in the codebase (contract §1, design memory R13).
+ *
+ * Everything an image needs to behave — the width ladder, intrinsic dimensions
+ * so nothing reflows as it loads, decoding hints, and the one high-priority
+ * fetch a route is allowed — lives here once. A component that renders its own
+ * <img> is how a site ends up with four different loading strategies and a
+ * layout that jumps on three of them.
+ *
+ * priority — the single LCP candidate on the route: eager, fetchpriority high.
+ * eager    — above the fold but not the LCP (the logo). Two high-priority
+ *            images on one route is one too many, so these are separate flags
+ *            rather than a single boolean.
+ */
+import { requireImage, type SiteImage } from "../lib/media";
+
+interface Props {
+  image: SiteImage;
+  sizes: string;
+  class?: string;
+  style?: string;
+  priority?: boolean;
+  eager?: boolean;
+}
+
+const { image, sizes, class: cls, style, priority = false, eager = false } = Astro.props;
+const r = requireImage(image.key);
+
+// alt="" is a legitimate, deliberate value: it marks an image as decorative to a
+// screen reader. A *missing* alt is not — it leaves the reader to announce the
+// filename. The distinction is enforceable, so it is enforced.
+if (image.alt === undefined || image.alt === null) {
+  throw new Error(`[Figure] image "${image.key}" has no alt. Use "" only if decorative.`);
+}
+---
+
+<img
+  class={cls}
+  style={style}
+  src={r.src}
+  srcset={r.srcset}
+  sizes={sizes}
+  width={r.width}
+  height={r.height}
+  alt={image.alt}
+  loading={priority || eager ? undefined : "lazy"}
+  decoding="async"
+  fetchpriority={priority ? "high" : undefined}
+/>

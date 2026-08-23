@@ -1,0 +1,67 @@
+---
+/* Press and awards — one content type with a `kind`, never two systems.
+ *
+ * The wall is mastheads. Where a publication has supplied a logo it is set as
+ * the object; where it has not, the name typeset at display scale is the
+ * designed fallback and nothing has to move when the asset arrives.
+ */
+import Base from "../layouts/Base.astro";
+import Figure from "../components/Figure.astro";
+import { getPublications, getProjects } from "../lib/content";
+
+const items = getPublications();
+const projects = getProjects();
+const projectFor = (slug: string | null) =>
+  slug ? projects.find((p) => p.slug === slug) : undefined;
+
+const yearOf = (date: string) => (date ? date.trim().split(/\s+/).pop()! : "");
+---
+
+<Base
+  title="Press — btl architects"
+  description="Where the practice has been published."
+  current="press"
+>
+  <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+    <div class="container" style="padding-bottom:var(--space-section)">
+      <h1 class="press-hero rv">See where we've been.</h1>
+
+      <div class="pwall">
+        {items.map((item, i) => {
+          const related = projectFor(item.relatedProject);
+          const live = !!item.url && item.url !== "#";
+          const Tag = live ? "a" : "div";
+          return (
+            <article class="pw rv" data-delay={i % 3}>
+              <Tag
+                class="pw__link"
+                href={live ? item.url : undefined}
+                rel={live ? "noopener" : undefined}
+                target={live ? "_blank" : undefined}
+              >
+                {item.logo
+                  ? <Figure image={item.logo} sizes="(min-width:48rem) 24rem, 60vw" />
+                  : <span class="pw__pub">{item.publication}</span>}
+                <span class="pw__t">{item.title}</span>
+                <span class="pw__meta">
+                  <span>{item.kind === "award" ? "Award" : "Feature"}</span>
+                  {yearOf(item.date) && <span>{yearOf(item.date)}</span>}
+                  {related && <span>{related.title}</span>}
+                </span>
+              </Tag>
+              {related && (
+                <span class="pw__media" aria-hidden="true">
+                  <Figure image={related.hook} sizes="(min-width:48rem) 22rem, 38vw" />
+                </span>
+              )}
+            </article>
+          );
+        })}
+      </div>
+
+      <p class="t-caption" style="margin-top:var(--s-8); color:var(--text-tertiary)">
+        Links open the publication's own page.
+      </p>
+    </div>
+  </main>
+</Base>

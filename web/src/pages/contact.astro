@@ -1,0 +1,63 @@
+---
+/* Contact — where the site resolves. Everything needed to reach the studio,
+ * stated once, on a light ground so the page reads as an ending rather than
+ * another dark section.
+ *
+ * The form posts to Netlify. The honeypot is a real field hidden from people,
+ * which catches most bots without putting a puzzle in front of a client.
+ */
+import Base from "../layouts/Base.astro";
+import { getSettings } from "../lib/content";
+
+const c = getSettings().contact;
+---
+
+<Base title="Contact — btl architects" description="Talk to the studio." current="contact" ground="light">
+  <main
+    id="main"
+    data-ground="light"
+    style="background:var(--surface); color:var(--text-primary)"
+  >
+    <div class="container" style="padding-top:calc(var(--header-h) + var(--s-8)); padding-bottom:var(--space-section)">
+      <h1 class="t-h1 rv">Contact</h1>
+
+      <div class="contact__grid">
+        <form name="enquiry" method="POST" data-netlify="true" netlify-honeypot="company" class="rv">
+          <p class="hp"><label>Company <input name="company" tabindex="-1" autocomplete="off" /></label></p>
+          <div class="f">
+            <label for="n">Name</label>
+            <input id="n" name="name" type="text" autocomplete="name" required />
+          </div>
+          <div class="f">
+            <label for="em">Email</label>
+            <input id="em" name="email" type="email" inputmode="email" autocomplete="email" required />
+          </div>
+          <div class="f">
+            <label for="ph">Phone <span class="muted">(optional)</span></label>
+            <input id="ph" name="phone" type="tel" inputmode="tel" autocomplete="tel" />
+          </div>
+          <div class="f">
+            <label for="ms">Message</label>
+            <textarea id="ms" name="message" required minlength="20"></textarea>
+          </div>
+          <button class="b b--solid" type="submit">Send enquiry</button>
+          <p class="t-caption" style="margin-top:var(--s-4)">
+            Your name and email reach the studio at {c.formTo} and are kept only to reply. Nothing is shared.
+          </p>
+        </form>
+
+        <div class="contact__aside rv" data-delay="1">
+          <div>
+            <span class="footer__k" style="color:var(--text-tertiary)">Studio</span>
+            <address style="font-style:normal; line-height:1.7" set:html={c.address.join("<br>")} />
+          </div>
+          <p>
+            <a class="tl" href={`mailto:${c.email}`}>{c.email}</a><br />
+            <a class="tl" href={`tel:${c.phoneHref}`}>{c.phone}</a>
+          </p>
+          <p class="t-caption" style="color:var(--text-tertiary)">GSTIN {c.gstin}</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</Base>

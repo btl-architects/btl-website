@@ -1,0 +1,920 @@
+/* ==========================================================================
+   Components
+   ========================================================================== */
+
+/* --- the btl line ---------------------------------------------------------
+   Flat bar + the real inflection. The bar is 22.5% of the figure height,
+   which is what lets a rule butt against the curve seamlessly at any width. */
+
+.line { display: flex; align-items: flex-end; width: 100%; }
+.line__bar { flex: 1 1 auto; background: var(--mark); }
+.line__fig { flex: 0 0 auto; display: block; }
+.line__fig path { fill: var(--mark); }
+
+.line--xl .line__fig { height: 52px; } .line--xl .line__bar { height: 11.7px; }
+.line--m  .line__fig { height: 30px; } .line--m  .line__bar { height: 6.75px; }
+.line--s  .line__fig { height: 18px; } .line--s  .line__bar { height: 4.05px; }
+.line--xs .line__fig { height: 8px;  } .line--xs .line__bar { height: 1.8px; }
+.line__bar--stub { flex: 0 0 clamp(1.5rem, 6vw, 6rem); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .line--draw .line__bar {
+    transform: scaleX(0); transform-origin: left;
+    transition: transform var(--dur-slow) var(--ease);
+  }
+  .line--draw .line__fig path {
+    transform-box: fill-box; transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform var(--dur-draw) var(--ease) 120ms;
+  }
+  .line--draw.in .line__bar,
+  .line--draw.in .line__fig path { transform: scaleX(1); }
+}
+
+
+/* --- the mark --------------------------------------------------------------
+   The btl line is used as itself — a real vector at a size that can carry it —
+   or it is not used. See the .line component above and the landing cue. The
+   token that lived here rebuilt it out of a CSS mask for underline-scale
+   decoration, and after several attempts it was never a faithful drawing; it
+   has been removed rather than kept as a near-miss of the practice's own
+   mark. */
+
+/* Hover and focus draw a plain rule, not the mark.
+
+   This used to composite the btl line out of a CSS mask — the knot as an image,
+   the flat run as a gradient — and it never became a faithful reproduction of
+   the drawing at underline scale, through several rewrites. A near-miss of a
+   practice's own mark is worse than not using it: it reads as the logo drawn
+   badly. The real element is still on the page where it can be rendered
+   properly, from its own vector, at a size that carries it (see .line). A
+   hairline is honest about being a hairline. R3 still holds — one at a time. */
+.ul, .tl { position: relative; display: inline-block; padding-bottom: 0.4em; font-weight: 500; }
+
+.ul::after, .tl::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0.15em;
+  height: 1px;
+  background-color: var(--mark);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-hover) var(--ease);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .ul:hover::after, .tl:hover::after { clip-path: inset(0 0 0 0); }
+}
+.ul:focus-visible::after, .tl:focus-visible::after { clip-path: inset(0 0 0 0); }
+
+/* --- the navigation indicator ----------------------------------------------
+   One element that slides. One element means one line. P4. */
+
+.nav { position: relative; }
+
+.nav__ind {
+  position: absolute; bottom: 0; left: 0;
+  height: 1px;
+  background-color: var(--mark);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dur-base) var(--ease),
+    width     var(--dur-base) var(--ease),
+    opacity   var(--dur-fast) var(--ease);
+}
+.nav__ind[data-on="true"] { opacity: 1; }
+.nav__ind[data-first="true"] { transition: opacity var(--dur-fast) var(--ease); }
+
+/* --- header ---------------------------------------------------------------- */
+
+.header {
+  position: fixed; inset: 0 0 auto 0; z-index: 100;
+  height: var(--header-h);
+  display: flex; align-items: center;
+  padding-inline: var(--page-margin);
+  padding-top: env(safe-area-inset-top, 0);
+  transition: background var(--dur-base) var(--ease);
+}
+.header__inner {
+  width: 100%; max-width: var(--max-width); margin-inline: auto;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-5);
+}
+.header__logo { display: block; flex: 0 0 auto; }
+.header__logo img {
+  width: clamp(3.1rem, 2.4rem + 2vw, 4.4rem); height: auto;
+}
+
+/* The header is fixed, so it sits outside the section it overlaps and cannot
+   inherit that section's ground. It reads data-over instead and re-declares
+   both the ink and the line colour — a photograph and a dark section take
+   green, a light section takes red. §13. */
+/* Over the hero the header floats on the photograph. Past it, it takes the
+   page ground — a transparent header over arbitrary content is unreadable
+   the moment a pale photograph scrolls under it. */
+.header[data-pinned="true"] {
+  background: var(--n-950);
+  border-bottom: 1px solid var(--n-800);
+}
+/* The header sits outside <main>, so it cannot inherit the light register from
+   the section below it — it has to be told. */
+.header[data-pinned="true"][data-over="light"] {
+  background: var(--n-0);
+  border-bottom-color: var(--n-200);
+}
+.header[data-over="media"] { color: #fff;          --mark: var(--btl-green); }
+.header[data-over="dark"]  { color: var(--n-0);    --mark: var(--btl-green); }
+.header[data-over="light"] { color: var(--n-950);  --mark: var(--btl-red); }
+
+.nav { display: none; }
+@media (min-width: 48rem) {
+  .nav { display: flex; gap: clamp(1.25rem, 0.4rem + 2vw, 2.75rem); align-items: center; }
+}
+.nav__link {
+  display: block;
+  font-size: var(--type-nav); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-nav);
+  padding-block: 0.35em 0.75em;
+}
+/* --- mobile nav ------------------------------------------------------------ */
+
+.burger {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  background: none; border: 0; cursor: pointer;
+  padding: 0.7rem 0; min-height: 44px;
+  font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+}
+@media (min-width: 48rem) { .burger { display: none; } }
+.burger svg { width: 20px; height: 20px; }
+
+/* The menu is always the dark ground, whatever page it opens over — one
+   overlay, one identity, and the white logo is always the right logo. */
+.menu {
+  position: fixed; inset: 0; z-index: 150;
+  background: var(--n-950); color: var(--n-0);
+  display: flex; flex-direction: column;
+  padding: var(--s-5) var(--page-margin) calc(var(--s-6) + env(safe-area-inset-bottom, 0));
+  transform: translateY(-100%);
+  transition: transform var(--dur-base) var(--ease), visibility var(--dur-base);
+  visibility: hidden;
+  overflow-y: auto;
+}
+.menu[data-open="true"] { transform: none; visibility: visible; }
+.menu__top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--s-6);
+}
+.menu__top img { width: 3.4rem; height: auto; }
+.menu__list { display: flex; flex-direction: column; gap: var(--s-3); }
+.menu__link {
+  font-size: 1.25rem; font-weight: 900;
+  letter-spacing: var(--track-h1); line-height: 1;
+  color: var(--n-450);
+  display: inline-block; padding-block: 0.2em;
+  min-height: 44px;
+}
+.menu__link[aria-current="page"] { color: var(--n-0); }
+.menu__media { margin: var(--s-5) 0; }
+.menu__media img { width: 100%; height: 9rem; object-fit: cover; }
+.menu__foot {
+  margin-top: auto; padding-top: var(--s-4);
+  border-top: 1px solid var(--n-800);
+  font-size: var(--type-caption); line-height: 1.55;
+  color: var(--n-300);
+}
+.menu__foot a { display: inline-block; min-height: 44px; padding-block: 0.6em; }
+
+/* --- landing --------------------------------------------------------------- */
+
+.landing {
+  position: relative;
+  height: 100svh; min-height: 32rem;
+  background: #0a0a0a;
+}
+.landing > img, .landing > video {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.landing::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 30%,
+                                      rgba(0,0,0,0) 72%, rgba(0,0,0,.4) 100%);
+}
+.landing__cue {
+  position: absolute; z-index: 2;
+  right: var(--page-margin); bottom: clamp(1.5rem, 4vh, 3rem);
+  width: clamp(4.5rem, 8vw, 7.5rem);
+}
+
+/* the one line after the opening: the compression that follows the immersion */
+.home-statement {
+  font-size: clamp(1.25rem, 0.9rem + 1.4vw, 2.125rem);
+  line-height: 1.35; letter-spacing: -0.01em;
+  max-width: 34ch; color: var(--text-primary);
+}
+
+/* the home page runs the index's own cards, so it needs none of its own
+   spacing — only room to breathe inside a section that already has padding */
+.home-sec--release .pindex { padding-inline: 0; padding-bottom: 0; }
+
+/* --- the social rail -------------------------------------------------------
+   Structural chrome (R14): it sits on the left edge of the frame and stays
+   there, on every page, like the logo and the nav. Rotated so it reads up the
+   margin rather than intruding on the photograph. Hidden on a phone, where
+   there is no margin to give it. */
+
+.srail {
+  position: fixed; left: 0; top: 50%; z-index: 95;
+  transform: translateY(-50%);
+  display: none; flex-direction: column-reverse; align-items: center;
+  gap: var(--s-6);
+  padding: var(--s-5) 0;
+  writing-mode: vertical-rl;
+}
+@media (min-width: 64rem) { .srail { display: flex; } }
+
+.srail__i {
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: rgba(255,255,255,.55);
+  text-decoration: none; padding: var(--s-3) var(--s-4);
+  transition: color var(--dur-hover) var(--ease);
+}
+.srail__i:hover, .srail__i:focus-visible { color: #fff; }
+
+/* a hairline between them, drawn by the gap rather than a border on each */
+.srail__i + .srail__i { position: relative; }
+.srail__i + .srail__i::before {
+  content: ""; position: absolute; left: 50%; bottom: calc(100% + var(--s-3));
+  width: 1px; height: var(--s-4); background: rgba(255,255,255,.25);
+}
+
+/* --- the opening -----------------------------------------------------------
+   Atmosphere before information. A full-bleed stage that cycles an authored
+   sequence — the land, then the building in the land, then the rooms — with
+   no arrows, dots or counter, because it is ambient rather than navigational
+   (R8). Frames cross-dissolve on the one curve; the poster of the first frame
+   is painted immediately so the page is never black while a video negotiates. */
+
+.stage { position: absolute; inset: 0; overflow: hidden; background: var(--surface); }
+
+.stage__f {
+  position: absolute; inset: 0; margin: 0;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease);
+}
+.stage__f[data-on="true"] { opacity: 1; }
+.stage__f video,
+.stage__f img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* the frame names itself, quietly, bottom left — the one piece of information
+   the opening carries */
+.stage__label {
+  position: absolute; left: var(--page-margin); bottom: var(--s-7); z-index: 2;
+  margin: 0;
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: rgba(255,255,255,.8);
+  transition: opacity var(--dur-base) var(--ease);
+}
+.stage__label[data-fading="true"] { opacity: 0; }
+
+@media (max-width: 63.99rem) {
+  .stage__label { bottom: var(--s-8); }
+}
+
+/* --- categories ------------------------------------------------------------
+   Real routes, not JavaScript filters, so a category is a place you can link
+   to and share. Rendered only where work exists — P9. */
+
+.chips {
+  display: flex; flex-wrap: wrap; gap: var(--s-5);
+  width: 100%; max-width: var(--max-width); margin-inline: auto;
+  padding: var(--s-5) var(--page-margin) var(--s-6);
+}
+.chips .chip {
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+  text-decoration: none; transition: color var(--dur-hover) var(--ease);
+}
+.chips .chip:hover, .chips .chip[aria-current="page"] { color: var(--text-primary); }
+
+/* --- the projects grid -----------------------------------------------------
+   The 12 columns the design system has always declared, finally used. Every
+   piece of type on this page sits on it; only photography is allowed to break
+   out of it and bleed. One class, no per-component column maths. */
+
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--grid-gap);
+  width: 100%; max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-margin);
+}
+
+/* --- the rail --------------------------------------------------------------
+   One project on one horizontal axis. Photographs keep their own proportions —
+   they are set to the strip's height and take whatever width that gives them,
+   never cropped to a common shape (R5). The note rides inside the strip as its
+   first panel, so it scrolls away with the pictures instead of holding a
+   column of the screen for the whole project. */
+
+.rail {
+  display: flex; align-items: stretch; gap: var(--s-5);
+  overflow-x: auto; overflow-y: hidden;
+  scroll-padding-left: var(--page-margin);
+  padding-inline: var(--page-margin);
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+
+.rail__note {
+  flex: 0 0 min(20rem, 76vw);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding-bottom: var(--s-2);
+}
+.rail__title {
+  font-size: clamp(1.25rem, 0.9rem + 1vw, 1.75rem);
+  font-weight: 900; line-height: 1; letter-spacing: var(--track-display);
+  margin-bottom: var(--s-4);
+}
+.rail__text {
+  font-size: var(--type-body-sm); line-height: 1.55; color: var(--text-secondary);
+  max-width: 34ch;
+}
+.rail__meta { margin: var(--s-5) 0 0; display: grid; gap: var(--s-3); }
+.rail__m dt {
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+.rail__m dd { margin: var(--s-1) 0 0; font-size: var(--type-body-sm); }
+
+.rail__f { margin: 0; flex: 0 0 auto; height: 100%; }
+.rail__f img {
+  /* height drives, width follows — a landscape photograph comes out wide and a
+     portrait one narrow, which is the point. No max-width, no object-fit: both
+     were cropping every image to the same vertical slot. */
+  height: 100%; width: auto; max-width: none;
+  background: var(--surface);
+}
+.rail__f figcaption {
+  margin-top: var(--s-3);
+  font-size: var(--type-caption); color: var(--text-tertiary);
+}
+
+/* --- the project index -----------------------------------------------------
+   One card per line: a wide, shallow photograph with the name set on it.
+
+   The card IS the project. Opening does not summon a panel — the card grows
+   and its own strip starts scrolling, the cover photograph holding its place
+   and un-cropping itself as its siblings arrive. Because the card only ever
+   gets taller on open, the document never shrinks mid-animation, which is what
+   made the earlier version leap: it removed a tall cover instantly while a
+   separate panel grew from nothing, and the browser clamped the scroll. */
+
+/* held open for the length of a transition so the scroll anchor always has
+   range to work with; it eases away afterwards rather than snapping */
+.pindex[data-holding] { padding-bottom: calc(var(--space-section) + var(--hold, 0px)); }
+/* No transition on the reserved height: animating it away drags the document
+   height for another 320ms after everything else has settled, which is its own
+   small glitch. It is given back in one step, inside the anchor's window. */
+
+.pindex {
+  /* The gap between cards and the gap between a card's own photographs are
+     doing opposite jobs, so they should not be near each other in size. One
+     says "different project", the other says "same project, next frame". At
+     1.5rem against 1rem they read as the same interval and the whole page
+     flattened into one grid of pictures. */
+  display: flex; flex-direction: column; gap: var(--s-8);
+  width: 100%; max-width: var(--max-width); margin-inline: auto;
+  padding: 0 var(--page-margin) var(--space-section);
+}
+
+/* Cards arrive by being uncovered, like everything else (R10) — not by
+   sliding, which is what the older .rv primitive does. Each waits until it is
+   actually approaching the viewport, so the page below is never pre-animated. */
+@media (prefers-reduced-motion: no-preference) {
+  .rvc { clip-path: inset(0 0 100% 0); transition: clip-path var(--dur-slow) var(--ease); }
+  .rvc.in { clip-path: inset(0 0 0 0); }
+}
+
+.pcard {
+  position: relative;
+  height: clamp(11rem, 27vh, 21rem);
+  transition: height var(--dur-slow) var(--ease);
+  cursor: pointer;
+}
+.pcard[data-open="true"] { cursor: default; }
+/* Opening is the gesture you asked for and gets the full duration; closing is
+   the card getting out of the way and should not make you wait for it. */
+.pcard:not([data-open="true"]) { transition-duration: var(--dur-hover), var(--dur-hover); }
+.pcard[data-open="true"] { height: clamp(19rem, 56vh, 32rem); }
+
+.pcard__strip {
+  display: flex; align-items: stretch; gap: var(--s-2);
+  /* One pixel short of the card on purpose. Card heights come from vh, so the
+     card's box is almost always fractional; the moment anything composites it
+     into its own layer — the opacity used for hover dimming is enough — the
+     bottom edge rasterises at partial coverage and smears whatever sits on it.
+     With the photographs ending a pixel early, that edge falls on the ground
+     instead of on an image, and black smeared into black is nothing at all. */
+  height: calc(100% - 1px);
+  overflow: hidden;                 /* becomes scrollable only when open */
+  /* The browser re-anchors a scroller when its contents change size, and these
+     photographs are lazy — each one that lands widens the strip. In a mirrored
+     (rtl) strip the content grows leftward, so that adjustment walks the scroll
+     off its resting zero and leaves the note hanging past the edge with its
+     text clipped. We place this strip ourselves; the browser must not. */
+  overflow-anchor: none;
+  scroll-padding-left: 0;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.pcard__strip::-webkit-scrollbar { display: none; }
+/* No scroll-snap. It fought everything that moves this strip: the reveal eased
+   to its resting place and snap yanked it to the nearest frame, and letting go
+   of a drag jumped rather than settled. Photographs of different widths have no
+   natural grid to snap to anyway — free scrolling is both smoother and truer. */
+.pcard[data-open="true"] .pcard__strip { overflow-x: auto; overflow-y: hidden; }
+
+/* Every frame keeps its own proportions, collapsed and open alike — height
+   drives, width follows (R5). The card simply shows the first three and clips
+   whatever runs past its edge, which is the affordance saying it continues. */
+.pcard__peek { flex: 0 0 auto; }
+/* Card heights come from vh, so they land on fractional pixels almost always
+   (27vh of 1044 = 281.88). A replaced element on a fractional box smears its
+   last texel row along the bottom edge — a thin streaked band that looks like
+   a squashed copy of the photograph. Clipping the figure and over-sizing the
+   image by a pixel puts that row outside the visible box, which costs nothing
+   and removes the artefact at every display scale. */
+.pcard__strip > .rail__f { overflow: hidden; }
+.pcard__strip > .rail__f img {
+  height: calc(100% + 1px); width: auto; max-width: none; object-fit: cover;
+  background: var(--surface);
+}
+
+/* the name sits on the photograph over a scrim covering only the type (R4) */
+/* Alternating sides. Odd cards read left-to-right, even ones mirror — the
+   page gains a rhythm instead of four identical strips, and the eye is handed
+   from one card to the next rather than restarting at the same margin. */
+/* Every project is laid out the same way — caption left, hook left, the strip
+   running left to right. The cards used to alternate hands, mirroring every
+   second one, but a reader should not have to re-learn where a project's name
+   is or which way its photographs run halfway down the page. Rhythm comes from
+   the work itself, not from flipping the frame around it. */
+.pcard__t {
+  position: absolute; inset: auto 0 0 0; z-index: 2;
+  display: grid; grid-template-columns: auto 1fr; gap: 0 var(--s-3);
+  align-items: baseline;
+  padding: var(--s-8) var(--s-5) var(--s-5);
+  color: inherit; text-decoration: none;
+  /* deeper and darker than a hint: the name has to read over an unknown
+     photograph, and a pale interior shot will eat a gentle scrim */
+  /* An eased ramp with NO plateau. A flat stop near the bottom (.92 held to 8%)
+     put a hard crease where the constant met the ramp — a Mach band running the
+     full width of the card, right along the bottom edge of every photograph.
+     Extra stops approximate an ease so the falloff never creases. */
+  background: linear-gradient(to top,
+    rgba(5,5,5,.88) 0%, rgba(5,5,5,.86) 6%, rgba(5,5,5,.78) 14%,
+    rgba(5,5,5,.62) 26%, rgba(5,5,5,.42) 42%, rgba(5,5,5,.22) 62%,
+    rgba(5,5,5,.08) 80%, rgba(5,5,5,0) 100%);
+  transition: opacity var(--dur-base) var(--ease);
+}
+.pcard__n {
+  grid-row: 1; font-size: var(--type-meta); color: rgba(255,255,255,.6);
+  font-variant-numeric: tabular-nums;
+}
+.pcard__name {
+  grid-row: 1; font-weight: 700; line-height: 1.1;
+  font-size: clamp(1.375rem, 1rem + 1.1vw, 2.25rem);
+  letter-spacing: -0.02em; color: #fff;
+}
+.pcard__place {
+  grid-row: 2; grid-column: 2; margin-top: var(--s-2);
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: rgba(255,255,255,.78);
+}
+
+/* The caption steps aside when the card opens: the note now leads the strip
+   and states the name itself, so leaving both would collide them in the same
+   bottom-left corner and say it twice. */
+.pcard[data-open="true"] .pcard__t { opacity: 0; pointer-events: none; }
+
+@media (hover: hover) {
+  /* Dimming the rest is how you browse a closed index. Once something is open
+     it stops meaning anything — you are not choosing any more — so the whole
+     effect is switched off rather than fought with exceptions. */
+  .pindex:not(:has([data-open="true"])):hover .pcard { opacity: .5; }
+  .pindex:not(:has([data-open="true"])):hover .pcard:hover { opacity: 1; }
+  .pcard { transition: height var(--dur-slow) var(--ease), opacity var(--dur-hover) var(--ease); }
+
+  /* The caption lifts very slightly on hover — but the TYPE lifts, never the
+     element carrying the scrim. Moving the scrim itself pulled its bottom edge
+     off the bottom of the card and exposed a couple of pixels of un-darkened
+     photograph across the full width, gaps included: a pale band that appeared
+     only on hover. The gradient stays anchored; the words move. */
+  .pcard__n, .pcard__name, .pcard__place {
+    transition: transform var(--dur-hover) var(--ease), color var(--dur-hover) var(--ease);
+  }
+  .pcard:hover:not([data-open="true"]) .pcard__n,
+  .pcard:hover:not([data-open="true"]) .pcard__name,
+  .pcard:hover:not([data-open="true"]) .pcard__place { transform: translateY(-2px); }
+}
+
+/* An open strip can be dragged. Without this the only way across it on a
+   desktop is shift+wheel, which nobody discovers. */
+.pcard[data-open="true"] .pcard__strip { cursor: grab; }
+.pcard[data-open="true"] .pcard__strip[data-dragging] {
+  cursor: grabbing; scroll-behavior: auto;
+}
+.pcard[data-open="true"] .pcard__strip[data-dragging] img { pointer-events: none; }
+
+/* the note and the injected photographs wipe up in turn — R10 */
+.pcard .rail__note,
+.pcard__strip > .rail__f:not(.pcard__peek) {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path var(--dur-slow) var(--ease);
+}
+/* Closing runs the same wipe backwards, and fast — a close should get out of
+   the way rather than perform. Delays are dropped so the whole card clears
+   together instead of unravelling frame by frame.
+
+   The note is not animated at all on the way out — no width, no opacity, no
+   layout properties. It is scrolled off the edge first, while the card is
+   still at full height, and only then does the card collapse. Animating its
+   flex-basis forced a full re-layout of the strip on every frame, on top of
+   the card's own height transition: two layout animations over seven large
+   photographs, which jitters. */
+.pcard[data-open="true"] .rail__note,
+.pcard[data-open="true"] .pcard__strip > .rail__f { clip-path: inset(0 0 0 0); }
+
+/* Closing slides the whole strip sideways with a TRANSFORM — the note off the
+   edge, the photographs into its place. Transform is the only way to move this
+   smoothly: it runs on the compositor, so it neither re-lays out seven large
+   photographs on every frame (which is what collapsing the note's width did,
+   and it jittered against the card's height transition) nor depends on a
+   JavaScript frame loop (which stalls the moment the tab is throttled and
+   turns the movement into a jump).
+
+   It also removes the end-of-close snap by construction. The transform leaves
+   each photograph exactly where deleting the note would put it, so when the
+   note is finally removed and the transform dropped in the same frame, nothing
+   moves at all. */
+.pcard[data-closing] .pcard__strip > * {
+  transform: translateX(var(--close-shift, 0px));
+  transition: transform var(--close-dur, 420ms) var(--ease);
+}
+.pcard[data-open="true"] .rail__note { transition-delay: 60ms; }
+.pcard[data-open="true"] .pcard__strip > .rail__f:nth-child(5) { transition-delay: 150ms; }
+.pcard[data-open="true"] .pcard__strip > .rail__f:nth-child(6) { transition-delay: 205ms; }
+.pcard[data-open="true"] .pcard__strip > .rail__f:nth-child(n+7) { transition-delay: 255ms; }
+
+/* Padding on BOTH sides, always. The words used to sit flush against the edge
+   of the strip, so anything that moved the scroll by even a few pixels — and a
+   scroller re-anchors itself every time a lazy photograph lands — sheared the
+   text off mid-letter. Room at the margin makes that impossible to see, and
+   type should never touch the edge of its container in any case. */
+.pcard .rail__note {
+  flex: 0 0 min(20rem, 76vw);
+  padding-bottom: var(--s-2);
+  padding-inline: var(--s-4);
+}
+
+/* --- the scroll affordance -------------------------------------------------
+   On a phone one photograph fills the width with nothing beside it, so there
+   is no edge to tell you the strip continues. A position and a progress rule
+   say it plainly. The rule is drawn with the mark — R3 allows it on a sequence
+   progress rule, and it is the one place the brand does real work. */
+
+.pcard__nav {
+  display: none;
+  align-items: center; gap: var(--s-4);
+  padding-top: var(--s-3);
+}
+.pcard__pos {
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  color: var(--text-tertiary); font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+.pcard__bar {
+  position: relative; flex: 1 1 auto; height: 1px;
+  background: var(--border-strong);
+}
+.pcard__bar i {
+  position: absolute; inset: 0 auto 0 0;
+  width: 20%;
+  background: var(--mark);
+  transition: width var(--dur-fast) linear, transform var(--dur-fast) linear;
+}
+
+@media (max-width: 51.99rem) {
+  .pindex { gap: var(--s-7); }
+  .pcard[data-open="true"] .pcard__nav { display: flex; }
+
+  /* Every strip runs left-to-right on a phone. The mirror is a composition
+     device for a wide screen, where both hands are visible at once and the
+     alternation reads as rhythm; on a phone you see one photograph at a time,
+     so half the cards scrolling the other way is just disorienting. The
+     caption keeps alternating — that costs nothing and still varies the page. */
+
+  /* the trailing edge fades, so a clipped photograph reads as continuing
+     rather than as one that simply ends */
+  .pcard[data-open="true"] .pcard__strip {
+    -webkit-mask-image: linear-gradient(to right, #000 88%, rgba(0,0,0,.15));
+    mask-image: linear-gradient(to right, #000 88%, rgba(0,0,0,.15));
+  }
+  .pcard__t { padding: var(--s-7) var(--s-4) var(--s-4); }
+  .pcard__strip { gap: var(--s-2); }
+
+  /* The card grows by its STRIP, and the note stacks underneath in normal
+     flow, so the card takes whatever height the words need. */
+  .pcard, .pcard[data-open="true"] { height: auto; }
+  .pcard__strip {
+    height: clamp(13rem, 34vh, 20rem);
+    transition: height var(--dur-slow) var(--ease);
+  }
+  .pcard[data-open="true"] .pcard__strip { height: clamp(17rem, 48vh, 26rem); }
+  .pcard > .rail__note {
+    display: block; padding: var(--s-5) 0 var(--s-2);
+  }
+  .pcard > .rail__note .rail__text { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcard, .pcard__t { transition: none; }
+  .pcard .rail__note,
+  .pcard__strip > .rail__f { clip-path: none; transition: none; }
+}
+
+/* --- the project's own page ------------------------------------------------
+   No index row above the rail here, so the project names itself — on the same
+   grid and at the same weight as a card's caption, stated once. */
+
+.pj__head { padding-top: calc(var(--header-h) + var(--s-6)); padding-bottom: var(--s-4); }
+.pjh__id { align-items: baseline; }
+.pjh__name {
+  grid-column: 1 / 8;
+  font-weight: 500; line-height: 1.15;
+  font-size: clamp(1.0625rem, 0.9rem + 0.6vw, 1.5rem);
+}
+.pjh__place {
+  grid-column: 8 / 13; text-align: right;
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+.pj .rail { height: clamp(18rem, 56vh, 34rem); }
+
+@media (max-width: 51.99rem) {
+  .pjh__id { grid-template-columns: repeat(6, 1fr); }
+  .pjh__name { grid-column: 1 / 7; }
+  .pjh__place { grid-column: 1 / 7; text-align: left; margin-top: var(--s-2); }
+  .pj .rail { height: clamp(14rem, 40vh, 22rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail { scroll-behavior: auto; }
+}
+
+/* --- project pager --------------------------------------------------------- */
+
+.pager {
+  display: flex; justify-content: space-between; gap: var(--s-5);
+  padding-block: var(--s-6);
+  border-top: 1px solid var(--border-subtle);
+}
+.pager a { display: block; text-decoration: none; color: inherit; }
+.pager__r { text-align: right; }
+.pager__k {
+  display: block;
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+.pager__n {
+  display: block; margin-top: var(--s-2);
+  font-size: var(--type-h3); font-weight: 500;
+  transition: color var(--dur-hover) var(--ease);
+}
+.pager a:hover .pager__n { color: var(--text-tertiary); }
+
+/* --- buttons & links ------------------------------------------------------- */
+
+.b {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 44px; padding: 0.7rem 1.4rem;
+  font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+  border-radius: var(--radius-pill); cursor: pointer;
+  transition: background var(--dur-base) var(--ease),
+              color var(--dur-base) var(--ease),
+              border-color var(--dur-base) var(--ease);
+}
+.b--outline { background: none; color: var(--text-primary); border: 1px solid var(--text-primary); }
+.b--outline:hover { background: var(--text-primary); color: var(--surface); }
+.b--solid { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); }
+.b--solid:hover { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface); }
+.b svg { width: 16px; height: 16px; }
+
+/* --- people ---------------------------------------------------------------
+   Two tiers. Principals get scale; everyone else sits in a compact grid that
+   keeps working at four people or forty. The old version was two enormous
+   portraits with nowhere to put a third. */
+
+.principals { display: grid; gap: var(--s-6); }
+@media (min-width: 44rem) { .principals { grid-template-columns: repeat(2, 1fr); gap: var(--s-7); } }
+@media (min-width: 68rem) { .principals { grid-template-columns: repeat(2, minmax(0, 24rem)); } }
+
+.team {
+  display: grid; gap: var(--s-5) var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+}
+
+.person__img { margin-bottom: var(--s-3); background: var(--surface-sunken); overflow: hidden; }
+.person__img img { width: 100%; aspect-ratio: 4/5; object-fit: cover; }
+@media (hover: hover) {
+  .person__img img { transition: transform var(--dur-slow) var(--ease); }
+  .person:hover .person__img img { transform: scale(1.03); }
+}
+.person__n { font-weight: 700; letter-spacing: -0.012em; line-height: 1.15; }
+.principals .person__n { font-size: var(--type-h3); }
+.team .person__n { font-size: 0.9375rem; }
+.person__r {
+  display: block; margin-top: var(--s-2);
+  font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+  color: var(--text-tertiary);
+}
+.principals .person__b {
+  margin-top: var(--s-3); font-size: var(--type-caption);
+  line-height: 1.5; color: var(--text-secondary);
+}
+
+/* --- press: the typographic index ------------------------------------------
+   Not a simulated spread and not a grid of clippings. The mastheads ARE the
+   composition: publication at display scale, headline under it, year alone in
+   the margin. It holds at five entries and at fifty, and it stays honest —
+   nothing here pretends to be a scan of a page we do not have. */
+
+.press-hero {
+  font-size: clamp(2.5rem, 1rem + 7vw, 6.5rem);
+  font-weight: 900; line-height: 0.98; letter-spacing: var(--track-display);
+  max-width: 12ch;
+}
+
+.pi { list-style: none; margin: var(--s-8) 0 0; padding: 0; }
+.pi--compact { margin-top: var(--s-6); }
+
+.pi__row { border-top: 1px solid var(--border-subtle); }
+.pi__row:last-child { border-bottom: 1px solid var(--border-subtle); }
+
+.pi__link {
+  position: relative;
+  display: grid; align-items: baseline;
+  grid-template-columns: 3.5rem 1fr auto;
+  gap: var(--s-4);
+  padding-block: var(--s-6);
+  color: inherit; text-decoration: none;
+}
+.pi--compact .pi__link { padding-block: var(--s-5); }
+
+.pi__n, .pi__yr {
+  font-size: var(--type-meta); letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-tertiary);
+  transition: color var(--dur-hover) var(--ease);
+}
+.pi__yr { font-variant-numeric: tabular-nums; }
+
+.pi__pub {
+  display: block;
+  font-weight: 900; letter-spacing: -0.03em; line-height: 1;
+  font-size: clamp(1.5rem, 0.6rem + 2.6vw, 3.25rem);
+  transition: transform var(--dur-hover) var(--ease);
+  transform-origin: left center;
+}
+.pi--compact .pi__pub { font-size: clamp(1.25rem, 0.6rem + 1.6vw, 2.25rem); }
+.pi__pub--tbc { color: var(--text-tertiary); font-weight: 500; letter-spacing: 0; }
+
+.pi__t {
+  display: block; max-width: 46ch; margin-top: var(--s-3);
+  font-size: var(--type-body-sm); line-height: 1.5; color: var(--text-secondary);
+}
+
+/* a plain rule, drawn on hover — see the note on .ul::after */
+.pi__link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background-color: var(--mark);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-hover) var(--ease);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  a.pi__link:hover::after { clip-path: inset(0 0 0 0); }
+  a.pi__link:hover .pi__pub { transform: translateX(var(--s-3)); }
+  a.pi__link:hover .pi__n, a.pi__link:hover .pi__yr { color: var(--text-primary); }
+}
+a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
+
+@media (max-width: 40rem) {
+  .pi__link { grid-template-columns: 2.25rem 1fr; }
+  .pi__yr { grid-column: 2; }
+}
+
+/* --- form ------------------------------------------------------------------ */
+
+.f { display: grid; gap: 0.4rem; margin-bottom: var(--s-5); }
+.f label {
+  font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+  color: var(--text-tertiary);
+}
+.f input, .f textarea, .f select {
+  font: inherit; font-size: var(--type-body);
+  color: var(--text-primary); background: none;
+  border: 0; border-bottom: 1px solid var(--border-strong);
+  border-radius: 0; padding: 0.55rem 0; width: 100%;
+  transition: border-color var(--dur-base) var(--ease);
+}
+.f input:hover, .f textarea:hover { border-bottom-color: var(--text-secondary); }
+.f input:focus, .f textarea:focus {
+  outline: none; border-bottom-color: var(--accent);
+  border-bottom-width: 2px; padding-bottom: calc(0.55rem - 1px);
+}
+.f textarea { resize: vertical; min-height: 6rem; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* --- footer ---------------------------------------------------------------- */
+
+.footer {
+  background: var(--n-950); color: var(--n-0);
+  padding-block: var(--space-section) var(--s-6);
+}
+[data-ground="light"] .footer { background: var(--n-950); color: var(--n-0); }
+.footer__lead { margin-bottom: var(--s-8); }
+.footer__grid { display: grid; gap: var(--s-6); }
+@media (min-width: 44rem) { .footer__grid { grid-template-columns: repeat(3, 1fr); } }
+.footer__k {
+  display: block; font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+  color: var(--n-450); margin-bottom: var(--s-3);
+}
+.footer address { font-style: normal; line-height: 1.7; color: var(--n-300); }
+.footer a { color: var(--n-0); }
+.footer__base {
+  margin-top: var(--s-8); padding-top: var(--s-4);
+  border-top: 1px solid var(--n-800);
+  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6);
+  font-size: var(--type-caption); color: var(--n-450);
+}
+
+/* --- home sections ---------------------------------------------------------
+   The page has a rhythm, not a list. Sections alternate between RELEASE
+   (full-bleed, image-led, no container) and COMPRESSION (contained, narrow
+   measure, type-led). Every section being the same shape was the problem —
+   heading, hairline, link, grid, five times over, so nothing led. */
+
+.home-sec { padding-block: var(--s-8); }
+.home-sec--release { padding-block: var(--s-7) 0; }      /* image runs to the edge */
+.home-sec--compress { padding-block: var(--space-section); }
+
+/* the section head is a label, not a headline. The work is the headline. */
+.home-sec__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--s-5) var(--s-6); flex-wrap: wrap;
+  margin-bottom: var(--s-5);
+}
+.home-sec__k {
+  font-size: var(--type-meta); font-weight: 500;
+  text-transform: uppercase; letter-spacing: var(--track-meta);
+  color: var(--text-tertiary);
+}
+.home-sec--compress .home-sec__head { margin-bottom: var(--s-6); }
+
+/* Studio is the one place the page stops and speaks. Narrow measure, no image,
+   type doing the work — the compression between two image-led sections. */
+.home-studio { max-width: 46ch; }
+.home-studio p + p { margin-top: var(--s-5); }
+
+/* footer */
+.footer__row {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  justify-content: space-between; gap: var(--s-5);
+  padding-bottom: var(--s-6);
+}
+.footer__cta { display: inline-block; color: var(--n-0); }
+.footer__social { font-size: var(--type-body-sm); }
+
+
+/* --- small media grids ----------------------------------------------------- */
+
+/* On the home page these are previews, not the subject. Capped so a portrait
+   never out-weighs the work above it — P1. */
+.mini { display: grid; gap: var(--s-5); }
+@media (min-width: 44rem) {
+  .mini--2 { grid-template-columns: repeat(2, 1fr); gap: var(--s-6); max-width: 44rem; }
+}
+@media (min-width: 52rem) { .mini--3 { grid-template-columns: repeat(3, 1fr); } }
+.mini figure { margin: 0; }
+.mini img { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: var(--surface-sunken); }
+.mini figcaption { margin-top: var(--s-3); }
+
+/* Press on the home page is a full-bleed change of ground, not a white card
+   sitting on the dark page. R4: no containers. */
+.home-press { padding-block: var(--space-section); }

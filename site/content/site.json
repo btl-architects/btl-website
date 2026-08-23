@@ -1,0 +1,204 @@
+{
+ "name": "btl architects",
+ "domain": "btldesigns.in",
+ "tagline": "Built with you to shape places that last.",
+ "nav": [
+  {
+   "label": "Home",
+   "href": "index"
+  },
+  {
+   "label": "Projects",
+   "href": "projects"
+  },
+  {
+   "label": "Studio",
+   "href": "studio"
+  },
+  {
+   "label": "People",
+   "href": "people"
+  },
+  {
+   "label": "Press",
+   "href": "press"
+  },
+  {
+   "label": "Contact",
+   "href": "contact"
+  }
+ ],
+ "landing": {
+  "image": "office-07",
+  "alt": "The btl studio, looking out through the glass"
+ },
+ "studio": {
+  "lead": "We believe that structure is both a foundation and a reflection of identity.",
+  "body": [
+   "btl is short for between the lines. The practice works from a fourth-floor room on Mavoor Road in Kozhikode, and takes on houses, interiors and the occasional commercial project across Kerala.",
+   "The work tends to begin with what is already there — an old tree, a reclaimed door, the earth dug out to make a pond. Our dedication to precision, reliability and quiet confidence defines every project we undertake.",
+   "PLACEHOLDER — the studio will replace this copy from the CMS. Nothing here needs a developer."
+  ],
+  "image": "office-11",
+  "imageAlt": "The studio entrance, 'between the lines' cut into the wall"
+ },
+ "people": [
+  {
+   "prefix": "Ar.",
+   "name": "Thressia Paul",
+   "role": "Principal Architect",
+   "bio": "PLACEHOLDER — bio to come from the studio. Thressia leads design across the practice's residential work.",
+   "image": "person-01",
+   "imageAlt": "Ar. Thressia Paul",
+   "tier": "principal",
+   "order": 0,
+   "active": true
+  },
+  {
+   "prefix": "Ar.",
+   "name": "Faizan Hussain",
+   "role": "Principal Architect",
+   "bio": "PLACEHOLDER — bio to come from the studio. Faizan leads detailing and site delivery.",
+   "image": "person-02",
+   "imageAlt": "Ar. Faizan Hussain",
+   "tier": "principal",
+   "order": 1,
+   "active": true
+  },
+  {
+   "prefix": "",
+   "name": "Team member",
+   "role": "Architect",
+   "tier": "team",
+   "image": "office-03",
+   "imageAlt": "Placeholder",
+   "bio": "",
+   "order": 2,
+   "active": true
+  },
+  {
+   "prefix": "",
+   "name": "Team member",
+   "role": "Architect",
+   "tier": "team",
+   "image": "office-04",
+   "imageAlt": "Placeholder",
+   "bio": "",
+   "order": 3,
+   "active": true
+  },
+  {
+   "prefix": "",
+   "name": "Team member",
+   "role": "Junior architect",
+   "tier": "team",
+   "image": "office-06",
+   "imageAlt": "Placeholder",
+   "bio": "",
+   "order": 4,
+   "active": true
+  },
+  {
+   "prefix": "",
+   "name": "Team member",
+   "role": "Interior designer",
+   "tier": "team",
+   "image": "office-01",
+   "imageAlt": "Placeholder",
+   "bio": "",
+   "order": 5,
+   "active": true
+  }
+ ],
+ "press": [
+  {
+   "publication": "Architectural Digest",
+   "short": "AD",
+   "title": "A publisher and wildlife conservationist's Wayanad home lies amid the wilderness",
+   "date": "5 August 2026",
+   "url": "https://www.architecturaldigest.in/story/a-publisher-and-wildlife-conservationists-wayanad-home-lies-amid-the-wilderness/",
+   "image": "press-01",
+   "relatedProject": "nelly-house",
+   "kind": "press"
+  },
+  {
+   "publication": "PLACEHOLDER",
+   "short": "",
+   "title": "Headline to come",
+   "date": "",
+   "url": "#",
+   "image": "press-02"
+  },
+  {
+   "publication": "PLACEHOLDER",
+   "short": "",
+   "title": "Headline to come",
+   "date": "",
+   "url": "#",
+   "image": "press-03"
+  },
+  {
+   "publication": "PLACEHOLDER",
+   "short": "",
+   "title": "Headline to come",
+   "date": "",
+   "url": "#",
+   "image": "press-04"
+  },
+  {
+   "publication": "PLACEHOLDER",
+   "short": "",
+   "title": "Headline to come",
+   "date": "",
+   "url": "#",
+   "image": "press-05"
+  }
+ ],
+ "contact": {
+  "address": [
+   "4th floor, Chamayam Building",
+   "Mavoor Rd, Pottamal",
+   "Kozhikode, Kerala 673016"
+  ],
+  "email": "studio@btldesigns.in",
+  "formTo": "admin@btldesigns.in",
+  "phone": "+91 99472 44424",
+  "phoneHref": "+919947244424",
+  "gstin": "32ABBFB8726C1ZW"
+ },
+ "social": [
+  {
+   "label": "LinkedIn",
+   "short": "LinkedIn",
+   "url": "https://www.linkedin.com/"
+  },
+  {
+   "label": "Instagram",
+   "short": "Instagram",
+   "url": "https://www.instagram.com/"
+  },
+  {
+   "label": "YouTube",
+   "short": "YouTube",
+   "url": "https://www.youtube.com/"
+  }
+ ],
+ "home": {
+  "statement": "btl is short for between the lines. We work from a fourth-floor room on Mavoor Road in Kozhikode, on houses, interiors and the occasional commercial project across Kerala.",
+  "openingCaption": true
+ },
+ "categories": [
+  {
+   "slug": "houses",
+   "label": "Houses"
+  },
+  {
+   "slug": "interiors",
+   "label": "Interiors"
+  },
+  {
+   "slug": "commercial",
+   "label": "Commercial"
+  }
+ ]
+}

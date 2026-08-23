@@ -1,0 +1,32 @@
+---
+/* Deliberately thin. The address, email and phone belong to Contact — a footer
+ * that repeats them in full makes every page end twice (design memory R9).
+ */
+import type { Settings } from "../lib/content";
+
+interface Props { settings: Settings }
+const { settings } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="footer" data-ground="dark">
+  <div class="container">
+    <div class="footer__row">
+      <a class="footer__cta t-h2" href="/contact/">Let's build something that lasts.</a>
+      <p class="footer__social">
+        {settings.social.map((s, i) => (
+          <>
+            {i > 0 && " · "}
+            <a class="tl" href={s.url} rel="noopener">{s.label}</a>
+          </>
+        ))}
+      </p>
+    </div>
+    <div class="footer__base">
+      <span>© {year} {settings.name}</span>
+      <span>Kozhikode, Kerala</span>
+      <span>GSTIN {settings.contact.gstin}</span>
+      <span>{settings.domain}</span>
+    </div>
+  </div>
+</footer>
