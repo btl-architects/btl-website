@@ -120,6 +120,25 @@
                                  : v.getAttribute("data-src");
     }
 
+    /* The poster has to match the encode about to play. The portrait cut is
+       framed differently from the landscape one, so showing the landscape
+       still and then starting the portrait film made the picture jump — the
+       sun sliding out of the middle of the frame the instant playback began.
+       Set before any source is loaded, and again on rotation. */
+    function poster(v) {
+      return narrowStage.matches ? v.getAttribute("data-poster-portrait")
+                                 : v.getAttribute("data-poster");
+    }
+    function matchPosters() {
+      sFrames.forEach(function (f) {
+        var v = f.querySelector("video");
+        if (!v) return;
+        var want = poster(v);
+        if (want && v.getAttribute("poster") !== want) v.setAttribute("poster", want);
+      });
+    }
+    matchPosters();
+
     function load(i) {
       if (stillsOnly) return;
       var f = sFrames[i];
@@ -181,6 +200,7 @@
     /* a change of orientation changes which encode is the right one */
     (narrowStage.addEventListener ? narrowStage.addEventListener.bind(narrowStage, "change")
                                   : narrowStage.addListener.bind(narrowStage))(function () {
+      matchPosters();
       sFrames.forEach(function (f, k) { if (k === at) load(k); });
     });
   }
@@ -221,8 +241,13 @@
 
   /* --- 3. mobile menu ------------------------------------------------------ */
   var menu = document.querySelector(".menu");
-  var openBtn = document.querySelector("[data-menu-open]");
-  var closeBtn = document.querySelector("[data-menu-close]");
+  /* One button. It used to be two — a "Menu" in the header and a "Close" inside
+     the panel, each with its own word and its own place — so opening the menu
+     swapped one control for a different one sitting somewhere else. A single
+     toggle that stays put and changes state is a transition; two controls
+     trading places is a substitution, and that is what felt abrupt. */
+  var openBtn = document.querySelector("[data-menu-toggle]");
+  var menuLabel = document.querySelector("[data-menu-label]");
   if (menu && openBtn) {
     var lastFocus = null;
 
@@ -234,6 +259,7 @@
       menu.setAttribute("data-open", "true");
       openBtn.setAttribute("aria-expanded", "true");
       document.documentElement.style.overflow = "hidden";
+      if (menuLabel) menuLabel.textContent = "Close";
       var f = focusables();
       if (f.length) f[0].focus();
     }
@@ -241,10 +267,12 @@
       menu.setAttribute("data-open", "false");
       openBtn.setAttribute("aria-expanded", "false");
       document.documentElement.style.overflow = "";
+      if (menuLabel) menuLabel.textContent = "Menu";
       if (lastFocus) lastFocus.focus();
     }
-    openBtn.addEventListener("click", open);
-    if (closeBtn) closeBtn.addEventListener("click", close);
+    openBtn.addEventListener("click", function () {
+      menu.getAttribute("data-open") === "true" ? close() : open();
+    });
 
     document.addEventListener("keydown", function (e) {
       if (menu.getAttribute("data-open") !== "true") return;
@@ -838,46 +866,8 @@
      cannot be lit at the same time, and moving between tabs reads as a single
      object travelling rather than one fading out while another fades in. */
   var nav = document.querySelector(".nav");
-  var ind = document.querySelector(".nav__ind");
-  if (nav && ind) {
-    var navLinks = [].slice.call(nav.querySelectorAll(".nav__link"));
-    var pinnedLink = nav.querySelector('.nav__link[aria-current="page"]');
-    var first = true;
-
-    function place(link, show) {
-      if (!link) { ind.setAttribute("data-on", "false"); return; }
-      ind.style.width = link.offsetWidth + "px";
-      ind.style.transform = "translateX(" + link.offsetLeft + "px)";
-      ind.setAttribute("data-on", show ? "true" : "false");
-      if (first && show) {
-        /* the first appearance draws in place instead of sliding from 0 */
-        ind.setAttribute("data-first", "true");
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () { ind.removeAttribute("data-first"); });
-        });
-        first = false;
-      }
-    }
-    function settleToPinned() { place(pinnedLink, !!pinnedLink); }
-
-    navLinks.forEach(function (a) {
-      a.addEventListener("pointerenter", function () { place(a, true); });
-      a.addEventListener("focus", function () { place(a, true); });
-    });
-    nav.addEventListener("pointerleave", settleToPinned);
-    nav.addEventListener("focusout", function (ev) {
-      if (!nav.contains(ev.relatedTarget)) settleToPinned();
-    });
-    window.addEventListener("resize", settleToPinned);
-
-    /* There is no scroll spy. The nav marks the page you are on, not the
-       section you happen to be level with — a marker that moves while you
-       scroll makes the nav look like it is navigating when it is not. */
-
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(settleToPinned);
-    }
-    settleToPinned();
-  }
+/* The navigation indicator is gone. Each link draws its own underline in CSS
+     now, which needs no measuring, no resize handling and no JavaScript — and
+     matches how every other link on the site behaves. */
 
 })();

@@ -44,28 +44,24 @@ const logo = LOGO_WHITE;
             >{n.label}</a>
           </li>
         ))}
-        <span class="nav__ind" aria-hidden="true"></span>
       </ul>
     </nav>
-    <button class="burger" type="button" data-menu-open aria-expanded="false" aria-controls="menu">
-      Menu
-      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M4 8h16M4 16h16" />
-      </svg>
+    {/* One control, not two. It reads "Menu" then "Close" to a screen reader
+        via aria-expanded, while visually the two rules rotate into a cross —
+        a continuous movement rather than one word being replaced by another. */}
+    <button class="burger" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu">
+      <span class="burger__label" data-menu-label>Menu</span>
+      <span class="burger__mark" aria-hidden="true"><i></i><i></i></span>
     </button>
   </div>
 </header>
 
 <div class="menu" id="menu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
-  <div class="menu__top">
-    <Figure image={logo} sizes="3.4rem" />
-    <button class="burger" type="button" data-menu-close>
-      Close
-      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M6 6l12 12M18 6L6 18" />
-      </svg>
-    </button>
-  </div>
+  {/* No logo in here. The header's own logo stays visible above the panel, so
+      putting a second one at the top of the panel meant the mark slid down and
+      landed on top of itself — which is the jarring part. One button too: the
+      burger below morphs into a cross rather than being swapped for a
+      different control with different words. */}
   <ul class="menu__list">
     {settings.nav.map((n) => (
       <li>

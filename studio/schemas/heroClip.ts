@@ -50,6 +50,13 @@ export default defineType({
         "Shown before the film loads, and instead of it for anyone who has asked their device to reduce motion. Choose a frame that stands on its own.",
       validation: (r) => r.required(),
     }),
+    defineField({
+      name: "posterPortrait",
+      title: "Still frame (portrait)",
+      type: "image",
+      description:
+        "The matching first frame of the portrait cut. Without it a phone shows the landscape still and then starts playing the portrait film, and the picture visibly jumps as the framing changes underneath it.",
+    }),
   ],
   preview: { select: { title: "label", media: "poster" } },
 });

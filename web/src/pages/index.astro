@@ -13,7 +13,6 @@
  * and finally the page resolves once into contact.
  */
 import Base from "../layouts/Base.astro";
-import BrandLine from "../components/BrandLine.astro";
 import MediaStage from "../components/MediaStage.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Figure from "../components/Figure.astro";
@@ -45,9 +44,6 @@ const c = settings.contact;
           <a class="srail__i" href={s.url} rel="noopener" target="_blank">{s.label}</a>
         ))}
       </nav>
-      <div class="landing__cue" data-on-media>
-        <BrandLine size="s" />
-      </div>
     </section>
 
     {/* COMPRESSION — one line, a lot of air */}

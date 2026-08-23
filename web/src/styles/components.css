@@ -65,30 +65,41 @@
 }
 .ul:focus-visible::after, .tl:focus-visible::after { clip-path: inset(0 0 0 0); }
 
-/* --- the navigation indicator ----------------------------------------------
-   One element that slides. One element means one line. P4. */
+/* --- the navigation ---------------------------------------------------------
+   A single indicator used to slide between items. It was a deliberate idea —
+   one element, one line — but sliding a bar sideways across six words is a
+   mechanical gesture, and it was the only place on the site that moved like
+   that. Every other link here draws its own underline left to right, and the
+   nav now does the same: less machinery, and one language instead of two.
 
-.nav { position: relative; }
+   The current page keeps its underline drawn; hovering draws another. */
 
-.nav__ind {
-  position: absolute;
-  /* Was bottom: 0, which put it on the floor of the nav row — 12.5px under the
-     text, when every other underline on the site sits about 4px under its word.
-     It read as a stray line rather than as the underline of the thing being
-     pointed at. */
-  bottom: 0.55rem;
-  left: 0;
+.nav__link {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.5em;
+  text-decoration: none;
+  color: inherit;
+}
+.nav__link::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0.35em;
   height: 1px;
   background-color: var(--mark);
-  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-base) var(--ease);
   pointer-events: none;
-  transition:
-    transform var(--dur-base) var(--ease),
-    width     var(--dur-base) var(--ease),
-    opacity   var(--dur-fast) var(--ease);
 }
-.nav__ind[data-on="true"] { opacity: 1; }
-.nav__ind[data-first="true"] { transition: opacity var(--dur-fast) var(--ease); }
+.nav__link[aria-current="page"]::after { clip-path: inset(0 0 0 0); }
+
+@media (hover: hover) {
+  .nav__link:hover::after { clip-path: inset(0 0 0 0); }
+  /* The others recede rather than the hovered one shouting — P4, one state at
+     a time, done by taking away instead of adding. */
+  .nav:hover .nav__link { opacity: 0.55; transition: opacity var(--dur-hover) var(--ease); }
+  .nav:hover .nav__link:hover { opacity: 1; }
+}
+.nav__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 
 /* --- header ---------------------------------------------------------------- */
 
@@ -999,7 +1010,16 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
   text-decoration: none; color: inherit;
 }
 .team__list li:last-child .trow__link { border-bottom: 1px solid var(--border-subtle); }
-.trow__n { font-size: var(--type-h3); letter-spacing: var(--track-h3); color: var(--text-primary); }
+/* A name in a list is a name, not a heading. This was set at h3 — 32px at the
+   old scale — which made a four-person team read like four section titles. */
+.trow__n {
+  /* Its own size rather than a step off the heading scale: a list of names
+     wants to be readable and even, not to compete with the section it sits
+     under. */
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
 .trow__r {
   margin-left: auto;
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
@@ -1323,3 +1343,49 @@ body[data-preview] main { padding-top: var(--preview-h); }
   .credit__media img { transition: opacity var(--dur-hover) var(--ease), color var(--dur-hover) var(--ease); }
   .credit:hover .credit__media img { opacity: 0.82; }
 }
+
+/* --- the menu button ------------------------------------------------------
+   One control that changes state, rather than two controls that swap places.
+   The panel used to carry its own copy of the logo, directly beneath the
+   header's, so opening the menu slid the mark down onto itself — and the word
+   "Menu" was replaced outright by "Close". Both read as a substitution rather
+   than a transition, which is what made it feel abrupt.
+
+   Now the two rules rotate into a cross. The label still changes, but it is
+   the same element crossfading, and the panel has no logo of its own. */
+
+.burger__mark {
+  position: relative;
+  display: inline-block;
+  width: 20px; height: 12px;
+  flex: 0 0 auto;
+}
+.burger__mark i {
+  position: absolute; left: 0; right: 0;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
+  transform-origin: 50% 50%;
+}
+.burger__mark i:first-child { top: 0; }
+.burger__mark i:last-child  { bottom: 0; }
+
+/* Open: the two rules travel to the middle and cross. */
+[data-menu-toggle][aria-expanded="true"] .burger__mark i:first-child {
+  transform: translateY(5.25px) rotate(45deg);
+}
+[data-menu-toggle][aria-expanded="true"] .burger__mark i:last-child {
+  transform: translateY(-5.25px) rotate(-45deg);
+}
+
+.burger__label {
+  display: inline-block;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burger__mark i, .burger__label { transition: none; }
+}
+
+/* The panel no longer holds a logo, so it starts with the links. */
+.menu__top { display: none; }

@@ -74,11 +74,20 @@
   --font: "Satoshi", "Satoshi Fallback", -apple-system, BlinkMacSystemFont,
           "Segoe UI", Roboto, sans-serif;
 
-  --type-display:  clamp(2.75rem, 1.5rem + 6.2vw, 7.5rem);
-  --type-h1:       clamp(2.25rem, 1.4rem + 4vw,   4.5rem);
-  --type-h2:       clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
-  --type-h3:       clamp(1.375rem, 1.1rem + 1.2vw, 2rem);
-  --type-lead:     clamp(1.125rem, 1rem + 0.9vw,  1.625rem);
+  /* The top of the scale came down a step in every size.
+   *
+   * It was drawn for a page carrying one enormous statement and very little
+   * else, and the site has since filled out — names in lists, credits, section
+   * headings. At the old sizes a team member's name was set at 32px, which is
+   * a headline, and everything that was merely large read as shouting. The
+   * ratios between the steps are unchanged; the whole scale is simply quieter,
+   * which leaves the display size room to still mean something when it is
+   * used. */
+  --type-display:  clamp(2.5rem, 1.4rem + 5vw,      5.75rem);
+  --type-h1:       clamp(1.875rem, 1.25rem + 3vw,   3.5rem);
+  --type-h2:       clamp(1.5rem, 1.1rem + 1.8vw,    2.375rem);
+  --type-h3:       clamp(1.25rem, 1.05rem + 0.9vw,  1.75rem);
+  --type-lead:     clamp(1.0625rem, 0.95rem + 0.8vw, 1.5rem);
   --type-body:     clamp(1rem, 0.97rem + 0.15vw,  1.125rem);
   --type-body-sm:  0.9375rem;
   --type-caption:  0.8125rem;

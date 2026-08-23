@@ -295,6 +295,8 @@ export interface HeroClip {
   video: string;
   videoPortrait: string;
   poster: SiteImage | null;
+  /** The matching first frame of the portrait cut. */
+  posterPortrait: SiteImage | null;
 }
 
 /** The opening sequence, straight from the CMS. Empty is a legitimate state:
@@ -307,7 +309,10 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
     "videoPortrait": videoPortrait.asset->url,
     "poster": { "source": { "asset": poster.asset }, "alt": "",
                 "lqip": poster.asset->metadata.lqip,
-                "dimensions": poster.asset->metadata.dimensions{width, height} }
+                "dimensions": poster.asset->metadata.dimensions{width, height} },
+    "posterPortrait": { "source": { "asset": posterPortrait.asset }, "alt": "",
+                "lqip": posterPortrait.asset->metadata.lqip,
+                "dimensions": posterPortrait.asset->metadata.dimensions{width, height} }
   }`);
   return (rows ?? [])
     .filter((c: any) => c.video)
@@ -319,6 +324,7 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
       // right fallback: a differently framed film, never a missing one.
       videoPortrait: c.videoPortrait || c.video,
       poster: c.poster?.source?.asset ? c.poster : null,
+      posterPortrait: c.posterPortrait?.source?.asset ? c.posterPortrait : null,
     }));
 });
 

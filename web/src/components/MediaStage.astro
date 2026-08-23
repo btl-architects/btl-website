@@ -25,6 +25,12 @@ const clips = await getHeroClips();
   <div class="stage" data-stage-frames>
     {clips.map((clip, i) => {
       const poster = clip.poster ? requireImage(clip.poster) : null;
+      /* The portrait cut is framed differently from the landscape one, so a
+         phone showing the landscape still and then playing the portrait film
+         jumps the moment playback starts. Both posters travel with the frame
+         and site.js picks the one that matches the encode it is about to
+         load. */
+      const posterP = clip.posterPortrait ? requireImage(clip.posterPortrait) : null;
       return (
         <figure class="stage__f" data-on={i === 0 ? "true" : "false"} data-label={clip.label}>
           <video
@@ -34,6 +40,8 @@ const clips = await getHeroClips();
             playsinline
             preload={i === 0 ? "auto" : "none"}
             poster={poster?.src}
+            data-poster={poster?.src}
+            data-poster-portrait={posterP?.src ?? poster?.src}
             data-src={clip.video}
             data-src-portrait={clip.videoPortrait}
           ></video>
