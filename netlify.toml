@@ -117,11 +117,14 @@
   status = 301
   force = true
 
-[[redirects]]
-  from = "/projects/:slug.html"
-  to = "/projects/:slug/"
-  status = 301
-  force = true
+# NOTE: the per-project ".html" redirects are generated into dist/_redirects by
+# web/tools/redirects.mjs, one explicit rule per slug.
+#
+# They were written here first as `from = "/projects/:slug.html"`, which does not
+# mean what it looks like: a Netlify placeholder cannot carry a suffix inside a
+# segment, so that pattern matched EVERY path under /projects/ and sent it to the
+# literal string "/projects/:slug/". With force = true it beat the real pages, so
+# every project on the live site became a redirect loop.
 
 [[redirects]]
   from = "/studio.html"

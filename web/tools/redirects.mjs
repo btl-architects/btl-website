@@ -54,6 +54,23 @@ const rows = await client.fetch(
   `*[_type == "redirect" && defined(from) && defined(to)]{from, to, permanent}`,
 );
 
+/* The prototype shipped project pages at /projects/<slug>.html. Those URLs may
+ * have been shared, and one of them is in a magazine feature, so they have to
+ * keep working.
+ *
+ * Written explicitly, one rule per project, rather than as a pattern. The
+ * pattern version — `/projects/:slug.html` — looked obviously correct and was
+ * not: a Netlify placeholder cannot carry a suffix within a segment, so it
+ * matched every path under /projects/ and redirected it to the literal string
+ * "/projects/:slug/". Every project page on the live site became a redirect
+ * loop. Explicit rules cannot do that. */
+const slugs = await client.fetch(
+  `*[_type == "project" && lifecycle == "published"].slug.current`,
+);
+for (const slug of slugs ?? []) {
+  rows.push({ from: `/projects/${slug}.html`, to: `/projects/${slug}/`, permanent: true });
+}
+
 if (!rows.length) {
   console.log("[redirects] none defined");
   process.exit(0);
@@ -65,7 +82,9 @@ const norm = (p) => {
   if (!p || p.startsWith("https://")) return p;
   let s = p.trim().toLowerCase().split("?")[0].split("#")[0];
   if (!s.startsWith("/")) s = "/" + s;
-  if (s !== "/" && !s.endsWith("/")) s += "/";
+  // A .html source is a real file path, not a directory — adding a slash to it
+  // would produce a rule that never matches anything.
+  if (s !== "/" && !s.endsWith("/") && !s.endsWith(".html")) s += "/";
   return s;
 };
 
