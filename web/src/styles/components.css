@@ -370,8 +370,8 @@
    sliding, which is what the older .rv primitive does. Each waits until it is
    actually approaching the viewport, so the page below is never pre-animated. */
 @media (prefers-reduced-motion: no-preference) {
-  .js .rvc { clip-path: inset(0 0 100% 0); transition: clip-path var(--dur-slow) var(--ease); }
-  .js .rvc.in { clip-path: inset(0 0 0 0); }
+  :where(.js) .rvc { clip-path: inset(0 0 100% 0); transition: clip-path var(--dur-slow) var(--ease); }
+  :where(.js) .rvc.in { clip-path: inset(0 0 0 0); }
 }
 
 .pcard {

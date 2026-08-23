@@ -127,7 +127,17 @@ a { color: inherit; text-decoration: none; }
    Motion — one curve, five durations. Reveals are decoration, never delivery.
    ========================================================================== */
 
-/* Note the `.js` gate on every reveal below.
+/* The gate is written as :where(.js) rather than .js on purpose.
+ *
+ * :where() contributes nothing to specificity, so these rules weigh exactly
+ * what `.rvc` and `.rv` weighed before the gate existed and the cascade is
+ * unchanged. Written as a plain `.js .rvc` it climbs to (0,2,0) and starts
+ * beating `.pcard { transition: height ... }` at (0,1,0) — which silently
+ * deleted the height transition and with it the entire open/close animation on
+ * the project cards. A gate is supposed to change WHEN a rule applies, never
+ * how hard it argues. */
+
+/* Note the gate on every reveal below.
  *
  * These rules HIDE content and rely on script to bring it back. That is the
  * wrong way round: if the observer does not fire — a background tab, an
@@ -136,16 +146,16 @@ a { color: inherit; text-decoration: none; }
  * adds to <html> as its first act means the default state of the document is
  * visible, and the reveal is an enhancement on top. */
 @media (prefers-reduced-motion: no-preference) {
-  .js .rv {
+  :where(.js) .rv {
     opacity: 0;
     transform: translateY(18px);
     transition: opacity var(--dur-slow) var(--ease),
                 transform var(--dur-slow) var(--ease);
   }
-  .js .rv.in { opacity: 1; transform: none; }
-  .js .rv[data-delay="1"] { transition-delay: 80ms; }
-  .js .rv[data-delay="2"] { transition-delay: 160ms; }
-  .js .rv[data-delay="3"] { transition-delay: 240ms; }
+  :where(.js) .rv.in { opacity: 1; transform: none; }
+  :where(.js) .rv[data-delay="1"] { transition-delay: 80ms; }
+  :where(.js) .rv[data-delay="2"] { transition-delay: 160ms; }
+  :where(.js) .rv[data-delay="3"] { transition-delay: 240ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {
