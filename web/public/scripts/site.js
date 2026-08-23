@@ -1196,6 +1196,17 @@
        Delegated, because the rails that hold these photographs are fetched and
        inserted long after this runs. Card strips are excluded: a click there
        opens the project, which is a different intention entirely. */
+    /* Capture, not bubble.
+     *
+     * Both this and the card's own click handler run on the same click, and the
+     * card's fires first because it is bound closer to the target. By the time a
+     * bubbling handler here looked at the card it had already been opened, so
+     * data-open read "true" and a single click on a closed card opened the card
+     * AND threw the viewer up on top of it.
+     *
+     * The capture phase runs before any of that, while the card still holds the
+     * state it had when the reader clicked — which is the state the decision
+     * actually depends on. */
     document.addEventListener("click", function (e) {
       var picture = e.target.closest && e.target.closest(".rail__f img");
       if (!picture) return;
@@ -1231,5 +1242,5 @@
       });
       var i = figures.indexOf(picture.closest(".rail__f"));
       open(list, i < 0 ? 0 : i);
-    });
+    }, true);
   })();
