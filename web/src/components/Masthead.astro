@@ -26,7 +26,15 @@ const { item, sizes = "(min-width:48rem) 20rem, 46vw" } = Astro.props;
 // "AD" if the practice has recorded one, otherwise the full name — which is
 // still better set as a mark than as a sentence.
 const mark = item.short?.trim() || item.publication;
-const long = mark.length > 6;
+
+/* Only genuinely long names step down, and they step down a little.
+ *
+ * The threshold was six characters, which made "Dezeen" a mark and "ArchDaily"
+ * a caption — a row where half the entries sat on one optical band and half on
+ * another, which reads as a mistake rather than a hierarchy. Nine or ten
+ * characters fit the band perfectly well; it is only a name like "Kerala State
+ * Architecture Awards" that has to give way, and even then not by much. */
+const long = mark.length > 13;
 ---
 
 {item.logo ? (

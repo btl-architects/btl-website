@@ -1073,9 +1073,19 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 
 /* Touch has no hover, so there the portrait is simply part of the row — the
    information is never available only to a pointer. */
+/* Touch has no hover, so the portrait has to be in the row rather than revealed
+   beside it. At 2.5rem it was a thumbnail of a thumbnail — too small to be
+   worth the request, let alone to show a face. Given real size, and the row
+   given the height to hold it. */
 @media not all and (hover: hover) {
-  .trow__p { display: block; flex: 0 0 auto; width: 2.5rem; aspect-ratio: 1; order: -1; }
+  .trow__link { align-items: center; gap: var(--s-4); padding-block: var(--s-4); }
+  .trow__p {
+    display: block; flex: 0 0 auto;
+    width: 4.5rem; aspect-ratio: 3 / 4; order: -1;
+    overflow: hidden;
+  }
   .trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .trow__r { align-self: center; }
 }
 
 /* --- the way onward -------------------------------------------------------
@@ -1313,21 +1323,43 @@ body[data-preview] main { padding-top: var(--preview-h); }
    most magazine wordmarks actually use; the rest are fallbacks that keep the
    species right even where those are missing. */
 
+/* Marks are normalised by HEIGHT, never by width.
+ *
+ * Publication marks have nothing in common dimensionally: AD's monogram is
+ * 1.4:1, a spelled-out wordmark is 15:1, an awarding body is a line of text.
+ * Sized to a share of their container they came out looking nothing like each
+ * other — one a huge square, the next a thin strip — which is what made a row
+ * of them look broken rather than curated.
+ *
+ * Every logo row that works does the same thing: fix the optical height and let
+ * width fall where it may, so each mark reads at the same weight regardless of
+ * its shape. --mark-h is that band, set by whatever is placing them. */
+:root { --mark-h: 2rem; }
+
 .masthead {
   display: block;
   font-family: Didot, "Bodoni 72", "Bodoni MT", "Playfair Display",
                Georgia, "Times New Roman", serif;
   font-weight: 400;
-  font-size: clamp(3.5rem, 2rem + 7vw, 8rem);
-  line-height: 0.86;
+  /* A serif's cap-height is roughly 0.7 of its size, so this lands a text mark
+     on the same optical band as an image one. */
+  font-size: calc(var(--mark-h) / 0.7);
+  line-height: 1;
   letter-spacing: 0.01em;
   color: var(--text-primary);
+  white-space: nowrap;
 }
-/* A full name needs to come down or it wraps into a paragraph. */
+/* A spelled-out name cannot hold that size without running off the card, so it
+   drops to a band it can keep and is allowed to wrap. */
 .masthead--long {
-  font-size: clamp(1.75rem, 1.1rem + 2.6vw, 3.25rem);
-  line-height: 1.02;
+  /* A step, not a demotion. It still belongs to the same row. */
+  font-size: calc(var(--mark-h) / 1.05);
+  line-height: 1.05;
   letter-spacing: 0;
+  white-space: normal;
+  /* Two lines at most: a mark that runs to three has stopped being a mark. */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 /* An uploaded logo has to carry the same weight as the type it replaces, or
@@ -1335,9 +1367,13 @@ body[data-preview] main { padding-top: var(--preview-h); }
    point. Sized against the composition, not left at its natural pixel size. */
 .masthead__img {
   display: block;
-  width: clamp(9rem, 6rem + 14vw, 20rem);
-  height: auto;
-  filter: drop-shadow(0 2px 28px rgb(0 0 0 / 0.55));
+  /* Height fixed, width free — the whole point. */
+  height: var(--mark-h);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  filter: drop-shadow(0 2px 20px rgb(0 0 0 / 0.7));
 }
 
 /* --- a press credit ------------------------------------------------------
@@ -1396,7 +1432,9 @@ body[data-preview] main { padding-top: var(--preview-h); }
   position: static; width: 100%;
   justify-content: center;
 }
-.credit--flat .credit__mark .masthead { font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.125rem); }
+/* Same band as every other credit. It had a smaller one, which was backwards:
+   with no photograph the mark is the only thing on the card, so if anything it
+   has more room, never less. */
 
 .credit__media { display: block; width: 72%; }
 .credit__media img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
@@ -1428,14 +1466,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
   font-size: clamp(2rem, 1.2rem + 2.2vw, 3rem);
 }
 .credit__mark .masthead--long { font-size: clamp(1.0625rem, 0.9rem + 0.8vw, 1.375rem); }
-.credit__mark .masthead__img {
-  /* Full width of the space it sits in. A wordmark is read, not glanced at, and
-     at 219:15 anything less than about 150px is a grey smudge. */
-  width: 100%;
-  max-width: none;
-  height: auto;
-  filter: drop-shadow(0 1px 14px rgb(0 0 0 / 0.8));
-}
+
 
 .credit__t {
   display: block;

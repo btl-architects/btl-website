@@ -55,8 +55,11 @@ const lead = leadProp ?? copy.projectsLead;
     ))}
   </div>
 
-  {/* Every other page ends by pointing somewhere. This one stopped dead. */}
-  <div class="container">
+  {/* Every other page ends by pointing somewhere. This one stopped dead.
+      The padding is there because this page has no container wrapping its whole
+      length — the index runs edge to edge — so nothing else was holding the
+      closing line off the footer. */}
+  <div class="container" style="padding-bottom:var(--space-section)">
     <Onward href="/studio/" kicker="Next">The practice behind the work</Onward>
   </div>
 </main>
