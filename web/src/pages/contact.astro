@@ -12,12 +12,12 @@ import { getSettings } from "../lib/content";
 const c = (await getSettings()).contact;
 ---
 
-<Base title="Contact — btl architects" description="Talk to the studio." current="contact" ground="light">
-  <main
-    id="main"
-    data-ground="light"
-    style="background:var(--surface); color:var(--text-primary)"
-  >
+{/* Dark, like every other page. The white ground was a deliberate idea — the
+    site resolving into daylight at the end — but in practice it reads as a
+    different website bolted onto the last click, and the form is the one place
+    a visitor most needs to feel they are still dealing with the same people. */}
+<Base title="Contact — btl architects" description="Talk to the studio." current="contact">
+  <main id="main" data-ground="dark">
     <div class="container" style="padding-top:calc(var(--header-h) + var(--s-8)); padding-bottom:var(--space-section)">
       <h1 class="t-h1 rv">Contact</h1>
 

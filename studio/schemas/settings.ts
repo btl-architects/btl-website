@@ -80,6 +80,15 @@ export default defineType({
       description: "Default: “Kozhikode, Kerala”.",
     }),
     defineField({
+      name: "projectsLead",
+      title: "Projects headline",
+      type: "string",
+      group: "copy",
+      description:
+        "One line under the Projects title. Default: “Houses, interiors and the occasional commercial project, across Kerala.”",
+      validation: (r) => r.max(120),
+    }),
+    defineField({
       name: "pressLead",
       title: "Press headline",
       type: "string",

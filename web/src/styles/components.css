@@ -71,7 +71,13 @@
 .nav { position: relative; }
 
 .nav__ind {
-  position: absolute; bottom: 0; left: 0;
+  position: absolute;
+  /* Was bottom: 0, which put it on the floor of the nav row — 12.5px under the
+     text, when every other underline on the site sits about 4px under its word.
+     It read as a stray line rather than as the underline of the thing being
+     pointed at. */
+  bottom: 0.55rem;
+  left: 0;
   height: 1px;
   background-color: var(--mark);
   opacity: 0;
@@ -684,40 +690,6 @@
 .b--solid:hover { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface); }
 .b svg { width: 16px; height: 16px; }
 
-/* --- people ---------------------------------------------------------------
-   Two tiers. Principals get scale; everyone else sits in a compact grid that
-   keeps working at four people or forty. The old version was two enormous
-   portraits with nowhere to put a third. */
-
-.principals { display: grid; gap: var(--s-6); }
-@media (min-width: 44rem) { .principals { grid-template-columns: repeat(2, 1fr); gap: var(--s-7); } }
-@media (min-width: 68rem) { .principals { grid-template-columns: repeat(2, minmax(0, 24rem)); } }
-
-.team {
-  display: grid; gap: var(--s-5) var(--s-4);
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-}
-
-.person__img { margin-bottom: var(--s-3); background: var(--surface-sunken); overflow: hidden; }
-.person__img img { width: 100%; aspect-ratio: 4/5; object-fit: cover; }
-@media (hover: hover) {
-  .person__img img { transition: transform var(--dur-slow) var(--ease); }
-  .person:hover .person__img img { transform: scale(1.03); }
-}
-.person__n { font-weight: 700; letter-spacing: -0.012em; line-height: 1.15; }
-.principals .person__n { font-size: var(--type-h3); }
-.team .person__n { font-size: 0.9375rem; }
-.person__r {
-  display: block; margin-top: var(--s-2);
-  font-size: var(--type-meta); font-weight: 500;
-  text-transform: uppercase; letter-spacing: var(--track-meta);
-  color: var(--text-tertiary);
-}
-.principals .person__b {
-  margin-top: var(--s-3); font-size: var(--type-caption);
-  line-height: 1.5; color: var(--text-secondary);
-}
-
 /* --- press: the typographic index ------------------------------------------
    Not a simulated spread and not a grid of clippings. The mastheads ARE the
    composition: publication at display scale, headline under it, year alone in
@@ -1109,63 +1081,6 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
    ========================================================================== */
 .nf { min-height: 70vh; display: grid; align-content: center; }
 
-/* ==========================================================================
-   Press — the masthead wall
-   ==========================================================================
-   The masthead is the object. A publication's name set at display scale IS the
-   evidence; a screenshot of an article is not. On hover the photograph of the
-   project that earned the credit rises behind the name, tying the recognition
-   to the work rather than leaving it as a logo on a wall.
-
-   Where a logo asset is missing — and today all of them are — the name set
-   typographically is the designed state, not a degraded one. The AD wordmark is
-   itself a serif logotype, so the fallback and the asset are the same species.
-   ------------------------------------------------------------------------- */
-
-.pwall { display: grid; gap: var(--s-8); margin-top: var(--s-9); }
-
-.pw { position: relative; isolation: isolate; }
-
-.pw__link {
-  position: relative; z-index: 2;
-  display: grid; gap: var(--s-3);
-  padding-block: var(--s-6);
-  text-decoration: none; color: inherit;
-}
-
-.pw__pub {
-  font-size: var(--type-display);
-  letter-spacing: var(--track-display);
-  line-height: var(--lead-tight);
-  color: var(--text-primary);
-}
-.pw__t { max-width: var(--measure); color: var(--text-secondary); }
-.pw__meta {
-  display: flex; gap: var(--s-4);
-  font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: var(--text-tertiary);
-}
-
-/* The photograph rises from below and sits behind the type. It is dimmed hard
-   so the masthead stays the object and the image stays evidence. */
-.pw__media {
-  position: absolute; z-index: 1;
-  inset-block: 0; right: 0;
-  width: min(38%, 22rem);
-  clip-path: inset(100% 0 0 0);
-  opacity: 0;
-  transition: clip-path var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
-  pointer-events: none;
-}
-.pw__media img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.42; }
-
-@media (hover: hover) {
-  .pw:hover .pw__media, .pw:focus-within .pw__media { clip-path: inset(0 0 0 0); opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pw__media { transition: none; }
-}
-
 /* --- preview builds -------------------------------------------------------
    A preview deployment looks exactly like the real site, which is the point and
    also the danger: the expensive mistake is approving, or panicking about,
@@ -1178,3 +1093,66 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; text-align: center;
 }
+
+/* --- an index masthead ----------------------------------------------------
+   The projects index used to open with a photograph pressed against the header.
+   There was nothing to land on: the work began before the page had said what it
+   was, and a visitor arriving from a search result had no idea what they were
+   looking at. This costs a screen of scrolling and gives them somewhere to
+   stand. */
+
+.index-head {
+  padding: clamp(var(--s-8), 18vh, var(--s-9)) var(--page-margin) var(--s-8);
+  max-width: var(--max-width);
+  margin-inline: auto;
+}
+.index-head__t {
+  margin: 0;
+  font-size: var(--type-display);
+  letter-spacing: var(--track-display);
+  line-height: var(--lead-tight);
+  color: var(--text-primary);
+}
+.index-head__s {
+  margin: var(--s-5) 0 0;
+  max-width: var(--measure-lead);
+  font-size: var(--type-lead);
+  letter-spacing: var(--track-lead);
+  line-height: var(--lead-snug);
+  color: var(--text-secondary);
+}
+
+/* Everything shifts down by the preview banner's height while previewing. */
+body[data-preview] .header { top: var(--preview-h); }
+body[data-preview] main { padding-top: var(--preview-h); }
+
+/* --- press entries --------------------------------------------------------
+   Built on the spread, like People and Studio, so the page belongs to the same
+   site rather than being a wall of names in its own idiom. The masthead is
+   still the object; the building that earned the credit is simply on the page
+   instead of hidden behind a hover half the visitors cannot perform. */
+
+.pw { padding-block: var(--s-8); }
+.pw + .pw { border-top: 1px solid var(--border-subtle); }
+
+.pw__kind {
+  margin: 0 0 var(--s-4);
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+.pw__pub {
+  margin: 0;
+  font-size: var(--type-h1);
+  letter-spacing: var(--track-h1);
+  line-height: var(--lead-tight);
+  color: var(--text-primary);
+}
+.pw__t {
+  margin: var(--s-4) 0 0;
+  max-width: var(--measure);
+  font-size: var(--type-lead);
+  line-height: var(--lead-snug);
+  color: var(--text-secondary);
+}
+.pw__on { margin: var(--s-4) 0 0; color: var(--text-tertiary); }
+.pw__read { display: inline-block; margin-top: var(--s-5); }

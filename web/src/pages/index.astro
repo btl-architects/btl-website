@@ -53,24 +53,41 @@ const c = settings.contact;
       <div class="container">
         <div class="home-sec__head">
           <h2 class="home-sec__k">Selected work</h2>
-          <a class="tl" href="/projects/">All projects</a>
         </div>
       </div>
       <div class="pindex" data-pindex>
         {work.map((p, i) => <ProjectCard project={p} index={i} />)}
       </div>
+      {/* Below the work, not above it. A visitor who has just scrolled three
+          projects needs to be told there are more; a visitor who has not seen
+          any yet does not need a link away from them. */}
+      <div class="container">
+        <a class="onward ul" href="/projects/">
+          <span class="onward__k">More</span>
+          Every project, {projects.length} in all.
+        </a>
+      </div>
     </section>
 
-    {/* COMPRESSION — the page stops and speaks */}
-    <section class="home-sec home-sec--compress" id="studio" data-ground="dark">
+    {/* The practice, in the room it works in. This used to be two paragraphs
+        and nothing else — the start of a long text-only run that made the whole
+        second half of the page a wall. */}
+    <section class="home-sec" id="studio" data-ground="dark">
       <div class="container">
         <div class="home-sec__head">
           <h2 class="home-sec__k">Studio</h2>
-          <a class="tl" href="/studio/">More about us</a>
         </div>
-        <div class="home-studio">
-          <p class="t-lead rv">{home.studio.lead}</p>
-          <p class="rv" data-delay="1" style="color:var(--text-secondary)">{home.studio.body[0]}</p>
+        <div class="spread spread--flip">
+          {home.studio.image && (
+            <div class="spread__media rv">
+              <Figure image={home.studio.image} sizes="420px" />
+            </div>
+          )}
+          <div class="spread__body rv" data-delay="1">
+            <p class="spread__say spread__say--display">{home.studio.lead}</p>
+            {home.studio.body[0] && <p class="spread__note">{home.studio.body[0]}</p>}
+            <a class="tl" href="/studio/" style="display:inline-block;margin-top:var(--s-5)">More about us</a>
+          </div>
         </div>
       </div>
     </section>
@@ -86,25 +103,33 @@ const c = settings.contact;
       </div>
     </section>
 
-    {/* RELEASE — the faces behind the credibility just established */}
+    {/* The faces behind the credibility the press section just established.
+        The founders photograph rather than two portraits, because there are no
+        individual portraits — and this frame says more about the practice than
+        two headshots would anyway. */}
     <section class="home-sec" id="people" data-ground="dark">
       <div class="container">
         <div class="home-sec__head">
           <h2 class="home-sec__k">People</h2>
-          <a class="tl" href="/people/">The team</a>
         </div>
-        <div class="mini mini--2">
-          {principals.map((p, i) => (
-            <figure class="rv" data-delay={i}>
-              {p.portrait && (
-                <Figure image={p.portrait} sizes="(min-width:44rem) 22rem, 92vw" />
-              )}
-              <figcaption>
-                <span class="t-h3">{p.prefix} {p.name}</span>
-                <span class="eyebrow" style="display:block;margin-top:var(--s-2)">{p.role}</span>
-              </figcaption>
-            </figure>
-          ))}
+        <div class="spread">
+          {home.founders && (
+            <div class="spread__media spread__media--type rv">
+              <Figure image={home.founders} sizes="420px" />
+              <div class="spread__names">
+                {principals.map((p) => (
+                  <span>
+                    <span class="spread__n">{p.prefix} {p.name}</span>
+                    <span class="spread__r">{p.role}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div class="spread__body rv" data-delay="1">
+            <p class="spread__say spread__say--lead">{home.peopleLead}</p>
+            <a class="tl" href="/people/" style="display:inline-block;margin-top:var(--s-5)">Everyone at btl</a>
+          </div>
         </div>
       </div>
     </section>

@@ -52,7 +52,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
       crossorigin
     />
   </head>
-  <body id="top" data-ground={ground}>
+  <body id="top" data-ground={ground} data-preview={isPreview ? "true" : undefined}>
     <a class="skip" href="#main">Skip to content</a>
     {/* Unmissable, because the most expensive mistake with a preview build is
         not realising you are looking at one. */}

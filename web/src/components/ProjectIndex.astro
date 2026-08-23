@@ -6,17 +6,34 @@
  * chip is current, so that is all this takes as props.
  */
 import ProjectCard from "./ProjectCard.astro";
-import { getEarnedCategories, type Project } from "../lib/content";
+import { getEarnedCategories, getSettings, type Project } from "../lib/content";
 
-interface Props { projects: Project[]; active?: string; heading: string }
-const { projects, active = "", heading } = Astro.props;
+interface Props {
+  projects: Project[];
+  active?: string;
+  heading: string;
+  /** What the page calls itself, large. Defaults to "Projects". */
+  title?: string;
+  /** The line under it. Defaults to the CMS's projects headline. */
+  lead?: string;
+}
+const { projects, active = "", heading, title = "Projects", lead: leadProp } = Astro.props;
 
 // Empty until the work earns it — see getEarnedCategories.
 const chips = await getEarnedCategories();
+const copy = (await getSettings()).copy;
+const lead = leadProp ?? copy.projectsLead;
 ---
 
 <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
-  <h1 class="sr-only">{heading}</h1>
+  {/* The index used to begin with a photograph hard against the header, which
+      gave a visitor nothing to land on — the work started before the page had
+      said what it was. A masthead costs one screen of scrolling and buys the
+      reader a moment to arrive. */}
+  <header class="index-head">
+    <h1 class="index-head__t">{title}</h1>
+    {lead && <p class="index-head__s">{lead}</p>}
+  </header>
 
   {chips.length > 0 && (
     <nav class="chips" aria-label="Project categories">

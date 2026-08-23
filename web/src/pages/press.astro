@@ -1,9 +1,17 @@
 ---
 /* Press and awards — one content type with a `kind`, never two systems.
  *
- * The wall is mastheads. Where a publication has supplied a logo it is set as
- * the object; where it has not, the name typeset at display scale is the
- * designed fallback and nothing has to move when the asset arrives.
+ * The first version was a masthead wall with the project photograph hidden
+ * behind a hover. With one credit that is a page containing a name and a
+ * sentence, which is not a page — and hover is a state half the visitors do not
+ * have. The recognition means something because of the building that earned it,
+ * so the building is on the page rather than one gesture away from it.
+ *
+ * Each entry is the same spread the rest of the site is built from: photograph
+ * one side, type the other, alternating down the page. Where a publication has
+ * supplied a logo it is set as the object; where it has not, the name typeset
+ * at display scale is the designed fallback and nothing moves when the asset
+ * arrives.
  */
 import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
@@ -15,9 +23,8 @@ const projects = await getProjects();
 const projectFor = (slug: string | null) =>
   slug ? projects.find((p) => p.slug === slug) : undefined;
 
-/* Sanity stores a real date, so this arrives as "2026-08-04" — the old
-   split-on-spaces returned the whole ISO string and printed it on the page.
-   The design wants the year alone in the margin. */
+/* Sanity stores a real date, so this arrives as "2026-08-04" — splitting on
+   spaces returned the whole ISO string and printed it on the page. */
 const yearOf = (date: string) => {
   if (!date) return "";
   const y = /^(\d{4})/.exec(date.trim());
@@ -31,45 +38,50 @@ const yearOf = (date: string) => {
   current="press"
 >
   <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+    <header class="index-head">
+      <h1 class="index-head__t">Press</h1>
+      <p class="index-head__s">{copy.pressLead}</p>
+    </header>
+
     <div class="container" style="padding-bottom:var(--space-section)">
-      <h1 class="press-hero rv">{copy.pressLead}</h1>
-
-      <div class="pwall">
-        {items.map((item, i) => {
-          const related = projectFor(item.relatedProject);
-          const live = !!item.url && item.url !== "#";
-          const Tag = live ? "a" : "div";
-          return (
-            <article class="pw rv" data-delay={i % 3}>
-              <Tag
-                class="pw__link"
-                href={live ? item.url : undefined}
-                rel={live ? "noopener" : undefined}
-                target={live ? "_blank" : undefined}
-              >
-                {item.logo
-                  ? <Figure image={item.logo} sizes="(min-width:48rem) 24rem, 60vw" />
-                  : <span class="pw__pub">{item.publication}</span>}
-                <span class="pw__t">{item.title}</span>
-                <span class="pw__meta">
-                  <span>{item.kind === "award" ? "Award" : "Feature"}</span>
-                  {yearOf(item.date) && <span>{yearOf(item.date)}</span>}
-                  {related && <span>{related.title}</span>}
-                </span>
-              </Tag>
+      {items.map((item, i) => {
+        const related = projectFor(item.relatedProject);
+        const live = !!item.url && item.url !== "#";
+        const year = yearOf(item.date);
+        return (
+          <article class:list={["spread", "pw", i % 2 === 1 && "spread--flip"]}>
+            {related && (
+              <div class="spread__media rv">
+                <Figure image={related.hook} sizes="420px" />
+              </div>
+            )}
+            <div class="spread__body rv" data-delay="1">
+              <p class="pw__kind">
+                {item.kind === "award" ? "Award" : "Feature"}{year ? ` · ${year}` : ""}
+              </p>
+              {item.logo
+                ? <Figure image={item.logo} sizes="(min-width:48rem) 22rem, 60vw" />
+                : <p class="pw__pub">{item.publication}</p>}
+              <p class="pw__t">{item.title}</p>
               {related && (
-                <span class="pw__media" aria-hidden="true">
-                  <Figure image={related.hook} sizes="(min-width:48rem) 22rem, 38vw" />
-                </span>
+                <p class="pw__on">
+                  on <a class="ul" href={`/projects/${related.slug}/`}>{related.title}</a>
+                </p>
               )}
-            </article>
-          );
-        })}
-      </div>
+              {live && (
+                <a class="tl pw__read" href={item.url} rel="noopener" target="_blank">
+                  Read it at {item.publication}
+                </a>
+              )}
+            </div>
+          </article>
+        );
+      })}
 
-      <p class="t-caption" style="margin-top:var(--s-8); color:var(--text-tertiary)">
-        Links open the publication's own page.
-      </p>
+      <a class="onward ul" href="/projects/">
+        <span class="onward__k">Next</span>
+        The work behind the coverage.
+      </a>
     </div>
   </main>
 </Base>

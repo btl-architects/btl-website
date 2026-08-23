@@ -70,6 +70,7 @@ export interface Publication {
  *  field never leaves a blank page — it just goes back to the written one. */
 export interface Copy {
   footerCta: string;
+  projectsLead: string;
   locationLabel: string;
   pressLead: string;
   peopleOnward: string;
@@ -142,7 +143,7 @@ const once = <T>(fn: () => Promise<T>): (() => Promise<T>) => {
 export const getSettings = once(async (): Promise<Settings> => {
   const s = await sanity.fetch(`*[_type == "settings"][0]{
     name, domain, tagline, nav, social,
-    footerCta, locationLabel, pressLead, peopleOnward, studioOnward, notFoundLead,
+    footerCta, locationLabel, projectsLead, pressLead, peopleOnward, studioOnward, notFoundLead,
     address, email, formTo, phone, phoneHref, gstin
   }`);
   const categories = await sanity.fetch(
@@ -154,6 +155,8 @@ export const getSettings = once(async (): Promise<Settings> => {
     tagline: s?.tagline ?? "",
     copy: {
       footerCta: s?.footerCta || "Let's build something that lasts.",
+      projectsLead: s?.projectsLead ||
+        "Houses, interiors and the occasional commercial project, across Kerala.",
       locationLabel: s?.locationLabel || "Kozhikode, Kerala",
       pressLead: s?.pressLead || "See where we've been.",
       peopleOnward: s?.peopleOnward || "The work behind the practice.",
