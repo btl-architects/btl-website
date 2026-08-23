@@ -1,0 +1,29 @@
+---
+/* The one way this site says "there is more this way".
+ *
+ * There were three of these. The home page closed its work section with a large
+ * two-line link, its studio section with a small inline one, and its people
+ * section with a different small inline one — three treatments for the same
+ * idea on a single page, in three positions. Pages used a fourth. A reader
+ * learns a pattern once and then expects it; changing it every section is a
+ * tax on their attention for no gain.
+ *
+ * One component, one position: after the content, below a hairline, aligned to
+ * the same margin as everything else. The kicker is the only thing that varies,
+ * and it varies for a reason — "More" goes further into the subject you are
+ * already reading about, "Next" moves you on to a different one.
+ */
+interface Props {
+  href: string;
+  /** "More" within a subject, "Next" when leaving one. */
+  kicker?: string;
+  /** Quieter inside a home-page section than at the end of a whole page. */
+  quiet?: boolean;
+}
+const { href, kicker = "More", quiet = false } = Astro.props;
+---
+
+<a class:list={["onward", quiet && "onward--quiet"]} href={href}>
+  <span class="onward__k">{kicker}</span>
+  <span class="onward__t"><slot /></span>
+</a>

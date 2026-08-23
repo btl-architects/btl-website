@@ -83,23 +83,34 @@
 }
 .nav__link::after {
   content: "";
-  position: absolute; left: 0; right: 0; bottom: 0.35em;
+  position: absolute; left: 0; right: 0; bottom: 0.3em;
   height: 1px;
   background-color: var(--mark);
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path var(--dur-base) var(--ease);
+  /* Grown from the centre rather than wiped from the left. A wipe has a
+     direction, and a direction implies travel — which is what made the old
+     sliding indicator feel mechanical and the wipe that replaced it feel
+     merely quicker. Opening from the middle has no direction at all: the rule
+     is simply there, and the eye reads it as the word acknowledging you rather
+     than as something moving across the screen. */
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  transition: transform var(--dur-base) var(--ease);
   pointer-events: none;
 }
-.nav__link[aria-current="page"]::after { clip-path: inset(0 0 0 0); }
+.nav__link[aria-current="page"]::after { transform: scaleX(1); }
 
 @media (hover: hover) {
-  .nav__link:hover::after { clip-path: inset(0 0 0 0); }
-  /* The others recede rather than the hovered one shouting — P4, one state at
-     a time, done by taking away instead of adding. */
-  .nav:hover .nav__link { opacity: 0.55; transition: opacity var(--dur-hover) var(--ease); }
-  .nav:hover .nav__link:hover { opacity: 1; }
+  .nav__link { transition: color var(--dur-hover) var(--ease); }
+  .nav__link:hover::after { transform: scaleX(1); }
+  /* The others are left entirely alone. Dimming five words to emphasise a
+     sixth is a lot of movement to announce a hover, and it made the whole bar
+     flicker as the pointer crossed it. */
 }
-.nav__link:focus-visible::after { clip-path: inset(0 0 0 0); }
+.nav__link:focus-visible::after { transform: scaleX(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__link::after { transition: none; }
+}
 
 /* --- header ---------------------------------------------------------------- */
 
@@ -1054,42 +1065,50 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 }
 
 /* --- the way onward -------------------------------------------------------
-   A short page still has to end rather than stop. One line, at scale, pointing
-   at whatever the reader most plausibly wants next. */
+   One treatment, one position, everywhere. There used to be three on the home
+   page alone and a fourth on the inner pages — same idea, different size,
+   different place each time. A reader learns this once. */
 
 .onward {
   display: block;
-  margin-top: var(--s-9);
-  padding-top: var(--s-7);
+  margin-top: var(--s-8);
+  padding-top: var(--s-5);
   border-top: 1px solid var(--border-subtle);
   text-decoration: none;
   color: var(--text-primary);
-  font-size: var(--type-h2);
-  letter-spacing: var(--track-h2);
-  line-height: var(--lead-tight);
 }
 .onward__k {
-  display: block; margin-bottom: var(--s-3);
-  font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: var(--text-tertiary);
+  display: block;
+  margin-bottom: var(--s-3);
+  font-size: var(--type-meta);
+  letter-spacing: var(--track-meta);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
-
-/* ==========================================================================
-   Contact
-   ==========================================================================
-   The page resolves once (R9). The footer stays thin and does not repeat it.
-   ------------------------------------------------------------------------- */
-
-.contact__grid { display: grid; gap: var(--s-8); margin-top: var(--s-8); }
-@media (min-width: 60rem) {
-  .contact__grid { grid-template-columns: minmax(0, 34rem) minmax(0, 1fr); gap: var(--s-9); }
+.onward__t {
+  display: inline-block;
+  position: relative;
+  font-size: var(--type-h3);
+  letter-spacing: var(--track-h3);
+  line-height: var(--lead-tight);
 }
-.contact__aside { display: grid; gap: var(--s-6); align-content: start; }
+/* The underline draws from the left, like every other link on the site. */
+.onward__t::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: -0.28em;
+  height: 1px;
+  background-color: var(--mark);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-base) var(--ease);
+}
+@media (hover: hover) {
+  .onward:hover .onward__t::after { clip-path: inset(0 0 0 0); }
+}
+.onward:focus-visible .onward__t::after { clip-path: inset(0 0 0 0); }
 
-/* ==========================================================================
-   404
-   ========================================================================== */
-.nf { min-height: 70vh; display: grid; align-content: center; }
+/* Inside a home-page section it closes a passage rather than a whole page. */
+.onward--quiet { margin-top: var(--s-7); }
+.onward--quiet .onward__t { font-size: var(--type-lead); letter-spacing: var(--track-lead); }
 
 /* --- preview builds -------------------------------------------------------
    A preview deployment looks exactly like the real site, which is the point and
@@ -1198,55 +1217,56 @@ body[data-preview] main { padding-top: var(--preview-h); }
    Hidden on narrow screens: a vertical rail needs a margin to live in, and on a
    phone there isn't one. The same links are in the footer. */
 
-/* Shown on every size, not just wide desktops — a phone is where most people
-   will meet this practice, and the links were simply absent there. On a phone
-   there is no margin for a vertical rail, so they lie horizontally along the
-   bottom instead, beside the caption. */
+/* Set horizontally in the corner opposite the caption, at every size.
+ *
+ * This was a vertical rail down the left edge on desktop and something else on
+ * a phone — two behaviours, and the desktop one was 12px of sideways type at
+ * the very edge of the screen, which is close to invisible. Turned upright,
+ * put where the eye already goes at the end of the film, and given the same
+ * shape on every device. */
 .landing .srail {
   position: absolute;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: var(--s-5);
+  gap: var(--s-4);
   pointer-events: auto;
-  left: var(--page-margin);
+  right: var(--page-margin);
   bottom: var(--s-5);
 }
-@media (min-width: 64rem) {
-  .landing .srail {
-    left: 0; bottom: auto; top: 50%;
-    transform: translateY(-50%);
-    writing-mode: vertical-rl;
-    gap: var(--s-6);
-    padding-inline: var(--s-4);
-  }
+@media (max-width: 40rem) {
+  /* On a phone the caption owns the bottom-left, so these sit above it rather
+     than fighting it for the same corner. */
+  .landing .srail { right: var(--page-margin); bottom: calc(var(--s-5) + 1.6rem); }
 }
 
 .landing .srail__i {
-  font-size: var(--type-meta);
+  position: relative;
+  font-size: var(--type-caption);
   letter-spacing: var(--track-meta);
   text-transform: uppercase;
   text-decoration: none;
-  /* Was 0.66 white, which over a bright frame of sky was barely there. The
-     film is unpredictable — sunrise one clip, a dark interior the next — so
-     these carry their own small shadow rather than relying on the photograph
-     behind them being helpfully dark. */
-  color: rgb(255 255 255 / 0.92);
-  text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
-  transition: color var(--dur-hover) var(--ease);
+  color: #fff;
+  /* The film is unpredictable — sunrise on one clip, a dark interior on the
+     next — so these carry their own contrast rather than depending on the
+     photograph behind them being helpfully dark. */
+  text-shadow: 0 1px 14px rgb(0 0 0 / 0.7);
+  padding-bottom: 0.35em;
 }
+.landing .srail__i::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 1px; background: currentColor;
+  transform: scaleX(0); transform-origin: 50% 50%;
+  transition: transform var(--dur-base) var(--ease);
+}
+@media (hover: hover) {
+  .landing .srail__i:hover::after { transform: scaleX(1); }
+}
+.landing .srail__i:focus-visible::after { transform: scaleX(1); }
 .landing .srail__i:hover,
 .landing .srail__i:focus-visible { color: #fff; }
 
-/* A hairline between them, drawn by the gap rather than a border on each. */
-.landing .srail__i + .srail__i { position: relative; }
-.landing .srail__i + .srail__i::before {
-  content: "";
-  position: absolute; left: 50%; top: calc(var(--s-6) * -1);
-  width: 1px; height: var(--s-5);
-  transform: translateX(-50%);
-  background: rgb(255 255 255 / 0.3);
-}
 
 /* --- a publication's mark -------------------------------------------------
    The one place the site steps outside its single typeface, and it does so
@@ -1286,62 +1306,68 @@ body[data-preview] main { padding-top: var(--preview-h); }
   filter: drop-shadow(0 2px 28px rgb(0 0 0 / 0.55));
 }
 
-/* --- a credit -------------------------------------------------------------
-   The same spread the rest of the site is built from, so the press section
-   belongs to the page rather than sitting on it. It used to be a bordered
-   two-column box dropped into the middle of a run of photograph-and-type
-   spreads, which is exactly why it read as a widget from another website.
+/* --- a press credit ------------------------------------------------------
+   A repeating object in a grid, not a bespoke composition per article. It was
+   a full-width spread each, which gave one credit most of a screen and would
+   have given twenty credits twenty screens — a press page has to work at both.
 
-   The mark overlaps the work it published. That interlock is what a "seen in"
-   credit looks like when it means something — side by side with a gap they are
-   just two objects near each other. */
+   The mark hangs off the photograph's edge. That interlock is what says this
+   magazine published this building; side by side with a gap they are two
+   separate things. */
 
-.credit { text-decoration: none; color: inherit; display: grid; }
-
-.credit__media { position: relative; }
-/* Portrait, like the founders and the studio, so the three spreads on this page
-   share a shape. The photographs are landscape, so the crop is done here. */
-.credit__media img { aspect-ratio: 4 / 5; object-fit: cover; }
-
-.credit__body { position: relative; }
-
-/* The mark hangs back over the photograph's edge. Pulled with a negative
-   margin rather than absolute positioning, so it still occupies its own height
-   and can never land on the headline underneath. */
-.credit__mark { display: block; position: relative; z-index: 2; }
+.credits {
+  display: grid;
+  gap: var(--s-8) var(--grid-gap);
+  margin-top: var(--s-7);
+}
 @media (min-width: 60rem) {
-  /* Far enough over the photograph to read as one object rather than two near
-     each other. Pulled with a negative margin rather than positioned
-     absolutely, so it keeps its own height and can never land on the headline
-     below it. */
-  .credit__mark { margin-left: -48%; }
+  .credits { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-9) var(--s-8); }
+}
+
+.credit { display: block; text-decoration: none; color: inherit; }
+
+.credit__plate { display: block; position: relative; }
+
+.credit__media { display: block; width: 78%; }
+.credit__media img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+
+/* Overhanging the right edge, vertically centred on the frame. */
+.credit__mark {
+  position: absolute; z-index: 2;
+  left: 52%; top: 50%;
+  transform: translateY(-50%);
 }
 .credit__mark .masthead {
   color: var(--btl-white);
-  /* It sits on a photograph, and the photograph is different every time — a
-     bright exterior here, a dark interior on the next credit. The shadow is
-     what stops the mark depending on the picture behind it being helpful. */
-  text-shadow: 0 2px 28px rgb(0 0 0 / 0.55);
+  /* Different photograph behind every credit — bright exterior on one, dark
+     interior on the next — so the mark carries its own contrast rather than
+     depending on the picture being helpful. */
+  text-shadow: 0 2px 24px rgb(0 0 0 / 0.6);
+  font-size: clamp(2.75rem, 1.6rem + 4vw, 5rem);
 }
+.credit__mark .masthead--long { font-size: clamp(1.375rem, 1rem + 1.6vw, 2.25rem); }
+.credit__mark .masthead__img { width: clamp(7rem, 5rem + 8vw, 11rem); }
 
 .credit__t {
-  margin: var(--s-5) 0 0;
-  max-width: var(--measure);
+  display: block;
+  margin-top: var(--s-5);
+  max-width: 34ch;
   font-size: var(--type-lead);
   letter-spacing: var(--track-lead);
   line-height: var(--lead-snug);
   color: var(--text-secondary);
 }
 .credit__m {
-  margin: var(--s-4) 0 0;
+  display: block;
+  margin-top: var(--s-3);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; color: var(--text-tertiary);
 }
 
 @media (hover: hover) {
-  .credit .masthead,
-  .credit__media img { transition: opacity var(--dur-hover) var(--ease), color var(--dur-hover) var(--ease); }
-  .credit:hover .credit__media img { opacity: 0.82; }
+  .credit__media img,
+  .credit .masthead { transition: opacity var(--dur-hover) var(--ease); }
+  .credit:hover .credit__media img { opacity: 0.72; }
 }
 
 /* --- the menu button ------------------------------------------------------

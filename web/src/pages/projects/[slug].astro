@@ -9,6 +9,7 @@ import type { GetStaticPaths } from "astro";
 import Base from "../../layouts/Base.astro";
 import ProjectRail from "../../components/ProjectRail.astro";
 import { getProjects } from "../../lib/content";
+import Onward from "../../components/Onward.astro";
 
 export const getStaticPaths = (async () => {
   const projects = await getProjects();
@@ -59,7 +60,7 @@ const { project, prev, next } = Astro.props;
             <span class="pager__n">{next.title}</span>
           </a>
         </nav>
-        <p style="padding-block:var(--s-6)"><a class="tl" href="/projects/">All projects</a></p>
+        <Onward href="/projects/" kicker="Back">Every project</Onward>
       </div>
     </article>
   </main>

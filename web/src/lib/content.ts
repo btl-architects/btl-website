@@ -103,10 +103,10 @@ export interface Settings {
  * GROQ has no block comments, so this note lives out here rather than inside
  * the query, which is what broke the build the first time. */
 const FIGURE = `{
-  "source": { "asset": asset, "hotspot": hotspot, "crop": crop },
+  "source": asset,
   alt, caption, credit, rights, kind,
-  "lqip": asset->metadata.lqip,
-  "dimensions": asset->metadata.dimensions{width, height}
+  "lqip": asset.asset->metadata.lqip,
+  "dimensions": asset.asset->metadata.dimensions{width, height}
 }`;
 
 const PROJECT = `{

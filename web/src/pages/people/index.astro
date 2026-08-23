@@ -15,6 +15,7 @@
 import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
 import { getPeople, getHome, getSettings } from "../../lib/content";
+import Onward from "../../components/Onward.astro";
 
 const people = await getPeople();
 const principals = people.filter((p) => p.tier === "principal");
@@ -129,10 +130,7 @@ const say = (t: string) =>
         </section>
       )}
 
-      <a class="onward ul" href="/projects/">
-        <span class="onward__k">Next</span>
-        {copy.peopleOnward}
-      </a>
+      <Onward href="/projects/" kicker="Next">{copy.peopleOnward}</Onward>
     </div>
   </main>
 </Base>

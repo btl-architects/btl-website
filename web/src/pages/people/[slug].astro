@@ -9,6 +9,7 @@ import type { GetStaticPaths } from "astro";
 import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
 import { getProfiles } from "../../lib/content";
+import Onward from "../../components/Onward.astro";
 
 export const getStaticPaths = (async () => {
   const profiles = await getProfiles();
@@ -42,10 +43,7 @@ const fullName = `${person.prefix} ${person.name}`.trim();
         </div>
       </div>
 
-      <a class="onward ul" href="/people/">
-        <span class="onward__k">Back</span>
-        Everyone at btl.
-      </a>
+      <Onward href="/people/" kicker="Back">Everyone at btl</Onward>
     </div>
   </main>
 </Base>

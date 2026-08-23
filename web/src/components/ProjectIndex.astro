@@ -7,6 +7,7 @@
  */
 import ProjectCard from "./ProjectCard.astro";
 import { getEarnedCategories, getSettings, type Project } from "../lib/content";
+import Onward from "../components/Onward.astro";
 
 interface Props {
   projects: Project[];
@@ -56,9 +57,6 @@ const lead = leadProp ?? copy.projectsLead;
 
   {/* Every other page ends by pointing somewhere. This one stopped dead. */}
   <div class="container">
-    <a class="onward ul" href="/studio/">
-      <span class="onward__k">Next</span>
-      The practice behind the work.
-    </a>
+    <Onward href="/studio/" kicker="Next">The practice behind the work</Onward>
   </div>
 </main>

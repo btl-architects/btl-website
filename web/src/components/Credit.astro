@@ -1,0 +1,44 @@
+---
+/* One press credit. The same object on the home page and on /press.
+ *
+ * It was a full-width spread per entry, which gave a single article most of a
+ * screen and would have given twenty articles twenty screens. A press page has
+ * to work at one credit and at thirty, and the thing that scales is a repeating
+ * object in a grid — not a bespoke composition per item.
+ *
+ * The mark hangs off the photograph's edge rather than sitting beside it. That
+ * interlock is what says "this magazine published this building"; two things
+ * with a gap between them are just two things.
+ */
+import Figure from "./Figure.astro";
+import Masthead from "./Masthead.astro";
+import type { Publication, Project } from "../lib/content";
+
+interface Props { item: Publication; project?: Project }
+const { item, project } = Astro.props;
+
+const live = !!item.url && item.url !== "#";
+const Tag = live ? "a" : "div";
+const year = item.date ? item.date.slice(0, 4) : "";
+---
+
+<Tag
+  class="credit"
+  href={live ? item.url : undefined}
+  rel={live ? "noopener" : undefined}
+  target={live ? "_blank" : undefined}
+>
+  <span class="credit__plate">
+    {project && (
+      <span class="credit__media">
+        <Figure image={project.hook} sizes="(min-width:60rem) 22rem, 74vw" />
+      </span>
+    )}
+    <span class="credit__mark"><Masthead item={item} /></span>
+  </span>
+
+  <span class="credit__t">{item.title}</span>
+  <span class="credit__m">
+    {item.kind === "award" ? "Award" : "Feature"}{year ? ` · ${year}` : ""}{project ? ` · ${project.title}` : ""}
+  </span>
+</Tag>

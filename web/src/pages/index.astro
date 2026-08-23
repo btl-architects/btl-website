@@ -16,7 +16,8 @@ import Base from "../layouts/Base.astro";
 import MediaStage from "../components/MediaStage.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Figure from "../components/Figure.astro";
-import Masthead from "../components/Masthead.astro";
+import Onward from "../components/Onward.astro";
+import Credit from "../components/Credit.astro";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
 
 const settings = await getSettings();
@@ -67,10 +68,7 @@ const c = settings.contact;
           projects needs to be told there are more; a visitor who has not seen
           any yet does not need a link away from them. */}
       <div class="container">
-        <a class="onward onward--quiet ul" href="/projects/">
-          <span class="onward__k">More</span>
-          See every project
-        </a>
+        <Onward href="/projects/" quiet>See every project</Onward>
       </div>
     </section>
 
@@ -91,9 +89,9 @@ const c = settings.contact;
           <div class="spread__body rv" data-delay="1">
             <p class="spread__say spread__say--display">{home.studio.lead}</p>
             {home.studio.body[0] && <p class="spread__note">{home.studio.body[0]}</p>}
-            <a class="tl" href="/studio/" style="display:inline-block;margin-top:var(--s-5)">More about us</a>
           </div>
         </div>
+        <Onward href="/studio/" quiet>More about the practice</Onward>
       </div>
     </section>
 
@@ -112,39 +110,16 @@ const c = settings.contact;
             <h2 class="home-sec__k">Press</h2>
           </div>
 
-          {press.map((item, i) => {
-            const rel = item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined;
-            const live = !!item.url && item.url !== "#";
-            const Tag = live ? "a" : "div";
-            return (
-              <Tag
-                class="spread credit"
-                href={live ? item.url : undefined}
-                rel={live ? "noopener" : undefined}
-                target={live ? "_blank" : undefined}
-              >
-                {rel && (
-                  <div class="spread__media credit__media rv">
-                    <Figure image={rel.hook} sizes="420px" />
-                  </div>
-                )}
-                <div class="spread__body credit__body rv" data-delay="1">
-                  <span class="credit__mark"><Masthead item={item} /></span>
-                  <p class="credit__t">{item.title}</p>
-                  <p class="credit__m">
-                    {item.kind === "award" ? "Award" : "Feature"}
-                    {item.date ? ` · ${item.date.slice(0, 4)}` : ""}
-                    {rel ? ` · ${rel.title}` : ""}
-                  </p>
-                </div>
-              </Tag>
-            );
-          })}
+          <div class="credits">
+            {press.map((item) => (
+              <Credit
+                item={item}
+                project={item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined}
+              />
+            ))}
+          </div>
 
-          <a class="onward onward--quiet ul" href="/press/">
-            <span class="onward__k">More</span>
-            Everywhere btl has appeared
-          </a>
+          <Onward href="/press/" quiet>Everywhere btl has appeared</Onward>
         </div>
       </section>
     )}
@@ -174,9 +149,9 @@ const c = settings.contact;
           )}
           <div class="spread__body rv" data-delay="1">
             <p class="spread__say spread__say--lead">{home.peopleLead}</p>
-            <a class="tl" href="/people/" style="display:inline-block;margin-top:var(--s-5)">Everyone at btl</a>
           </div>
         </div>
+        <Onward href="/people/" quiet>Everyone at btl</Onward>
       </div>
     </section>
 
@@ -185,7 +160,6 @@ const c = settings.contact;
       <div class="container">
         <div class="home-sec__head">
           <h2 class="home-sec__k">Contact</h2>
-          <a class="tl" href="/contact/">Send an enquiry</a>
         </div>
         <div class="mini mini--2">
           <div class="rv">
@@ -201,6 +175,7 @@ const c = settings.contact;
             </p>
           </div>
         </div>
+        <Onward href="/contact/" quiet>Send an enquiry</Onward>
       </div>
     </section>
   </main>

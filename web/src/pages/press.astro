@@ -14,9 +14,9 @@
  * arrives.
  */
 import Base from "../layouts/Base.astro";
-import Figure from "../components/Figure.astro";
-import Masthead from "../components/Masthead.astro";
+import Credit from "../components/Credit.astro";
 import { getPublications, getProjects, getSettings } from "../lib/content";
+import Onward from "../components/Onward.astro";
 
 const copy = (await getSettings()).copy;
 const items = await getPublications();
@@ -45,42 +45,16 @@ const yearOf = (date: string) => {
     </header>
 
     <div class="container" style="padding-bottom:var(--space-section)">
-      {items.map((item, i) => {
-        const related = projectFor(item.relatedProject);
-        const live = !!item.url && item.url !== "#";
-        const year = yearOf(item.date);
-        return (
-          <article class:list={["spread", "pw", i % 2 === 1 && "spread--flip"]}>
-            {related && (
-              <div class="spread__media rv">
-                <Figure image={related.hook} sizes="420px" />
-              </div>
-            )}
-            <div class="spread__body rv" data-delay="1">
-              <p class="pw__kind">
-                {item.kind === "award" ? "Award" : "Feature"}{year ? ` · ${year}` : ""}
-              </p>
-              <Masthead item={item} />
-              <p class="pw__t">{item.title}</p>
-              {related && (
-                <p class="pw__on">
-                  on <a class="ul" href={`/projects/${related.slug}/`}>{related.title}</a>
-                </p>
-              )}
-              {live && (
-                <a class="tl pw__read" href={item.url} rel="noopener" target="_blank">
-                  Read it at {item.publication}
-                </a>
-              )}
-            </div>
-          </article>
-        );
-      })}
+      <div class="credits">
+        {items.map((item) => (
+          <Credit
+            item={item}
+            project={item.relatedProject ? projectFor(item.relatedProject) : undefined}
+          />
+        ))}
+      </div>
 
-      <a class="onward ul" href="/projects/">
-        <span class="onward__k">Next</span>
-        The work behind the coverage.
-      </a>
+      <Onward href="/projects/" kicker="Next">The work behind the coverage</Onward>
     </div>
   </main>
 </Base>

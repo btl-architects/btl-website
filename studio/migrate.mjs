@@ -90,7 +90,10 @@ async function uploadImage(relPath, label) {
 const figure = (assetId, { alt, caption, credit, rights, kind }) => ({
   _type: "figure",
   _key: createHash("sha1").update(assetId + alt).digest("hex").slice(0, 12),
-  asset: { _type: "reference", _ref: assetId },
+  /* A real image value, not the bare reference. figure.asset is declared as
+     type `image`, and an image value is what carries crop and hotspot — writing
+     the reference straight in leaves documents that do not match their schema. */
+  asset: { _type: "image", asset: { _type: "reference", _ref: assetId } },
   alt,
   ...(caption ? { caption } : {}),
   ...(credit ? { credit } : {}),
