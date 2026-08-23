@@ -285,6 +285,72 @@
         });
     }
 
+    /* Warm the rail before it is asked for.
+     *
+     * Opening a project used to begin with a network round trip: click, fetch
+     * the project's page, parse it, lift the rail out, insert, and only then do
+     * the photographs start arriving. On a good connection that is a beat of
+     * nothing happening; on a bad one it is the "takes a while to load up" that
+     * made the whole interaction feel broken.
+     *
+     * So the page is fetched before the click. On a pointer, hovering a card is
+     * the strongest possible signal of intent and buys a few hundred
+     * milliseconds. Everywhere else — touch, keyboard — cards warm themselves
+     * as they scroll into view, during idle time, one at a time so a phone on a
+     * slow connection is never fetching four pages at once. Nothing is
+     * rendered; it only fills the cache the click already reads from. */
+    var warming = {};
+
+    function warm(slug) {
+      if (!slug || railCache[slug] || warming[slug]) return;
+      warming[slug] = true;
+      fetchRail(slug).then(function (rail) {
+        /* Fetching the markup is only half of it: the photographs it references
+           have not been asked for yet, and the first one is what the reader
+           looks at the instant the card opens. Pull that one now, off-screen,
+           so it is in the browser's cache before it is inserted. The rest can
+           arrive as the strip is scrolled. */
+        var first = rail && rail.querySelector("img");
+        if (!first) return;
+        var pre = new Image();
+        if (first.getAttribute("sizes")) pre.sizes = first.getAttribute("sizes");
+        if (first.getAttribute("srcset")) pre.srcset = first.getAttribute("srcset");
+        pre.src = first.getAttribute("src");
+      }).catch(function () { warming[slug] = false; });
+    }
+
+    var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 200); };
+
+    [].slice.call(pindex.querySelectorAll("[data-project]")).forEach(function (h) {
+      var slug = h.getAttribute("data-project");
+      h.closest(".pcard").addEventListener("pointerenter", function () { warm(slug); });
+      h.addEventListener("focus", function () { warm(slug); });
+    });
+
+    if ("IntersectionObserver" in window) {
+      var queue = [];
+      var draining = false;
+      function drain() {
+        if (draining || !queue.length) return;
+        draining = true;
+        idle(function () {
+          var slug = queue.shift();
+          warm(slug);
+          draining = false;
+          if (queue.length) setTimeout(drain, 300);
+        });
+      }
+      var warmer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          warmer.unobserve(e.target);
+          var h = e.target.querySelector("[data-project]");
+          if (h) { queue.push(h.getAttribute("data-project")); drain(); }
+        });
+      }, { rootMargin: "200px" });
+      [].slice.call(pindex.querySelectorAll(".pcard")).forEach(function (c) { warmer.observe(c); });
+    }
+
     var openCard = null;
 
     function cardOf(slug) { return pindex.querySelector('[data-card="' + slug + '"]'); }

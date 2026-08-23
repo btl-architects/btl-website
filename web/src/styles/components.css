@@ -212,9 +212,12 @@
 
 /* the one line after the opening: the compression that follows the immersion */
 .home-statement {
-  font-size: clamp(1.25rem, 0.9rem + 1.4vw, 2.125rem);
-  line-height: 1.35; letter-spacing: -0.01em;
-  max-width: 34ch; color: var(--text-primary);
+  /* One step down from where this started (was 1.25–2.125rem). At display
+     scale a thirty-word paragraph stops being a statement and becomes a wall
+     the reader has to get past before reaching the work. */
+  font-size: clamp(1.0625rem, 0.85rem + 0.9vw, 1.625rem);
+  line-height: 1.45; letter-spacing: -0.005em;
+  max-width: 42ch; color: var(--text-primary);
 }
 
 /* the home page runs the index's own cards, so it needs none of its own
@@ -1132,7 +1135,19 @@ body[data-preview] main { padding-top: var(--preview-h); }
    still the object; the building that earned the credit is simply on the page
    instead of hidden behind a hover half the visitors cannot perform. */
 
+/* The photograph was taking the page. A press page exists to show WHO published
+   the practice — the masthead is the evidence and the building is the footnote,
+   not the other way round. So the type column leads and the photograph is held
+   to a narrow supporting band beside it. */
 .pw { padding-block: var(--s-8); }
+
+@media (min-width: 60rem) {
+  .pw.spread { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); align-items: center; }
+  /* Type first, always — the alternating flip belongs to People and Studio,
+     where the photograph is the subject. Here it never is. */
+  .pw.spread > .spread__media { order: 2; }
+  .pw.spread--flip > .spread__media { order: 2; }
+}
 .pw + .pw { border-top: 1px solid var(--border-subtle); }
 
 .pw__kind {
@@ -1142,7 +1157,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
 }
 .pw__pub {
   margin: 0;
-  font-size: var(--type-h1);
+  font-size: var(--type-display);
   letter-spacing: var(--track-h1);
   line-height: var(--lead-tight);
   color: var(--text-primary);
@@ -1156,3 +1171,94 @@ body[data-preview] main { padding-top: var(--preview-h); }
 }
 .pw__on { margin: var(--s-4) 0 0; color: var(--text-tertiary); }
 .pw__read { display: inline-block; margin-top: var(--s-5); }
+
+/* A quieter onward line. The one at the foot of a page is a destination; this
+   one sits under the work on the home page and only has to say there is more,
+   without competing with the photographs it follows. */
+.onward--quiet {
+  font-size: var(--type-h3);
+  letter-spacing: var(--track-h3);
+  padding-top: var(--s-6);
+  margin-top: var(--s-7);
+}
+
+/* --- the social rail ------------------------------------------------------
+   Set vertically down the left edge of the opening film, and nowhere else on
+   the site. It was chrome on every page once and competed with the photographs
+   the whole way down; here it has the one screen where nothing else is asking
+   for attention.
+
+   Hidden on narrow screens: a vertical rail needs a margin to live in, and on a
+   phone there isn't one. The same links are in the footer. */
+
+.landing .srail {
+  display: none;
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  writing-mode: vertical-rl;
+  align-items: center;
+  gap: var(--s-6);
+  padding-inline: var(--s-4);
+  pointer-events: auto;
+}
+@media (min-width: 64rem) {
+  .landing .srail { display: flex; }
+}
+
+.landing .srail__i {
+  font-size: var(--type-meta);
+  letter-spacing: var(--track-meta);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgb(255 255 255 / 0.66);
+  transition: color var(--dur-hover) var(--ease);
+}
+.landing .srail__i:hover,
+.landing .srail__i:focus-visible { color: #fff; }
+
+/* A hairline between them, drawn by the gap rather than a border on each. */
+.landing .srail__i + .srail__i { position: relative; }
+.landing .srail__i + .srail__i::before {
+  content: "";
+  position: absolute; left: 50%; top: calc(var(--s-6) * -1);
+  width: 1px; height: var(--s-5);
+  transform: translateX(-50%);
+  background: rgb(255 255 255 / 0.3);
+}
+
+/* --- press, on the home page ----------------------------------------------
+   A compact list was the wrong instrument for one credit: it read as a row in
+   a table when what it actually says is that a national magazine published
+   this practice. The masthead gets the scale that claim deserves. */
+
+.hpress { display: grid; gap: var(--s-7); }
+@media (min-width: 52rem) { .hpress { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-8); } }
+
+.hpress__i {
+  display: block; text-decoration: none; color: inherit;
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--border-subtle);
+}
+.hpress__pub {
+  display: block;
+  font-size: var(--type-h1);
+  letter-spacing: var(--track-h1);
+  line-height: var(--lead-tight);
+  color: var(--text-primary);
+  transition: color var(--dur-hover) var(--ease);
+}
+.hpress__t {
+  display: block; margin-top: var(--s-4);
+  max-width: var(--measure);
+  color: var(--text-secondary);
+}
+.hpress__m {
+  display: block; margin-top: var(--s-4);
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+@media (hover: hover) {
+  .hpress__i:hover .hpress__pub { color: var(--mark); }
+}

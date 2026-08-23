@@ -16,7 +16,6 @@ import Base from "../layouts/Base.astro";
 import BrandLine from "../components/BrandLine.astro";
 import MediaStage from "../components/MediaStage.astro";
 import ProjectCard from "../components/ProjectCard.astro";
-import PressIndex from "../components/PressIndex.astro";
 import Figure from "../components/Figure.astro";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
 
@@ -36,6 +35,14 @@ const c = settings.contact;
     <section class="landing" data-ground="media" data-stage>
       <h1 class="sr-only">btl architects — architecture and interiors, Kozhikode</h1>
       <MediaStage />
+      {/* The social links come back, but only here — over the opening film,
+          where there is nothing else competing and a visitor is still deciding
+          what this practice is. They do not follow you down the page. */}
+      <nav class="srail" aria-label="btl architects elsewhere">
+        {settings.social.map((s) => (
+          <a class="srail__i" href={s.url} rel="noopener" target="_blank">{s.label}</a>
+        ))}
+      </nav>
       <div class="landing__cue" data-on-media>
         <BrandLine size="s" />
       </div>
@@ -62,9 +69,9 @@ const c = settings.contact;
           projects needs to be told there are more; a visitor who has not seen
           any yet does not need a link away from them. */}
       <div class="container">
-        <a class="onward ul" href="/projects/">
+        <a class="onward onward--quiet ul" href="/projects/">
           <span class="onward__k">More</span>
-          Every project, {projects.length} in all.
+          See every project
         </a>
       </div>
     </section>
@@ -92,16 +99,40 @@ const c = settings.contact;
       </div>
     </section>
 
-    {/* RELEASE */}
-    <section class="home-sec home-press" id="press" data-ground="dark">
-      <div class="container">
-        <div class="home-sec__head">
-          <h2 class="home-sec__k">Press</h2>
-          <a class="tl" href="/press/">Everything</a>
+    {/* The outside world's verdict. A compact list was the wrong instrument
+        here — with one credit it read as a row in a table, when what it
+        actually says is that a national magazine published this practice. So
+        the masthead is set at the scale that claim deserves and the headline
+        sits under it. It stays a list on /press, where there will eventually be
+        several. */}
+    {press.length > 0 && (
+      <section class="home-sec home-press" id="press" data-ground="dark">
+        <div class="container">
+          <div class="home-sec__head">
+            <h2 class="home-sec__k">Press</h2>
+            <a class="tl" href="/press/">Everything</a>
+          </div>
+          <div class="hpress">
+            {press.slice(0, 2).map((item, i) => (
+              <a
+                class="hpress__i rv"
+                data-delay={i}
+                href={item.url || "/press/"}
+                rel={item.url ? "noopener" : undefined}
+                target={item.url ? "_blank" : undefined}
+              >
+                <span class="hpress__pub">{item.publication}</span>
+                <span class="hpress__t">{item.title}</span>
+                <span class="hpress__m">
+                  {item.kind === "award" ? "Award" : "Feature"}
+                  {item.date ? ` · ${item.date.slice(0, 4)}` : ""}
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
-        <PressIndex items={press} compact />
-      </div>
-    </section>
+      </section>
+    )}
 
     {/* The faces behind the credibility the press section just established.
         The founders photograph rather than two portraits, because there are no
