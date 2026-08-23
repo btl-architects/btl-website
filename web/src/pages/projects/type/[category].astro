@@ -8,11 +8,13 @@ import Base from "../../../layouts/Base.astro";
 import ProjectIndex from "../../../components/ProjectIndex.astro";
 import { getLiveCategories, getProjects } from "../../../lib/content";
 
-export const getStaticPaths = (() =>
-  getLiveCategories().map((c) => ({
+export const getStaticPaths = (async () => {
+  const [categories, projects] = await Promise.all([getLiveCategories(), getProjects()]);
+  return categories.map((c) => ({
     params: { category: c.slug },
-    props: { category: c, projects: getProjects().filter((p) => p.category.includes(c.slug)) },
-  }))) satisfies GetStaticPaths;
+    props: { category: c, projects: projects.filter((p) => p.category.includes(c.slug)) },
+  }));
+}) satisfies GetStaticPaths;
 
 const { category, projects } = Astro.props;
 ---

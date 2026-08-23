@@ -52,16 +52,30 @@ at `projects/<name>.html`, so a project titled "Houses" would have overwritten
 the Houses category page. The design system reserves `type` and `place` as
 segments precisely to prevent this. Now `/projects/type/houses/`.
 
-## Backend
+## Backend — connected and live
 
-`studio/` holds the Sanity studio: schemas for project, person, publication,
-category and settings, all typechecking clean. `alt` and `rights` are required
-at the schema level, and exactly one cover per project is enforced by custom
-validation. `migrate.mjs` imports the existing JSON and all photographs, is
-idempotent, and caches uploads by content hash.
+Sanity project `aur12nrf`, dataset `production`. The site reads it at build
+time with no token, because the dataset is public and the content is meant to
+be. **The prototype's JSON is no longer read by anything.**
 
-**Blocked on one thing only:** a Sanity account, which I cannot create. See
-`studio/README.md` — two commands, then `node migrate.mjs`.
+In the dataset: 4 projects (all published), 3 categories, 2 people, 1 press
+entry, 1 settings document, and 29 full-resolution photographs. Every display
+size is derived by Sanity's CDN from those originals, so nobody has to think
+about image sizes again.
+
+Both seams paid for themselves. Swapping the file-backed adapter for GROQ
+touched `lib/media.ts` and `lib/content.ts` and nothing else — no route,
+component or template knew where its content came from, so none of them
+changed beyond awaiting the calls.
+
+### One trap, worth not repeating
+
+`migrate.mjs` first built document ids as `project.nelly-house`. **A dot in a
+Sanity document id is a namespace separator, not decoration.** Those documents
+were created, reported as committed, and were then invisible to every
+unauthenticated read — which is exactly how the website reads. The import
+looked completely successful and the site saw an empty dataset. Ids are now
+joined with a hyphen.
 
 ## Still to do
 

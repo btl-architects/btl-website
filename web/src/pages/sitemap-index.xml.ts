@@ -8,13 +8,13 @@
 import type { APIRoute } from "astro";
 import { getProjects, getEarnedCategories } from "../lib/content";
 
-export const GET: APIRoute = ({ site }) => {
+export const GET: APIRoute = async ({ site }) => {
   const base = site?.href.replace(/\/$/, "") ?? "";
   const paths = [
     "/",
     "/projects/",
-    ...getProjects().map((p) => `/projects/${p.slug}/`),
-    ...getEarnedCategories().map((c) => `/projects/type/${c.slug}/`),
+    ...(await getProjects()).map((p) => `/projects/${p.slug}/`),
+    ...(await getEarnedCategories()).map((c) => `/projects/type/${c.slug}/`),
     "/studio/",
     "/people/",
     "/press/",

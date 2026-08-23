@@ -9,8 +9,8 @@ import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
 import { getPublications, getProjects } from "../lib/content";
 
-const items = getPublications();
-const projects = getProjects();
+const items = await getPublications();
+const projects = await getProjects();
 const projectFor = (slug: string | null) =>
   slug ? projects.find((p) => p.slug === slug) : undefined;
 

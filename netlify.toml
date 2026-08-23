@@ -1,0 +1,118 @@
+# Netlify configuration.
+#
+# The site is a static build: every route is rendered at build time and served
+# as a file. Content reaches production by rebuilding — a Sanity webhook fires a
+# build hook when something is published — not by a server querying at request
+# time. That is what makes the live site fast and unbreakable by a CMS outage.
+
+[build]
+  base    = "web"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "26"
+  # SANITY_PROJECT_ID and SANITY_DATASET are set in the Netlify UI rather than
+  # here. They are not secret, but configuration belongs in one place and the
+  # build should fail loudly on a fresh environment rather than silently use a
+  # stale value committed months earlier.
+
+# --- security headers -------------------------------------------------------
+# Contract §5a. These apply to every response.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options    = "nosniff"
+    Referrer-Policy           = "strict-origin-when-cross-origin"
+    Permissions-Policy        = "camera=(), microphone=(), geolocation=(), payment=()"
+    X-Frame-Options           = "DENY"
+
+    # Images come from this origin and from Sanity's CDN, which is where every
+    # photograph now lives. Nothing else is permitted to load anything:
+    # object-src none kills legacy plugin vectors, base-uri self stops a
+    # injected <base> redirecting every relative URL, and frame-ancestors none
+    # is the modern form of X-Frame-Options.
+    #
+    # No 'unsafe-inline' and no 'unsafe-eval'. The site's only script is
+    # /scripts/site.js, served from this origin.
+    Content-Security-Policy = """
+      default-src 'self'; \
+      script-src 'self'; \
+      style-src 'self'; \
+      img-src 'self' data: https://cdn.sanity.io; \
+      media-src 'self'; \
+      font-src 'self'; \
+      connect-src 'self' https://aur12nrf.api.sanity.io; \
+      form-action 'self'; \
+      object-src 'none'; \
+      base-uri 'self'; \
+      frame-ancestors 'none'; \
+      upgrade-insecure-requests"""
+
+# --- caching ----------------------------------------------------------------
+# Fingerprinted build assets never change under the same name, so they can be
+# cached forever. HTML must not be: it is how a publish reaches a returning
+# visitor.
+
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# --- redirects --------------------------------------------------------------
+# The prototype shipped .html URLs. Anything already linked to them — including
+# anything a publication printed — must keep working. 301, permanent.
+
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/projects.html"
+  to = "/projects/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/projects/:slug.html"
+  to = "/projects/:slug/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/studio.html"
+  to = "/studio/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/people.html"
+  to = "/people/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/press.html"
+  to = "/press/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/contact.html"
+  to = "/contact/"
+  status = 301
+  force = true

@@ -13,16 +13,15 @@ import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
 import { getPeople, getHome } from "../../lib/content";
 
-const people = getPeople();
+const people = await getPeople();
 const principals = people.filter((p) => p.tier === "principal");
 const team = people.filter((p) => p.tier === "team");
 const alumni = people.filter((p) => p.tier === "alumni");
-const studio = getHome().studio;
-
-const founders = {
-  key: "founders",
-  alt: `${principals.map((p) => `${p.prefix} ${p.name}`).join(" and ")} outside the studio`,
-};
+const home = await getHome();
+const studio = home.studio;
+// The founders photograph is settings content, not a file: the practice can
+// replace it the day they have a better frame, without anyone touching code.
+const founders = home.founders;
 ---
 
 <Base
@@ -33,6 +32,7 @@ const founders = {
   <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
     <h1 class="sr-only">People — btl architects</h1>
 
+    {founders && (
     <div class="plead rv">
       <Figure image={founders} sizes="(min-width:48rem) 44rem, 92vw" priority />
       <div class="plead__names">
@@ -44,6 +44,7 @@ const founders = {
         ))}
       </div>
     </div>
+    )}
 
     <div class="container" style="padding-bottom:var(--space-section)">
       <p class="t-lead rv" style="margin-top:var(--s-8); max-width:var(--measure-lead)">

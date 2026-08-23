@@ -25,7 +25,7 @@ interface Props {
 }
 
 const { title, description, current = "", ground = "dark" } = Astro.props;
-const settings = getSettings();
+const settings = await getSettings();
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 

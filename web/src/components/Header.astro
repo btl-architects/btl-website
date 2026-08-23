@@ -12,6 +12,7 @@
  */
 import Figure from "./Figure.astro";
 import type { Settings } from "../lib/content";
+import { LOGO_WHITE } from "../lib/media";
 
 interface Props { settings: Settings; current: string }
 const { settings, current } = Astro.props;
@@ -19,7 +20,7 @@ const { settings, current } = Astro.props;
 /** Settings still carry the prototype's page keys; routes are directories. */
 const hrefFor = (key: string) => (key === "index" ? "/" : `/${key}/`);
 
-const logo = { key: "logo-white", alt: "btl architects" };
+const logo = LOGO_WHITE;
 ---
 
 <nav class="srail" aria-label="btl architects elsewhere">

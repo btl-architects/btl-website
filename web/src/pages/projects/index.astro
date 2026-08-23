@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import ProjectIndex from "../../components/ProjectIndex.astro";
 import { getProjects } from "../../lib/content";
 
-const projects = getProjects();
+const projects = await getProjects();
 ---
 
 <Base

@@ -20,14 +20,14 @@ import PressIndex from "../components/PressIndex.astro";
 import Figure from "../components/Figure.astro";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
 
-const settings = getSettings();
-const home = getHome();
-const projects = getProjects();
+const settings = await getSettings();
+const home = await getHome();
+const projects = await getProjects();
 const featured = projects.filter((p) => p.featured).slice(0, 3);
 const work = featured.length ? featured : projects.slice(0, 3);
-const press = getPublications().slice(0, 3);
+const press = (await getPublications()).slice(0, 3);
 // The home preview shows the principals only; the full team lives on /people.
-const principals = getPeople().filter((p) => p.tier === "principal");
+const principals = (await getPeople()).filter((p) => p.tier === "principal");
 const c = settings.contact;
 ---
 

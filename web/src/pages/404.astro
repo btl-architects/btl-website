@@ -3,7 +3,7 @@
 import Base from "../layouts/Base.astro";
 import { getProjects } from "../lib/content";
 
-const recent = getProjects().slice(0, 3);
+const recent = (await getProjects()).slice(0, 3);
 ---
 
 <Base title="Not found — btl architects" description="That page does not exist.">

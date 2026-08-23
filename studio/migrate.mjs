@@ -53,7 +53,15 @@ const projects = JSON.parse(readFileSync(resolve(REPO, "site/content/projects.js
 const cache = existsSync(CACHE_PATH) ? JSON.parse(readFileSync(CACHE_PATH, "utf8")) : {};
 const saveCache = () => writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 1));
 
-const id = (type, slug) => `${type}.${String(slug).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+/* Deterministic ids, joined with a hyphen — NOT a dot.
+ *
+ * A dot in a Sanity document id is a namespace separator, not decoration. Ids
+ * like `project.nelly-house` land in a private path that only an authenticated
+ * request can read, so every document imported that way was created
+ * successfully, reported as committed, and then was completely invisible to the
+ * website — which reads the public dataset with no token. The failure is
+ * silent in both directions, which is what made it worth a comment. */
+const id = (type, slug) => `${type}-${String(slug).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
 
 // The stubs that exist so the prototype had something to lay out. They are not
 // content and must not become documents.
@@ -230,7 +238,9 @@ async function main() {
     gstin: c.gstin,
   });
 
-  await tx.commit();
+  console.log(`\nCommitting ${tx.toJSON().length} document mutations…`);
+  const res = await tx.commit({ visibility: "sync" });
+  console.log(`  committed: ${res?.results?.length ?? "?"} results, txn ${res?.transactionId ?? "?"}`);
   console.log("\nDone. Open the studio with `npm run dev`.\n");
 }
 

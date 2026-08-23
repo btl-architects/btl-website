@@ -10,8 +10,8 @@ import Base from "../../layouts/Base.astro";
 import ProjectRail from "../../components/ProjectRail.astro";
 import { getProjects } from "../../lib/content";
 
-export const getStaticPaths = (() => {
-  const projects = getProjects();
+export const getStaticPaths = (async () => {
+  const projects = await getProjects();
   return projects.map((project, i) => ({
     params: { slug: project.slug },
     props: {

@@ -7,7 +7,7 @@ import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
 import { getHome } from "../lib/content";
 
-const st = getHome().studio;
+const st = (await getHome()).studio;
 ---
 
 <Base title="Studio — btl architects" description={st.lead} current="studio">
@@ -16,9 +16,11 @@ const st = getHome().studio;
 
     <p class="t-display studio__lead rv">{st.lead}</p>
 
-    <div class="studio__media rv" data-delay="1">
-      <Figure image={{ key: st.image, alt: st.imageAlt }} sizes="100vw" priority />
-    </div>
+    {st.image && (
+      <div class="studio__media rv" data-delay="1">
+        <Figure image={st.image} sizes="100vw" priority />
+      </div>
+    )}
 
     <div class="studio__body">
       {st.body.map((para: string, i: number) => (

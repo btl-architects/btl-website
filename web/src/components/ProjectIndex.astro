@@ -12,7 +12,7 @@ interface Props { projects: Project[]; active?: string; heading: string }
 const { projects, active = "", heading } = Astro.props;
 
 // Empty until the work earns it — see getEarnedCategories.
-const chips = getEarnedCategories();
+const chips = await getEarnedCategories();
 ---
 
 <main id="main" data-ground="dark" style="padding-top:var(--header-h)">

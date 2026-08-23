@@ -9,10 +9,13 @@
     "check": "astro check"
   },
   "dependencies": {
+    "@sanity/client": "^8.2.0",
+    "@sanity/image-url": "^1.2.0",
     "astro": "7.2.4"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.5",
+    "@types/node": "^24.10.1",
     "typescript": "5.9.3"
   }
 }

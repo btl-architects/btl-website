@@ -9,7 +9,7 @@
 import Base from "../layouts/Base.astro";
 import { getSettings } from "../lib/content";
 
-const c = getSettings().contact;
+const c = (await getSettings()).contact;
 ---
 
 <Base title="Contact — btl architects" description="Talk to the studio." current="contact" ground="light">

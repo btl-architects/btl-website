@@ -5,11 +5,13 @@ import Base from "../../../layouts/Base.astro";
 import ProjectIndex from "../../../components/ProjectIndex.astro";
 import { getLocations, getProjects, locationSlug } from "../../../lib/content";
 
-export const getStaticPaths = (() =>
-  getLocations().map((l) => ({
+export const getStaticPaths = (async () => {
+  const [locations, projects] = await Promise.all([getLocations(), getProjects()]);
+  return locations.map((l) => ({
     params: { location: l.slug },
-    props: { place: l, projects: getProjects().filter((p) => locationSlug(p.location) === l.slug) },
-  }))) satisfies GetStaticPaths;
+    props: { place: l, projects: projects.filter((p) => locationSlug(p.location) === l.slug) },
+  }));
+}) satisfies GetStaticPaths;
 
 const { place, projects } = Astro.props;
 ---
