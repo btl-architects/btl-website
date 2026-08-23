@@ -24,6 +24,6 @@ const { category, projects } = Astro.props;
   description={`${category.label} by btl architects.`}
   current="projects"
 >
-  <ProjectIndex projects={projects} active={category.slug} heading={`${category.label} — btl architects`}
+  <ProjectIndex projects={projects} active={category.slug}
     title={category.label} />
 </Base>

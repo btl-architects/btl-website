@@ -1,32 +1,6 @@
-/* ==========================================================================
-   Components
-   ========================================================================== */
 
-/* --- the btl line ---------------------------------------------------------
-   Flat bar + the real inflection. The bar is 22.5% of the figure height,
-   which is what lets a rule butt against the curve seamlessly at any width. */
-
-.line { display: flex; align-items: flex-end; width: 100%; }
-.line__bar { flex: 1 1 auto; background: var(--mark); }
-.line__fig { flex: 0 0 auto; display: block; }
-.line__fig path { fill: var(--mark); }
-
-.line--xl .line__fig { height: 52px; } .line--xl .line__bar { height: 11.7px; }
-.line--m  .line__fig { height: 30px; } .line--m  .line__bar { height: 6.75px; }
-.line--s  .line__fig { height: 18px; } .line--s  .line__bar { height: 4.05px; }
-.line--xs .line__fig { height: 8px;  } .line--xs .line__bar { height: 1.8px; }
-.line__bar--stub { flex: 0 0 clamp(1.5rem, 6vw, 6rem); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .line--draw .line__bar {
-    transform: scaleX(0); transform-origin: left;
-    transition: transform var(--dur-slow) var(--ease);
-  }
-  .line--draw .line__fig path {
-    transform-box: fill-box; transform-origin: left center;
-    transform: scaleX(0);
-    transition: transform var(--dur-draw) var(--ease) 120ms;
-  }
   .line--draw.in .line__bar,
   .line--draw.in .line__fig path { transform: scaleX(1); }
 }
@@ -201,11 +175,6 @@ html:has(.menu[data-open="true"]) .header {
   overflow-y: auto;
 }
 .menu[data-open="true"] { transform: none; visibility: visible; }
-.menu__top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--s-6);
-}
-.menu__top img { width: 3.4rem; height: auto; }
 .menu__list { display: flex; flex-direction: column; gap: var(--s-3); }
 .menu__link {
   font-size: 1.25rem; font-weight: 900;
@@ -239,11 +208,6 @@ html:has(.menu[data-open="true"]) .header {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 30%,
                                       rgba(0,0,0,0) 72%, rgba(0,0,0,.4) 100%);
-}
-.landing__cue {
-  position: absolute; z-index: 2;
-  right: var(--page-margin); bottom: clamp(1.5rem, 4vh, 3rem);
-  width: clamp(4.5rem, 8vw, 7.5rem);
 }
 
 /* the one line after the opening: the compression that follows the immersion */
@@ -731,77 +695,6 @@ html:has(.menu[data-open="true"]) .header {
 .b--solid:hover { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface); }
 .b svg { width: 16px; height: 16px; }
 
-/* --- press: the typographic index ------------------------------------------
-   Not a simulated spread and not a grid of clippings. The mastheads ARE the
-   composition: publication at display scale, headline under it, year alone in
-   the margin. It holds at five entries and at fifty, and it stays honest —
-   nothing here pretends to be a scan of a page we do not have. */
-
-.press-hero {
-  font-size: clamp(2.5rem, 1rem + 7vw, 6.5rem);
-  font-weight: 900; line-height: 0.98; letter-spacing: var(--track-display);
-  max-width: 12ch;
-}
-
-.pi { list-style: none; margin: var(--s-8) 0 0; padding: 0; }
-.pi--compact { margin-top: var(--s-6); }
-
-.pi__row { border-top: 1px solid var(--border-subtle); }
-.pi__row:last-child { border-bottom: 1px solid var(--border-subtle); }
-
-.pi__link {
-  position: relative;
-  display: grid; align-items: baseline;
-  grid-template-columns: 3.5rem 1fr auto;
-  gap: var(--s-4);
-  padding-block: var(--s-6);
-  color: inherit; text-decoration: none;
-}
-.pi--compact .pi__link { padding-block: var(--s-5); }
-
-.pi__n, .pi__yr {
-  font-size: var(--type-meta); letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--text-tertiary);
-  transition: color var(--dur-hover) var(--ease);
-}
-.pi__yr { font-variant-numeric: tabular-nums; }
-
-.pi__pub {
-  display: block;
-  font-weight: 900; letter-spacing: -0.03em; line-height: 1;
-  font-size: clamp(1.5rem, 0.6rem + 2.6vw, 3.25rem);
-  transition: transform var(--dur-hover) var(--ease);
-  transform-origin: left center;
-}
-.pi--compact .pi__pub { font-size: clamp(1.25rem, 0.6rem + 1.6vw, 2.25rem); }
-.pi__pub--tbc { color: var(--text-tertiary); font-weight: 500; letter-spacing: 0; }
-
-.pi__t {
-  display: block; max-width: 46ch; margin-top: var(--s-3);
-  font-size: var(--type-body-sm); line-height: 1.5; color: var(--text-secondary);
-}
-
-/* a plain rule, drawn on hover — see the note on .ul::after */
-.pi__link::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
-  height: 1px;
-  background-color: var(--mark);
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path var(--dur-hover) var(--ease);
-  pointer-events: none;
-}
-@media (hover: hover) {
-  a.pi__link:hover::after { clip-path: inset(0 0 0 0); }
-  a.pi__link:hover .pi__pub { transform: translateX(var(--s-3)); }
-  a.pi__link:hover .pi__n, a.pi__link:hover .pi__yr { color: var(--text-primary); }
-}
-a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
-
-@media (max-width: 40rem) {
-  .pi__link { grid-template-columns: 2.25rem 1fr; }
-  .pi__yr { grid-column: 2; }
-}
-
 /* --- form ------------------------------------------------------------------ */
 
 .f { display: grid; gap: 0.4rem; margin-bottom: var(--s-5); }
@@ -887,7 +780,6 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 .home-sec--compress .home-sec__head { margin-bottom: var(--s-6); }
 
 
-
 /* --- small media grids ----------------------------------------------------- */
 
 /* On the home page these are previews, not the subject. Capped so a portrait
@@ -896,14 +788,9 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 @media (min-width: 44rem) {
   .mini--2 { grid-template-columns: repeat(2, 1fr); gap: var(--s-6); max-width: 44rem; }
 }
-@media (min-width: 52rem) { .mini--3 { grid-template-columns: repeat(3, 1fr); } }
 .mini figure { margin: 0; }
 .mini img { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: var(--surface-sunken); }
 .mini figcaption { margin-top: var(--s-3); }
-
-/* Press on the home page is a full-bleed change of ground, not a white card
-   sitting on the dark page. R4: no containers. */
-.home-press { padding-block: var(--space-section); }
 
 /* ==========================================================================
    The editorial spread — People and Studio
@@ -1201,18 +1088,6 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 body[data-preview] .header { top: var(--preview-h); }
 body[data-preview] main { padding-top: var(--preview-h); }
 
-/* --- press entries --------------------------------------------------------
-   Built on the spread, like People and Studio, so the page belongs to the same
-   site rather than being a wall of names in its own idiom. The masthead is
-   still the object; the building that earned the credit is simply on the page
-   instead of hidden behind a hover half the visitors cannot perform. */
-
-/* The photograph was taking the page. A press page exists to show WHO published
-   the practice — the masthead is the evidence and the building is the footnote,
-   not the other way round. So the type column leads and the photograph is held
-   to a narrow supporting band beside it. */
-.pw { padding-block: var(--s-8); }
-
 @media (min-width: 60rem) {
   .pw.spread { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); align-items: center; }
   /* Type first, always — the alternating flip belongs to People and Studio,
@@ -1220,29 +1095,6 @@ body[data-preview] main { padding-top: var(--preview-h); }
   .pw.spread > .spread__media { order: 2; }
   .pw.spread--flip > .spread__media { order: 2; }
 }
-.pw + .pw { border-top: 1px solid var(--border-subtle); }
-
-.pw__kind {
-  margin: 0 0 var(--s-4);
-  font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: var(--text-tertiary);
-}
-.pw__pub {
-  margin: 0;
-  font-size: var(--type-display);
-  letter-spacing: var(--track-h1);
-  line-height: var(--lead-tight);
-  color: var(--text-primary);
-}
-.pw__t {
-  margin: var(--s-4) 0 0;
-  max-width: var(--measure);
-  font-size: var(--type-lead);
-  line-height: var(--lead-snug);
-  color: var(--text-secondary);
-}
-.pw__on { margin: var(--s-4) 0 0; color: var(--text-tertiary); }
-.pw__read { display: inline-block; margin-top: var(--s-5); }
 
 /* A quieter onward line. The one at the foot of a page is a destination; this
    one sits under the work on the home page and only has to say there is more,

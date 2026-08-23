@@ -201,7 +201,7 @@
     (narrowStage.addEventListener ? narrowStage.addEventListener.bind(narrowStage, "change")
                                   : narrowStage.addListener.bind(narrowStage))(function () {
       matchPosters();
-      sFrames.forEach(function (f, k) { if (k === at) load(k); });
+      sFrames.forEach(function (_, k) { if (k === at) load(k); });
     });
   }
 
@@ -305,7 +305,6 @@
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));
     var PEEK = 6;                     /* frames the card renders itself */
     var railCache = {};
-    var openRow = null;
     var indexUrl = location.href;
     var baseTitle = document.title;
 
@@ -867,18 +866,12 @@
   }
 
 
-  /* --- 6. navigation indicator + scroll spy --------------------------------
-     One element slides between items. Because there is only ever one, two lines
-     cannot be lit at the same time, and moving between tabs reads as a single
-     object travelling rather than one fading out while another fades in. */
-  var nav = document.querySelector(".nav");
-/* The navigation indicator is gone. Each link draws its own underline in CSS
-     now, which needs no measuring, no resize handling and no JavaScript — and
-     matches how every other link on the site behaves. */
-
+  /* The navigation indicator that used to live here is gone. Each link draws
+     its own underline in CSS now, which needs no measuring, no resize handling
+     and no JavaScript — and matches how every other link on the site behaves. */
 })();
 
-  /* --- 6. the viewer --------------------------------------------------------
+  /* --- 5. the viewer --------------------------------------------------------
      A photograph on its own, at whatever size the reader wants.
 
      Three input languages, one model. A pointer zooms with the wheel and pans
@@ -994,7 +987,7 @@
 
     /* --- showing ----------------------------------------------------------- */
 
-    function show(i, settle) {
+    function show(i) {
       at = (i + items.length) % items.length;
       var it = items[at];
       reset(false);
@@ -1015,7 +1008,7 @@
       }
     }
 
-    function step(d) { if (items.length > 1) show(at + d, false); }
+    function step(d) { if (items.length > 1) show(at + d); }
 
     /* --- opening and closing ------------------------------------------------ */
 
@@ -1032,7 +1025,7 @@
       document.body.style.left = "0";
       document.body.style.right = "0";
 
-      show(i, false);
+      show(i);
       lb.setAttribute("data-open", "true");
       /* Focus once the panel is genuinely visible.
          The overlay starts at visibility:hidden and transitions, and you cannot
@@ -1082,7 +1075,7 @@
 
     function wireGestures() {
       var pointers = new Map();
-      var startDist = 0, startScale = 1, startMid = null;
+      var startDist = 0, startScale = 1;
       var panFrom = null;
 
       stage.addEventListener("pointerdown", function (e) {
@@ -1092,7 +1085,6 @@
           var p = [...pointers.values()];
           startDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
           startScale = scale;
-          startMid = { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
           panFrom = null;
         } else if (scale > 1.01) {
           panFrom = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };

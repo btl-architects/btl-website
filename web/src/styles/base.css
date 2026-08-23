@@ -67,18 +67,7 @@ a { color: inherit; text-decoration: none; }
   padding-inline: var(--page-margin);
 }
 
-.bleed { width: 100%; }
-
-.stack > * + * { margin-top: var(--flow, var(--s-5)); }
-
 .section { padding-block: var(--space-section); }
-.section--lg { padding-block: var(--space-section-lg); }
-
-.ratio { position: relative; overflow: hidden; }
-.ratio > img, .ratio > video {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%; object-fit: cover;
-}
 
 /* ==========================================================================
    Type roles

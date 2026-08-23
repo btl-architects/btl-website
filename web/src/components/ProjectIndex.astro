@@ -12,13 +12,12 @@ import Onward from "../components/Onward.astro";
 interface Props {
   projects: Project[];
   active?: string;
-  heading: string;
   /** What the page calls itself, large. Defaults to "Projects". */
   title?: string;
   /** The line under it. Defaults to the CMS's projects headline. */
   lead?: string;
 }
-const { projects, active = "", heading, title = "Projects", lead: leadProp } = Astro.props;
+const { projects, active = "", title = "Projects", lead: leadProp } = Astro.props;
 
 // Empty until the work earns it — see getEarnedCategories.
 const chips = await getEarnedCategories();
