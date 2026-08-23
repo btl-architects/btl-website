@@ -928,7 +928,7 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 
 @media (min-width: 60rem) {
   .spread {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
     gap: var(--s-9);
     align-items: center;
   }
@@ -944,8 +944,9 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
    mid-grey. A gradient over the frame, not a box around it — R5 holds. */
 .spread__media--type::after {
   content: "";
-  position: absolute; inset: 0 0 auto 0; height: 52%;
-  background: linear-gradient(to bottom, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0));
+  position: absolute; inset: 0 0 auto 0; height: 58%;
+  background: linear-gradient(to bottom,
+    rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0) 100%);
   pointer-events: none;
 }
 
@@ -964,20 +965,37 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
   color: var(--btl-white);
 }
 .spread__r {
-  display: block; margin-top: var(--s-1);
+  display: block; margin-top: var(--s-2);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: rgb(255 255 255 / 0.74);
+  text-transform: uppercase;
+  /* Sat at 0.74 over brick and foliage and simply could not be read. The names
+     are large enough to survive a busy ground; this is not. */
+  color: rgb(255 255 255 / 0.92);
 }
 
-/* The statement carries the page where there is little else. It is set at
-   display scale and given a measure short enough to break like a pull quote. */
-.spread__say {
-  margin: 0;
+/* The statement carries the page where there is little else — but the scale has
+   to follow the length of what is actually written, which is content the studio
+   controls and not something a stylesheet can assume.
+   
+   A short aphorism ("structure is both a foundation and a reflection of
+   identity") wants display scale. A thirty-word paragraph at that size stops
+   being a statement and becomes a wall: it outshouts the photograph next to it
+   and pushes everything else off the screen. So the template picks the variant
+   from the word count and both are set here. */
+.spread__say { margin: 0; text-wrap: balance; }
+
+.spread__say--display {
   font-size: var(--type-h1);
   letter-spacing: var(--track-h1);
   line-height: var(--lead-tight);
   max-width: 18ch;
-  text-wrap: balance;
+}
+.spread__say--lead {
+  font-size: var(--type-lead);
+  letter-spacing: var(--track-lead);
+  line-height: var(--lead-snug);
+  max-width: var(--measure-lead);
+  color: var(--text-primary);
 }
 .spread__note {
   margin-top: var(--s-6);

@@ -130,9 +130,16 @@ photograph. Words caption them; they never replace them. Where a logo is missing
 publication name is set typographically at display scale — a deliberate fallback of the same
 species, not a degraded one.
 
-**R14 — The chrome is structural.** Logo, navigation and the social rail sit on the edges of
-the frame and stay there, on every page. They read as the building's structure, not as a
-toolbar that scrolled into view.
+**R14 — The chrome is structural, and there is as little of it as possible.** Logo and
+navigation sit on the edges of the frame and stay there, on every page: they read as the
+building's structure, not as a toolbar that scrolled into view.
+
+The social rail used to be part of that and has been removed. Three links pinned to the edge
+of every screen compete with the photographs on a site whose entire argument is the
+photographs, and nobody arrives at an architecture practice looking for its Instagram. Social
+lives in the footer and on Contact, where someone who wants it will look. Structural chrome
+earns its permanence by being needed everywhere; anything else is decoration that follows you
+around.
 
 **R15 — A section with nothing real in it does not render.** Placeholder is not content. Four
 rows of "Publication to come" under one genuine credit make the practice look like it is
@@ -142,6 +149,12 @@ to disappear when its content is absent and to return by itself when it arrives.
 the single exception: it can never be dropped, because an image with no alt is unusable and
 `alt=""` would declare a photograph decorative — so a stub prefix is stripped and the real
 description behind it is kept.
+
+**R15a — The scale follows the writing.** A statement set at display scale is a statement; the
+same treatment applied to a thirty-word paragraph is a wall that outshouts the photograph
+beside it. Where a field can hold either, the template chooses the variant from the word count
+rather than the stylesheet assuming a length. Content states facts, the interface derives the
+arrangement — P8 applied to type, not just layout.
 
 **R16 — The interface is earned.** A control that exists before the content justifies it makes
 a young practice look thin. The category filter bar appears when two categories each hold

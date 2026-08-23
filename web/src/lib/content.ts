@@ -62,8 +62,20 @@ export interface Publication {
   relatedProject: string | null;
 }
 
+/** The lines that carry the practice's voice. Each has a default, so an empty
+ *  field never leaves a blank page — it just goes back to the written one. */
+export interface Copy {
+  footerCta: string;
+  locationLabel: string;
+  pressLead: string;
+  peopleOnward: string;
+  studioOnward: string;
+  notFoundLead: string;
+}
+
 export interface Settings {
   name: string; domain: string; tagline: string;
+  copy: Copy;
   nav: { label: string; href: string }[];
   social: { label: string; short: string; url: string }[];
   contact: {
@@ -114,6 +126,7 @@ const once = <T>(fn: () => Promise<T>): (() => Promise<T>) => {
 export const getSettings = once(async (): Promise<Settings> => {
   const s = await sanity.fetch(`*[_type == "settings"][0]{
     name, domain, tagline, nav, social,
+    footerCta, locationLabel, pressLead, peopleOnward, studioOnward, notFoundLead,
     address, email, formTo, phone, phoneHref, gstin
   }`);
   const categories = await sanity.fetch(
@@ -123,6 +136,15 @@ export const getSettings = once(async (): Promise<Settings> => {
     name: s?.name ?? "btl architects",
     domain: s?.domain ?? "btldesigns.in",
     tagline: s?.tagline ?? "",
+    copy: {
+      footerCta: s?.footerCta || "Let's build something that lasts.",
+      locationLabel: s?.locationLabel || "Kozhikode, Kerala",
+      pressLead: s?.pressLead || "See where we've been.",
+      peopleOnward: s?.peopleOnward || "The work behind the practice.",
+      studioOnward: s?.studioOnward || "Tell us what you want to build.",
+      notFoundLead: s?.notFoundLead ||
+        "It may have moved. The recent work is below, or start from the beginning.",
+    },
     nav: s?.nav ?? [],
     social: (s?.social ?? []).map((x: any) => ({ label: x.label, short: x.label, url: x.url })),
     contact: {

@@ -12,7 +12,7 @@ const year = new Date().getFullYear();
 <footer class="footer" data-ground="dark">
   <div class="container">
     <div class="footer__row">
-      <a class="footer__cta t-h2" href="/contact/">Let's build something that lasts.</a>
+      <a class="footer__cta t-h2" href="/contact/">{settings.copy.footerCta}</a>
       <p class="footer__social">
         {settings.social.map((s, i) => (
           <>
@@ -24,7 +24,7 @@ const year = new Date().getFullYear();
     </div>
     <div class="footer__base">
       <span>© {year} {settings.name}</span>
-      <span>Kozhikode, Kerala</span>
+      <span>{settings.copy.locationLabel}</span>
       <span>GSTIN {settings.contact.gstin}</span>
       <span>{settings.domain}</span>
     </div>

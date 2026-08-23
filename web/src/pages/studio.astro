@@ -17,6 +17,11 @@ import { getHome, getSettings } from "../lib/content";
 const st = (await getHome()).studio;
 const settings = await getSettings();
 const [lead, ...rest] = st.body;
+
+/* Short enough to be a statement, or long enough to be a paragraph? The scale
+   follows the writing rather than the writing being forced to fit a scale. */
+const say = (t: string) =>
+  t.trim().split(/\s+/).length <= 16 ? "spread__say--display" : "spread__say--lead";
 ---
 
 <Base title="Studio — btl architects" description={st.lead} current="studio">
@@ -31,7 +36,7 @@ const [lead, ...rest] = st.body;
           </div>
         )}
         <div class="spread__body rv" data-delay="1">
-          <p class="spread__say">{st.lead}</p>
+          <p class:list={["spread__say", say((st.lead ?? "")) ]}>{st.lead}</p>
           {lead && <p class="spread__note">{lead}</p>}
         </div>
       </div>
@@ -46,7 +51,7 @@ const [lead, ...rest] = st.body;
 
       <a class="onward ul" href="/contact/">
         <span class="onward__k">Next</span>
-        Tell us what you want to build.
+        {settings.copy.studioOnward}
       </a>
     </div>
   </main>

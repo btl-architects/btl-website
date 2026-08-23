@@ -7,8 +7,9 @@
  */
 import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
-import { getPublications, getProjects } from "../lib/content";
+import { getPublications, getProjects, getSettings } from "../lib/content";
 
+const copy = (await getSettings()).copy;
 const items = await getPublications();
 const projects = await getProjects();
 const projectFor = (slug: string | null) =>
@@ -31,7 +32,7 @@ const yearOf = (date: string) => {
 >
   <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
     <div class="container" style="padding-bottom:var(--space-section)">
-      <h1 class="press-hero rv">See where we've been.</h1>
+      <h1 class="press-hero rv">{copy.pressLead}</h1>
 
       <div class="pwall">
         {items.map((item, i) => {

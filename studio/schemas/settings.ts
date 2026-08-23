@@ -12,6 +12,7 @@ export default defineType({
   type: "document",
   groups: [
     { name: "studio", title: "The practice", default: true },
+    { name: "copy", title: "Page wording" },
     { name: "contact", title: "Contact" },
     { name: "nav", title: "Navigation" },
   ],
@@ -46,6 +47,62 @@ export default defineType({
       description: "Short editorial passages. Three reads best; more is fine.",
     }),
     defineField({ name: "studioImage", title: "Studio photograph", type: "figure", group: "studio" }),
+
+    /* --- page wording ------------------------------------------------------
+       The lines that carry the practice's voice rather than label the
+       interface. Buttons, field labels and section headings stay in the code
+       where they belong; these do not, because they are things the studio may
+       genuinely want to say differently. Every one falls back to a sensible
+       default when empty, so clearing a field never leaves a blank page. */
+    defineField({
+      name: "footerCta",
+      title: "Footer line",
+      type: "string",
+      group: "copy",
+      description: "The large line at the foot of every page. Default: “Let’s build something that lasts.”",
+      validation: (r) => r.max(80),
+    }),
+    defineField({
+      name: "locationLabel",
+      title: "Location, as shown in the footer",
+      type: "string",
+      group: "copy",
+      description: "Default: “Kozhikode, Kerala”.",
+    }),
+    defineField({
+      name: "pressLead",
+      title: "Press headline",
+      type: "string",
+      group: "copy",
+      description: "Default: “See where we’ve been.”",
+      validation: (r) => r.max(80),
+    }),
+    defineField({
+      name: "peopleOnward",
+      title: "People — closing line",
+      type: "string",
+      group: "copy",
+      description:
+        "The line at the bottom of the People page, linking to the work. Default: “The work behind the practice.”",
+      validation: (r) => r.max(80),
+    }),
+    defineField({
+      name: "studioOnward",
+      title: "Studio — closing line",
+      type: "string",
+      group: "copy",
+      description:
+        "The line at the bottom of the Studio page, linking to Contact. Default: “Tell us what you want to build.”",
+      validation: (r) => r.max(80),
+    }),
+    defineField({
+      name: "notFoundLead",
+      title: "404 page line",
+      type: "string",
+      group: "copy",
+      description: "Shown when a visitor lands on a page that does not exist.",
+      validation: (r) => r.max(120),
+    }),
     defineField({
       name: "foundersImage",
       title: "Founders photograph",
