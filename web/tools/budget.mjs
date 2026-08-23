@@ -77,6 +77,28 @@ for (const f of files(DIST, ".html")) {
   }
 }
 
+/* --- srcset integrity -------------------------------------------------------
+ * A cropped image gets `?rect=106,115,748,947` from Sanity, and a comma in a
+ * srcset is a candidate separator — so the browser reads "rect=106" as one
+ * candidate and silently fails to load anything. It produces no console error
+ * and no failed request; the image simply never appears. One photograph on this
+ * site broke exactly that way and it took a screenshot to notice.
+ *
+ * Every candidate must be "<url> <n>w". Anything else fails the build. */
+for (const f of files(DIST, ".html")) {
+  const html = readFileSync(f, "utf8");
+  const name = f.replace(DIST, "") || "/";
+  for (const tag of html.match(/<img\b[^>]*>/g) ?? []) {
+    const m = /srcset="([^"]+)"/.exec(tag);
+    if (!m) continue;
+    for (const cand of m[1].replace(/&amp;/g, "&").split(",")) {
+      if (!/^\S+ \d+w$/.test(cand.trim())) {
+        failures.push(`${name} has a malformed srcset candidate: ${cand.trim().slice(0, 60)}`);
+      }
+    }
+  }
+}
+
 console.log("\n[budget] gzipped, first paint");
 for (const [label, size, limit, note] of report) {
   const pct = Math.round((size / limit) * 100);

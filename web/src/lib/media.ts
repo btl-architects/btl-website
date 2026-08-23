@@ -98,8 +98,18 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
    * ever spotted in a photograph at this size. auto("format") hands WebP to
    * browsers that take it, which is worth a further 5% — less than it sounds,
    * because Sanity's JPEG encoder is already good. */
+  /* Commas are escaped because srcset separates its candidates with commas.
+   *
+   * A cropped image gets `?rect=106,115,748,947` from Sanity, and the moment
+   * that lands in a srcset the browser reads "rect=106" as one candidate and
+   * "115" as the next — the whole list is mangled and the image fails to load
+   * with no error anywhere. It only bites images that have a crop, which is why
+   * exactly one photograph on the site broke and the rest were fine.
+   *
+   * %2C is a legal encoding of a comma in a query value and Sanity accepts it. */
   const at = (w: number) =>
-    urlFor(source).width(w).quality(68).auto("format").fit("max").url();
+    urlFor(source).width(w).quality(68).auto("format").fit("max").url()
+      .replace(/,/g, "%2C");
 
   const srcset = widths.map((w) => `${at(w)} ${w}w`).join(", ");
   const fallback = widths[Math.floor(widths.length / 2)]!;
