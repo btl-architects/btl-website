@@ -15,15 +15,22 @@
  */
 interface Props {
   href: string;
-  /** "More" within a subject, "Next" when leaving one. */
+  /** Only where it says something the link text does not. */
   kicker?: string;
   /** Quieter inside a home-page section than at the end of a whole page. */
   quiet?: boolean;
 }
-const { href, kicker = "More", quiet = false } = Astro.props;
+const { href, kicker, quiet = false } = Astro.props;
 ---
 
+{/* No kicker by default.
+    Every home-page section used to carry one reading "More", above a line that
+    then began "More about the practice" — the same word twice, five times down
+    one page. A label that repeats the thing it labels is not a label. The link
+    text says where it goes; where a word genuinely adds something the caller
+    passes one, and at the end of a page "Next" does add something, because it
+    marks leaving the subject rather than going deeper into it. */}
 <a class:list={["onward", quiet && "onward--quiet"]} href={href}>
-  <span class="onward__k">{kicker}</span>
+  {kicker && <span class="onward__k">{kicker}</span>}
   <span class="onward__t"><slot /></span>
 </a>

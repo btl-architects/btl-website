@@ -23,7 +23,7 @@ const year = item.date ? item.date.slice(0, 4) : "";
 ---
 
 <Tag
-  class="credit"
+  class:list={["credit", !project && "credit--flat"]}
   href={live ? item.url : undefined}
   rel={live ? "noopener" : undefined}
   target={live ? "_blank" : undefined}

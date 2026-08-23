@@ -1108,6 +1108,24 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
   letter-spacing: var(--track-h3);
   line-height: var(--lead-tight);
 }
+/* A mark of direction, doing the job the repeated word used to do badly. It
+   travels a little on hover, which is the only movement in the gesture. */
+.onward__t::before {
+  content: "";
+  display: inline-block;
+  width: 1.1em; height: 1px;
+  margin-right: 0.55em;
+  vertical-align: 0.32em;
+  background: currentColor;
+  opacity: 0.5;
+  transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
+}
+@media (hover: hover) {
+  .onward:hover .onward__t::before { transform: translateX(0.3em); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onward__t::before { transition: none; }
+}
 /* The underline draws from the left, like every other link on the site. */
 .onward__t::after {
   content: "";
@@ -1336,6 +1354,18 @@ body[data-preview] main { padding-top: var(--preview-h); }
   gap: var(--s-8) var(--grid-gap);
   margin-top: var(--s-7);
 }
+
+/* On the home page this is a taste of the press page, not the press page. Three
+   across at a smaller size, so the section stays a passage rather than becoming
+   a second index. */
+.credits--preview .credit__media,
+.credits--preview .credit--flat .credit__plate { width: 88%; }
+@media (min-width: 52rem) {
+  .credits--preview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); }
+  .credits--preview .credit__media,
+  .credits--preview .credit--flat .credit__plate { width: 100%; }
+  .credits--preview .credit__t { font-size: var(--type-body-sm); margin-top: var(--s-3); }
+}
 @media (min-width: 44rem) {
   .credits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -1350,25 +1380,42 @@ body[data-preview] main { padding-top: var(--preview-h); }
 
 .credit__plate { display: block; position: relative; }
 
+/* An award has no photograph — there is no building it published, only a
+   judgement. Rather than leave a hole where the image would be, the plate
+   becomes a plain ground of the same proportion, so a row of credits keeps its
+   rhythm whether the entries are features, awards, or a mix. */
+.credit--flat .credit__plate {
+  aspect-ratio: 4 / 5;
+  width: 72%;
+  background: var(--surface-raised, #141414);
+  border: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--s-5);
+}
+.credit--flat .credit__mark {
+  position: static; width: 100%;
+  justify-content: center;
+}
+.credit--flat .credit__mark .masthead { font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.125rem); }
+
 .credit__media { display: block; width: 72%; }
 .credit__media img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
 
-/* Two shapes to place, so two placements.
-   A short mark like "AD" hangs off the photograph's right edge — that overhang
-   is what interlocks the magazine and the building. A real wordmark is long and
-   thin (Architectural Digest is 219x15), and hanging that off an edge either
-   runs it off the card or shrinks it to an illegible sliver, so it sits across
-   the foot of the frame instead, where a masthead belongs. */
+/* Every mark sits inside the frame, along its foot.
+ *
+ * A short mark used to hang off the photograph's right edge, which is what the
+ * reference showed — but the reference had two cards and room to spare. In a
+ * three-column grid that overhang runs straight into the next credit: "Dezeen"
+ * and "ArchDaily" were printing over their neighbours. Whatever the reference
+ * did with two entries has to survive twenty, and containment is what survives.
+ *
+ * It also means one placement instead of two, so a wordmark and a short mark
+ * are the same object at different widths rather than two different designs. */
 .credit__mark {
   position: absolute; z-index: 2;
-  left: 52%; top: 50%;
-  transform: translateY(-50%);
-}
-.credit__mark:has(.masthead__img) {
-  left: var(--s-4); right: auto;
-  top: auto; bottom: var(--s-4);
-  transform: none;
-  width: calc(72% - var(--s-4) * 2);
+  left: var(--s-4); right: var(--s-4);
+  bottom: var(--s-4);
+  display: flex; align-items: flex-end;
 }
 .credit__mark .masthead {
   color: var(--btl-white);
@@ -1386,6 +1433,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
      at 219:15 anything less than about 150px is a grey smudge. */
   width: 100%;
   max-width: none;
+  height: auto;
   filter: drop-shadow(0 1px 14px rgb(0 0 0 / 0.8));
 }
 

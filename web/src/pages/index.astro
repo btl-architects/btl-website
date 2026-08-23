@@ -25,7 +25,7 @@ const home = await getHome();
 const projects = await getProjects();
 const featured = projects.filter((p) => p.featured).slice(0, 3);
 const work = featured.length ? featured : projects.slice(0, 3);
-const press = (await getPublications()).slice(0, 2);
+const press = (await getPublications()).slice(0, 3);
 const projectsBySlug = new Map(projects.map((p) => [p.slug, p]));
 // The home preview shows the principals only; the full team lives on /people.
 const principals = (await getPeople()).filter((p) => p.tier === "principal");
@@ -91,7 +91,7 @@ const c = settings.contact;
             {home.studio.body[0] && <p class="spread__note">{home.studio.body[0]}</p>}
           </div>
         </div>
-        <Onward href="/studio/" quiet>More about the practice</Onward>
+        <Onward href="/studio/" quiet>How the practice works</Onward>
       </div>
     </section>
 
@@ -110,7 +110,7 @@ const c = settings.contact;
             <h2 class="home-sec__k">Press</h2>
           </div>
 
-          <div class="credits">
+          <div class="credits credits--preview">
             {press.map((item) => (
               <Credit
                 item={item}
