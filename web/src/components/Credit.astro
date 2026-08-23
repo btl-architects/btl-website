@@ -1,14 +1,25 @@
 ---
-/* One press credit. The same object on the home page and on /press.
+/* One line of an index, not a card in a grid.
  *
- * It was a full-width spread per entry, which gave a single article most of a
- * screen and would have given twenty articles twenty screens. A press page has
- * to work at one credit and at thirty, and the thing that scales is a repeating
- * object in a grid — not a bespoke composition per item.
+ * This was a card: a tall photograph with the publication's mark floating on
+ * it. Two things were wrong with that, and only one of them was fixable by
+ * tuning.
  *
- * The mark hangs off the photograph's edge rather than sitting beside it. That
- * interlock is what says "this magazine published this building"; two things
- * with a gap between them are just two things.
+ * The mark. Matched to a common height, "AD" measured 44x32 and "ArchDaily"
+ * 150x32 — the same height and three and a half times the visual mass. That
+ * cannot be tuned away: a two-letter monogram and a nine-letter word are not
+ * the same object. A row of "as seen in" logos gets away with it because every
+ * mark in it is a real logo drawn to similar optical weight; the moment type
+ * stands in for one, floating free on a photograph, the difference shouts.
+ *
+ * In a column it does not. Marks set left-aligned in a fixed measure read as a
+ * list of names of varying length, which is what they are — the same way a
+ * bibliography survives having both "Nature" and "Journal of Experimental
+ * Biology" in it.
+ *
+ * The other problem was space. Six credits as tall cards left most of the page
+ * empty and the practice looking thinly published. An index is dense at six and
+ * still an index at sixty.
  */
 import Figure from "./Figure.astro";
 import Masthead from "./Masthead.astro";
@@ -23,22 +34,23 @@ const year = item.date ? item.date.slice(0, 4) : "";
 ---
 
 <Tag
-  class:list={["credit", !project && "credit--flat"]}
+  class="cr"
   href={live ? item.url : undefined}
   rel={live ? "noopener" : undefined}
   target={live ? "_blank" : undefined}
 >
-  <span class="credit__plate">
-    {project && (
-      <span class="credit__media">
-        <Figure image={project.hook} sizes="(min-width:60rem) 22rem, 74vw" />
-      </span>
-    )}
-    <span class="credit__mark"><Masthead item={item} /></span>
+  <span class="cr__thumb">
+    {project && <Figure image={project.hook} sizes="120px" />}
   </span>
 
-  <span class="credit__t">{item.title}</span>
-  <span class="credit__m">
-    {item.kind === "award" ? "Award" : "Feature"}{year ? ` · ${year}` : ""}{project ? ` · ${project.title}` : ""}
+  <span class="cr__mark"><Masthead item={item} /></span>
+
+  <span class="cr__body">
+    <span class="cr__t">{item.title}</span>
+    <span class="cr__m">
+      {item.kind === "award" ? "Award" : "Feature"}{project ? ` · ${project.title}` : ""}
+    </span>
   </span>
+
+  <span class="cr__yr">{year}</span>
 </Tag>

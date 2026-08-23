@@ -1392,121 +1392,84 @@ body[data-preview] main { padding-top: var(--preview-h); }
   filter: drop-shadow(0 2px 20px rgb(0 0 0 / 0.7));
 }
 
-/* --- a press credit ------------------------------------------------------
-   A repeating object in a grid, not a bespoke composition per article. It was
-   a full-width spread each, which gave one credit most of a screen and would
-   have given twenty credits twenty screens — a press page has to work at both.
+/* --- the press index ------------------------------------------------------
+   Rows, not cards.
 
-   The mark hangs off the photograph's edge. That interlock is what says this
-   magazine published this building; side by side with a gap they are two
-   separate things. */
+   As cards, six credits left most of the page empty and made the practice look
+   thinly published — and the marks floating on photographs made every
+   difference in their width look like a mistake. In a column set to one
+   measure, "AD" and "ArchDaily" read as two names of different lengths, which
+   is all they are. The page is dense at six credits and still an index at
+   sixty.
+   ------------------------------------------------------------------------- */
 
-.credits {
+.credits { display: block; margin-top: var(--s-7); }
+
+.cr {
   display: grid;
-  gap: var(--s-8) var(--grid-gap);
-  margin-top: var(--s-7);
+  grid-template-columns: 4.5rem minmax(0, 9.5rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-5);
+  padding-block: var(--s-5);
+  border-top: 1px solid var(--border-subtle);
+  text-decoration: none;
+  color: inherit;
 }
+.credits .cr:last-child { border-bottom: 1px solid var(--border-subtle); }
 
-/* On the home page this is a taste of the press page, not the press page.
-   It was doing the opposite: the preview rule set the media to 100% of its
-   column while the press page uses 72%, so a card on the home page came out
-   374px wide against 269px on the page it was previewing. A preview larger than
-   the thing it previews is not a preview. */
-.credits--preview .credit__media,
-.credits--preview .credit--flat .credit__plate { width: 76%; }
-@media (min-width: 52rem) {
-  .credits--preview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); }
-  .credits--preview .credit__media,
-  .credits--preview .credit--flat .credit__plate { width: 58%; }
-  .credits--preview .credit__t { font-size: var(--type-body-sm); margin-top: var(--s-3); }
-  .credits--preview .credit__mark { --mark-h: clamp(1.125rem, 0.9rem + 0.7vw, 1.5rem); }
-}
-@media (min-width: 44rem) {
-  .credits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 68rem) {
-  /* Three to a row. A credit is a small object that repeats — the practice will
-     have twenty of these, and each one taking half a screen would make the
-     press page a scroll rather than a wall. */
-  .credits { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-8) var(--s-6); }
-}
+.cr__thumb { display: block; width: 4.5rem; aspect-ratio: 1; overflow: hidden; background: var(--surface-sunken); }
+.cr__thumb img { width: 100%; height: 100%; object-fit: cover; display: block;
+                 transition: opacity var(--dur-hover) var(--ease); }
+/* An award has no photograph. The column still holds its place, so every row
+   starts at the same margin whether it has an image or not. */
+.cr__thumb:empty { background: none; }
 
-.credit { display: block; text-decoration: none; color: inherit; }
+/* The mark's measure. Whatever it is — monogram, wordmark, a name in type — it
+   sits left-aligned in this column and never grows beyond it. */
+.cr__mark { --mark-h: 1.375rem; display: flex; align-items: center; min-width: 0; }
+.cr__mark .masthead { color: var(--text-primary); white-space: nowrap; }
+.cr__mark .masthead--long { font-size: calc(var(--mark-h) / 1.25); white-space: normal; }
+/* A logo is set a little larger than type on the same line.
+   A monogram is compact by design — "AD" at a word's cap-height measures 30px
+   against ArchDaily's 147 — so matching them exactly leaves the logo looking
+   like an afterthought. Every press list does this: the mark gets a shade more
+   room than the words around it. Still capped by the column. */
+.cr__mark .masthead__img { height: calc(var(--mark-h) * 1.55); max-width: 100%; }
 
-.credit__plate { display: block; position: relative; }
-
-/* An award has no photograph — there is no building it published, only a
-   judgement. Rather than leave a hole where the image would be, the plate
-   becomes a plain ground of the same proportion, so a row of credits keeps its
-   rhythm whether the entries are features, awards, or a mix. */
-.credit--flat .credit__plate {
-  aspect-ratio: 4 / 5;
-  width: 72%;
-  background: var(--surface-raised, #141414);
-  border: 1px solid var(--border-subtle);
-  display: flex; align-items: center; justify-content: center;
-  padding: var(--s-5);
-}
-.credit--flat .credit__mark {
-  position: static; width: 100%;
-  justify-content: center;
-}
-/* Same band as every other credit. It had a smaller one, which was backwards:
-   with no photograph the mark is the only thing on the card, so if anything it
-   has more room, never less. */
-
-.credit__media { display: block; width: 72%; }
-.credit__media img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
-
-/* Every mark sits inside the frame, along its foot.
- *
- * A short mark used to hang off the photograph's right edge, which is what the
- * reference showed — but the reference had two cards and room to spare. In a
- * three-column grid that overhang runs straight into the next credit: "Dezeen"
- * and "ArchDaily" were printing over their neighbours. Whatever the reference
- * did with two entries has to survive twenty, and containment is what survives.
- *
- * It also means one placement instead of two, so a wordmark and a short mark
- * are the same object at different widths rather than two different designs. */
-.credit__mark {
-  position: absolute; z-index: 2;
-  left: var(--s-4); right: var(--s-4);
-  bottom: var(--s-4);
-  display: flex; align-items: flex-end;
-}
-.credit__mark .masthead {
-  color: var(--btl-white);
-  /* Sized to the card, not to the page. Big enough to read as the magazine's
-     mark at a glance, small enough that three sit side by side. */
-  /* Different photograph behind every credit — bright exterior on one, dark
-     interior on the next — so the mark carries its own contrast rather than
-     depending on the picture being helpful. */
-  text-shadow: 0 2px 24px rgb(0 0 0 / 0.6);
-  font-size: clamp(2rem, 1.2rem + 2.2vw, 3rem);
-}
-.credit__mark .masthead--long { font-size: clamp(1.0625rem, 0.9rem + 0.8vw, 1.375rem); }
-
-
-.credit__t {
-  display: block;
-  margin-top: var(--s-4);
-  max-width: 30ch;
-  font-size: var(--type-body);
-  line-height: var(--lead-snug);
-  color: var(--text-secondary);
-}
-.credit__m {
-  display: block;
-  margin-top: var(--s-3);
+.cr__body { min-width: 0; }
+.cr__t { display: block; color: var(--text-primary); }
+.cr__m {
+  display: block; margin-top: var(--s-2);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; color: var(--text-tertiary);
 }
+.cr__yr {
+  font-size: var(--type-meta); letter-spacing: var(--track-meta);
+  color: var(--text-tertiary); font-variant-numeric: tabular-nums;
+}
 
 @media (hover: hover) {
-  .credit__media img,
-  .credit .masthead { transition: opacity var(--dur-hover) var(--ease); }
-  .credit:hover .credit__media img { opacity: 0.72; }
+  .cr { transition: background var(--dur-hover) var(--ease); }
+  .cr:hover { background: rgb(255 255 255 / 0.03); }
+  .cr:hover .cr__thumb img { opacity: 0.8; }
 }
+
+/* On a phone the four columns become two: the photograph keeps the left, and
+   the mark, headline and year stack beside it. */
+@media (max-width: 44rem) {
+  .cr {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: var(--s-4);
+    align-items: start;
+  }
+  .cr__thumb { width: 3.5rem; }
+  .cr__mark { --mark-h: 1.125rem; grid-column: 2; }
+  .cr__body { grid-column: 2; margin-top: var(--s-3); }
+  .cr__yr { grid-column: 2; margin-top: var(--s-2); }
+}
+
+/* The home page shows the first few, in the same shape. */
+.credits--preview .cr { padding-block: var(--s-4); }
 
 /* --- the menu button ------------------------------------------------------
    One control that changes state, rather than two controls that swap places.
