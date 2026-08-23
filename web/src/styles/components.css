@@ -290,7 +290,9 @@ html:has(.menu[data-open="true"]) .header {
 .stage__label[data-fading="true"] { opacity: 0; }
 
 @media (max-width: 63.99rem) {
-  .stage__label { bottom: var(--s-8); }
+  /* The caption has the foot of the film to itself again — the social links
+     moved to the right margin, so there is nothing down here to dodge. */
+  .stage__label { bottom: var(--s-7); }
 }
 
 /* --- categories ------------------------------------------------------------
@@ -1253,64 +1255,78 @@ body[data-preview] main { padding-top: var(--preview-h); }
 }
 
 /* --- the social rail ------------------------------------------------------
-   Set vertically down the left edge of the opening film, and nowhere else on
-   the site. It was chrome on every page once and competed with the photographs
-   the whole way down; here it has the one screen where nothing else is asking
-   for attention.
+   Down the right edge of the opening film, vertically centred, at every size.
 
-   Hidden on narrow screens: a vertical rail needs a margin to live in, and on a
-   phone there isn't one. The same links are in the footer. */
+   This has been moved three times and each move was a patch. Along the bottom
+   it fought the caption for the same line — and a caption is whatever the clip
+   happens to be called, so its width is not something a layout can assume. On a
+   phone that fight became an overlap. Stacking them fixed the collision and
+   left the links looking like something that had been put wherever there was
+   room.
 
-/* Set horizontally in the corner opposite the caption, at every size.
- *
- * This was a vertical rail down the left edge on desktop and something else on
- * a phone — two behaviours, and the desktop one was 12px of sideways type at
- * the very edge of the screen, which is close to invisible. Turned upright,
- * put where the eye already goes at the end of the film, and given the same
- * shape on every device. */
+   The right edge is the one place on this screen nothing else wants: the logo
+   is top-left, the menu top-right, the caption bottom-left. Set vertically it
+   occupies a margin rather than competing for the middle, it is the same object
+   on a phone and on a desktop, and it reads as chrome belonging to the film
+   rather than a row of buttons dropped on top of it. */
+
 .landing .srail {
   position: absolute;
   z-index: 3;
+  left: 0;
+  top: 50%;
   display: flex;
+  /* `row`, not `column`. In vertical writing the inline axis IS the vertical
+     one, so a flex row runs down the screen and a flex column runs across it —
+     which is why `column` laid the three labels out side by side in a block in
+     the middle of the film. */
+  flex-direction: row;
   align-items: center;
-  gap: var(--s-4);
+  gap: var(--s-6);
+  padding-block: var(--s-5);
+  padding-inline: clamp(var(--s-3), 1.6vw, var(--s-5));
   pointer-events: auto;
-  right: var(--page-margin);
-  bottom: var(--s-5);
+  writing-mode: vertical-rl;
+  /* Rotated so the words read bottom-to-top, the way a label is set on a spine.
+     The rotation also reverses the running order, so the list is reversed back
+     in the markup order below. */
+  transform: translateY(-50%) rotate(180deg);
+  transform-origin: center;
 }
-@media (max-width: 40rem) {
-  /* On a phone the caption owns the bottom-left, so these sit above it rather
-     than fighting it for the same corner. */
-  .landing .srail { right: var(--page-margin); bottom: calc(var(--s-5) + 1.6rem); }
-}
+/* Reversed to undo the rotation, so LinkedIn still comes first. */
+.landing .srail { flex-direction: row-reverse; }
 
 .landing .srail__i {
   position: relative;
   font-size: var(--type-caption);
-  letter-spacing: var(--track-meta);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   text-decoration: none;
-  color: #fff;
+  color: rgb(255 255 255 / 0.82);
   /* The film is unpredictable — sunrise on one clip, a dark interior on the
      next — so these carry their own contrast rather than depending on the
      photograph behind them being helpfully dark. */
-  text-shadow: 0 1px 14px rgb(0 0 0 / 0.7);
-  padding-bottom: 0.35em;
+  text-shadow: 0 1px 14px rgb(0 0 0 / 0.75);
+  padding-inline: 0.3em;
+  transition: color var(--dur-hover) var(--ease);
 }
 .landing .srail__i::after {
   content: "";
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: 1px; background: currentColor;
-  transform: scaleX(0); transform-origin: 50% 50%;
+  position: absolute; inset-block: 0; inset-inline-end: -0.35em;
+  width: 1px; background: currentColor;
+  transform: scaleY(0); transform-origin: 50% 100%;
   transition: transform var(--dur-base) var(--ease);
 }
 @media (hover: hover) {
-  .landing .srail__i:hover::after { transform: scaleX(1); }
+  .landing .srail__i:hover { color: #fff; }
+  .landing .srail__i:hover::after { transform: scaleY(1); }
 }
-.landing .srail__i:focus-visible::after { transform: scaleX(1); }
-.landing .srail__i:hover,
 .landing .srail__i:focus-visible { color: #fff; }
+.landing .srail__i:focus-visible::after { transform: scaleY(1); }
 
+@media (prefers-reduced-motion: reduce) {
+  .landing .srail__i, .landing .srail__i::after { transition: none; }
+}
 
 /* --- a publication's mark -------------------------------------------------
    The one place the site steps outside its single typeface, and it does so
@@ -1391,16 +1407,19 @@ body[data-preview] main { padding-top: var(--preview-h); }
   margin-top: var(--s-7);
 }
 
-/* On the home page this is a taste of the press page, not the press page. Three
-   across at a smaller size, so the section stays a passage rather than becoming
-   a second index. */
+/* On the home page this is a taste of the press page, not the press page.
+   It was doing the opposite: the preview rule set the media to 100% of its
+   column while the press page uses 72%, so a card on the home page came out
+   374px wide against 269px on the page it was previewing. A preview larger than
+   the thing it previews is not a preview. */
 .credits--preview .credit__media,
-.credits--preview .credit--flat .credit__plate { width: 88%; }
+.credits--preview .credit--flat .credit__plate { width: 76%; }
 @media (min-width: 52rem) {
   .credits--preview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); }
   .credits--preview .credit__media,
-  .credits--preview .credit--flat .credit__plate { width: 100%; }
+  .credits--preview .credit--flat .credit__plate { width: 58%; }
   .credits--preview .credit__t { font-size: var(--type-body-sm); margin-top: var(--s-3); }
+  .credits--preview .credit__mark { --mark-h: clamp(1.125rem, 0.9rem + 0.7vw, 1.5rem); }
 }
 @media (min-width: 44rem) {
   .credits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
