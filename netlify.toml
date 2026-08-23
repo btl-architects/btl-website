@@ -50,12 +50,27 @@
     # injected <base> redirecting every relative URL, and frame-ancestors none
     # is the modern form of X-Frame-Options.
     #
-    # No 'unsafe-inline' and no 'unsafe-eval'. The site's only script is
-    # /scripts/site.js, served from this origin.
+    # script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's only
+    # script is /scripts/site.js, served from this origin, and that is the
+    # restriction that actually matters.
+    #
+    # style-src does allow 'unsafe-inline', which is a deliberate and recorded
+    # deviation from the contract's blanket "no unsafe-inline". The build emits
+    # 173 style attributes, 123 of which are the base64 blur placeholder each
+    # photograph is painted over while it loads. Blocking them does not degrade
+    # the page, it breaks it: the placeholders vanish and the layout attributes
+    # go with them.
+    #
+    # style-src-attr would be the precise instrument — it permits attributes
+    # while keeping <style> elements locked to 'self' — but it is not supported
+    # everywhere, and browsers that lack it fall back to style-src and break.
+    # The risk being accepted is CSS injection, which needs an injection point;
+    # this site renders no user input into any page, and there are zero inline
+    # <style> blocks and zero inline scripts for an attacker to aim at.
     Content-Security-Policy = """
       default-src 'self'; \
       script-src 'self'; \
-      style-src 'self'; \
+      style-src 'self' 'unsafe-inline'; \
       img-src 'self' data: https://cdn.sanity.io; \
       media-src 'self' https://cdn.sanity.io; \
       font-src 'self'; \
