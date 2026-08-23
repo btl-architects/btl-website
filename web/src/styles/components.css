@@ -1241,13 +1241,30 @@ body[data-preview] main { padding-top: var(--preview-h); }
   padding-top: var(--s-5);
   border-top: 1px solid var(--border-subtle);
 }
-.hpress__pub {
+/* The mark in front, the building it published behind and to the right. The
+   overlap is the whole point: it says these two things belong to each other,
+   which a caption underneath never quite does. */
+.hpress__plate {
   display: block;
-  font-size: var(--type-h1);
-  letter-spacing: var(--track-h1);
-  line-height: var(--lead-tight);
-  color: var(--text-primary);
-  transition: color var(--dur-hover) var(--ease);
+  position: relative;
+  /* Tall enough to contain the photograph, which is positioned out of flow and
+     therefore contributes nothing to the height. Too short and it spilled over
+     the headline underneath and covered half of it. */
+  min-height: 12.5rem;
+}
+.hpress__mark { position: relative; z-index: 2; display: block; }
+.hpress__media {
+  position: absolute; z-index: 1;
+  right: 0; top: 0.5rem;
+  width: 56%; max-width: 14rem;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+}
+.hpress__media img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.85; }
+@media (hover: hover) {
+  .hpress__i:hover .hpress__media img { opacity: 1; }
+  .hpress__i:hover .masthead { color: var(--mark); }
+  .masthead { transition: color var(--dur-hover) var(--ease); }
 }
 .hpress__t {
   display: block; margin-top: var(--s-4);
@@ -1262,3 +1279,33 @@ body[data-preview] main { padding-top: var(--preview-h); }
 @media (hover: hover) {
   .hpress__i:hover .hpress__pub { color: var(--mark); }
 }
+
+/* --- a publication's mark -------------------------------------------------
+   The one place the site steps outside its single typeface, and it does so
+   because it is quoting somebody else's identity rather than expressing btl's.
+   "AD" in a high-contrast serif reads as the magazine; "Architectural Digest"
+   set in Satoshi reads as a caption about the magazine — which is the whole
+   difference between evidence and a mention.
+
+   A system stack, so nothing is downloaded. Didot and Bodoni are the shapes
+   most magazine wordmarks actually use; the rest are fallbacks that keep the
+   species right even where those are missing. */
+
+.masthead {
+  display: block;
+  font-family: Didot, "Bodoni 72", "Bodoni MT", "Playfair Display",
+               Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: clamp(3.5rem, 2rem + 7vw, 8rem);
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+/* A full name needs to come down or it wraps into a paragraph. */
+.masthead--long {
+  font-size: clamp(1.75rem, 1.1rem + 2.6vw, 3.25rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.masthead__img { display: block; width: 100%; height: auto; max-width: 20rem; }

@@ -15,6 +15,7 @@
  */
 import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
+import Masthead from "../components/Masthead.astro";
 import { getPublications, getProjects, getSettings } from "../lib/content";
 
 const copy = (await getSettings()).copy;
@@ -59,9 +60,7 @@ const yearOf = (date: string) => {
               <p class="pw__kind">
                 {item.kind === "award" ? "Award" : "Feature"}{year ? ` · ${year}` : ""}
               </p>
-              {item.logo
-                ? <Figure image={item.logo} sizes="(min-width:48rem) 22rem, 60vw" />
-                : <p class="pw__pub">{item.publication}</p>}
+              <Masthead item={item} />
               <p class="pw__t">{item.title}</p>
               {related && (
                 <p class="pw__on">

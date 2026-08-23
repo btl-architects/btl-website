@@ -1,0 +1,39 @@
+---
+/* A publication's mark.
+ *
+ * The point of a press page is recognition: a reader should know at a glance
+ * that this practice was in Architectural Digest, and what carries that is the
+ * masthead, not the name spelled out in the website's own typeface. "AD" in a
+ * high-contrast serif reads as the magazine; "Architectural Digest" set in
+ * Satoshi reads as a caption about the magazine.
+ *
+ * So where a publication has an actual logo it is used, and where it has not
+ * the short mark is set in a serif — the same species of letterform every
+ * magazine wordmark belongs to. This is the one place on the site that steps
+ * outside the single-typeface rule, and it does so because it is quoting
+ * somebody else's identity rather than expressing btl's. A system typeface
+ * stack, so it costs nothing to download.
+ *
+ * The moment a real logo is uploaded to the CMS it replaces this and nothing
+ * else moves.
+ */
+import Figure from "./Figure.astro";
+import type { Publication } from "../lib/content";
+
+interface Props { item: Publication; sizes?: string }
+const { item, sizes = "(min-width:48rem) 20rem, 46vw" } = Astro.props;
+
+// "AD" if the practice has recorded one, otherwise the full name — which is
+// still better set as a mark than as a sentence.
+const mark = item.short?.trim() || item.publication;
+const long = mark.length > 6;
+---
+
+{item.logo ? (
+  <Figure image={item.logo} sizes={sizes} class="masthead__img" />
+) : (
+  <span
+    class:list={["masthead", long && "masthead--long"]}
+    aria-label={item.publication}
+  >{mark}</span>
+)}

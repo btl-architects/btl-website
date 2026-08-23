@@ -17,6 +17,7 @@ import BrandLine from "../components/BrandLine.astro";
 import MediaStage from "../components/MediaStage.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Figure from "../components/Figure.astro";
+import Masthead from "../components/Masthead.astro";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
 
 const settings = await getSettings();
@@ -24,7 +25,8 @@ const home = await getHome();
 const projects = await getProjects();
 const featured = projects.filter((p) => p.featured).slice(0, 3);
 const work = featured.length ? featured : projects.slice(0, 3);
-const press = (await getPublications()).slice(0, 3);
+const press = (await getPublications()).slice(0, 2);
+const projectsBySlug = new Map(projects.map((p) => [p.slug, p]));
 // The home preview shows the principals only; the full team lives on /people.
 const principals = (await getPeople()).filter((p) => p.tier === "principal");
 const c = settings.contact;
@@ -112,22 +114,34 @@ const c = settings.contact;
             <h2 class="home-sec__k">Press</h2>
           </div>
           <div class="hpress">
-            {press.slice(0, 2).map((item, i) => (
-              <a
-                class="hpress__i rv"
-                data-delay={i}
-                href={item.url || "/press/"}
-                rel={item.url ? "noopener" : undefined}
-                target={item.url ? "_blank" : undefined}
-              >
-                <span class="hpress__pub">{item.publication}</span>
-                <span class="hpress__t">{item.title}</span>
-                <span class="hpress__m">
-                  {item.kind === "award" ? "Award" : "Feature"}
-                  {item.date ? ` · ${item.date.slice(0, 4)}` : ""}
-                </span>
-              </a>
-            ))}
+            {press.map((item, i) => {
+              const rel = item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined;
+              return (
+                <a
+                  class="hpress__i rv"
+                  data-delay={i}
+                  href={item.url || "/press/"}
+                  rel={item.url ? "noopener" : undefined}
+                  target={item.url ? "_blank" : undefined}
+                >
+                  {/* The mark and the work overlap: the magazine's identity in
+                      front, the building it published behind it. */}
+                  <span class="hpress__plate">
+                    <span class="hpress__mark"><Masthead item={item} /></span>
+                    {rel && (
+                      <span class="hpress__media">
+                        <Figure image={rel.hook} sizes="260px" />
+                      </span>
+                    )}
+                  </span>
+                  <span class="hpress__t">{item.title}</span>
+                  <span class="hpress__m">
+                    {item.kind === "award" ? "Award" : "Feature"}
+                    {item.date ? ` · ${item.date.slice(0, 4)}` : ""}
+                  </span>
+                </a>
+              );
+            })}
           </div>
           {/* After the items, like Studio and People. Press was the only
               section still putting its link up in the heading row. */}
