@@ -48,22 +48,51 @@
     }, { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
     reveals.forEach(function (el) { io.observe(el); });
 
-    /* Nothing stays hidden longer than this, whatever the observer does.
-       Anything already on screen when the page settles has plainly been
-       intersecting for a while, and if the observer has not said so by now it
-       is not going to. A missed reveal costs an animation; a permanently
-       clipped card costs the reader the entire page, and reads as a site that
-       never finished loading. */
-    setTimeout(function () {
-      reveals.forEach(function (el) {
-        if (el.classList.contains("in")) return;
+    /* A backstop that follows the reader, not a one-shot timer.
+     *
+     * The first version of this ran once, 1200ms after load, and revealed
+     * whatever was on screen at that instant. On the home page that is never
+     * the work: Selected Work sits below a full-height opening film, so it was
+     * still below the fold when the timer fired and went on depending entirely
+     * on the observer. If the observer is slow, throttled or silent, the cards
+     * stay clipped while their photographs quietly finish loading behind them —
+     * which is exactly what "still taking a long time to load" looks like from
+     * the outside.
+     *
+     * So the check runs on scroll as well, rAF-throttled, and detaches itself
+     * the moment everything has been revealed. It costs nothing once the page
+     * has been read and it cannot leave content hidden below the fold. */
+    var pending = [].slice.call(reveals);
+    var ticking = false;
+
+    function sweep() {
+      ticking = false;
+      var vh = window.innerHeight;
+      pending = pending.filter(function (el) {
+        if (el.classList.contains("in")) return false;
         var r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight && r.bottom > 0) {
+        if (r.top < vh && r.bottom > 0) {
           el.classList.add("in");
           if (el.classList.contains("rvc")) el.style.clipPath = "none";
+          return false;
         }
+        return true;
       });
-    }, 1200);
+      if (!pending.length) {
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+      }
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(sweep);
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    setTimeout(sweep, 1200);
   }
 
   /* --- 1b. the opening sequence --------------------------------------------
