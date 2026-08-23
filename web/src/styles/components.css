@@ -651,6 +651,9 @@
 .pj__head { padding-top: calc(var(--header-h) + var(--s-6)); padding-bottom: var(--s-4); }
 .pjh__id { align-items: baseline; }
 .pjh__name {
+  /* It is an <h1> now — the heading defaults must not reintroduce space the
+     grid row was never designed to absorb. */
+  margin: 0;
   grid-column: 1 / 8;
   font-weight: 500; line-height: 1.15;
   font-size: clamp(1.0625rem, 0.9rem + 0.6vw, 1.5rem);
@@ -834,8 +837,22 @@ a.pi__link:focus-visible::after { clip-path: inset(0 0 0 0); }
 }
 .f input:hover, .f textarea:hover { border-bottom-color: var(--text-secondary); }
 .f input:focus, .f textarea:focus {
+  /* The outline is dropped in favour of a thicker accent rule under the field,
+     which is the same gesture the rest of the site uses for state. It clears
+     3:1 against both grounds, so it is a real indicator rather than a decorative
+     one. */
   outline: none; border-bottom-color: var(--accent);
   border-bottom-width: 2px; padding-bottom: calc(0.55rem - 1px);
+}
+
+/* Forced-colours mode overrides author colours, so the underline above stops
+   carrying any meaning — and `outline: none` would leave nothing at all in the
+   one mode used by people who most need the indicator. Put it back. */
+@media (forced-colors: active) {
+  .f input:focus, .f textarea:focus {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 .f textarea { resize: vertical; min-height: 6rem; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

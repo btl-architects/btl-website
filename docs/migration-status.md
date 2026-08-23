@@ -10,7 +10,7 @@ again in Astro, which is what the plan's sequencing exists to prevent.
 
 | | State |
 |---|---|
-| Repository | `git init` done. Photographs and `.env` are ignored — the contract forbids committing either. No commits yet. |
+| Repository | `btl-architects/btl-website`, private. Photographs and `.env` are ignored — the contract forbids committing either. |
 | `web/` | Astro 7.2.4, TypeScript strict, static output, zero UI dependencies. |
 | Design system | `tokens.css` → `base.css` → `components.css` copied verbatim and imported in cascade order by `Base.astro`. Unchanged from the prototype except the `@font-face` URL, which now resolves from `/assets/`. |
 | Behaviour | `site.js` ported unchanged to `public/scripts/`. It reads hrefs from the DOM and absolutises them, so it is URL-shape agnostic and works with directory routes. |
@@ -77,9 +77,21 @@ unauthenticated read — which is exactly how the website reads. The import
 looked completely successful and the site saw an empty dataset. Ids are now
 joined with a hyphen.
 
+## Accessibility and responsive pass — done
+
+- Every page has exactly one `<h1>`, heading order never skips a level, and every
+  page carries `<main>`, `lang`, and a skip link.
+- No horizontal overflow at 375px on any route. The photograph strips overhang
+  their container by design — that is the horizontal scroll, not a layout bug.
+- Reduced motion is a global kill switch over all 34 transitions, and the
+  scroll reveals only exist under `no-preference`, so the structure survives and
+  only the reveal is dropped.
+- The focus underline on form fields clears 3:1 against both grounds, with an
+  outline restored under `forced-colors` where author colours stop applying.
+- Form touch targets are 43–44px.
+
 ## Still to do
 
-- Connect `lib/content.ts` to Sanity (the seam exists; this is a swap, not a rewrite)
 - Draft / preview / publish states
 - Netlify config: headers, form handling, redirects, build hook
 - Responsive, reduced-motion, a11y and performance pass

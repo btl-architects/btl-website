@@ -23,7 +23,22 @@ const c = (await getSettings()).contact;
 
       <div class="contact__grid">
         <form name="enquiry" method="POST" data-netlify="true" netlify-honeypot="company" class="rv">
-          <p class="hp"><label>Company <input name="company" tabindex="-1" autocomplete="off" /></label></p>
+          {/* Netlify matches a submission to a form by this field. It usually
+              injects it during post-processing, but not reliably for markup a
+              framework rendered — and the failure mode is the worst kind:
+              the form submits, the visitor sees success, and the enquiry never
+              arrives. Stating it explicitly costs nothing. */}
+          <input type="hidden" name="form-name" value="enquiry" />
+          {/* Honeypot. Positioned off-screen rather than display:none, because
+              a field that is not rendered is not submitted and the trap stops
+              working. Off-screen alone is not enough though: a screen reader
+              would happily read it out, and a blind visitor who filled it in
+              would have their enquiry silently binned. aria-hidden keeps it out
+              of the accessibility tree and tabindex keeps it out of the tab
+              order, so only something scraping the DOM ever sees it. */}
+          <p class="hp" aria-hidden="true">
+            <label>Company <input name="company" tabindex="-1" autocomplete="off" /></label>
+          </p>
           <div class="f">
             <label for="n">Name</label>
             <input id="n" name="name" type="text" autocomplete="name" required />
