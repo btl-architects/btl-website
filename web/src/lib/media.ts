@@ -76,6 +76,16 @@ function intrinsic(source: SanityImageSource): { w: number; h: number } | null {
   return m ? { w: Number(m[1]), h: Number(m[2]) } : null;
 }
 
+/* Sanity's image pipeline cannot transform an SVG — asking it for a width
+ * returns the file untouched — and a vector needs no ladder anyway. Publication
+ * wordmarks are the case that matters here: served whole, at whatever size the
+ * layout asks for, at a few kilobytes. */
+function isSvg(source: unknown): boolean {
+  const ref = typeof source === "string" ? source
+    : (source as any)?.asset?._ref ?? (source as any)?._ref ?? "";
+  return typeof ref === "string" && ref.endsWith("-svg");
+}
+
 export function resolveImage(image: SiteImage): ResolvedImage | null {
   if (image?.static) {
     const { src, srcset, width, height } = image.static;
@@ -84,6 +94,14 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
   }
   const source = image?.source;
   if (!source) return null;
+
+  if (isSvg(source)) {
+    // No srcset at all: a vector has one file and every width descriptor would
+    // point at the same bytes. (The first attempt emitted a "1x" candidate,
+    // which the build's own srcset check rejected — correctly, since srcset
+    // width descriptors are what `sizes` is resolved against.)
+    return { src: urlFor(source).url(), srcset: "", width: 0, height: 0, ratio: 0 };
+  }
   const dims = image.dimensions
     ? { w: image.dimensions.width, h: image.dimensions.height }
     : intrinsic(source) ?? { w: image.width ?? 1600, h: image.height ?? 1067 };
