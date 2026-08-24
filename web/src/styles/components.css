@@ -975,30 +975,37 @@ html:has(.menu[data-open="true"]) .header {
  *
  * Cheap on purpose — clip-path and transform only, no layout, no paint of
  * anything but a one-pixel rule. This site has been slow before. */
+/* Drawn as a background gradient rather than a positioned pseudo-element.
+ *
+ * The first version put position:relative on these rows so an ::after could sit
+ * on the hairline. That silently broke the team: .trow__p, the portrait that
+ * appears beside the list on hover, is position:absolute inside the row, and it
+ * had been resolving against .team — the whole section. Making the row
+ * positioned captured it, so the portrait shrank to the height of one row and
+ * pinned itself to that row's corner, over the top of the job title.
+ *
+ * A containing block is invisible in the rule that creates it and acts on
+ * descendants written somewhere else entirely. A background needs none, so this
+ * gesture can no longer reach anything but itself. It costs a paint of one
+ * pixel by the row's width instead of a composited clip, which at this size is
+ * not a trade worth having a class of bug for. */
 .cr,
 .trow__link,
-.mrow { position: relative; }
-
-.cr::after,
-.trow__link::after,
-.mrow::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; top: -1px;   /* sits exactly on the existing hairline */
-  height: 1px;
-  background: var(--accent);
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path var(--dur-hover) var(--ease);
-  pointer-events: none;
+.mrow {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position: 0 0;      /* on the existing hairline, at the top edge */
+  background-size: 0 1px;
+  transition: background-size var(--dur-hover) var(--ease);
 }
 
 /* The whole row is the target, but on the team it is the row that hovers and
    the link that carries the rule, so that one is addressed through its parent. */
 @media (hover: hover) {
-  .cr:hover::after,
-  .trow:hover .trow__link::after,
-  .trow__link:focus-visible::after,
-  .mrow:hover::after { clip-path: inset(0 0 0 0); }
+  .cr:hover,
+  .trow:hover .trow__link,
+  .trow__link:focus-visible,
+  .mrow:hover { background-size: 100% 1px; }
 
   /* A step, not a jump. Enough to feel the row acknowledge the pointer without
      moving anything the eye is trying to read. */
@@ -1013,9 +1020,9 @@ html:has(.menu[data-open="true"]) .header {
 /* The line is the affordance; without motion it would draw instantly, which
    reads as a flicker rather than a gesture. Better to hold it open. */
 @media (prefers-reduced-motion: reduce) {
-  .cr::after,
-  .trow__link::after,
-  .mrow::after { transition: none; }
+  .cr,
+  .trow__link,
+  .mrow { transition: none; }
   .cr:hover .cr__body,
   .mrow:hover .mrow__b { transform: none; }
   .cr:hover .cr__thumb img { transform: none; }
