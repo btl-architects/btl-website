@@ -1,25 +1,25 @@
 ---
-/* One line of an index, not a card in a grid.
+/* One credit: the building, then who published it.
  *
- * This was a card: a tall photograph with the publication's mark floating on
- * it. Two things were wrong with that, and only one of them was fixable by
- * tuning.
+ * This has been a card, then an index row, and is now a card again — which is
+ * worth writing down, because the reasons the card failed the first time are
+ * real and this shape only works because it avoids both of them.
  *
- * The mark. Matched to a common height, "AD" measured 44x32 and "ArchDaily"
- * 150x32 — the same height and three and a half times the visual mass. That
- * cannot be tuned away: a two-letter monogram and a nine-letter word are not
- * the same object. A row of "as seen in" logos gets away with it because every
- * mark in it is a real logo drawn to similar optical weight; the moment type
- * stands in for one, floating free on a photograph, the difference shouts.
+ * The first version floated the publication's mark ON the photograph. Matched
+ * to a common height, "AD" measured 44x32 and "ArchDaily" 150x32 — the same
+ * height and three and a half times the visual mass. That cannot be tuned away:
+ * a two-letter monogram and a nine-letter word are not the same object, and
+ * free on an image the difference shouts. Here the mark sits underneath, in its
+ * own line of a text block, where marks of different lengths read as a list of
+ * names of different lengths — which is what they are.
  *
- * In a column it does not. Marks set left-aligned in a fixed measure read as a
- * list of names of varying length, which is what they are — the same way a
- * bibliography survives having both "Nature" and "Journal of Experimental
- * Biology" in it.
+ * The second was density: six tall cards left the page mostly empty and the
+ * practice looking thinly published. These are wide rather than tall and run at
+ * least two across, so six of them is a block of work rather than a long fall.
  *
- * The other problem was space. Six credits as tall cards left most of the page
- * empty and the practice looking thinly published. An index is dense at six and
- * still an index at sixty.
+ * The headline is gone at the practice's request. A credit is recognition, and
+ * the recognition is the building plus the masthead; the article's own sentence
+ * belongs to the article, one click away.
  */
 import Figure from "./Figure.astro";
 import Masthead from "./Masthead.astro";
@@ -31,26 +31,30 @@ const { item, project } = Astro.props;
 const live = !!item.url && item.url !== "#";
 const Tag = live ? "a" : "div";
 const year = item.date ? item.date.slice(0, 4) : "";
+
+/* The photograph is the point, so a credit with no project behind it has
+ * nothing to show and says so in type instead of leaving a grey rectangle. */
+const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
+  .filter(Boolean)
+  .join(" · ");
 ---
 
 <Tag
-  class="cr ruled"
+  class="pc"
   href={live ? item.url : undefined}
   rel={live ? "noopener" : undefined}
   target={live ? "_blank" : undefined}
 >
-  <span class="cr__thumb">
-    {project && <Figure image={project.hook} sizes="120px" />}
+  {/* Rendered even with nothing in it. One credit here — a Young Practice
+      award — has no project behind it, and without the frame its card was
+      shorter than its neighbour's and dragged that whole row's caption out of
+      line. Empty it draws nothing; it just keeps the row straight. */}
+  <span class="pc__img">
+    {project && <Figure image={project.hook} sizes="(min-width: 60rem) 22rem, 45vw" />}
   </span>
-
-  <span class="cr__mark"><Masthead item={item} /></span>
-
-  <span class="cr__body">
-    <span class="cr__t">{item.title}</span>
-    <span class="cr__m">
-      {item.kind === "award" ? "Award" : "Feature"}{project ? ` · ${project.title}` : ""}
-    </span>
-  </span>
-
-  <span class="cr__yr">{year}</span>
+  {/* The mark carries the height of a line so a monogram and a long wordmark
+      leave the same gap above the meta line — the one part of the old card
+      that was worth keeping. */}
+  <span class="pc__mark"><Masthead item={item} /></span>
+  <span class="pc__m">{meta}</span>
 </Tag>

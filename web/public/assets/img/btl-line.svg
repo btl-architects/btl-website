@@ -1,8 +1,0 @@
-<!-- The btl line element. Extracted from btl brand and assets/002 Element
-     files/002 Short/PDF/S003.pdf with pdftocairo. The path below is the
-     brand file's own curve data, unmodified — it is not a redrawing, and it
-     must never become one. viewBox is cropped to the artwork's own clip box
-     so the element can be sized by its width alone. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0.34375 128.0 652.65625 133.0">
-  <path fill="#fff" d="M 0.34375 260.535156 L 0.34375 230.808594 L 221.621094 230.804688 C 311.445312 230.804688 398.53125 129.417969 399.398438 128.394531 L 423.3125 145.933594 C 404.121094 176.378906 397.363281 200.058594 404.289062 212.617188 C 414.328125 230.804688 454.058594 230.804688 471.027344 230.804688 L 652.9375 230.804688 L 652.9375 260.53125 L 471.148438 260.53125 C 446.925781 260.53125 396.777344 260.53125 378.261719 226.976562 C 373.234375 217.859375 371.144531 207.496094 372.015625 195.78125 C 334.457031 226.503906 279.738281 260.53125 221.621094 260.53125 Z M 0.34375 260.535156 "/>
-</svg>
