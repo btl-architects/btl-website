@@ -77,6 +77,39 @@ for (const f of files(DIST, ".html")) {
   }
 }
 
+/* --- classes with nobody behind them ----------------------------------------
+ * Every check on this project looked for the dead-rule direction: CSS that no
+ * markup uses. The opposite went unnoticed for the life of the site —
+ * .contact__grid and .contact__aside sat in the markup with no rules anywhere,
+ * so the contact form never had its two columns and stacked at the full width
+ * of the page. Nothing errored. Nothing could: a class that matches no rule is
+ * silent by design.
+ *
+ * Utility and state classes are excluded by prefix, because plenty of those are
+ * hooks for JavaScript rather than for CSS. */
+const styles = [...files(DIST, ".css")].map((f) => readFileSync(f, "utf8")).join("\n");
+/* Names that are structure rather than style: a grid places them and they need
+ * no rules of their own. Anything not on this list that has no rule is a bug. */
+const structural = new Set(["spread__body"]);
+const ignore = /^(js|is-|has-|no-|rv|in|sr-only|container|astro-)/;
+const unstyled = new Map();
+for (const f of files(DIST, ".html")) {
+  const html = readFileSync(f, "utf8");
+  const name = f.replace(DIST, "").replace("/index.html", "") || "/";
+  for (const m of html.matchAll(/class="([^"]+)"/g)) {
+    for (const cls of m[1].split(/\s+/)) {
+      if (!cls || ignore.test(cls) || structural.has(cls) || cls.startsWith("astro-")) continue;
+      if (styles.includes("." + cls)) continue;
+      if (!unstyled.has(cls)) unstyled.set(cls, name);
+    }
+  }
+}
+if (unstyled.size) {
+  for (const [cls, where] of unstyled) {
+    failures.push(`.${cls} is in the markup (${where}) but no stylesheet defines it`);
+  }
+}
+
 /* --- the page ending --------------------------------------------------------
  * Every page must leave the same room above the footer, and until now that was
  * an inline padding copied by hand into six templates. The seventh, the project

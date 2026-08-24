@@ -729,6 +729,40 @@ html:has(.menu[data-open="true"]) .header {
 
 /* --- form ------------------------------------------------------------------ */
 
+/* --- contact ----------------------------------------------------------------
+   These two classes have been in the markup with no rules behind them for the
+   whole life of this file, so the form and the studio's details stacked at the
+   full width of the page: at 1440 the box for somebody's first name was 1340px
+   wide. Nothing errored, and no audit caught it, because every check so far
+   looked for CSS with no markup — the dead-rule direction — and never for
+   markup with no CSS. There is now a build guard for the other direction.
+
+   The form leads and the details sit beside it. Below 48rem they stack, which
+   is what they were doing everywhere before. */
+.contact__grid {
+  display: grid;
+  gap: var(--s-8);
+  align-items: start;
+  /* The page's h1 carries no bottom margin, and nothing here claimed the space
+     under it, so "Contact" sat two pixels off the first field's label. Same
+     fault as the doubled gaps elsewhere, from the other side: a gap with no
+     owner rather than one with two. */
+  margin-top: var(--s-8);
+}
+
+@media (min-width: 48rem) {
+  .contact__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+    gap: var(--s-9);
+  }
+}
+
+/* A field is as wide as the answer it expects, not as wide as the window.
+   The measure is the same one the site's prose uses. */
+.contact__grid form { max-width: var(--measure); }
+
+.contact__aside { display: grid; gap: var(--s-6); align-content: start; }
+
 .f { display: grid; gap: 0.4rem; margin-bottom: var(--s-5); }
 .f label {
   font-size: var(--type-meta); font-weight: 500;
@@ -831,11 +865,24 @@ html:has(.menu[data-open="true"]) .header {
   gap: var(--s-5) var(--s-6); flex-wrap: wrap;
   margin-bottom: var(--s-5);
 }
-.home-sec__k {
-  font-size: var(--type-meta); font-weight: 500;
-  text-transform: uppercase; letter-spacing: var(--track-meta);
+/* The small label above a section. Written once, here.
+ *
+ * .eyebrow has been in the markup since the beginning with no rule behind it,
+ * and three of them were quietly rendering as plain headings: "How a project
+ * runs" and "The team" came out at 26.5px bold white instead of a small tracked
+ * label, and Contact's "Studio" at 17.7px. The other eighteen looked right only
+ * because they also carry .home-sec__k or .onward__k, which each restate the
+ * same five declarations. Now they inherit them. */
+.eyebrow,
+.home-sec__k,
+.onward__k {
+  font-size: var(--type-meta);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--track-meta);
   color: var(--text-tertiary);
 }
+
 .home-sec--compress .home-sec__head { margin-bottom: var(--s-6); }
 
 /* --- small media grids ----------------------------------------------------- */
