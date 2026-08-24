@@ -497,6 +497,15 @@ html:has(.menu[data-open="true"]) .header {
   .pcard:hover:not([data-open="true"]) .pcard__n,
   .pcard:hover:not([data-open="true"]) .pcard__name,
   .pcard:hover:not([data-open="true"]) .pcard__place { transform: translateY(-2px); }
+
+  /* Anticipation. The card's whole trick is that it grows and the rest of the
+     photographs wipe in behind the one already showing; before that happens
+     there was nothing to say it would. A 1.5% push on the cover — inside a
+     frame that already clips — is enough to read as the card leaning forward,
+     and small enough that a row of them at rest is still a row of still
+     photographs rather than a row of things twitching. */
+  .pcard__peek img { transition: transform var(--dur-hover) var(--ease); }
+  .pcard:hover:not([data-open="true"]) .pcard__peek img { transform: scale(1.015); }
 }
 
 /* An open strip can be dragged. Without this the only way across it on a
@@ -619,7 +628,8 @@ html:has(.menu[data-open="true"]) .header {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pcard, .pcard__t { transition: none; }
+  .pcard, .pcard__t, .pcard__peek img { transition: none; }
+  .pcard:hover:not([data-open="true"]) .pcard__peek img { transform: none; }
   .pcard .rail__note,
   .pcard__strip > .rail__f { clip-path: none; transition: none; }
 }
@@ -949,6 +959,67 @@ html:has(.menu[data-open="true"]) .header {
 
 .bio { max-width: var(--measure); margin-top: var(--s-6); color: var(--text-secondary); }
 .bio__n { display: inline-block; color: var(--text-primary); font-weight: 500; margin-bottom: var(--s-2); }
+
+/* --- the index row's answer -------------------------------------------------
+ *
+ * Three lists on this site are built from hairline rows: the press index, the
+ * team, and the stages on the Studio page. They had three different answers to
+ * being pointed at — a grey wash, a colour change on one word, and nothing at
+ * all — which is three dialects of the same sentence.
+ *
+ * They now share one, and it is the site's only motif: a line drawn left to
+ * right. It is the same clip-path move .ul makes under a link, at the same
+ * duration and easing, so hovering a row and hovering a link feel like the
+ * same hand. The practice is called between the lines; the lines are the one
+ * thing on this site allowed to be pleased to see you.
+ *
+ * Cheap on purpose — clip-path and transform only, no layout, no paint of
+ * anything but a one-pixel rule. This site has been slow before. */
+.cr,
+.trow__link,
+.mrow { position: relative; }
+
+.cr::after,
+.trow__link::after,
+.mrow::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -1px;   /* sits exactly on the existing hairline */
+  height: 1px;
+  background: var(--accent);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-hover) var(--ease);
+  pointer-events: none;
+}
+
+/* The whole row is the target, but on the team it is the row that hovers and
+   the link that carries the rule, so that one is addressed through its parent. */
+@media (hover: hover) {
+  .cr:hover::after,
+  .trow:hover .trow__link::after,
+  .trow__link:focus-visible::after,
+  .mrow:hover::after { clip-path: inset(0 0 0 0); }
+
+  /* A step, not a jump. Enough to feel the row acknowledge the pointer without
+     moving anything the eye is trying to read. */
+  .cr__body,
+  .mrow__b { transition: transform var(--dur-hover) var(--ease); }
+  .cr:hover .cr__body,
+  .mrow:hover .mrow__b { transform: translateX(3px); }
+
+  .cr__thumb img { transition: transform var(--dur-hover) var(--ease), opacity var(--dur-hover) var(--ease); }
+}
+
+/* The line is the affordance; without motion it would draw instantly, which
+   reads as a flicker rather than a gesture. Better to hold it open. */
+@media (prefers-reduced-motion: reduce) {
+  .cr::after,
+  .trow__link::after,
+  .mrow::after { transition: none; }
+  .cr:hover .cr__body,
+  .mrow:hover .mrow__b { transform: none; }
+  .cr:hover .cr__thumb img { transform: none; }
+}
 
 /* --- how a project runs (Studio) --------------------------------------------
    The same hairline index row the team list and the press index use: a label in
@@ -1431,9 +1502,12 @@ body[data-preview] main { padding-top: var(--preview-h); }
 }
 
 @media (hover: hover) {
-  .cr { transition: background var(--dur-hover) var(--ease); }
-  .cr:hover { background: rgb(255 255 255 / 0.03); }
-  .cr:hover .cr__thumb img { opacity: 0.8; }
+  /* The wash that used to live here — a 3% white rectangle — was the one
+     generic gesture on the site: it could have belonged to any table on any
+     website. The rows now answer the way every other link here answers, by
+     drawing a line. See .row-line below; the practice is called between the
+     lines and this is the only motif it has. */
+  .cr:hover .cr__thumb img { transform: scale(1.03); }
 }
 
 /* On a phone the four columns become two: the photograph keeps the left, and
