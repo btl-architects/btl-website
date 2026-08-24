@@ -1068,14 +1068,43 @@ html:has(.menu[data-open="true"]) .header {
    worth the request, let alone to show a face. Given real size, and the row
    given the height to hold it. */
 @media not all and (hover: hover) {
-  .trow__link { align-items: center; gap: var(--s-4); padding-block: var(--s-4); }
+  /* Name over role, both beside the portrait — two columns, not three.
+   *
+   * This was a flex row: portrait, then the name, then the role pushed to the
+   * far edge. On a desktop that is a clean index line. At 375px it is three
+   * things competing for 300, and the result depended on how long somebody's
+   * name happened to be. "Ar. Aparna Menon" and "ARCHITECT" just fitted;
+   * "Sneha Kurian" and "INTERIOR DESIGNER" each broke onto a second line with
+   * sixteen pixels between them, so half the list sat on one baseline and half
+   * on another. A layout that holds for short names and collapses for long ones
+   * is not a layout, and which of the team it embarrasses is an accident.
+   *
+   * Areas rather than source order, so the portrait can lead visually while the
+   * name stays first in the markup for anyone reading it aloud. */
+  .trow__link {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-areas:
+      "pic name"
+      "pic role";
+    align-items: center;
+    column-gap: var(--s-4);
+    row-gap: var(--s-1);
+    padding-block: var(--s-4);
+  }
   .trow__p {
-    display: block; flex: 0 0 auto;
-    width: 4.5rem; aspect-ratio: 3 / 4; order: -1;
+    grid-area: pic;
+    display: block;
+    width: 4.5rem; aspect-ratio: 3 / 4;
     overflow: hidden;
+    align-self: center;
   }
   .trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .trow__r { align-self: center; }
+
+  /* Pulled to the boundary between the two rows so the pair reads as one block
+     against the portrait rather than as two lines drifting apart in a tall cell. */
+  .trow__n { grid-area: name; align-self: end; }
+  .trow__r { grid-area: role; align-self: start; margin-left: 0; }
 }
 
 /* --- the way onward -------------------------------------------------------
