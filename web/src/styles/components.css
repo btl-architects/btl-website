@@ -1332,6 +1332,20 @@ html:has(.menu[data-open="true"]) .header {
  * A masthead should still cost something — the index used to begin with a
  * photograph hard against the header and gave the reader nowhere to land — but
  * it should cost the same everywhere, and less than a third of the view. */
+/* Every page ends the same distance above the footer.
+ *
+ * This was the inline style padding-bottom:var(--space-section), repeated on
+ * six page templates — and the seventh, the project page, simply did not have
+ * it, so "Every project" sat flush against the footer with no gap at all. A
+ * value copied by hand into six files is not a system; it is six chances to
+ * forget, and one of them was taken.
+ *
+ * The home page satisfies this through its last section, which is a compress
+ * section and already pads by the same token. It carries the class too, so the
+ * rule is universal and can be checked rather than remembered — see the page
+ * ending guard in tools/budget.mjs. */
+.page-end { padding-bottom: var(--space-section); }
+
 .index-head {
   padding: clamp(var(--s-7), 9vh, var(--s-8)) var(--page-margin) var(--s-8);
   max-width: var(--max-width);

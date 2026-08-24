@@ -77,6 +77,25 @@ for (const f of files(DIST, ".html")) {
   }
 }
 
+/* --- the page ending --------------------------------------------------------
+ * Every page must leave the same room above the footer, and until now that was
+ * an inline padding copied by hand into six templates. The seventh, the project
+ * page, did not have it, so "Every project" sat flush against the footer — and
+ * nothing failed, because a missing gap is not an error, it just looks wrong to
+ * whoever happens to scroll that far.
+ *
+ * The rule is .page-end, and this is the check that it was not forgotten. It
+ * rides along here rather than in a fifth build script because this file
+ * already opens every page. */
+for (const f of files(DIST, ".html")) {
+  const html = readFileSync(f, "utf8");
+  const name = f.replace(DIST, "").replace("/index.html", "") || "/";
+  const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+  if (main && !main.includes("page-end")) {
+    failures.push(`${name} has no .page-end — it will sit flush against the footer`);
+  }
+}
+
 /* --- srcset integrity -------------------------------------------------------
  * A cropped image gets `?rect=106,115,748,947` from Sanity, and a comma in a
  * srcset is a candidate separator — so the browser reads "rect=106" as one
