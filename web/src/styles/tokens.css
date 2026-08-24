@@ -114,6 +114,13 @@
   --s-5: 1.5rem;   --s-6: 2rem;     --s-7: 3rem;     --s-8: 4rem;   --s-9: 6rem;
 
   --space-section:    clamp(4rem, 2rem + 7vw,  8rem);
+
+  /* How tall a photograph on a spread may be.
+     Not a magic number buried in one rule: the Studio page, the home studio
+     section, the People spread and the press spreads all read it, so raising it
+     raises them together. 74svh keeps the heading above and the paragraph
+     beside it on screen at the same time, which is the point of a spread. */
+  --spread-max-h:     74svh;
   --space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);
 
   /* ---- grid -------------------------------------------------------------- */

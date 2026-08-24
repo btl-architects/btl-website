@@ -824,8 +824,44 @@ html:has(.menu[data-open="true"]) .header {
   .spread--flip > .spread__media { order: 2; }
 }
 
+/* The frame hugs the photograph rather than the column.
+ *
+ * Needed because the media box is what the type spread's gradient and names are
+ * registered to — both are inset: 0 on this element. Once the image below was
+ * allowed to be narrower than its column, the box stayed full width and the
+ * founders' names slid off the picture onto the black beside it. fit-content
+ * keeps the box exactly as wide as the image inside it, so the overlay lands on
+ * the photograph at every size. */
 .spread__media { position: relative; }
+/* A spread's photograph fills the column it is given. Width stays at 100% —
+   never auto — because for a responsive image `auto` resolves to whichever
+   srcset candidate the browser chose, which puts the layout at the mercy of
+   `sizes` and the network. The founders photograph laid out at 358px that way. */
 .spread__media img { display: block; width: 100%; height: auto; }
+
+/* The cap applies only where the box carries nothing but the photograph.
+ *
+ * A --type spread has a gradient and the founders' names positioned against the
+ * media box, so an image narrower than that box leaves the names stranded on
+ * the black beside it. Those spreads keep filling their column; they are the
+ * ones whose shape was never the problem. */
+.spread__media:not(.spread__media--type) img {
+
+  /* The cap, applied to width rather than height.
+   *
+   * A photograph may not be taller than --spread-max-h. Capping the height
+   * directly either stretches the picture (width stays 100% while height
+   * clamps) or crops it (object-fit), and this photograph cannot afford a crop:
+   * the studio's own name is etched into the glass at one end of the frame and
+   * the vessel sits at the other, so a 40% trim loses one or the other.
+   *
+   * Multiplying the height limit by the image's own ratio gives the width at
+   * which it reaches exactly that height, so it scales down whole. Landscape
+   * images produce a cap wider than any column and are untouched. The fallback
+   * of 100 means an image whose ratio is unknown is never capped. */
+  max-width: calc(var(--spread-max-h) * var(--img-ratio, 100));
+  margin-inline: auto;
+}
 
 /* The scrim exists so type clears contrast against concrete, which sits around
    mid-grey. A gradient over the frame, not a box around it — R5 holds. */

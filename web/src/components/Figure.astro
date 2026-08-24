@@ -51,7 +51,18 @@ if (image.alt === undefined || image.alt === null) {
 const placeholder = r.lqip
   ? `background-image:url('${r.lqip}');background-size:cover;background-position:center;`
   : "";
-const inline = `${placeholder}${style ?? ""}`;
+
+/* The image's own proportions, published to CSS.
+ *
+ * Layout sometimes needs to cap how tall a photograph may be, and the honest
+ * way to do that is to cap its WIDTH by the height limit and this ratio —
+ * a portrait then scales down whole instead of being stretched or cropped.
+ * Doing it the obvious way instead, with width:auto and a max-height, made the
+ * rendered size depend on which srcset candidate the browser happened to pick:
+ * the founders photograph laid out at 358px because `sizes` had asked for a
+ * small file. Layout must not be decided by the network. */
+const ratio = r.ratio > 0 ? `--img-ratio:${r.ratio.toFixed(4)};` : "";
+const inline = `${placeholder}${ratio}${style ?? ""}`;
 ---
 
 <img
