@@ -46,6 +46,9 @@ export interface Project {
   /** The cover again, for card use. Same photograph, different derived size. */
   hook: SiteImage;
   related: string[];
+  /** What the practice wants a search result to say, when the derived title and
+   *  opening line are not what they would have written. Both optional. */
+  seo: { title: string | null; description: string | null };
 }
 
 export interface Person {
@@ -135,7 +138,8 @@ const PROJECT = `{
     "collaborators": coalesce(credits.collaborators, [])
   },
   "images": images[] ${FIGURE},
-  "related": coalesce(related[]->slug.current, [])
+  "related": coalesce(related[]->slug.current, []),
+  "seo": { "title": seo.title, "description": seo.description }
 }`;
 
 /* --------------------------------------------------------------- queries --- */

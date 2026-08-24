@@ -63,7 +63,7 @@ const c = settings.contact;
         </div>
       </div>
       <div class="pindex" data-pindex>
-        {work.map((p, i) => <ProjectCard project={p} index={i} />)}
+        {work.map((p) => <ProjectCard project={p} />)}
       </div>
       {/* Below the work, not above it. A visitor who has just scrolled three
           projects needs to be told there are more; a visitor who has not seen

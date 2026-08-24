@@ -28,8 +28,10 @@ const { project, prev, next } = Astro.props;
 ---
 
 <Base
-  title={`${project.title} — btl architects`}
-  description={project.description.slice(0, 155) || `${project.title}, ${project.location} — btl architects.`}
+  title={project.seo?.title || `${project.title} — btl architects`}
+  description={project.seo?.description
+    || project.description.slice(0, 155)
+    || `${project.title}, ${project.location} — btl architects.`}
   current="projects"
   share={project.hook}
 >

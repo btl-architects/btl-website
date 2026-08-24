@@ -73,19 +73,9 @@ a { color: inherit; text-decoration: none; }
    Type roles
    ========================================================================== */
 
-.t-display {
-  font-size: var(--type-display); font-weight: 900;
-  line-height: 0.95; letter-spacing: var(--track-display);
-  text-wrap: balance;
-}
 .t-h1 {
   font-size: var(--type-h1); font-weight: 900;
   line-height: var(--lead-tight); letter-spacing: var(--track-h1);
-  text-wrap: balance;
-}
-.t-h2 {
-  font-size: var(--type-h2); font-weight: 700;
-  line-height: 1.05; letter-spacing: var(--track-h2);
   text-wrap: balance;
 }
 .t-h3 {
@@ -98,16 +88,9 @@ a { color: inherit; text-decoration: none; }
   max-width: var(--measure-lead);
 }
 .t-body { max-width: var(--measure); }
-.t-body--wide { max-width: 74ch; }
 .t-caption {
   font-size: var(--type-caption); line-height: 1.4;
   color: var(--text-secondary);
-}
-.t-meta, .eyebrow {
-  font-size: var(--type-meta); font-weight: 500;
-  line-height: 1.2; text-transform: uppercase;
-  letter-spacing: var(--track-meta);
-  color: var(--text-tertiary);
 }
 
 .muted { color: var(--text-secondary); }

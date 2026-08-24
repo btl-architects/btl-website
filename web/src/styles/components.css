@@ -205,7 +205,7 @@ html:has(.menu[data-open="true"]) .header {
 .menu[data-open="true"] { transform: none; visibility: visible; }
 .menu__list { display: flex; flex-direction: column; gap: var(--s-3); }
 .menu__link {
-  font-size: 1.25rem; font-weight: 900;
+  font-size: var(--type-h3); font-weight: 900;
   letter-spacing: var(--track-h1); line-height: 1;
   color: var(--n-450);
   display: inline-block; padding-block: 0.2em;
@@ -510,7 +510,6 @@ html:has(.menu[data-open="true"]) .header {
   .pcard__name, .pcard__place {
     transition: transform var(--dur-hover) var(--ease), color var(--dur-hover) var(--ease);
   }
-  .pcard:hover:not([data-open="true"]) .pcard__n,
   .pcard:hover:not([data-open="true"]) .pcard__name,
   .pcard:hover:not([data-open="true"]) .pcard__place { transform: translateY(-2px); }
 
@@ -715,7 +714,6 @@ html:has(.menu[data-open="true"]) .header {
               color var(--dur-base) var(--ease),
               border-color var(--dur-base) var(--ease);
 }
-.b--outline { background: none; color: var(--text-primary); border: 1px solid var(--text-primary); }
 .b--outline:hover { background: var(--text-primary); color: var(--surface); }
 .b--solid { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); }
 .b--solid:hover { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface); }
@@ -1165,7 +1163,16 @@ html:has(.menu[data-open="true"]) .header {
      * it can never be taller than the list, because it is exactly as tall as
      * the list. The width is then whatever keeps it a portrait, capped so a
      * long team cannot push it across the names. */
+    /* Tied to the list, but not without limit.
+     *
+     * height:100% alone was right for a team of four and wrong for a team of
+     * twenty-five: the section grows with every name, and the portrait grew
+     * with it — 309x1614 at twenty-five rows, a photograph of a person rendered
+     * as a vertical sliver, because max-width capped the width while nothing
+     * capped the height. Found by stress test, not by looking, since the
+     * practice currently has four. */
     height: 100%;
+    max-height: 22rem;
     width: auto;
     max-width: 30%;
     aspect-ratio: 3 / 4;
@@ -1342,6 +1349,20 @@ html:has(.menu[data-open="true"]) .header {
  * ending guard in tools/budget.mjs. */
 .page-end { padding-bottom: var(--space-section); }
 
+/* Two things still moved for a reader who has asked the operating system for
+   less of it: the card caption lifting two pixels under the pointer, and the
+   team portrait wiping in on hover. Colour, background and opacity are left
+   alone deliberately — reduced-motion is about movement, and taking the fade
+   off a link would make the site worse for the people asking for it. */
+@media (prefers-reduced-motion: reduce) {
+  .pcard__name,
+  .pcard__place,
+  .trow__p { transition: none; }
+  .pcard:hover:not([data-open="true"]) .pcard__name,
+  .pcard:hover:not([data-open="true"]) .pcard__place { transform: none; }
+  .trow__p { clip-path: none; }
+}
+
 /* --- press credits ----------------------------------------------------------
    Two across on a phone, three once there is room. Two is the practice's own
    minimum and it is also what makes the mobile page short: as a stacked list
@@ -1454,7 +1475,6 @@ body[data-preview] .header { top: var(--preview-h); }
 body[data-preview] main { padding-top: var(--preview-h); }
 
 @media (min-width: 60rem) {
-  .pw.spread { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); align-items: center; }
   /* Type first, always — the alternating flip belongs to People and Studio,
      where the photograph is the subject. Here it never is. */
   .pw.spread > .spread__media { order: 2; }

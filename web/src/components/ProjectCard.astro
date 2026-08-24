@@ -19,8 +19,8 @@
 import Figure from "./Figure.astro";
 import type { Project } from "../lib/content";
 
-interface Props { project: Project; index: number; priority?: boolean }
-const { project, index, priority = false } = Astro.props;
+interface Props { project: Project; priority?: boolean }
+const { project, priority = false } = Astro.props;
 
 /* Not a vw figure: these frames are height-driven and come out 360–460 CSS px
  * wide at every viewport, because the card's height is what is fixed. A
