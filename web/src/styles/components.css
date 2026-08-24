@@ -1272,13 +1272,37 @@ html:has(.menu[data-open="true"]) .header {
 }
 /* A mark of direction, doing the job the repeated word used to do badly. It
    travels a little on hover, which is the only movement in the gesture. */
+/* The btl line element, in the one slot on this site that was already a rule.
+ *
+ * This was a plain 1px dash. The brand has an actual line element — a rule with
+ * a single peak in it — which had never appeared anywhere, and a dash before
+ * "Next" is exactly what it is for.
+ *
+ * It is the real artwork. The SVG is the brand PDF's own curve data pulled out
+ * with pdftocairo, not a redrawing: earlier attempts at recreating this element
+ * by hand were never faithful and were removed for that reason (design memory
+ * R2 — the mark is the real vector or nothing). If it ever needs changing, take
+ * it from the brand files again.
+ *
+ * Carried as a mask rather than an image so it keeps taking currentColor, the
+ * way the dash did — the element ships in five inks and the site should not be
+ * committed to one of them here.
+ *
+ * The Short variant specifically. Medium and Long are 15:1 and 49:1, and at the
+ * size a dash needs to be their peak lands under a pixel and the whole thing
+ * reads as the straight line it replaced. */
 .onward__t::before {
   content: "";
   display: inline-block;
-  width: 1.1em; height: 1px;
-  margin-right: 0.55em;
-  vertical-align: 0.32em;
+  /* Ratio 4.91, from the artwork's own clip box. */
+  width: 1.6em;
+  aspect-ratio: 4.91;
+  height: auto;
+  margin-right: 0.5em;
+  vertical-align: 0.06em;
   background: currentColor;
+  -webkit-mask: url("/assets/img/btl-line.svg") no-repeat center / contain;
+  mask: url("/assets/img/btl-line.svg") no-repeat center / contain;
   opacity: 0.5;
   transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
 }
@@ -1351,7 +1375,6 @@ html:has(.menu[data-open="true"]) .header {
  * rule is universal and can be checked rather than remembered — see the page
  * ending guard in tools/budget.mjs. */
 .page-end { padding-bottom: var(--space-section); }
-
 .index-head {
   padding: clamp(var(--s-7), 9vh, var(--s-8)) var(--page-margin) var(--s-8);
   max-width: var(--max-width);
