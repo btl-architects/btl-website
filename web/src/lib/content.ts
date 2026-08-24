@@ -66,6 +66,16 @@ export interface Publication {
   relatedProject: string | null;
 }
 
+/** One stage of how a project runs, for the Studio page.
+ *
+ *  Deliberately has no default. The rest of the copy on this site falls back to
+ *  a written line when a field is empty, because a heading with nothing under it
+ *  looks broken. This must not: a practice's working method is the one thing on
+ *  the site that cannot be supplied by anyone but the practice, and inventing a
+ *  plausible one would put words in their mouth about how they treat clients.
+ *  Empty means the section does not exist. */
+export interface StudioStage { title: string; body: string }
+
 /** The lines that carry the practice's voice. Each has a default, so an empty
  *  field never leaves a blank page — it just goes back to the written one. */
 export interface Copy {
@@ -331,6 +341,7 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
 export const getHome = once(async () => {
   const s = await sanity.fetch(`*[_type == "settings"][0]{
     statement, studioLead, peopleLead, studioBody,
+    studioMethod[]{title, body},
     "studioImage": studioImage ${FIGURE},
     "foundersImage": foundersImage ${FIGURE}
   }`);
@@ -352,6 +363,12 @@ export const getHome = once(async () => {
     studio: {
       lead: s?.studioLead ?? "",
       body: (s?.studioBody ?? []) as string[],
+      /* The stages only count when both halves are written. A stage with a
+       * heading and no text renders as a label floating over nothing, which is
+       * how a half-finished edit reaches production looking like a bug. */
+      method: ((s?.studioMethod ?? []) as StudioStage[]).filter(
+        (m) => m?.title?.trim() && m?.body?.trim(),
+      ),
       image: (s?.studioImage?.source?.asset ? s.studioImage : null) as SiteImage | null,
     },
     founders: (s?.foundersImage?.source?.asset ? s.foundersImage : null) as SiteImage | null,

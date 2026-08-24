@@ -50,6 +50,26 @@ const say = (t: string) =>
         </div>
       )}
 
+      {/* The reason this page exists apart from the home page's section.
+          Without it the two are the same statement and the same photograph, and
+          the link that brings people here promises "How the practice works" and
+          then does not answer it. Set in the same index-row language as the team
+          list and the press index rather than as cards or numbered circles —
+          this site states things in rows. */}
+      {st.method.length > 0 && (
+        <section class="roster" style="margin-top:var(--space-section)">
+          <h2 class="eyebrow roster__k">How a project runs</h2>
+          <ol class="method">
+            {st.method.map((stage, i) => (
+              <li class="mrow rv" data-delay={i % 3}>
+                <h3 class="mrow__t">{stage.title}</h3>
+                <p class="mrow__b">{stage.body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       <Onward href="/contact/" kicker="Next">{settings.copy.studioOnward}</Onward>
     </div>
   </main>

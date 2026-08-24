@@ -950,6 +950,53 @@ html:has(.menu[data-open="true"]) .header {
 .bio { max-width: var(--measure); margin-top: var(--s-6); color: var(--text-secondary); }
 .bio__n { display: inline-block; color: var(--text-primary); font-weight: 500; margin-bottom: var(--s-2); }
 
+/* --- how a project runs (Studio) --------------------------------------------
+   The same hairline index row the team list and the press index use: a label in
+   a fixed left column, the text in the rest. Deliberately not numbered circles
+   or three cards in a row — this site states things in rows, and a working
+   method is not more important than the people or the press because it happens
+   to be newer.
+
+   Named mrow to sit beside trow and cr, and NOT `stage`: that belongs to the
+   opening film's full-screen frame, which is position:absolute; inset:0. Four
+   rows written as .stage inherited it, left the flow, and each measured exactly
+   one viewport tall inside a list of zero height — invisible on the page while
+   sitting perfectly correct in the HTML. */
+.method { list-style: none; margin: 0; padding: 0; }
+
+.mrow {
+  display: grid;
+  gap: var(--s-2);
+  padding-block: var(--s-5);
+  border-top: 1px solid var(--border-subtle);
+}
+.method > .mrow:last-child { border-bottom: 1px solid var(--border-subtle); }
+
+.mrow__t {
+  font-size: var(--type-meta);
+  letter-spacing: var(--track-meta);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+.mrow__b {
+  margin: 0;
+  color: var(--text-secondary);
+  /* A measure, not a column width: past about 70 characters the eye loses the
+     start of the next line. */
+  max-width: 68ch;
+}
+
+/* Two columns once there is room for the label to sit beside the text rather
+   than above it — the same move the press index makes at the same width. */
+@media (min-width: 48rem) {
+  .mrow {
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: var(--s-6);
+    align-items: baseline;
+  }
+}
+
 .team { position: relative; }
 .team__list { list-style: none; margin: 0; padding: 0; }
 

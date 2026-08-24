@@ -46,6 +46,38 @@ export default defineType({
       group: "studio",
       description: "Short editorial passages. Three reads best; more is fine.",
     }),
+    defineField({
+      name: "studioMethod",
+      title: "How the practice works",
+      type: "array",
+      group: "studio",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({
+              name: "title",
+              title: "Stage",
+              type: "string",
+              description: "Two or three words. “The first visit”, not “Phase 1: Discovery”.",
+              validation: (r) => r.required().max(40),
+            }),
+            defineField({
+              name: "body",
+              title: "What happens",
+              type: "text",
+              rows: 3,
+              description:
+                "A sentence or two, in the practice's own voice. What a client actually experiences at this point — not a description of architecture in general.",
+              validation: (r) => r.required().min(40).max(400),
+            }),
+          ],
+          preview: { select: { title: "title", subtitle: "body" } },
+        },
+      ],
+      description:
+        "The home page links here promising “How the practice works”, and this is the answer. Three or four stages reads best. Leave it empty and the section does not appear — the page is then the statement and the photograph, which is honest but thin.",
+    }),
     defineField({ name: "studioImage", title: "Studio photograph", type: "figure", group: "studio" }),
     defineField({
       name: "heroClips",
