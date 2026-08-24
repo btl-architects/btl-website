@@ -124,15 +124,44 @@ without deploying.
 
 ## Rebuilding when content changes
 
-In Cloudflare Pages: **Settings → Builds → Deploy hooks → Add**. Name it
-`Sanity publish` and copy the URL it gives you.
+Publishing in the Studio does nothing to the live site on its own. This is the
+wire between them, and it is set up once.
 
-Then in Sanity: **Manage project → API → Webhooks → Create webhook**. Paste the
-URL, set the trigger to *Create, Update, Delete*, and leave the filter empty so
-any published change rebuilds.
+**1. Get the hook URL from Cloudflare.** Workers & Pages → the project →
+**Settings → Builds → Deploy hooks → Add**. Name it `Sanity publish` and set the
+branch to `main`. It gives you a long URL.
 
-Without this the site still works — it just won't notice new content until the
-next push or a manual "Retry deployment".
+> Treat that URL like a password. Anyone who has it can start a build on this
+> project, as many times as they like. It does not belong in the repository, in
+> a chat message, or in a screenshot.
+
+**2. Create the webhook in Sanity.** [sanity.io/manage](https://www.sanity.io/manage)
+→ the `aur12nrf` project → **API → Webhooks → Create webhook**.
+
+| Field | Value |
+| --- | --- |
+| Name | `Rebuild the site` |
+| URL | the hook URL from step 1 |
+| Dataset | `production` |
+| Trigger on | Create, Update **and** Delete |
+| Filter | leave empty — any published change should rebuild |
+| Projection | leave empty |
+| HTTP method | `POST` |
+| **Drafts and versions** | **off** |
+| Secret | leave empty — Cloudflare does not check one |
+
+**Drafts off is the one that matters.** The Studio saves a draft every few
+seconds while somebody is typing, and the site only ever reads published
+content — so leaving it on would spend a build on every pause for thought, and
+rebuild a site whose pages had not changed. The free plan allows 500 builds a
+month; a practice publishing a project a week will use about four.
+
+**3. Test it.** Change something small in the Studio and publish. A new
+deployment should appear in Cloudflare within about half a minute, and the
+change should be live a minute or so after that.
+
+Without this the site still works — it just will not notice new content until
+somebody pushes code or presses "Retry deployment" by hand.
 
 ---
 
