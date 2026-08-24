@@ -24,7 +24,7 @@
      animation and nothing else. */
   document.documentElement.classList.add("js");
 
-  var reveals = document.querySelectorAll(".rv, .rvc, .line--draw");
+  var reveals = document.querySelectorAll(".rv, .rvc, .ruled");
   function revealAll() {
     reveals.forEach(function (el) {
       el.classList.add("in");

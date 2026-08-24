@@ -1,9 +1,5 @@
 
 
-@media (prefers-reduced-motion: no-preference) {
-  .line--draw.in .line__bar,
-  .line--draw.in .line__fig path { transform: scaleX(1); }
-}
 
 
 /* --- the mark --------------------------------------------------------------
@@ -100,7 +96,41 @@
   width: 100%; max-width: var(--max-width); margin-inline: auto;
   display: flex; align-items: center; justify-content: space-between; gap: var(--s-5);
 }
-.header__logo { display: block; flex: 0 0 auto; }
+.header__logo { display: block; flex: 0 0 auto; position: relative; }
+
+/* What btl stands for, drawn in beside the mark on hover.
+ *
+ * Same clip-path move as .ul and the index rows, so it belongs to the one
+ * gesture the site has rather than being a joke with its own vocabulary.
+ *
+ * Only above 64rem. It is absolutely positioned, so on a narrow header it
+ * would draw straight across the navigation, and on touch it could never be
+ * revealed at all — a punchline nobody can reach is just an overlap waiting to
+ * happen. */
+.header__expand {
+  position: absolute;
+  left: calc(100% + var(--s-4));
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  white-space: nowrap;
+  font-size: var(--type-meta);
+  letter-spacing: var(--track-meta);
+  color: var(--text-tertiary);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-hover) var(--ease);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (min-width: 64rem) {
+  .header__expand { display: block; }
+  .header__logo:hover .header__expand,
+  .header__logo:focus-visible .header__expand { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header__expand { transition: none; }
+}
 .header__logo img {
   width: clamp(3.1rem, 2.4rem + 2vw, 4.4rem); height: auto;
 }
@@ -992,12 +1022,33 @@ html:has(.menu[data-open="true"]) .header {
 .cr,
 .trow__link,
 .mrow {
-  background-image: linear-gradient(var(--accent), var(--accent));
+  /* Two layers on the same one-pixel band at the top edge: the accent line
+     that answers the pointer, over the structural rule that separates the
+     rows. The rule used to be a border; as a background it can be drawn.
+
+     Both closed to 0 width and opened by changing background-size, so the row
+     never has a border-box that changes height and nothing below it moves. */
+  background-image:
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--border-subtle), var(--border-subtle));
   background-repeat: no-repeat;
-  background-position: 0 0;      /* on the existing hairline, at the top edge */
-  background-size: 0 1px;
+  background-position: 0 0;
+  background-size: 0 1px, 100% 1px;
   transition: background-size var(--dur-hover) var(--ease);
 }
+
+/* The rules draw themselves in as they arrive.
+ *
+ * Gated on :where(.js) at zero specificity, the same way .rvc is: without
+ * JavaScript every rule is simply present, so a parse error or an old browser
+ * costs the gesture and not the layout. .ruled is watched by the same
+ * IntersectionObserver as .rv — it replaced .line--draw in that selector,
+ * which had been pointing at classes deleted during the audit.
+ *
+ * Slower than the hover: a rule arriving should feel like the page ruling
+ * itself, and a rule lighting up under the pointer should feel like an answer. */
+:where(.js) .ruled { background-size: 0 1px, 0 1px; transition: background-size var(--dur-slow) var(--ease); }
+:where(.js) .ruled.in { background-size: 0 1px, 100% 1px; }
 
 /* The whole row is the target, but on the team it is the row that hovers and
    the link that carries the rule, so that one is addressed through its parent. */
@@ -1005,7 +1056,7 @@ html:has(.menu[data-open="true"]) .header {
   .cr:hover,
   .trow:hover .trow__link,
   .trow__link:focus-visible,
-  .mrow:hover { background-size: 100% 1px; }
+  .mrow:hover { background-size: 100% 1px, 100% 1px; }
 
   /* A step, not a jump. Enough to feel the row acknowledge the pointer without
      moving anything the eye is trying to read. */
@@ -1046,7 +1097,6 @@ html:has(.menu[data-open="true"]) .header {
   display: grid;
   gap: var(--s-2);
   padding-block: var(--s-5);
-  border-top: 1px solid var(--border-subtle);
 }
 .method > .mrow:last-child { border-bottom: 1px solid var(--border-subtle); }
 
@@ -1081,7 +1131,6 @@ html:has(.menu[data-open="true"]) .header {
 .trow__link {
   display: flex; align-items: baseline; gap: var(--s-4);
   padding-block: var(--s-4);
-  border-top: 1px solid var(--border-subtle);
   text-decoration: none; color: inherit;
 }
 .team__list li:last-child .trow__link { border-bottom: 1px solid var(--border-subtle); }
@@ -1489,7 +1538,6 @@ body[data-preview] main { padding-top: var(--preview-h); }
   align-items: center;
   gap: var(--s-5);
   padding-block: var(--s-5);
-  border-top: 1px solid var(--border-subtle);
   text-decoration: none;
   color: inherit;
 }

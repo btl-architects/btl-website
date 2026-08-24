@@ -61,7 +61,7 @@ const say = (t: string) =>
           <h2 class="eyebrow roster__k">How a project runs</h2>
           <ol class="method">
             {st.method.map((stage, i) => (
-              <li class="mrow rv" data-delay={i % 3}>
+              <li class="mrow rv ruled" data-delay={i % 3}>
                 <h3 class="mrow__t">{stage.title}</h3>
                 <p class="mrow__b">{stage.body}</p>
               </li>

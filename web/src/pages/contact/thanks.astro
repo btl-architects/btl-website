@@ -31,9 +31,13 @@ const c = (await getSettings()).contact;
       <h1 class="t-h1 rv">Thank you</h1>
 
       <div class="spread__body rv" data-delay="1" style="margin-top:var(--s-8)">
+        {/* "A person will read this" is the only thing anyone wants to know
+            after sending a form into the dark. Said plainly rather than
+            confirmed like a transaction — the previous version was accurate
+            and sounded like a receipt. */}
         <p class="spread__say spread__say--lead">
-          Your enquiry has reached the studio. Someone will read it and write
-          back — usually within a couple of working days.
+          It is in the studio's inbox now. Someone will read it properly and
+          write back — usually within a couple of working days.
         </p>
         <p class="spread__note">
           If it is urgent, the studio is on <a class="tl" href={`tel:${c.phoneHref}`}>{c.phone}</a>,

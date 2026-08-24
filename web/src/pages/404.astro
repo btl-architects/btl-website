@@ -1,5 +1,12 @@
 ---
-/* Not found — offers the way back into the work rather than an apology. */
+/* Not found — offers the way back into the work rather than an apology.
+ *
+ * The one page on the site allowed to be funny, because it is the only one
+ * nobody arrives at on purpose. Everywhere else a joke would be spending the
+ * reader's goodwill on the practice's behalf; here there is no goodwill to
+ * spend and a dead end to make bearable. The joke is architectural rather than
+ * technical — a room that was never built, not an HTTP status — because the
+ * reader is on an architect's website and does not care what a 404 is. */
 import Base from "../layouts/Base.astro";
 import { getProjects, getSettings } from "../lib/content";
 
@@ -10,7 +17,7 @@ const copy = (await getSettings()).copy;
 <Base title="Not found — btl architects" description="That page does not exist.">
   <main id="main" data-ground="dark" class="nf">
     <div class="container">
-      <h1 class="t-h1">That page isn't here.</h1>
+      <h1 class="t-h1">You’ve found a room we never built.</h1>
       <p class="t-lead" style="margin-top:var(--s-5); color:var(--text-secondary); max-width:var(--measure-lead)">
         {copy.notFoundLead}
       </p>

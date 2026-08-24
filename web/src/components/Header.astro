@@ -32,6 +32,17 @@ const logo = LOGO_WHITE;
   <div class="header__inner">
     <a class="header__logo" href="/" aria-label="btl architects — home">
       <Figure image={logo} sizes="(min-width: 48rem) 4.4rem, 3.1rem" eager />
+      {/* Every first-time visitor wonders what btl stands for, and the site
+          answers it exactly once, in a paragraph on the home page they may
+          never scroll to. The mark can just say so.
+
+          aria-hidden because the link already carries "btl architects — home"
+          as its accessible name; announcing the expansion as well would make
+          the first thing in the tab order the wordiest. It is set beside the
+          mark rather than under it so the header's height never changes, and
+          absolutely positioned so it cannot push the navigation when it
+          appears. */}
+      <span class="header__expand" aria-hidden="true">between the lines</span>
     </a>
     <nav aria-label="Primary">
       <ul class="nav">

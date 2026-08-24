@@ -90,7 +90,7 @@ const say = (t: string) =>
               <li class="trow">
                 {/* A row is only a link where there is a page worth reaching. */}
                 {p.slug && p.bio ? (
-                  <a class="trow__link" href={`/people/${p.slug}/`}>
+                  <a class="trow__link ruled" href={`/people/${p.slug}/`}>
                     {p.portrait && (
                       <span class="trow__p">
                         <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
@@ -100,7 +100,7 @@ const say = (t: string) =>
                     <span class="trow__r">{p.role}</span>
                   </a>
                 ) : (
-                  <span class="trow__link">
+                  <span class="trow__link ruled">
                     {p.portrait && (
                       <span class="trow__p">
                         <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
@@ -122,7 +122,7 @@ const say = (t: string) =>
           <ul class="team__list">
             {alumni.map((p) => (
               <li class="trow">
-                <span class="trow__link">
+                <span class="trow__link ruled">
                   <span class="trow__n">{p.prefix} {p.name}</span>
                   <span class="trow__r">{p.role}</span>
                 </span>

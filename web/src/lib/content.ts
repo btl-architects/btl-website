@@ -172,7 +172,7 @@ export const getSettings = once(async (): Promise<Settings> => {
       peopleOnward: s?.peopleOnward || "The work behind the practice.",
       studioOnward: s?.studioOnward || "Tell us what you want to build.",
       notFoundLead: s?.notFoundLead ||
-        "It may have moved. The recent work is below, or start from the beginning.",
+        "It may have moved, or the link may be wrong. Here is what we did build.",
     },
     nav: s?.nav ?? [],
     social: (s?.social ?? []).map((x: any) => ({ label: x.label, short: x.label, url: x.url })),
