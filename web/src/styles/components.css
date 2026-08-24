@@ -1867,7 +1867,14 @@ body[data-preview] main { padding-top: var(--preview-h); }
   position: absolute; inset: 0 0 auto 0; z-index: 2;
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--s-5);
-  padding: var(--s-5) var(--page-margin);
+  /* The same inset on every side, so the close button sits square in its
+     corner. This used --page-margin across, which is the gutter the page's
+     content column is set in — but the viewer is full-bleed and has no content
+     column to line up with, so on a desktop the button drifted 50px in from
+     the right while sitting 24px down from the top. The caption below keeps the
+     wider gutter on purpose: it is centred prose and wants a measure, not a
+     corner. */
+  padding: var(--s-5);
   padding-top: calc(var(--s-5) + env(safe-area-inset-top, 0));
   pointer-events: none;
 }
