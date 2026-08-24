@@ -36,7 +36,7 @@ export default defineType({
       rows: 2,
       group: "studio",
       description:
-        "One or two lines about the people rather than the work — what it is like to deal with this practice. Leave it empty and the People page borrows the home page statement, which is about the practice rather than about the two of you.",
+        "One or two lines about the people rather than the work — what it is like to deal with this practice. It used to borrow the home page statement when left empty, which meant the same paragraph ran on three pages; now the People page simply opens with the photograph instead.",
     }),
     defineField({
       name: "studioBody",
