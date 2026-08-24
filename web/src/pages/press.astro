@@ -23,12 +23,17 @@ const items = await getPublications();
 const projects = await getProjects();
 const projectFor = (slug: string | null) =>
   slug ? projects.find((p) => p.slug === slug) : undefined;
+
+/* The press page shares as the building that got written about, not as a
+   masthead: the recognition means something because of the work behind it. */
+const firstFeatured = items.map((i) => projectFor(i.relatedProject)).find(Boolean);
 ---
 
 <Base
   title="Press — btl architects"
   description="Where the practice has been published."
   current="press"
+  share={firstFeatured?.hook}
 >
   <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
     <header class="index-head">

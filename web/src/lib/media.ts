@@ -142,6 +142,37 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
   };
 }
 
+/* The one image nobody on the site ever sees.
+ *
+ * A shared link is the practice's front door far more often than the home page
+ * is — somebody sends btldesigns.in on WhatsApp and what arrives is either a
+ * photograph of a building or a grey rectangle with a sentence in it. Until
+ * now it was the rectangle, on every page.
+ *
+ * Fixed 1200x630 because that is what the platforms crop to anyway, and doing
+ * it here means the hotspot an editor set in the Studio decides what survives
+ * the crop rather than the centre of the frame deciding for them. fit=crop
+ * instead of the ladder's fit=max for the same reason: this is the one place a
+ * photograph should be cut to a shape rather than fitted into one.
+ *
+ * Quality 80 rather than 68 — it is fetched once by a scraper and cached by the
+ * platform forever, so the usual argument about a visitor's data plan does not
+ * apply, and WhatsApp re-compresses hard on top of whatever it is given.
+ *
+ * No comma escaping needed: this URL never enters a srcset. */
+export function socialImage(image: SiteImage | null | undefined): string | null {
+  const source = image?.source;
+  if (!source || isSvg(source)) return null;
+  return urlFor(source)
+    .width(1200)
+    .height(630)
+    .fit("crop")
+    .crop("focalpoint")
+    .quality(80)
+    .auto("format")
+    .url();
+}
+
 /** Build-time guard: a missing image is a content bug, and should be loud. */
 export function requireImage(image: SiteImage): ResolvedImage {
   const r = resolveImage(image);

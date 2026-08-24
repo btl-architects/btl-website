@@ -31,6 +31,7 @@ const { project, prev, next } = Astro.props;
   title={`${project.title} — btl architects`}
   description={project.description.slice(0, 155) || `${project.title}, ${project.location} — btl architects.`}
   current="projects"
+  share={project.hook}
 >
   <main id="main" data-ground="dark" class="pj">
     <article>
