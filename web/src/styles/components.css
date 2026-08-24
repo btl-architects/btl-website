@@ -950,7 +950,25 @@ html:has(.menu[data-open="true"]) .header {
   .trow__p {
     display: block;
     position: absolute; top: 0; right: 0;
-    width: 30%; aspect-ratio: 3 / 4;
+
+    /* Height leads, width follows.
+     *
+     * This was width: 30% with the aspect ratio deriving the height, which
+     * meant the frame's height was set by how wide the window happened to be
+     * and had no relationship to the list beside it. With four names on a
+     * 1600px screen the portrait came out 571px tall against a section barely
+     * 340px high, so it hung out of the bottom — past the "next" link and over
+     * the footer, which is where it was noticed.
+     *
+     * Driving from height instead ties the frame to the thing it belongs to:
+     * it can never be taller than the list, because it is exactly as tall as
+     * the list. The width is then whatever keeps it a portrait, capped so a
+     * long team cannot push it across the names. */
+    height: 100%;
+    width: auto;
+    max-width: 30%;
+    aspect-ratio: 3 / 4;
+
     opacity: 0; clip-path: inset(0 0 100% 0);
     transition: opacity var(--dur-base) var(--ease), clip-path var(--dur-base) var(--ease);
     pointer-events: none;

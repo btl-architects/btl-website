@@ -147,9 +147,11 @@ const c = settings.contact;
               </div>
             </div>
           )}
-          <div class="spread__body rv" data-delay="1">
-            <p class="spread__say spread__say--lead">{home.peopleLead}</p>
-          </div>
+          {home.peopleLead && (
+            <div class="spread__body rv" data-delay="1">
+              <p class="spread__say spread__say--lead">{home.peopleLead}</p>
+            </div>
+          )}
         </div>
         <Onward href="/people/" quiet>Everyone at btl</Onward>
       </div>

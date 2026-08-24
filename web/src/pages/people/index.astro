@@ -59,9 +59,11 @@ const say = (t: string) =>
           </div>
         )}
 
-        <div class="spread__body rv" data-delay="1">
-          <p class:list={["spread__say", say((home.peopleLead ?? "")) ]}>{home.peopleLead}</p>
-        </div>
+        {home.peopleLead && (
+          <div class="spread__body rv" data-delay="1">
+            <p class:list={["spread__say", say(home.peopleLead)]}>{home.peopleLead}</p>
+          </div>
+        )}
       </div>
 
       {withBios.length > 0 && (

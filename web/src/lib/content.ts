@@ -336,11 +336,19 @@ export const getHome = once(async () => {
   }`);
   return {
     statement: s?.statement ?? "",
-    // The People page gets its own words when the practice writes them, and
-    // borrows the home statement until then — which is at least about who btl
-    // is, rather than repeating the Studio page's design philosophy back at the
-    // reader two pages later.
-    peopleLead: s?.peopleLead || s?.statement || "",
+    /* No fallback. This used to borrow the home statement when peopleLead was
+     * unwritten, on the reasoning that words about who btl is beat no words at
+     * all. In practice nobody ever wrote peopleLead, so the same paragraph ran
+     * three times — the home statement, the people section under it, and again
+     * at the top of the People page — which is how a fallback that looked
+     * generous turned into the site repeating itself to anyone who read more
+     * than one page.
+     *
+     * A borrowed sentence also hides the gap: while the page looked filled, no
+     * one had any reason to write the real one. Empty is honest, the sections
+     * that need it now decline to render (R15), and the day somebody writes a
+     * People introduction it appears on its own. */
+    peopleLead: s?.peopleLead ?? "",
     studio: {
       lead: s?.studioLead ?? "",
       body: (s?.studioBody ?? []) as string[],
