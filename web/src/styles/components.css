@@ -1271,8 +1271,20 @@ html:has(.menu[data-open="true"]) .header {
    looking at. This costs a screen of scrolling and gives them somewhere to
    stand. */
 
+/* The page's masthead, and the sole owner of the space beneath it.
+ *
+ * The top was clamp(--s-8, 18vh, --s-9), which on any ordinary screen resolved
+ * to the maximum. Together with the header it put 188px above a 92px word, and
+ * on the press page the first entry did not begin until 355px down — 39% of the
+ * screen spent before the reader sees anything they came for. The comparison
+ * that settles it is internal: People and Studio start their content 64px under
+ * the header. Five pages had five answers between 64 and 355.
+ *
+ * A masthead should still cost something — the index used to begin with a
+ * photograph hard against the header and gave the reader nowhere to land — but
+ * it should cost the same everywhere, and less than a third of the view. */
 .index-head {
-  padding: clamp(var(--s-8), 18vh, var(--s-9)) var(--page-margin) var(--s-8);
+  padding: clamp(var(--s-7), 9vh, var(--s-8)) var(--page-margin) var(--s-8);
   max-width: var(--max-width);
   margin-inline: auto;
 }
@@ -1463,7 +1475,13 @@ body[data-preview] main { padding-top: var(--preview-h); }
    sixty.
    ------------------------------------------------------------------------- */
 
-.credits { display: block; margin-top: var(--s-7); }
+/* No outer margin. A component that sets its own top margin is guessing about
+   a context it cannot see, and here it guessed wrong twice over: on the press
+   page it added 48px underneath a masthead that had already spent 64px of
+   padding on the same gap, so the space below the standfirst was larger than
+   the space above the title. Whatever a list of credits sits under is
+   responsible for the room it gets. */
+.credits { display: block; }
 
 .cr {
   display: grid;
@@ -1532,6 +1550,12 @@ body[data-preview] main { padding-top: var(--preview-h); }
 }
 
 /* The home page shows the first few, in the same shape. */
+/* The relationship owns the gap, not either element on its own. This is the
+   space .credits used to carry as its own margin-top, which is why it also
+   appeared under the press page's masthead where it was not wanted. Stated as
+   a sibling rule it applies exactly where the pairing occurs. */
+.home-sec__head + .credits { margin-top: var(--s-7); }
+
 .credits--preview .cr { padding-block: var(--s-4); }
 
 /* --- the menu button ------------------------------------------------------
