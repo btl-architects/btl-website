@@ -67,7 +67,6 @@ a { color: inherit; text-decoration: none; }
   padding-inline: var(--page-margin);
 }
 
-.section { padding-block: var(--space-section); }
 
 /* ==========================================================================
    Type roles

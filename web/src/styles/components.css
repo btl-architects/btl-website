@@ -1899,8 +1899,14 @@ body[data-preview] main { padding-top: var(--preview-h); }
 
 .lb__cap {
   position: absolute; inset: auto 0 0 0; z-index: 2;
-  padding: var(--s-5) var(--page-margin);
+  /* A measure, not the page's gutter. Same correction as the bar above: the
+     viewer is full-bleed and has no content column for --page-margin to line
+     up with, so the caption's inset grew with the window for no reason. It is
+     centred prose, so what it actually wants is a line length. */
+  padding: var(--s-5);
   padding-bottom: calc(var(--s-5) + env(safe-area-inset-bottom, 0));
+  max-width: var(--measure);
+  margin-inline: auto;
   font-size: var(--type-caption);
   color: rgb(255 255 255 / 0.72);
   text-align: center;
