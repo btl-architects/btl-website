@@ -385,7 +385,15 @@ html:has(.menu[data-open="true"]) .header {
      flattened into one grid of pictures. */
   display: flex; flex-direction: column; gap: var(--s-8);
   width: 100%; max-width: var(--max-width); margin-inline: auto;
-  padding: 0 var(--page-margin) var(--space-section);
+  /* The underside is --s-8, not --space-section.
+   *
+   * The Onward beneath this already brings its own --s-6 of margin, so a full
+   * section's worth of padding here made 160px between the last card and
+   * "Next" — where the same content-to-onward transition measures 99 on a
+   * project page and 113 on Studio. Third time this site has paid twice for
+   * one gap: the statement section, the closing section, and here. The list
+   * pads to the ordinary rhythm and lets the Onward finish the job. */
+  padding: 0 var(--page-margin) var(--s-8);
 }
 
 /* Cards arrive by being uncovered, like everything else (R10) — not by
@@ -803,6 +811,19 @@ html:has(.menu[data-open="true"]) .header {
  * coming out of a full-height film, and taking that away would land the reader
  * on the type before they have finished leaving the video. */
 .home-sec--compress.home-sec--midpage { padding-bottom: var(--s-8); }
+
+/* A pause is generous on ONE side, not both.
+ *
+ * --compress pads top and bottom by --space-section, and where that met an
+ * ordinary section's 64px it produced a gap nothing else on the page had:
+ * every inter-section gap on the home page measures 134px except the one above
+ * Contact, which measured 198. Two components were each paying for the same
+ * piece of empty space.
+ *
+ * The statement's generous side is the top, because it comes out of a
+ * full-height film. The closing section's is the bottom, and it already gets
+ * that from .page-end — so its top rejoins the ordinary rhythm. */
+.home-sec--compress.home-sec--closing { padding-top: var(--s-8); }
 
 /* the section head is a label, not a headline. The work is the headline. */
 .home-sec__head {
