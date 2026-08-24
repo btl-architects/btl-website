@@ -1,0 +1,72 @@
+---
+/* A statement: one line said loudly, the rest said quietly.
+ *
+ * This is the grammar the site already speaks — the Studio page, the thank-you
+ * page and every person page set a large line and follow it with a smaller one.
+ * Three places did not: the home statement, the people section under it, and
+ * the top of the People page, each of which rendered a single flat block. A
+ * paragraph of even weight in a wide dark band is what "sparse" actually means
+ * here; there was nothing in it to look at first.
+ *
+ * It also ends a duplication. The rule for whether a line is display size or
+ * lead size — sixteen words — was written out in two page templates, which is
+ * two places for it to drift.
+ *
+ * Two ways to use it. Hand it `text` and it finds the opening sentence itself;
+ * hand it `text` and `note` and it trusts you, for the pages whose lead and
+ * body are separate fields in the CMS.
+ */
+interface Props {
+  /** The statement. Split at its first sentence unless `note` is given. */
+  text: string;
+  /** The quiet half, when the content model already keeps them apart. */
+  note?: string;
+  /** Extra classes for the wrapper. */
+  class?: string;
+}
+
+const { text, note, class: cls } = Astro.props;
+
+/* Abbreviations that end in a full stop and are not the end of anything.
+ * "Ar." is the one that matters on an architecture practice's website — every
+ * principal's name begins with it, and a splitter that does not know that would
+ * cut "Ar. Thressia Paul" into a heading and an orphan. */
+const ABBR = /\b(?:Ar|Mr|Mrs|Ms|Dr|Prof|St|Rd|No|vs|etc|e\.g|i\.e)\.$/i;
+
+/* Deliberately conservative: it would rather leave a statement whole than cut
+ * it in the wrong place. A split only happens when there is a real sentence
+ * boundary, the opening is long enough to carry a display line, and something
+ * is actually left over. Anything else falls through and renders as one block,
+ * which is exactly what these pages did before and was never broken — only
+ * flat. */
+function split(raw: string): { lead: string; rest: string } {
+  const t = (raw ?? "").trim();
+  const boundary = /([.!?])\s+(?=[A-Z"'“])/g;
+  let m: RegExpExecArray | null;
+  while ((m = boundary.exec(t)) !== null) {
+    const head = t.slice(0, m.index + 1);
+    const tail = t.slice(boundary.lastIndex).trim();
+    if (ABBR.test(head)) continue;
+    if (head.length < 16 || !tail) continue;
+    return { lead: head, rest: tail };
+  }
+  return { lead: t, rest: "" };
+}
+
+const parts = note ? { lead: (text ?? "").trim(), rest: note.trim() } : split(text);
+
+/* Short enough to be a statement, or long enough to be a paragraph? The scale
+ * follows the writing rather than the writing being made to fit a scale. Now
+ * measured against the opening line alone, which is the point of splitting:
+ * a sentence that was too long to set large is usually only too long because
+ * the detail was still attached to it. */
+const size =
+  parts.lead.trim().split(/\s+/).length <= 16 ? "spread__say--display" : "spread__say--lead";
+---
+
+{parts.lead && (
+  <div class:list={["statement", cls]}>
+    <p class:list={["spread__say", size]}>{parts.lead}</p>
+    {parts.rest && <p class="spread__note">{parts.rest}</p>}
+  </div>
+)}

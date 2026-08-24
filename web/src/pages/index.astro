@@ -13,6 +13,7 @@
  * and finally the page resolves once into contact.
  */
 import Base from "../layouts/Base.astro";
+import Statement from "../components/Statement.astro";
 import MediaStage from "../components/MediaStage.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Figure from "../components/Figure.astro";
@@ -48,9 +49,9 @@ const c = settings.contact;
     </section>
 
     {/* COMPRESSION — one line, a lot of air */}
-    <section class="home-sec home-sec--compress" id="statement" data-ground="dark">
+    <section class="home-sec home-sec--compress home-sec--midpage" id="statement" data-ground="dark">
       <div class="container">
-        <p class="home-statement rv">{home.statement}</p>
+        <Statement text={home.statement} class="rv" />
       </div>
     </section>
 
@@ -87,8 +88,7 @@ const c = settings.contact;
             </div>
           )}
           <div class="spread__body rv" data-delay="1">
-            <p class="spread__say spread__say--display">{home.studio.lead}</p>
-            {home.studio.body[0] && <p class="spread__note">{home.studio.body[0]}</p>}
+            <Statement text={home.studio.lead} note={home.studio.body[0]} />
           </div>
         </div>
         <Onward href="/studio/" quiet>How the practice works</Onward>
@@ -149,7 +149,7 @@ const c = settings.contact;
           )}
           {home.peopleLead && (
             <div class="spread__body rv" data-delay="1">
-              <p class="spread__say spread__say--lead">{home.peopleLead}</p>
+              <Statement text={home.peopleLead} />
             </div>
           )}
         </div>

@@ -241,14 +241,6 @@ html:has(.menu[data-open="true"]) .header {
 }
 
 /* the one line after the opening: the compression that follows the immersion */
-.home-statement {
-  /* One step down from where this started (was 1.25–2.125rem). At display
-     scale a thirty-word paragraph stops being a statement and becomes a wall
-     the reader has to get past before reaching the work. */
-  font-size: clamp(1.0625rem, 0.85rem + 0.9vw, 1.625rem);
-  line-height: 1.45; letter-spacing: -0.005em;
-  max-width: 42ch; color: var(--text-primary);
-}
 
 /* the home page runs the index's own cards, so it needs none of its own
    spacing — only room to breathe inside a section that already has padding */
@@ -805,6 +797,20 @@ html:has(.menu[data-open="true"]) .header {
 .home-sec { padding-block: var(--s-8); }
 .home-sec--release { padding-block: var(--s-7) 0; }      /* image runs to the edge */
 .home-sec--compress { padding-block: var(--space-section); }
+
+/* A compress section that is not the last thing on the page.
+ *
+ * Both sides at --space-section is right for the closing pause, where the
+ * section is the end of the reading and the space is the point. Mid-page it is
+ * not: the statement is 197px of type inside 256px of padding, the only
+ * section on the home page with more padding than content, and the section
+ * after it adds another 48 of its own — so 176px sat between the last line and
+ * "Selected Work".
+ *
+ * Only the underside gives way. The top is doing real work: it is the breath
+ * coming out of a full-height film, and taking that away would land the reader
+ * on the type before they have finished leaving the video. */
+.home-sec--compress.home-sec--midpage { padding-bottom: var(--s-8); }
 
 /* the section head is a label, not a headline. The work is the headline. */
 .home-sec__head {

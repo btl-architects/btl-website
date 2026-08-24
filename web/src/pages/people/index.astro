@@ -16,6 +16,7 @@ import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
 import { getPeople, getHome, getSettings } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
+import Statement from "../../components/Statement.astro";
 
 const people = await getPeople();
 const principals = people.filter((p) => p.tier === "principal");
@@ -29,10 +30,6 @@ const copy = (await getSettings()).copy;
 const founders = home.founders;
 const withBios = principals.filter((p) => p.bio);
 
-/* Short enough to be a statement, or long enough to be a paragraph? The scale
-   follows the writing rather than the writing being forced to fit a scale. */
-const say = (t: string) =>
-  t.trim().split(/\s+/).length <= 16 ? "spread__say--display" : "spread__say--lead";
 ---
 
 <Base
@@ -61,7 +58,7 @@ const say = (t: string) =>
 
         {home.peopleLead && (
           <div class="spread__body rv" data-delay="1">
-            <p class:list={["spread__say", say(home.peopleLead)]}>{home.peopleLead}</p>
+            <Statement text={home.peopleLead} />
           </div>
         )}
       </div>
