@@ -1417,6 +1417,48 @@ html:has(.menu[data-open="true"]) .header {
  * ending guard in tools/budget.mjs. */
 .page-end { padding-bottom: var(--space-section); }
 
+/* --- moving between pages ---------------------------------------------------
+ * Every navigation on this site was a hard cut: the page went white-black for
+ * an instant and rebuilt. Cross-document view transitions replace that with a
+ * dissolve, and they cost nothing — this is the whole implementation, there is
+ * no router, no framework and not one byte of JavaScript. Browsers without the
+ * feature navigate exactly as they did before.
+ *
+ * Same-origin only, by the spec. The press credits link out to publications and
+ * are unaffected, which is correct: leaving the site should feel like leaving.
+ */
+@view-transition { navigation: auto; }
+
+/* The chrome holds still while the content changes. Without a name the header
+   and footer are part of the page snapshot and cross-fade with everything else,
+   which makes the whole window blink; named, they are treated as the same
+   object either side of the navigation and simply stay put. */
+.header { view-transition-name: site-header; }
+.footer { view-transition-name: site-footer; }
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  /* Slower than a hover and shorter than the card opening: long enough to read
+     as a dissolve rather than a flash, short enough that a reader clicking
+     through four projects is never waiting for the site. */
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease);
+}
+
+/* The cover morphs from one project to the next rather than fading. This is the
+   only place on the site where two pages share an object, and it is the reason
+   the pager is worth clicking twice. */
+::view-transition-group(project-cover) {
+  animation-duration: var(--dur-slow);
+  animation-timing-function: var(--ease);
+}
+
+/* A reader who has asked for less motion gets the cut back. The transition is
+   the enhancement; the navigation always worked. */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
+
 /* Two things still moved for a reader who has asked the operating system for
    less of it: the card caption lifting two pixels under the pointer, and the
    team portrait wiping in on hover. Colour, background and opacity are left

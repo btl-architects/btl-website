@@ -46,7 +46,12 @@ if (project.credits.photographer) meta.push(["Photograph", project.credits.photo
     </dl>
   </div>
   {project.images.map((image, j) => (
-    <figure class="rail__f">
+    /* The cover carries a view-transition-name, so moving between two projects
+       with the pager morphs one cover into the next instead of cutting. The
+       name is the same on every project page and appears exactly once per
+       document, which is what the API requires — two elements sharing a name
+       in one document silently cancels the entire transition. */
+    <figure class="rail__f" style={j === 0 ? "view-transition-name: project-cover" : undefined}>
       <Figure
         image={image}
         sizes={RAIL_SIZES}
