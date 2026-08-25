@@ -115,6 +115,14 @@
 
   --space-section:    clamp(4rem, 2rem + 7vw,  8rem);
 
+  /* The ordinary rhythm between sections, as opposed to --space-section, which
+     is the big pause. Fluid for the same reason the type is: --s-8 is a flat
+     64px at every width, so on a phone two sections put 128px between them —
+     16% of an 812px screen — while the same gap on a desktop is 14% of a much
+     wider, shorter view. Fixed spacing inside a fluid type scale reads as
+     generous on a laptop and as scrolling through nothing on a phone. */
+  --space-band:       clamp(2.5rem, 1.5rem + 2.5vw, 4rem);
+
   /* How tall a photograph on a spread may be.
      Not a magic number buried in one rule: the Studio page, the home studio
      section, the People spread and the press spreads all read it, so raising it

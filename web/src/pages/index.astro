@@ -73,28 +73,6 @@ const c = settings.contact;
       </div>
     </section>
 
-    {/* The practice, in the room it works in. This used to be two paragraphs
-        and nothing else — the start of a long text-only run that made the whole
-        second half of the page a wall. */}
-    <section class="home-sec" id="studio" data-ground="dark">
-      <div class="container">
-        <div class="home-sec__head">
-          <h2 class="home-sec__k">Studio</h2>
-        </div>
-        <div class="spread spread--flip">
-          {home.studio.image && (
-            <div class="spread__media rv">
-              <Figure image={home.studio.image} sizes="420px" />
-            </div>
-          )}
-          <div class="spread__body rv" data-delay="1">
-            <Statement text={home.studio.lead} note={home.studio.body[0]} />
-          </div>
-        </div>
-        <Onward href="/studio/" quiet>How the practice works</Onward>
-      </div>
-    </section>
-
     {/* The outside world's verdict, built from the same spread as Studio and
         People — which is the point. It read as a bolted-on widget because it
         was one: a bordered two-column box in the middle of a page that is
@@ -124,7 +102,29 @@ const c = settings.contact;
       </section>
     )}
 
-    {/* The faces behind the credibility the press section just established.
+    {/* The practice, in the room it works in. This used to be two paragraphs
+        and nothing else — the start of a long text-only run that made the whole
+        second half of the page a wall. */}
+    <section class="home-sec" id="studio" data-ground="dark">
+      <div class="container">
+        <div class="home-sec__head">
+          <h2 class="home-sec__k">Studio</h2>
+        </div>
+        <div class="spread spread--flip">
+          {home.studio.image && (
+            <div class="spread__media rv">
+              <Figure image={home.studio.image} sizes="420px" />
+            </div>
+          )}
+          <div class="spread__body rv" data-delay="1">
+            <Statement text={home.studio.lead} note={home.studio.body[0]} />
+          </div>
+        </div>
+        <Onward href="/studio/" quiet>How the practice works</Onward>
+      </div>
+    </section>
+
+    {/* The faces behind the practice the section above just described.
         The founders photograph rather than two portraits, because there are no
         individual portraits — and this frame says more about the practice than
         two headshots would anyway. */}

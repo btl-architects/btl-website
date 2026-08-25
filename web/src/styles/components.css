@@ -828,7 +828,7 @@ html:has(.menu[data-open="true"]) .header {
    measure, type-led). Every section being the same shape was the problem —
    heading, hairline, link, grid, five times over, so nothing led. */
 
-.home-sec { padding-block: var(--s-8); }
+.home-sec { padding-block: var(--space-band); }
 .home-sec--release { padding-block: var(--s-7) 0; }      /* image runs to the edge */
 .home-sec--compress { padding-block: var(--space-section); }
 
