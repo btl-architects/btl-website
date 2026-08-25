@@ -137,8 +137,17 @@
   /* How wide a content card wants to be, before the grid decides how many fit.
      Repeating card grids state THIS and derive their column count from it —
      never the other way round, which makes the card size a function of the
-     window and inflates it on every wider screen. */
-  --card-min:         22rem;
+     window and inflates it on every wider screen.
+
+     18rem, not 22. A minimum is a promise that a card will never be NARROWER
+     than this, and the grid keeps it by dropping a column — so the number is
+     really a decision about the narrowest screen the grid runs on, not the
+     widest. At 22rem a 768px tablet could not fit two 352px cards beside a
+     32px gap, fell to one column of 706px, and the press section went from
+     15% of the home page to 30% of it. Chosen against the tightest case
+     instead: two columns at 768, three at 1024, and it still holds the card
+     between 294 and 375px at every width above that. */
+  --card-min:         18rem;
 
   --spread-max-h:     74svh;
   --space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);
