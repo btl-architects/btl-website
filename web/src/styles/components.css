@@ -969,11 +969,17 @@ html:has(.menu[data-open="true"]) .header {
    * statement centres itself, two either side of the photograph. Three gaps that
    * nobody chose, all of them growing with the window.
    *
-   * `auto auto` sizes each column to its own content, and justify-content: start
-   * is what stops them stretching — auto tracks absorb free space by default,
-   * which would put the voids straight back. The pair then sits at the content
-   * edge with one deliberate gap between them, and the slack falls outside the
-   * block instead of being shared out inside it.
+   * `auto auto` sizes each column to its own content, and justify-content is what
+   * stops them stretching — auto tracks absorb free space by default, which would
+   * put the voids straight back.
+   *
+   * Centred, not packed to the start. The photograph is a tall portrait: filling
+   * half of a 1793px page would make it 1543px high, so no amount of extra
+   * content makes equal columns work — the pair is about 1240px wide and the page
+   * is wider than that, full stop. Left-anchored, all of the difference piled up
+   * on the right and read as a missing column. Split either side of a centred
+   * block it reads as margin, which is what it is. The section label stays on the
+   * content edge above it, marking the section the way a folio marks a page.
    *
    * Not named columns: .spread leads with the photograph and .spread--flip leads
    * with the text, so anything that says "the first column is the text" is wrong
@@ -981,7 +987,7 @@ html:has(.menu[data-open="true"]) .header {
    * in a column sized for a paragraph. */
   .spread {
     grid-template-columns: minmax(0, auto) minmax(0, auto);
-    justify-content: start;
+    justify-content: center;
     gap: var(--s-9);
     align-items: center;
   }
@@ -1562,6 +1568,27 @@ html:has(.menu[data-open="true"]) .header {
    failure mode dark instead of bright. */
 ::view-transition { background: var(--surface); }
 @keyframes vt-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* The chrome is the one thing that must be allowed to leave.
+ *
+ * Holding the outgoing snapshot at full opacity is right for the page — the new
+ * one paints over it and nothing is ever see-through. It is wrong for the header,
+ * because the header's appearance is a STATE, not content: it is transparent at
+ * the top of a page and black once pinned by scrolling. Arriving at the home page
+ * from a scrolled one, the old black bar sat at opacity 1 over the opening film
+ * for the whole transition and then vanished in one frame — the bar snapping away
+ * as the video appeared behind it.
+ *
+ * It can cross-fade safely now. The reason the old snapshot had to hold in the
+ * first place was that two part-way transparent layers let the white canvas
+ * through; ::view-transition paints the site's ground underneath everything, so
+ * the worst a crossfade can reveal is the ground itself. */
+::view-transition-old(site-header),
+::view-transition-old(site-footer) {
+  animation: vt-fade-out var(--dur-base) var(--ease) both;
+  opacity: 1;
+}
 
 /* The cover morphs from one project to the next rather than fading. This is the
    only place on the site where two pages share an object, and it is the reason
