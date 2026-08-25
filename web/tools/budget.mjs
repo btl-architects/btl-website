@@ -207,6 +207,47 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
   }
 }
 
+/* --- a transition shorthand that eats its neighbour --------------------------
+ *
+ * `transition` is a shorthand: it replaces the property, it does not add to it.
+ * So when one element carries two concerns that each declare a transition, the
+ * rule written later wins outright and the other animation is gone — no error,
+ * no warning, it simply never runs.
+ *
+ * That is what happened to the project cards. Every .pcard is also a .rvc; the
+ * reveal declared `transition: clip-path`, .pcard declared `transition: height`
+ * a few lines further down at the same specificity, and the reveal was deleted.
+ * The cards had been snapping into place instead of animating for as long as
+ * the component has existed, which is what "everything appears at once" was.
+ *
+ * The reveal is now a token, and any transition list on a component that is also
+ * a reveal has to include it. Checked, not trusted. */
+const REVEAL_COMPONENTS = [".pcard"];
+
+for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
+  const css = readFileSync(join(STYLES, file), "utf8");
+  const rule = /([^{}]*)\{([^{}]*)\}/g;
+  let m;
+  while ((m = rule.exec(css))) {
+    /* Only the shorthand clobbers. transition-duration and friends are additive. */
+    if (!/(^|[;\s])transition\s*:/.test(m[2])) continue;
+    const sel = m[1].replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").trim();
+    if (!sel) continue;
+    const hit = REVEAL_COMPONENTS.find((c) => sel.split(",").some((s) => s.trim() === c));
+    if (!hit) continue;
+    /* `transition: none` is a deliberate opt-out — reduced motion turns the
+       whole thing off, and that is allowed. */
+    if (/transition\s*:\s*none/.test(m[2])) continue;
+    if (!m[2].includes("var(--tr-reveal)")) {
+      const line = css.slice(0, m.index).split("\n").length;
+      failures.push(
+        `${file}:${line} sets the transition shorthand on ${hit}, which is also a .rvc, ` +
+          `without var(--tr-reveal) — this deletes the card's reveal animation`,
+      );
+    }
+  }
+}
+
 console.log("\n[budget] gzipped, first paint");
 for (const [label, size, limit, note] of report) {
   const pct = Math.round((size / limit) * 100);

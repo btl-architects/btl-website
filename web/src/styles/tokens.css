@@ -128,6 +128,12 @@
      section, the People spread and the press spreads all read it, so raising it
      raises them together. 74svh keeps the heading above and the paragraph
      beside it on screen at the same time, which is the point of a spread. */
+  /* The scroll reveal's transition, as a token rather than a literal.
+     A component that is also a .rvc has to restate it — the `transition`
+     shorthand replaces rather than adds — and restating a literal is how the
+     project cards lost their reveal without anyone noticing. */
+  --tr-reveal:        clip-path var(--dur-slow) var(--ease);
+
   --spread-max-h:     74svh;
   --space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);
 
@@ -135,7 +141,29 @@
   --grid-cols:   12;
   --grid-gap:    clamp(1rem, 0.5rem + 1.5vw, 1.5rem);
   --page-margin: clamp(1.25rem, 0.6rem + 2.8vw, 4.5rem);
-  --max-width:   96rem;
+
+  /* How wide the page is allowed to get.
+   *
+   * This was 96rem, and it was doing a job it does not have to do. A page cap
+   * usually exists to stop prose running to an unreadable line length — but
+   * prose here is already capped by --measure and --measure-lead in ten places,
+   * so the page cap was never what kept text readable. All it did was box the
+   * photographs.
+   *
+   * The cost showed on the home page. The opening film and the release rail are
+   * full-bleed; at 1920 the cap left everything under them floating in 255px of
+   * dead ground either side, so the page went edge-to-edge, then boxed, then
+   * edge-to-edge again. That reads as a mistake rather than a rhythm, and it got
+   * worse the better the reader's monitor was.
+   *
+   * At 120rem the page is the window minus its margin at every ordinary screen
+   * size up to 1920, and the cap only starts holding on genuinely enormous
+   * displays, where a 12-column grid does need a limit. Prose is unaffected —
+   * it never reached this width in the first place.
+   *
+   * Still exactly one edge: this is read only by the shared content-edge rule in
+   * base.css, and the build fails anything that re-derives it. */
+  --max-width:   120rem;
 
   /* ---- shape ------------------------------------------------------------- */
   --radius-none: 0;

@@ -25,6 +25,39 @@
   document.documentElement.classList.add("js");
 
   var reveals = document.querySelectorAll(".rv, .rvc, .ruled");
+
+  /* One way in, used by every path that reveals something.
+   *
+   * There used to be three, and two of them cheated: they set clipPath = "none"
+   * inline at the moment of revealing, which overrides the `inset(0 0 0 0)` the
+   * .in class transitions towards and cancels the animation outright. So a card
+   * the observer caught slid open, and a card the 1200ms backstop caught simply
+   * appeared. On the projects page the backstop is what usually wins — which is
+   * why the whole list arrived at once, a second in, with no animation: not a
+   * loading delay, a reveal that skipped itself.
+   *
+   * Clearing the clip is a CLEANUP step and belongs after the transition ends,
+   * where the transitionend handler above already does it. The only caller
+   * allowed to skip straight to the end state is revealAll(), which exists for
+   * the cases where there is no animation to run.
+   *
+   * `stagger` spaces siblings revealed in the same pass. Without it a screenful
+   * of cards animates as one block, which reads as a page popping rather than a
+   * list arriving. It is cleared on transitionend so a delay meant for one
+   * entrance never lingers on a later state change. */
+  var STAGGER_MS = 90;
+  function reveal(el, stagger) {
+    if (el.classList.contains("in")) return;
+    if (stagger) el.style.transitionDelay = stagger + "ms";
+    el.classList.add("in");
+  }
+
+  document.addEventListener("transitionend", function (ev) {
+    if (ev.target.style && ev.target.style.transitionDelay) ev.target.style.transitionDelay = "";
+  });
+
+  /* The end state, reached without animating: reduced motion, a hidden tab, or
+     a browser with no IntersectionObserver. Here the inline clip IS correct. */
   function revealAll() {
     reveals.forEach(function (el) {
       el.classList.add("in");
@@ -42,8 +75,11 @@
       if (document.hidden) { revealAll(); document.removeEventListener("visibilitychange", once); }
     });
     var io = new IntersectionObserver(function (entries) {
+      var n = 0;
       entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+        if (!e.isIntersecting) return;
+        reveal(e.target, n++ * STAGGER_MS);
+        io.unobserve(e.target);
       });
     }, { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
     reveals.forEach(function (el) { io.observe(el); });
@@ -68,12 +104,12 @@
     function sweep() {
       ticking = false;
       var vh = window.innerHeight;
+      var n = 0;
       pending = pending.filter(function (el) {
         if (el.classList.contains("in")) return false;
         var r = el.getBoundingClientRect();
         if (r.top < vh && r.bottom > 0) {
-          el.classList.add("in");
-          if (el.classList.contains("rvc")) el.style.clipPath = "none";
+          reveal(el, n++ * STAGGER_MS);
           return false;
         }
         return true;

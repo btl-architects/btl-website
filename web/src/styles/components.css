@@ -410,14 +410,30 @@ html:has(.menu[data-open="true"]) .header {
    sliding, which is what the older .rv primitive does. Each waits until it is
    actually approaching the viewport, so the page below is never pre-animated. */
 @media (prefers-reduced-motion: no-preference) {
-  :where(.js) .rvc { clip-path: inset(0 0 100% 0); transition: clip-path var(--dur-slow) var(--ease); }
+  /* The reveal's transition is a token, not a literal, because it has to be
+     repeated on every component that is ALSO a .rvc — see .pcard below. */
+  :where(.js) .rvc { clip-path: inset(0 0 100% 0); transition: var(--tr-reveal); }
   :where(.js) .rvc.in { clip-path: inset(0 0 0 0); }
 }
 
+/* Every .pcard is also a .rvc, and both used to set the `transition` SHORTHAND.
+ * A shorthand replaces the whole property rather than adding to it, and these
+ * two rules sit at the same specificity — :where(.js) was chosen deliberately to
+ * keep it that way — so the one written later in the file won outright. .pcard
+ * is later. The result: clip-path was never in the card's transition list at
+ * all, and the reveal it was supposed to animate simply snapped.
+ *
+ * That is what "the projects all appear at once with no animation" was. Not the
+ * images loading, not the observer: an animation that had been silently deleted
+ * by a neighbouring rule, on the one component where it mattered most.
+ *
+ * So the reveal is a token and every transition list on this element carries it.
+ * If you add another `transition:` for .pcard, it must include var(--tr-reveal)
+ * — tools/budget.mjs fails the build if it does not. */
 .pcard {
   position: relative;
   height: clamp(11rem, 27vh, 21rem);
-  transition: height var(--dur-slow) var(--ease);
+  transition: height var(--dur-slow) var(--ease), var(--tr-reveal);
   cursor: pointer;
 }
 .pcard[data-open="true"] { cursor: default; }
@@ -518,7 +534,7 @@ html:has(.menu[data-open="true"]) .header {
      effect is switched off rather than fought with exceptions. */
   .pindex:not(:has([data-open="true"])):hover .pcard { opacity: .5; }
   .pindex:not(:has([data-open="true"])):hover .pcard:hover { opacity: 1; }
-  .pcard { transition: height var(--dur-slow) var(--ease), opacity var(--dur-hover) var(--ease); }
+  .pcard { transition: height var(--dur-slow) var(--ease), opacity var(--dur-hover) var(--ease), var(--tr-reveal); }
 
   /* The caption lifts very slightly on hover — but the TYPE lifts, never the
      element carrying the scrim. Moving the scrim itself pulled its bottom edge
@@ -1453,13 +1469,36 @@ html:has(.menu[data-open="true"]) .header {
 
    The new snapshot already paints above the old one, so there is no moment when
    either is see-through and no gap to look through. */
-::view-transition-old(root) {
+/* Every group, not the root by name.
+ *
+ * The first version of this rule said (root) and stopped, which fixed the page
+ * body and left the white flash exactly where it had always been. .header and
+ * .footer are NAMED above, and naming an element LIFTS IT OUT of the root
+ * snapshot — it becomes its own group with its own animation, and the root
+ * snapshot is left with a hole where it used to be. Those two groups kept the
+ * browser default, a true crossfade, so at the midpoint both were part-way
+ * transparent over a hole. On a black site that is a white band across the top
+ * and bottom of the window on every navigation.
+ *
+ * So the rule is written for the category — (*) matches every name, including
+ * ones added later — rather than for the one member of it I happened to be
+ * looking at. Naming a new shared element now inherits the right behaviour
+ * instead of quietly reintroducing this. */
+::view-transition-old(*) {
   animation: none;
   opacity: 1;
 }
-::view-transition-new(root) {
+::view-transition-new(*) {
   animation: vt-fade-in var(--dur-base) var(--ease) both;
 }
+
+/* And a floor under all of it. The snapshots paint onto the transition overlay,
+   and anywhere they do not cover — a hole left by a named group, a page shorter
+   than the last one — the overlay itself is what shows. Painting it the site's
+   ground means there is no arrangement of groups, present or future, that can
+   expose white. The rules above make the transition correct; this makes the
+   failure mode dark instead of bright. */
+::view-transition { background: var(--surface); }
 @keyframes vt-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* The cover morphs from one project to the next rather than fading. This is the
