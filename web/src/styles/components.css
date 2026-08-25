@@ -945,8 +945,43 @@ html:has(.menu[data-open="true"]) .header {
 .spread { display: grid; gap: var(--s-7); align-items: start; }
 
 @media (min-width: 60rem) {
+  /* Columns sized by what is in them, not by halving the page.
+   *
+   * 6fr/6fr splits the container down the middle, and neither half can fill
+   * itself: the photograph is capped at --spread-max-h × its own ratio so it
+   * scales down whole, and the text is capped at its measure. So on a wide page
+   * an 849px column held a 416px picture and a 688px paragraph, and the leftover
+   * came back as three separate voids — one to the left of the text because the
+   * statement centres itself, two either side of the photograph. Three gaps that
+   * nobody chose, all of them growing with the window.
+   *
+   * Now the text column IS the measure and the image column is the picture's own
+   * width, and the slack goes to one gap in the middle that the layout is
+   * actually asking for. The text sits on the content edge and the photograph
+   * sits on the opposite one, which is what the rest of the site does. */
+  /* Columns sized by what is in them, not by halving the page.
+   *
+   * 6fr/6fr split the container down the middle, and neither half could fill
+   * itself: the photograph is capped at --spread-max-h × its own ratio so it
+   * scales down whole, and the text is capped at its measure. So on a wide page
+   * an 849px column held a 416px picture and a 688px paragraph, and the leftover
+   * came back as three separate voids — one to the left of the text because the
+   * statement centres itself, two either side of the photograph. Three gaps that
+   * nobody chose, all of them growing with the window.
+   *
+   * `auto auto` sizes each column to its own content, and justify-content: start
+   * is what stops them stretching — auto tracks absorb free space by default,
+   * which would put the voids straight back. The pair then sits at the content
+   * edge with one deliberate gap between them, and the slack falls outside the
+   * block instead of being shared out inside it.
+   *
+   * Not named columns: .spread leads with the photograph and .spread--flip leads
+   * with the text, so anything that says "the first column is the text" is wrong
+   * half the time — which is exactly what it did, putting the People photograph
+   * in a column sized for a paragraph. */
   .spread {
-    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    grid-template-columns: minmax(0, auto) minmax(0, auto);
+    justify-content: start;
     gap: var(--s-9);
     align-items: center;
   }
@@ -993,6 +1028,33 @@ html:has(.menu[data-open="true"]) .header {
   max-width: calc(var(--spread-max-h) * var(--img-ratio, 100));
   margin-inline: auto;
 }
+
+/* WIDTH, not just max-width — so the column can be sized by the picture.
+ *
+ * With `width: 100%` a photograph asks its container how big it is, and its
+ * max-content contribution collapses to whatever srcset candidate the browser
+ * downloaded. A grid track sized to that content then lands on a number the
+ * network chose: the founders photograph laid out at 358px, which is the exact
+ * failure Figure.astro warns about a few lines above its own ratio calculation.
+ *
+ * Stating the width as the cap makes the picture's size a property of the
+ * picture — its own ratio against the height limit — so the track around it is
+ * the same size whichever file arrived. max-width: 100% keeps it inside a narrow
+ * column, and a landscape image produces a cap wider than any column and is
+ * simply bounded by that, exactly as before. */
+@media (min-width: 60rem) {
+  .spread__media img {
+    width: calc(var(--spread-max-h) * var(--img-ratio, 100));
+    max-width: 100%;
+  }
+}
+
+/* The text column is the measure, so nothing is left over to centre inside.
+   .statement centres its lines; given a column wider than the lines themselves
+   that centring became a void on the left of every spread — 62px on Studio at
+   1920, and growing. Capping the body at the same measure its lines already use
+   makes the column and its contents the same object. */
+.spread__body { max-width: var(--measure-lead); }
 
 /* The scrim exists so type clears contrast against concrete, which sits around
    mid-grey. A gradient over the frame, not a box around it — R5 holds. */
@@ -1540,8 +1602,23 @@ html:has(.menu[data-open="true"]) .header {
   gap: var(--s-6) var(--s-5);
 }
 
+/* Above the phone the COUNT stops being the constant and the CARD does.
+ *
+ * This said repeat(3, 1fr), which reads as "three across" but actually means
+ * "whatever a third of the page happens to be". At a 96rem page that was 480px
+ * and looked deliberate; at 120rem it became 576px and the cards were simply
+ * too big — the layout had no opinion about how large a press credit should be,
+ * so it inherited one from the window.
+ *
+ * Stated the other way round, the card holds its size and the number of columns
+ * falls out of the width: three at 1280, three at 1440, four from about 1600 up.
+ * The card stays between 375 and 425px at every size instead of inflating, and
+ * a wider page in future adds a column rather than fattening the cards. */
 @media (min-width: 48rem) {
-  .credits { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-8) var(--s-6); }
+  .credits {
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+    gap: var(--s-8) var(--s-6);
+  }
 }
 
 .pc {

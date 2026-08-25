@@ -248,6 +248,50 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
   }
 }
 
+/* --- card grids state a size, not a count -----------------------------------
+ *
+ * A grid of repeating content has two ways to be written, and they read almost
+ * the same: repeat(3, 1fr) says "three across", and repeat(auto-fill,
+ * minmax(22rem, 1fr)) says "as many as fit at this size". The first one has no
+ * opinion about how big a card should be — it inherits one from the window, so
+ * the card grows every time the page gets wider. That is exactly what happened
+ * when the page cap went from 96rem to 120rem: the press credits went from 480px
+ * to 576px and were suddenly too big, with nothing in the CSS to blame.
+ *
+ * Layout grids — the 12-column grid, a two-up spread, a header — are legitimately
+ * count-based, because the count IS the design. This only applies to grids whose
+ * children are a repeating list of content cards. */
+const CARD_GRIDS = [".credits"];
+
+for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
+  const css = readFileSync(join(STYLES, file), "utf8");
+  const rule = /([^{}]*)\{([^{}]*)\}/g;
+  let m;
+  while ((m = rule.exec(css))) {
+    if (!m[2].includes("grid-template-columns")) continue;
+    const sel = m[1].replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").trim();
+    if (!sel) continue;
+    const hit = CARD_GRIDS.find((c) => sel.split(",").some((s) => s.trim().endsWith(c)));
+    if (!hit) continue;
+    const decl = /grid-template-columns:([^;]+)/.exec(m[2]);
+    if (!decl) continue;
+    const value = decl[1].trim();
+    /* A fixed small count is how the phone layout is stated deliberately — two
+       across on a narrow screen is a decision, not an accident. Only the rules
+       that run at width is where the card is free to grow have to be size-led. */
+    const isSizeLed = /auto-fill|auto-fit/.test(value);
+    const isPhoneDefault = /^repeat\(\s*2\s*,/.test(value);
+    if (!isSizeLed && !isPhoneDefault && /repeat\(\s*\d+/.test(value)) {
+      const line = css.slice(0, m.index).split("\n").length;
+      failures.push(
+        `${file}:${line} ${hit} states a column COUNT (${value}) — a card grid must state a ` +
+          `card size instead, e.g. repeat(auto-fill, minmax(var(--card-min), 1fr)), or the card ` +
+          `grows with the window`,
+      );
+    }
+  }
+}
+
 console.log("\n[budget] gzipped, first paint");
 for (const [label, size, limit, note] of report) {
   const pct = Math.round((size / limit) * 100);

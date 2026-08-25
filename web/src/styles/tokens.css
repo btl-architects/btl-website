@@ -134,6 +134,12 @@
      project cards lost their reveal without anyone noticing. */
   --tr-reveal:        clip-path var(--dur-slow) var(--ease);
 
+  /* How wide a content card wants to be, before the grid decides how many fit.
+     Repeating card grids state THIS and derive their column count from it —
+     never the other way round, which makes the card size a function of the
+     window and inflates it on every wider screen. */
+  --card-min:         22rem;
+
   --spread-max-h:     74svh;
   --space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);
 
