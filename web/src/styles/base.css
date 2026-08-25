@@ -70,7 +70,30 @@ a { color: inherit; text-decoration: none; }
    Layout primitives — nothing else writes raw spacing
    ========================================================================== */
 
-.container {
+/* The content edge — defined once, for everything that sits on it.
+ *
+ * This formula used to be copied into seven rules. Six of them agreed and one
+ * did not, which is how the header came to sit 63px from the window while the
+ * page under it sat at 255 on wide screens: past 96rem the column stops growing
+ * and the edge becomes the centring offset plus the gutter, so any rule that
+ * applies --page-margin OUTSIDE a max-width lands somewhere else entirely.
+ *
+ * Anything that must line up with the page column joins this selector list.
+ * It does not re-derive the arithmetic, and it does not get a second opinion —
+ * that is the whole point. A rule here may still set its own padding-BLOCK;
+ * what it must never do is set padding-inline or restate the max-width, because
+ * then there are two answers again.
+ *
+ * The build refuses to ship a rule that consumes --page-margin without being
+ * either in this list or on the full-bleed allowlist in tools/budget.mjs, so an
+ * eighth copy cannot be introduced quietly the way the seventh was. */
+.container,
+.header__inner,
+.chips,
+.grid12,
+.pindex,
+.index-head,
+.stage__foot {
   width: 100%;
   max-width: var(--max-width);
   margin-inline: auto;

@@ -93,9 +93,8 @@
   padding-top: env(safe-area-inset-top, 0);
   transition: background var(--dur-base) var(--ease);
 }
+/* Column comes from the shared content-edge rule in base.css. */
 .header__inner {
-  width: 100%; max-width: var(--max-width); margin-inline: auto;
-  padding-inline: var(--page-margin);
   display: flex; align-items: center; justify-content: space-between; gap: var(--s-5);
 }
 .header__logo { display: block; flex: 0 0 auto; position: relative; }
@@ -272,14 +271,22 @@ html:has(.menu[data-open="true"]) .header {
 
 /* the frame names itself, quietly, bottom left — the one piece of information
    the opening carries */
-.stage__label {
-  /* The content edge, not the raw gutter. The stage is full-bleed, so
-     --page-margin alone put this label 63px from the window while everything
-     under it sat at 255. Past 96rem the column stops growing and the edge is
-     the centring offset plus the gutter — which is what .container resolves to
-     and what this now matches. */
+/* The label sits on the content edge, and the stage it lives in is full-bleed.
+ *
+ * This used to compute the edge by hand — max(gutter, centring offset + gutter)
+ * — which is the seventh copy of a formula that only needed one. Now the label
+ * is wrapped in a band that joins the shared content-edge rule in base.css and
+ * inherits the column like everything else, so it cannot disagree with the page
+ * beneath it. Centred by transform rather than by inset, because an absolutely
+ * positioned box with left, right AND width set is over-constrained and auto
+ * margins stop centring it. */
+.stage__foot {
   position: absolute;
-  left: max(var(--page-margin), calc((100% - var(--max-width)) / 2 + var(--page-margin))); bottom: var(--s-7); z-index: 2;
+  left: 50%; transform: translateX(-50%);
+  bottom: var(--s-7); z-index: 2;
+  pointer-events: none;
+}
+.stage__label {
   margin: 0;
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; color: rgba(255,255,255,.8);
@@ -287,20 +294,13 @@ html:has(.menu[data-open="true"]) .header {
 }
 .stage__label[data-fading="true"] { opacity: 0; }
 
-@media (max-width: 63.99rem) {
-  /* The caption has the foot of the film to itself again — the social links
-     moved to the right margin, so there is nothing down here to dodge. */
-  .stage__label { bottom: var(--s-7); }
-}
-
 /* --- categories ------------------------------------------------------------
    Real routes, not JavaScript filters, so a category is a place you can link
    to and share. Rendered only where work exists — P9. */
 
 .chips {
   display: flex; flex-wrap: wrap; gap: var(--s-5);
-  width: 100%; max-width: var(--max-width); margin-inline: auto;
-  padding: var(--s-5) var(--page-margin) var(--s-6);
+  padding-block: var(--s-5) var(--s-6);
 }
 .chips .chip {
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
@@ -318,9 +318,6 @@ html:has(.menu[data-open="true"]) .header {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: var(--grid-gap);
-  width: 100%; max-width: var(--max-width);
-  margin-inline: auto;
-  padding-inline: var(--page-margin);
 }
 
 /* --- the rail --------------------------------------------------------------
@@ -398,7 +395,6 @@ html:has(.menu[data-open="true"]) .header {
      1.5rem against 1rem they read as the same interval and the whole page
      flattened into one grid of pictures. */
   display: flex; flex-direction: column; gap: var(--s-8);
-  width: 100%; max-width: var(--max-width); margin-inline: auto;
   /* The underside is --s-8, not --space-section.
    *
    * The Onward beneath this already brings its own --s-6 of margin, so a full
@@ -407,7 +403,7 @@ html:has(.menu[data-open="true"]) .header {
    * project page and 113 on Studio. Third time this site has paid twice for
    * one gap: the statement section, the closing section, and here. The list
    * pads to the ordinary rhythm and lets the Onward finish the job. */
-  padding: 0 var(--page-margin) var(--s-8);
+  padding-block: 0 var(--s-8);
 }
 
 /* Cards arrive by being uncovered, like everything else (R10) — not by
@@ -1581,9 +1577,7 @@ html:has(.menu[data-open="true"]) .header {
 .statement > .spread__say,
 .statement > .spread__note { margin-inline: auto; }
 .index-head {
-  padding: clamp(var(--s-7), 9vh, var(--s-8)) var(--page-margin) var(--s-8);
-  max-width: var(--max-width);
-  margin-inline: auto;
+  padding-block: clamp(var(--s-7), 9vh, var(--s-8)) var(--s-8);
 }
 .index-head__t {
   margin: 0;

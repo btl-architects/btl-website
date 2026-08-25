@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 const DIST = resolve(dirname(fileURLToPath(import.meta.url)), "..", "dist");
+const STYLES = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src", "styles");
 
 const BUDGET = {
   html: 60 * 1024,   // one page's markup, gzipped — includes the inline blur previews
@@ -147,6 +148,61 @@ for (const f of files(DIST, ".html")) {
       if (!/^\S+ \d+w$/.test(cand.trim())) {
         failures.push(`${name} has a malformed srcset candidate: ${cand.trim().slice(0, 60)}`);
       }
+    }
+  }
+}
+
+/* --- one content edge, not seven -------------------------------------------
+ *
+ * The site's left edge is a formula: the gutter, or past 96rem the centring
+ * offset plus the gutter. It was once written out in seven separate rules. Six
+ * agreed; the seventh applied --page-margin without a max-width, so on a wide
+ * screen the header sat 63px from the window while the page under it sat at
+ * 255. Nothing caught that, because every page looked right at 1440 — which is
+ * BELOW this site's own max-width, where the two formulas happen to agree.
+ *
+ * So the check is not "does each page look aligned". It is "is there still only
+ * one definition". A rule may consume --page-margin only if it is the shared
+ * content-edge rule in base.css, or if it is genuinely full-bleed and using the
+ * gutter as a plain inset with no content column to line up with.
+ *
+ * Adding a new full-bleed element means adding it here deliberately. Adding one
+ * that belongs on the content column means joining the selector list in
+ * base.css instead. Either way it is a decision someone made on purpose, which
+ * is the only thing that stops the seventh copy becoming the eighth. */
+const FULL_BLEED = new Set([
+  ".header",       // the fixed bar spans the window; .header__inner holds the column
+  ".menu",         // full-screen overlay
+  ".rail",         // horizontally scrolled, deliberately runs past the column
+  ".preview-flag", // pinned to the window, not to the page
+  ".lb__bar",      // lightbox chrome sits over the viewport
+  ".lb__cap",
+]);
+
+for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
+  const css = readFileSync(join(STYLES, file), "utf8");
+  const rule = /([^{}]*)\{([^{}]*)\}/g;
+  let m;
+  while ((m = rule.exec(css))) {
+    /* var(--page-margin) is a use; --page-margin: is the definition in :root. */
+    if (!m[2].includes("var(--page-margin)")) continue;
+    const sel = m[1].replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").trim();
+    if (!sel) continue;
+    const line = css.slice(0, m.index).split("\n").length;
+    const selectors = sel.split(",").map((s) => s.trim());
+    /* The canonical rule — recognised by the fact that .container is in it. */
+    if (selectors.includes(".container")) {
+      if (!m[2].includes("max-width: var(--max-width)")) {
+        failures.push(`${file}:${line} is the content-edge rule but no longer caps to --max-width`);
+      }
+      continue;
+    }
+    const strays = selectors.filter((s) => !FULL_BLEED.has(s));
+    if (strays.length) {
+      failures.push(
+        `${file}:${line} re-derives the content edge: ${strays.join(", ")} — join the ` +
+          `shared rule in base.css, or add it to FULL_BLEED in tools/budget.mjs if it is not on the column`,
+      );
     }
   }
 }
