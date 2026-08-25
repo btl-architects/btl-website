@@ -173,8 +173,8 @@ export const getSettings = once(async (): Promise<Settings> => {
         "Houses, interiors and the occasional commercial project, across Kerala.",
       locationLabel: s?.locationLabel || "Kozhikode, Kerala",
       pressLead: s?.pressLead || "See where we've been.",
-      peopleOnward: s?.peopleOnward || "The work behind the practice.",
-      studioOnward: s?.studioOnward || "Tell us what you want to build.",
+      peopleOnward: s?.peopleOnward || "Tell us what you want to build",
+      studioOnward: s?.studioOnward || "The people behind it",
       notFoundLead: s?.notFoundLead ||
         "It may have moved, or the link may be wrong. Here is what we did build.",
     },

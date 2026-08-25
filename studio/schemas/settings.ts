@@ -134,7 +134,7 @@ export default defineType({
       type: "string",
       group: "copy",
       description:
-        "The line at the bottom of the People page, linking to the work. Default: “The work behind the practice.”",
+        "The line at the bottom of the People page, which now leads to Contact. Default: “Tell us what you want to build”",
       validation: (r) => r.max(80),
     }),
     defineField({
@@ -143,7 +143,7 @@ export default defineType({
       type: "string",
       group: "copy",
       description:
-        "The line at the bottom of the Studio page, linking to Contact. Default: “Tell us what you want to build.”",
+        "The line at the bottom of the Studio page, which now leads to People. Default: “The people behind it”",
       validation: (r) => r.max(80),
     }),
     defineField({
