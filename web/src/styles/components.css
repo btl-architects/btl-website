@@ -1450,14 +1450,21 @@ html:has(.menu[data-open="true"]) .header {
 .header { view-transition-name: site-header; }
 .footer { view-transition-name: site-footer; }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  /* Slower than a hover and shorter than the card opening: long enough to read
-     as a dissolve rather than a flash, short enough that a reader clicking
-     through four projects is never waiting for the site. */
-  animation-duration: var(--dur-base);
-  animation-timing-function: var(--ease);
+/* The outgoing page holds full opacity and the incoming one fades in on top of
+   it. The default is a true crossfade, where both layers are part-way
+   transparent at the midpoint and whatever is behind them shows through — which
+   is how a dark site manages to flash white between two dark pages.
+
+   The new snapshot already paints above the old one, so there is no moment when
+   either is see-through and no gap to look through. */
+::view-transition-old(root) {
+  animation: none;
+  opacity: 1;
 }
+::view-transition-new(root) {
+  animation: vt-fade-in var(--dur-base) var(--ease) both;
+}
+@keyframes vt-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* The cover morphs from one project to the next rather than fading. This is the
    only place on the site where two pages share an object, and it is the reason

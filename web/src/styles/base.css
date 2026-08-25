@@ -6,6 +6,16 @@
 
 html { -webkit-text-size-adjust: 100%; }
 
+/* The canvas, not just the page.
+ *
+ * Only body carried a background, and normally that is enough — a background on
+ * body propagates to the canvas when html has none. It stops being enough
+ * during a cross-document view transition: the body is snapshotted into the
+ * transition layer, and for the moment the two snapshots are both part-way
+ * transparent there is nothing painting behind them but the browser's default
+ * canvas, which is white. Painting the root removes that possibility. */
+html { background: var(--surface); }
+
 body {
   margin: 0;
   background: var(--surface);
