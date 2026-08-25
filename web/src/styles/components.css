@@ -86,12 +86,16 @@
   position: fixed; inset: 0 0 auto 0; z-index: 100;
   height: var(--header-h);
   display: flex; align-items: center;
-  padding-inline: var(--page-margin);
+  /* No gutter here. .container applies --page-margin INSIDE its max-width and
+     this applied it outside, so above 96rem the two could never agree: at
+     1920 the logo sat at 192 and every section label at 255. The gutter moves
+     to __inner, which is the element that carries the max-width. */
   padding-top: env(safe-area-inset-top, 0);
   transition: background var(--dur-base) var(--ease);
 }
 .header__inner {
   width: 100%; max-width: var(--max-width); margin-inline: auto;
+  padding-inline: var(--page-margin);
   display: flex; align-items: center; justify-content: space-between; gap: var(--s-5);
 }
 .header__logo { display: block; flex: 0 0 auto; position: relative; }
@@ -242,7 +246,11 @@ html:has(.menu[data-open="true"]) .header {
 
 /* the home page runs the index's own cards, so it needs none of its own
    spacing — only room to breathe inside a section that already has padding */
-.home-sec--release .pindex { padding-inline: 0; padding-bottom: 0; }
+/* Released means released. This kept .pindex's max-width, so the rail broke
+   out of the gutter and then stopped at 96rem anyway — full-bleed on a laptop
+   and inset on a wide monitor, which is the shape changing with the window
+   rather than by decision. */
+.home-sec--release .pindex { padding-inline: 0; padding-bottom: 0; max-width: none; }
 
 /* --- the opening -----------------------------------------------------------
    Atmosphere before information. A full-bleed stage that cycles an authored
@@ -265,7 +273,13 @@ html:has(.menu[data-open="true"]) .header {
 /* the frame names itself, quietly, bottom left — the one piece of information
    the opening carries */
 .stage__label {
-  position: absolute; left: var(--page-margin); bottom: var(--s-7); z-index: 2;
+  /* The content edge, not the raw gutter. The stage is full-bleed, so
+     --page-margin alone put this label 63px from the window while everything
+     under it sat at 255. Past 96rem the column stops growing and the edge is
+     the centring offset plus the gutter — which is what .container resolves to
+     and what this now matches. */
+  position: absolute;
+  left: max(var(--page-margin), calc((100% - var(--max-width)) / 2 + var(--page-margin))); bottom: var(--s-7); z-index: 2;
   margin: 0;
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; color: rgba(255,255,255,.8);
