@@ -1830,11 +1830,23 @@ body[data-preview] main { padding-top: var(--preview-h); }
  * site's layout work has been.
  *
  * So it is constant where there is a margin to be constant in, and part of the
- * opening where there is not. 80rem is where --page-margin (45px there, rising
- * to 63 at 1920) first clears the rail's own width with room to spare — the
- * breakpoint is derived from those two measurements, not chosen to look round,
- * and it moves if either the margin or the rail does. */
-@media (max-width: 79.99rem) {
+ * opening where there is not.
+ *
+ * 48rem, and the first version of this said 80rem, which was wrong and had the
+ * practice reporting the rail scrolling away with the film. That number came
+ * from estimating the rail at 40px and asking where --page-margin exceeds it.
+ * Measured instead: the rail is 36px, the margin reaches it at 1024, and the
+ * overlap below that is 1px at 900 and 4px at 768 — nothing. Everything from a
+ * small laptop down to a large phone was giving up a constant rail to avoid an
+ * overlap that does not exist. Same mistake as picking --card-min against the
+ * widest screen instead of the tightest: a threshold guessed rather than
+ * measured lands in the wrong place, and only measurement says where.
+ *
+ * Below 48rem the overlap is real — 15px of a 390px screen, permanently, over
+ * the right edge of the content column. There the rail stays with the opening,
+ * and the same three links are in the footer of every page anyway, so nothing
+ * is unreachable. */
+@media (max-width: 47.99rem) {
   .landing .srail { position: absolute; z-index: 3; }
 }
 
