@@ -46,23 +46,20 @@ const [lead, ...rest] = st.body;
         </div>
       )}
 
-      {/* The reason this page exists apart from the home page's section.
-          Without it the two are the same statement and the same photograph, and
-          the link that brings people here promises "How the practice works" and
-          then does not answer it. Set in the same index-row language as the team
-          list and the press index rather than as cards or numbered circles —
-          this site states things in rows. */}
-      {st.method.length > 0 && (
-        <section class="roster" style="margin-top:var(--space-section)">
-          <h2 class="eyebrow roster__k">How a project runs</h2>
-          <ol class="method">
-            {st.method.map((stage, i) => (
-              <li class="mrow rv ruled" data-delay={i % 3}>
-                <h3 class="mrow__t">{stage.title}</h3>
-                <p class="mrow__b">{stage.body}</p>
-              </li>
-            ))}
-          </ol>
+      {/* Photographs instead of a written method.
+          "How a project runs" was four stages in index rows, and the practice
+          asked for it out: they would rather show the studio than describe a
+          process. The writing above carries as many paragraphs as are added to
+          studioBody, and this carries as many photographs as are added to
+          studioImages — so the page grows by editing content rather than by
+          anyone touching this file again. Empty renders nothing (R15). */}
+      {st.images.length > 0 && (
+        <section class="studio-plates" style="margin-top:var(--space-section)">
+          {st.images.map((img, i) => (
+            <figure class="plate rvc" data-delay={i % 3}>
+              <Figure image={img} sizes="(min-width:60rem) 46rem, 92vw" />
+            </figure>
+          ))}
         </section>
       )}
 

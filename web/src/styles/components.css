@@ -1187,8 +1187,7 @@ html:has(.menu[data-open="true"]) .header {
  * gesture can no longer reach anything but itself. It costs a paint of one
  * pixel by the row's width instead of a composited clip, which at this size is
  * not a trade worth having a class of bug for. */
-.trow__link,
-.mrow {
+.trow__link {
   /* Two layers on the same one-pixel band at the top edge: the accent line
      that answers the pointer, over the structural rule that separates the
      rows. The rule used to be a border; as a background it can be drawn.
@@ -1221,69 +1220,33 @@ html:has(.menu[data-open="true"]) .header {
    the link that carries the rule, so that one is addressed through its parent. */
 @media (hover: hover) {
   .trow:hover .trow__link,
-  .trow__link:focus-visible,
-  .mrow:hover { background-size: 100% 1px, 100% 1px; }
-
-  /* A step, not a jump. Enough to feel the row acknowledge the pointer without
-     moving anything the eye is trying to read. */
-  .mrow__b { transition: transform var(--dur-hover) var(--ease); }
-  .mrow:hover .mrow__b { transform: translateX(3px); }
+  .trow__link:focus-visible { background-size: 100% 1px, 100% 1px; }
 
 }
 
 /* The line is the affordance; without motion it would draw instantly, which
    reads as a flicker rather than a gesture. Better to hold it open. */
 @media (prefers-reduced-motion: reduce) {
-  .trow__link,
-  .mrow { transition: none; }
-  .mrow:hover .mrow__b { transform: none; }
+  .trow__link { transition: none; }
 }
 
-/* --- how a project runs (Studio) --------------------------------------------
-   The same hairline index row the team list and the press index use: a label in
-   a fixed left column, the text in the rest. Deliberately not numbered circles
-   or three cards in a row — this site states things in rows, and a working
-   method is not more important than the people or the press because it happens
-   to be newer.
+/* --- the studio's own photographs ------------------------------------------
+/* "How a project runs" is gone at the practice's request — they would rather
+   show the studio than describe a process — and its rows go with it rather than
+   sitting here unused. The hairline gesture they shared with the team list stays
+   on .trow__link, which is now its only user.
 
-   Named mrow to sit beside trow and cr, and NOT `stage`: that belongs to the
-   opening film's full-screen frame, which is position:absolute; inset:0. Four
-   rows written as .stage inherited it, left the flow, and each measured exactly
-   one viewport tall inside a list of zero height — invisible on the page while
-   sitting perfectly correct in the HTML. */
-.method { list-style: none; margin: 0; padding: 0; }
-
-.mrow {
+   In its place, plates: photographs at the page's own measure, uncovered as they
+   arrive like everything else on the site. */
+.studio-plates {
   display: grid;
-  gap: var(--s-2);
-  padding-block: var(--s-5);
+  gap: var(--space-band);
+  margin-inline: auto;
+  max-width: 46rem;
 }
-.method > .mrow:last-child { border-bottom: 1px solid var(--border-subtle); }
+.plate { margin: 0; }
+.plate img { width: 100%; height: auto; display: block; }
 
-.mrow__t {
-  font-size: var(--type-meta);
-  letter-spacing: var(--track-meta);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin: 0;
-}
-.mrow__b {
-  margin: 0;
-  color: var(--text-secondary);
-  /* A measure, not a column width: past about 70 characters the eye loses the
-     start of the next line. */
-  max-width: 68ch;
-}
-
-/* Two columns once there is room for the label to sit beside the text rather
-   than above it — the same move the press index makes at the same width. */
-@media (min-width: 48rem) {
-  .mrow {
-    grid-template-columns: 13rem minmax(0, 1fr);
-    gap: var(--s-6);
-    align-items: baseline;
-  }
-}
 
 .team { position: relative; }
 .team__list { list-style: none; margin: 0; padding: 0; }
