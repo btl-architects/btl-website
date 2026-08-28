@@ -172,6 +172,11 @@
      a neighbour rather than three has room to be slightly more generous. */
   --card-max:         26rem;
 
+  /* The team portrait's frame. One value drives the picture and the column it
+     sits in, so they cannot drift apart; it grows with the screen rather than
+     the row switching layout at a breakpoint. */
+  --trow-pic:         clamp(4.5rem, 3.2rem + 3.4vw, 7rem);
+
   --spread-max-h:     74svh;
   --space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);
 

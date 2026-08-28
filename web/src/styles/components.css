@@ -514,11 +514,12 @@ html:has(.menu[data-open="true"]) .header {
 .pcard[data-open="true"] .pcard__t { opacity: 0; pointer-events: none; }
 
 @media (hover: hover) {
-  /* Dimming the rest is how you browse a closed index. Once something is open
-     it stops meaning anything — you are not choosing any more — so the whole
-     effect is switched off rather than fought with exceptions. */
-  .pindex:not(:has([data-open="true"])):hover .pcard { opacity: .5; }
-  .pindex:not(:has([data-open="true"])):hover .pcard:hover { opacity: 1; }
+  /* No dimming. Pointing at one project used to take every other project down
+     to half opacity, which the practice asked to remove — and they are right
+     about it for a reason worth keeping: it makes the pointer destructive. The
+     index is a set of finished buildings, and moving the mouse across it should
+     not repeatedly hide most of them. Hover may acknowledge; it should not
+     subtract. The card's own lift on hover, below, still answers the pointer. */
   .pcard { transition: height var(--dur-slow) var(--ease), opacity var(--dur-hover) var(--ease), var(--tr-reveal); }
 
   /* The caption lifts very slightly on hover — but the TYPE lifts, never the
@@ -1309,97 +1310,64 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase; color: var(--text-tertiary);
   transition: color var(--dur-hover) var(--ease);
 }
-.trow__p { display: none; }
+/* One team row, at every width, with the portrait in it.
+ *
+ * There were two layouts here and the difference between them was hover. A
+ * pointer got a name-only list and a portrait that appeared in a slot beside it;
+ * everything without a pointer got the portrait inline, in the row, always
+ * visible. The practice asked for the photographs to be there — and the layout
+ * that already did that was the one written for touch.
+ *
+ * So the touch layout becomes the layout. Not because it is a compromise, but
+ * because it was the correct one: a portrait that only exists while the mouse is
+ * over a name is information the page is withholding, and half the visitors
+ * could never get it at all. Keeping two of these meant every change to the team
+ * list had to be made twice and looked right in whichever one you happened to be
+ * testing.
+ *
+ * The frame scales with the screen rather than switching layout — 4.5rem on a
+ * phone, 7rem once there is room — so there is one thing to reason about.
+ *
+ * This also retires the absolutely-positioned portrait, and with it the
+ * containing-block bug documented above it: nothing is positioned out of its row
+ * any more, so nothing can be captured by an ancestor that gains a position. */
+.trow__link {
+  display: grid;
+  grid-template-columns: var(--trow-pic) minmax(0, 1fr);
+  grid-template-areas:
+    "pic name"
+    "pic role";
+  align-items: center;
+  column-gap: var(--s-4);
+  row-gap: var(--s-1);
+  padding-block: var(--s-4);
+}
+.trow__p {
+  grid-area: pic;
+  display: block;
+  width: var(--trow-pic); aspect-ratio: 3 / 4;
+  overflow: hidden;
+  align-self: center;
+}
+.trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-@media (hover: hover) and (min-width: 60rem) {
-  /* A name reveals its portrait in a slot beside the list. CSS only: each
-     portrait is absolutely positioned into the shared slot from inside its own
-     row, so :hover on the row addresses it without a line of JavaScript. */
-  .team__list { width: 62%; }
-  .trow__p {
-    display: block;
-    position: absolute; top: 0; right: 0;
+/* Areas rather than source order, so the portrait leads visually while the name
+   stays first in the markup for anyone reading the page aloud.
 
-    /* Height leads, width follows.
-     *
-     * This was width: 30% with the aspect ratio deriving the height, which
-     * meant the frame's height was set by how wide the window happened to be
-     * and had no relationship to the list beside it. With four names on a
-     * 1600px screen the portrait came out 571px tall against a section barely
-     * 340px high, so it hung out of the bottom — past the "next" link and over
-     * the footer, which is where it was noticed.
-     *
-     * Driving from height instead ties the frame to the thing it belongs to:
-     * it can never be taller than the list, because it is exactly as tall as
-     * the list. The width is then whatever keeps it a portrait, capped so a
-     * long team cannot push it across the names. */
-    /* Tied to the list, but not without limit.
-     *
-     * height:100% alone was right for a team of four and wrong for a team of
-     * twenty-five: the section grows with every name, and the portrait grew
-     * with it — 309x1614 at twenty-five rows, a photograph of a person rendered
-     * as a vertical sliver, because max-width capped the width while nothing
-     * capped the height. Found by stress test, not by looking, since the
-     * practice currently has four. */
-    height: 100%;
-    max-height: 22rem;
-    width: auto;
-    max-width: 30%;
-    aspect-ratio: 3 / 4;
+   Pulled to the boundary between the two rows so the pair reads as one block
+   against the portrait rather than as two lines drifting apart in a tall cell. */
+.trow__n { grid-area: name; align-self: end; }
+.trow__r { grid-area: role; align-self: start; margin-left: 0; }
 
-    opacity: 0; clip-path: inset(0 0 100% 0);
-    transition: opacity var(--dur-base) var(--ease), clip-path var(--dur-base) var(--ease);
-    pointer-events: none;
-  }
-  .trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .trow:hover .trow__p, .trow:focus-within .trow__p { opacity: 1; clip-path: inset(0 0 0 0); }
-  .trow:hover .trow__r, .trow:focus-within .trow__r { color: var(--text-secondary); }
+/* A row with no portrait — the alumni list — must not leave a hole where one
+   would have been. It has no .trow__p at all, so the picture column collapses. */
+.trow__link:not(:has(.trow__p)) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "name" "role";
 }
 
-/* Touch has no hover, so there the portrait is simply part of the row — the
-   information is never available only to a pointer. */
-/* Touch has no hover, so the portrait has to be in the row rather than revealed
-   beside it. At 2.5rem it was a thumbnail of a thumbnail — too small to be
-   worth the request, let alone to show a face. Given real size, and the row
-   given the height to hold it. */
-@media not all and (hover: hover) {
-  /* Name over role, both beside the portrait — two columns, not three.
-   *
-   * This was a flex row: portrait, then the name, then the role pushed to the
-   * far edge. On a desktop that is a clean index line. At 375px it is three
-   * things competing for 300, and the result depended on how long somebody's
-   * name happened to be. "Ar. Aparna Menon" and "ARCHITECT" just fitted;
-   * "Sneha Kurian" and "INTERIOR DESIGNER" each broke onto a second line with
-   * sixteen pixels between them, so half the list sat on one baseline and half
-   * on another. A layout that holds for short names and collapses for long ones
-   * is not a layout, and which of the team it embarrasses is an accident.
-   *
-   * Areas rather than source order, so the portrait can lead visually while the
-   * name stays first in the markup for anyone reading it aloud. */
-  .trow__link {
-    display: grid;
-    grid-template-columns: 4.5rem minmax(0, 1fr);
-    grid-template-areas:
-      "pic name"
-      "pic role";
-    align-items: center;
-    column-gap: var(--s-4);
-    row-gap: var(--s-1);
-    padding-block: var(--s-4);
-  }
-  .trow__p {
-    grid-area: pic;
-    display: block;
-    width: 4.5rem; aspect-ratio: 3 / 4;
-    overflow: hidden;
-    align-self: center;
-  }
-  .trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-  /* Pulled to the boundary between the two rows so the pair reads as one block
-     against the portrait rather than as two lines drifting apart in a tall cell. */
-  .trow__n { grid-area: name; align-self: end; }
-  .trow__r { grid-area: role; align-self: start; margin-left: 0; }
+@media (hover: hover) {
+  .trow:hover .trow__r, .trow:focus-within .trow__r { color: var(--text-secondary); }
 }
 
 /* --- the way onward -------------------------------------------------------
@@ -1465,12 +1433,36 @@ html:has(.menu[data-open="true"]) .header {
 @media (prefers-reduced-motion: reduce) {
   .onward__t::before { transition: none; }
 }
-/* The underline draws from the left, like every other link on the site. */
+/* The underline IS the brand's line element, drawn from its own vector.
+ *
+ * The practice asked for the mark on the rule that answers the pointer, and the
+ * note at the top of this file records why an earlier attempt was pulled: it
+ * composited the thing — the knot as a raster image, the flat run as a CSS
+ * gradient — and never matched the drawing. This does not composite. It is the
+ * single path out of the brand PDF, used as a mask, so the shape is the
+ * practice's own artwork and not a reconstruction of it.
+ *
+ * aspect-ratio is what keeps it honest. A mask stretched to an arbitrary box
+ * would flatten or squash the knot on every link of a different width, which is
+ * the same near-miss by another route. Tying height to width means the element
+ * is only ever scaled, never distorted — the rule thickens slightly on a longer
+ * link, which is how the artwork behaves at its three supplied lengths anyway.
+ *
+ * Scoped to the onward headings, not to .ul and .tl. This is the long variant,
+ * 49:1, so on a short inline link the rule would compute below a pixel and
+ * disappear. Ordinary links keep the hairline; the headings the practice was
+ * pointing at get the mark. */
 .onward__t::after {
   content: "";
   position: absolute; left: 0; right: 0; bottom: -0.28em;
-  height: 1px;
+  aspect-ratio: 2057.164 / 41.871;
   background-color: var(--mark);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='17.195%2010.402%202057.164%2041.871'%20preserveAspectRatio='none'%3E%3Cpath%20d='M%2017.195312%2052.273438%20L%2017.195312%2042.851562%20L%201578.589844%2042.851562%20C%201607.054688%2042.851562%201634.644531%2010.726562%201634.921875%2010.402344%20L%201642.5%2015.960938%20C%201636.417969%2025.605469%201634.277344%2033.109375%201636.472656%2037.089844%20C%201639.652344%2042.851562%201652.242188%2042.851562%201657.617188%2042.851562%20L%202074.359375%2042.851562%20L%202074.359375%2052.269531%20L%201657.65625%2052.269531%20C%201649.980469%2052.269531%201634.089844%2052.269531%201628.222656%2041.640625%20C%201626.628906%2038.75%201625.96875%2035.464844%201626.246094%2031.753906%20C%201614.34375%2041.488281%201597.007812%2052.269531%201578.589844%2052.269531%20Z%20M%2017.195312%2052.273438'%20fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='17.195%2010.402%202057.164%2041.871'%20preserveAspectRatio='none'%3E%3Cpath%20d='M%2017.195312%2052.273438%20L%2017.195312%2042.851562%20L%201578.589844%2042.851562%20C%201607.054688%2042.851562%201634.644531%2010.726562%201634.921875%2010.402344%20L%201642.5%2015.960938%20C%201636.417969%2025.605469%201634.277344%2033.109375%201636.472656%2037.089844%20C%201639.652344%2042.851562%201652.242188%2042.851562%201657.617188%2042.851562%20L%202074.359375%2042.851562%20L%202074.359375%2052.269531%20L%201657.65625%2052.269531%20C%201649.980469%2052.269531%201634.089844%2052.269531%201628.222656%2041.640625%20C%201626.628906%2038.75%201625.96875%2035.464844%201626.246094%2031.753906%20C%201614.34375%2041.488281%201597.007812%2052.269531%201578.589844%2052.269531%20Z%20M%2017.195312%2052.273438'%20fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   clip-path: inset(0 100% 0 0);
   transition: clip-path var(--dur-base) var(--ease);
 }
