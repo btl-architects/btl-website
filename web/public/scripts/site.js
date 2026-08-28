@@ -143,7 +143,8 @@
   var stage = document.querySelector("[data-stage-frames]");
   if (stage) {
     var sFrames = [].slice.call(stage.querySelectorAll(".stage__f"));
-    var sLabel = stage.querySelector("[data-stage-label]");
+    /* The opening no longer captions itself, so nothing reads data-label. The
+       attribute stays on each frame — it is the clip's name in the CMS. */
     var saveData = (navigator.connection || {}).saveData === true;
     var stillsOnly = reduced || saveData;
     var at = 0, timer = null, preloadNext = null;
@@ -196,13 +197,6 @@
         if (on && !stillsOnly) { load(k); var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
         else if (!on) { try { v.pause(); } catch (e) {} }
       });
-      if (sLabel) {
-        sLabel.setAttribute("data-fading", "true");
-        window.setTimeout(function () {
-          sLabel.textContent = sFrames[at].getAttribute("data-label") || "";
-          sLabel.removeAttribute("data-fading");
-        }, 220);
-      }
       /* The next clip is fetched PART-WAY through this one, not alongside it.
          Preloading immediately meant an arriving visitor paid for the whole
          sequence at once — 5.5 MB before they had watched six seconds of it.

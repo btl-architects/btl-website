@@ -128,6 +128,21 @@
      section, the People spread and the press spreads all read it, so raising it
      raises them together. 74svh keeps the heading above and the paragraph
      beside it on screen at the same time, which is the point of a spread. */
+  /* How type is made legible when it has to sit on a photograph.
+   *
+   * The site used to do this with a gradient scrim under the type, which the
+   * practice asked to remove — it darkened a quarter of every picture to hold up
+   * two lines. A shadow darkens only what is directly behind the letterforms.
+   *
+   * Three layers, because one cannot do it: a tight dark offset gives the edge
+   * definition against a busy photograph, a close blur carries it over mid
+   * tones, and a wide soft halo keeps it readable on a bright sky or a pale
+   * interior — which is the case that defeats a single shadow. */
+  --shadow-on-image:
+    0 1px 2px rgba(5, 5, 5, 0.95),
+    0 2px 8px rgba(5, 5, 5, 0.7),
+    0 4px 24px rgba(5, 5, 5, 0.55);
+
   /* The scroll reveal's transition, as a token rather than a literal.
      A component that is also a .rvc has to restate it — the `transition`
      shorthand replaces rather than adds — and restating a literal is how the

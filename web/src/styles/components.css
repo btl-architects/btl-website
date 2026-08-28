@@ -269,30 +269,12 @@ html:has(.menu[data-open="true"]) .header {
 .stage__f video,
 .stage__f img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* the frame names itself, quietly, bottom left — the one piece of information
-   the opening carries */
-/* The label sits on the content edge, and the stage it lives in is full-bleed.
- *
- * This used to compute the edge by hand — max(gutter, centring offset + gutter)
- * — which is the seventh copy of a formula that only needed one. Now the label
- * is wrapped in a band that joins the shared content-edge rule in base.css and
- * inherits the column like everything else, so it cannot disagree with the page
- * beneath it. Centred by transform rather than by inset, because an absolutely
- * positioned box with left, right AND width set is over-constrained and auto
- * margins stop centring it. */
-.stage__foot {
-  position: absolute;
-  left: 50%; transform: translateX(-50%);
-  bottom: var(--s-7); z-index: 2;
-  pointer-events: none;
-}
-.stage__label {
-  margin: 0;
-  font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: rgba(255,255,255,.8);
-  transition: opacity var(--dur-base) var(--ease);
-}
-.stage__label[data-fading="true"] { opacity: 0; }
+/* The opening carries no caption. It named each clip in the bottom-left corner
+   and the practice asked for it off — the sequence is atmosphere, and naming the
+   frames turns it into a slideshow of exhibits. The rules that positioned and
+   faded that label are deleted rather than left behind unused; .stage__foot also
+   comes out of the shared content-edge list in base.css, since nothing is on
+   that edge here any more. */
 
 /* --- categories ------------------------------------------------------------
    Real routes, not JavaScript filters, so a category is a place you can link
@@ -500,27 +482,30 @@ html:has(.menu[data-open="true"]) .header {
   align-items: baseline;
   padding: var(--s-8) var(--s-5) var(--s-5);
   color: inherit; text-decoration: none;
-  /* deeper and darker than a hint: the name has to read over an unknown
-     photograph, and a pale interior shot will eat a gentle scrim */
-  /* An eased ramp with NO plateau. A flat stop near the bottom (.92 held to 8%)
-     put a hard crease where the constant met the ramp — a Mach band running the
-     full width of the card, right along the bottom edge of every photograph.
-     Extra stops approximate an ease so the falloff never creases. */
-  background: linear-gradient(to top,
-    rgba(5,5,5,.88) 0%, rgba(5,5,5,.86) 6%, rgba(5,5,5,.78) 14%,
-    rgba(5,5,5,.62) 26%, rgba(5,5,5,.42) 42%, rgba(5,5,5,.22) 62%,
-    rgba(5,5,5,.08) 80%, rgba(5,5,5,0) 100%);
+  /* No scrim. The practice asked for the vignette off the photographs, and it
+     was never a style in its own right — it was there to hold up the two lines
+     of type sitting on the picture. The type keeps its own legibility instead,
+     which is the smaller of the two marks to put on a photograph: a shadow
+     darkens the pixels immediately behind a letterform, where a gradient
+     darkened a quarter of the image to serve a caption.
+
+     --shadow-on-image is shared with the film's own caption, so a photograph is
+     only ever written on one way. */
   transition: opacity var(--dur-base) var(--ease);
 }
 .pcard__name {
   grid-row: 1; font-weight: 700; line-height: 1.1;
   font-size: clamp(1rem, 0.85rem + 0.55vw, 1.375rem);
   letter-spacing: -0.02em; color: #fff;
+  text-shadow: var(--shadow-on-image);
 }
 .pcard__place {
   grid-row: 2; grid-column: 1; margin-top: var(--s-2);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: rgba(255,255,255,.78);
+  /* Opaque white, not 78%. The name can afford to be slightly transparent over
+     a gradient; over bare photograph the tint is the first thing to disappear. */
+  text-transform: uppercase; color: #fff;
+  text-shadow: var(--shadow-on-image);
 }
 
 /* The caption steps aside when the card opens: the note now leads the strip
@@ -1083,35 +1068,39 @@ html:has(.menu[data-open="true"]) .header {
 
 /* The scrim exists so type clears contrast against concrete, which sits around
    mid-grey. A gradient over the frame, not a box around it — R5 holds. */
-.spread__media--type::after {
-  content: "";
-  position: absolute; inset: 0 0 auto 0; height: 58%;
-  background: linear-gradient(to bottom,
-    rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0) 100%);
-  pointer-events: none;
-}
+/* The scrim over the founders photograph is gone with the type it supported.
+   .spread__media--type now means only "this photograph carries a credit", which
+   sits underneath it — the modifier is kept because the two People spreads still
+   need to be told apart from the studio one. */
 
 /* Names set INTO the photograph's own negative space — the architecture above
    the founders is the type field, which is the whole idea of the page. */
+/* A caption, no longer an overlay.
+ *
+ * These two names were set into the upper half of the photograph, over a scrim
+ * covering more than half the frame to hold them up. The practice asked for the
+ * writing off the picture, so the credit comes down underneath it, where a
+ * photograph's credit normally goes and where no scrim is needed at all.
+ *
+ * They are still here rather than deleted: taking the names off the image is
+ * what was asked for, but leaving the two principals unnamed on the page about
+ * them would lose something nobody asked to lose. This position is the obvious
+ * one, and it is a caption now, so moving it is a matter of where it sits. */
 .spread__names {
-  position: absolute; z-index: 1;
-  top: clamp(var(--s-5), 6%, var(--s-7));
-  left: var(--s-5); right: var(--s-5);
   display: flex; flex-direction: column; gap: var(--s-4);
+  margin-top: var(--s-5);
 }
 .spread__n {
   display: block; margin: 0;
   font-size: var(--type-h3); letter-spacing: var(--track-h3);
   line-height: var(--lead-tight); font-weight: 500;
-  color: var(--btl-white);
+  color: var(--text-primary);
 }
 .spread__r {
   display: block; margin-top: var(--s-2);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase;
-  /* Sat at 0.74 over brick and foliage and simply could not be read. The names
-     are large enough to survive a busy ground; this is not. */
-  color: rgb(255 255 255 / 0.92);
+  color: var(--text-tertiary);
 }
 
 /* The statement carries the page where there is little else — but the scale has

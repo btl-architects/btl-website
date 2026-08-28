@@ -47,8 +47,10 @@ const clips = await getHeroClips();
         </figure>
       );
     })}
-    <div class="stage__foot">
-      <p class="stage__label" data-stage-label aria-live="off"></p>
-    </div>
+    {/* No caption. The opening names each clip — "NELLY HOUSE" over the film —
+        and the practice asked for it off: the sequence is atmosphere, and a
+        label turns it into a slideshow of captioned exhibits. data-label stays
+        on the frame because it is the clip's name in the CMS and site.js may
+        want it again; nothing renders it now. */}
   </div>
 )}
