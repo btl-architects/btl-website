@@ -1803,9 +1803,26 @@ body[data-preview] main { padding-top: var(--preview-h); }
    rather than a row of buttons dropped on top of it. */
 
 .landing .srail {
-  position: absolute;
-  z-index: 3;
-  left: 0;
+  /* Fixed to the window, not to the film.
+   *
+   * The practice asked for these on the right and constant — still there after
+   * scrolling. It was absolutely positioned inside .landing, so it left with the
+   * opening. .landing carries only position: relative, no transform and no
+   * clipping, so a fixed descendant resolves against the viewport as intended;
+   * a transform on that ancestor would silently turn this back into an absolute
+   * box, which is worth knowing before anyone animates the landing.
+   *
+   * It stays inside the landing section in the markup, and that is the scoping:
+   * the section only exists on the home page, so the rail only exists there,
+   * with no page-level condition to keep in sync.
+   *
+   * z-index 50 puts it over the page and under everything that is meant to
+   * cover the page — the menu at 90, the header at 100, the viewer at 300. A
+   * rail floating above an open lightbox would be a bug, and choosing a number
+   * below all three is what prevents it. */
+  position: fixed;
+  z-index: 50;
+  right: 0;
   top: 50%;
   display: flex;
   /* `row`, not `column`. In vertical writing the inline axis IS the vertical
@@ -1815,8 +1832,22 @@ body[data-preview] main { padding-top: var(--preview-h); }
   flex-direction: row;
   align-items: center;
   gap: var(--s-6);
-  padding-block: var(--s-5);
-  padding-inline: clamp(var(--s-3), 1.6vw, var(--s-5));
+  /* Narrow enough to live in the margin — and note WHICH axis does that.
+   *
+   * The rail measured 68px, against a page margin of 63px at 1920 and 45px at
+   * 1280, so fixed it was not sitting beside the content column but on it, which
+   * is the one thing the practice asked to avoid. The first attempt to narrow it
+   * changed padding-inline and did nothing at all: this element is
+   * writing-mode: vertical-rl, so its inline axis runs DOWN the screen. Inline
+   * padding is the rail's length; block padding is its thickness. The comment
+   * above about `row` versus `column` is the same swap catching the same rule
+   * twice.
+   *
+   * Full-bleed photographs still pass underneath — that is what it already does
+   * over the film, and what the text-shadow below is for. Text never does,
+   * because text stops at the margin. */
+  padding-block: var(--s-2);
+  padding-inline: var(--s-5);
   pointer-events: auto;
   writing-mode: vertical-rl;
   /* Rotated so the words read bottom-to-top, the way a label is set on a spine.
@@ -1825,6 +1856,25 @@ body[data-preview] main { padding-top: var(--preview-h); }
   transform: translateY(-50%) rotate(180deg);
   transform-origin: center;
 }
+
+/* Below this it goes back to being part of the film.
+ *
+ * Fixed, the rail sits in the page's right margin. That margin is 63px at 1920
+ * and 21px on a phone, and the rail is about 40px wide — so on a narrow screen
+ * a permanent rail is not in the margin, it is on top of the text. The
+ * alternative is reserving width for it, which would give the page a second
+ * content edge on one side only, and unpicking exactly that is most of what this
+ * site's layout work has been.
+ *
+ * So it is constant where there is a margin to be constant in, and part of the
+ * opening where there is not. 80rem is where --page-margin (45px there, rising
+ * to 63 at 1920) first clears the rail's own width with room to spare — the
+ * breakpoint is derived from those two measurements, not chosen to look round,
+ * and it moves if either the margin or the rail does. */
+@media (max-width: 79.99rem) {
+  .landing .srail { position: absolute; z-index: 3; }
+}
+
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
 .landing .srail { flex-direction: row-reverse; }
 
