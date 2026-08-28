@@ -279,9 +279,24 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
     /* A fixed small count is how the phone layout is stated deliberately — two
        across on a narrow screen is a decision, not an accident. Only the rules
        that run at width is where the card is free to grow have to be size-led. */
+    /* Two columns is exempt, and that exemption is now load-bearing rather than
+     * incidental: the practice asked for two per line at every width, so the
+     * phone's repeat(2, 1fr) and the desktop's repeat(2, minmax(0, --card-max))
+     * are BOTH legitimate and they differ only by the ceiling on the track.
+     *
+     * This checker splits rules with a regex and cannot see which media query
+     * encloses one, so it cannot tell those two apart — and a check that cannot
+     * tell a correct rule from an incorrect one would fail the build on the
+     * phone rule. So the ceiling is not asserted here. It is measured instead:
+     * the card must stay at or under --card-max from 768 to 3440, which is a
+     * layout fact and belongs in a layout measurement, not in a text search.
+     *
+     * What this still catches, and what it was written for, is three or more
+     * columns stated as a bare count — where the card is whatever a third or a
+     * fifth of the page happens to be. */
     const isSizeLed = /auto-fill|auto-fit/.test(value);
-    const isPhoneDefault = /^repeat\(\s*2\s*,/.test(value);
-    if (!isSizeLed && !isPhoneDefault && /repeat\(\s*\d+/.test(value)) {
+    const isTwoUp = /^repeat\(\s*2\s*,/.test(value);
+    if (!isSizeLed && !isTwoUp && /repeat\(\s*\d+/.test(value)) {
       const line = css.slice(0, m.index).split("\n").length;
       failures.push(
         `${file}:${line} ${hit} states a column COUNT (${value}) — a card grid must state a ` +

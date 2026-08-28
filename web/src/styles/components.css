@@ -1661,7 +1661,18 @@ html:has(.menu[data-open="true"]) .header {
  * a wider page in future adds a column rather than fattening the cards. */
 @media (min-width: 48rem) {
   .credits {
-    grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+    /* Two per line at every size, which is what the practice asked for after
+       seeing five across. That makes the count the constant again — the thing
+       the note above warns about — so the CARD needs its own ceiling or two
+       columns of a 1793px page would be 880px each, half again the 576px that
+       started the complaint. --card-max is that ceiling, and justify-content
+       centres the pair once the page is wider than the two of them.
+
+       So the rule is: never more than two, never wider than --card-max, and
+       centred in whatever is left. The wide margins on a large screen are a
+       consequence of those two instructions together, not of either alone. */
+    grid-template-columns: repeat(2, minmax(0, var(--card-max)));
+    justify-content: center;
     gap: var(--s-8) var(--s-6);
   }
 }
