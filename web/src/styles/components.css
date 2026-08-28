@@ -900,13 +900,32 @@ html:has(.menu[data-open="true"]) .header {
  * because they also carry .home-sec__k or .onward__k, which each restate the
  * same five declarations. Now they inherit them. */
 .eyebrow,
-.home-sec__k,
 .onward__k {
   font-size: var(--type-meta);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--track-meta);
   color: var(--text-tertiary);
+}
+
+/* A section's name is not a kicker.
+ *
+ * .home-sec__k was in that list, and it is the one member that is not a small
+ * label above something — it is the <h2> that names the section. Sharing the
+ * kicker's size put "Press" at 12px tertiary grey while "Everywhere btl has
+ * appeared", the link that CLOSES that section, sat at 28px. The section read as
+ * smaller than its own footnote, which is what the practice noticed.
+ *
+ * It keeps the uppercase and the tracking, because that is the site's voice for
+ * a section marker, and takes a heading's size and colour because that is what
+ * it is. Tracking eases off as the size goes up — the meta tracking was drawn
+ * for 12px and reads as gappy at 28. */
+.home-sec__k {
+  font-size: var(--type-h3);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
 }
 
 .home-sec--compress .home-sec__head { margin-bottom: var(--s-6); }
@@ -1417,10 +1436,17 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
+/* Subordinate to the section it closes, which it was not.
+ *
+ * At --type-h3 this sat at the same size a section heading should be, so the
+ * page ended each section with its loudest line. It is a way out, not a title:
+ * --type-lead keeps it comfortably clickable and clearly below the .home-sec__k
+ * above it. The two moved in opposite directions on purpose — that inversion IS
+ * the fix, and changing only one of them would not have produced it. */
 .onward__t {
   display: inline-block;
   position: relative;
-  font-size: var(--type-h3);
+  font-size: var(--type-lead);
   letter-spacing: var(--track-h3);
   line-height: var(--lead-tight);
 }
@@ -1434,9 +1460,12 @@ html:has(.menu[data-open="true"]) .header {
 .onward__t::before {
   content: "";
   display: inline-block;
-  width: 1.1em; height: 1px;
-  margin-right: 0.55em;
-  vertical-align: 0.32em;
+  /* 0.7em, not 1.1. At the old width the rule was nearly as long as the first
+     word behind it and read as a dash in the sentence rather than a marker
+     before it. It scales with the type, so this holds at every size. */
+  width: 0.7em; height: 1px;
+  margin-right: 0.5em;
+  vertical-align: 0.3em;
   background: currentColor;
   opacity: 0.5;
   transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
@@ -1722,9 +1751,15 @@ html:has(.menu[data-open="true"]) .header {
 .index-head {
   padding-block: clamp(var(--s-7), 9vh, var(--s-8)) var(--s-8);
 }
+/* A page title at display scale was the loudest thing on the site.
+ *
+ * --type-display runs to 5.75rem and exists for a moment the page has earned;
+ * spending it on the word "Press" at the top of every index made the label
+ * bigger than any of the work under it. --type-h1 tops out at 3.5rem, which is
+ * still unmistakably the page's title and no longer the whole screen. */
 .index-head__t {
   margin: 0;
-  font-size: var(--type-display);
+  font-size: var(--type-h1);
   letter-spacing: var(--track-display);
   line-height: var(--lead-tight);
   color: var(--text-primary);
