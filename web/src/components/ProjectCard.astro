@@ -44,7 +44,11 @@ const total = String(project.images.length).padStart(2, "0");
     ))}
   </div>
   <div class="pcard__nav" data-nav hidden>
-    <button class="tl" type="button" data-project-close>Close project</button>
+    {/* A cross, not two words. It sits in a row with a counter, a progress track
+        and two arrows; "Close project" was the only thing in it spelled out, and
+        it set the row's height. The name is still there for anyone who cannot
+        see the mark. */}
+    <button class="tl pcard__x" type="button" data-project-close aria-label={`Close ${project.title}`}>×</button>
     <span class="pcard__pos" data-pos>01 / {total}</span>
     <span class="pcard__bar"><i data-bar></i></span>
     <button class="tl" type="button" data-gallery-step="-1" aria-label={`Previous photographs in ${project.title}`}>←</button>

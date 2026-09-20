@@ -13,9 +13,16 @@
  */
 import type { Settings } from "../lib/content";
 
-interface Props { settings: Settings }
-const { settings } = Astro.props;
+interface Props { settings: Settings; current?: string }
+const { settings, current = "" } = Astro.props;
 const year = new Date().getFullYear();
+
+/* The home page already carries these down its right edge, fixed, for the whole
+ * scroll. Printing them again at the foot of the same page is the reader being
+ * told twice. So the footer carries them everywhere the rail does not, which is
+ * one rule rather than a decision taken per page — and no page ends up without
+ * a way to reach the practice elsewhere. */
+const railCarriesSocial = current === "index";
 ---
 
 <footer class="footer" data-ground="dark">
@@ -24,13 +31,15 @@ const year = new Date().getFullYear();
     <span>{settings.copy.locationLabel}</span>
     <span>{settings.domain}</span>
     <a class="tl" href="/privacy/">Privacy</a>
-    <span class="footer__social">
-      {settings.social.map((s, i) => (
-        <>
-          {i > 0 && " · "}
-          <a class="tl" href={s.url} rel="noopener">{s.label}</a>
-        </>
-      ))}
-    </span>
+    {!railCarriesSocial && (
+      <span class="footer__social">
+        {settings.social.map((s, i) => (
+          <>
+            {i > 0 && " · "}
+            <a class="tl" href={s.url} rel="noopener">{s.label}</a>
+          </>
+        ))}
+      </span>
+    )}
   </div>
 </footer>

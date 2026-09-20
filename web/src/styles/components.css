@@ -608,10 +608,24 @@ html:has(.menu[data-open="true"]) .header {
    say it plainly. The rule is drawn with the mark — R3 allows it on a sequence
    progress rule, and it is the one place the brand does real work. */
 
+/* The nav belongs to the page column, not to the full-bleed card.
+ *
+ * A .pcard runs edge to edge — that is the release rhythm and it is correct for
+ * photographs. This control row inherited that width, so "Close" sat hard
+ * against the left edge of the screen and the arrows hard against the right,
+ * past where every other line on the page stops. It is type and controls, not
+ * imagery, so it takes the gutter the rest of the page takes. */
 .pcard__nav {
   display: none;
   align-items: center; gap: var(--s-4);
   padding-top: var(--s-3);
+}
+/* Sized to match the arrows it sits beside, so the row reads as one set of
+   controls rather than a word followed by three symbols. */
+.pcard__x {
+  flex: 0 0 auto;
+  font-size: 1.35rem; line-height: 1;
+  min-width: 44px; min-height: 44px;
 }
 .pcard__pos {
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
@@ -621,6 +635,11 @@ html:has(.menu[data-open="true"]) .header {
 .pcard__bar {
   position: relative; flex: 1 1 auto; height: 1px;
   background: var(--border-strong);
+  /* The indicator inside is positioned by transform, and a transform does not
+     care about its parent's edges — at the last frame it translated clean past
+     the end of the track. The track clips it, so the progress can never read as
+     further along than the strip actually is. */
+  overflow: hidden;
 }
 .pcard__bar i {
   position: absolute; inset: 0 auto 0 0;
@@ -831,8 +850,14 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
-.footer__social { margin-left: auto; }
-@media (max-width: 48rem) { .footer__social { margin-left: 0; } }
+/* One wrapped row, not a row with something pinned to the far end.
+ *
+ * margin-left: auto pushed the social group to the right edge, which reads as a
+ * deliberate pair of columns right up until the line wraps — and then the last
+ * item drops onto a second line, still hard right, with a gap the width of the
+ * page between it and everything it belongs to. Four short items and a list of
+ * three: they are one row that wraps, and they should wrap like one. */
+.footer__social { white-space: nowrap; }
 
 /* --- home sections ---------------------------------------------------------
    The page has a rhythm, not a list. Sections alternate between RELEASE
@@ -1087,9 +1112,19 @@ html:has(.menu[data-open="true"]) .header {
  * what was asked for, but leaving the two principals unnamed on the page about
  * them would lose something nobody asked to lose. This position is the obvious
  * one, and it is a caption now, so moving it is a matter of where it sits. */
+/* The credit follows the spread's own alignment.
+ *
+ * .statement centres the lines beside the photograph, and this caption sat
+ * left-aligned underneath it — so on the stacked layout the page ran centred,
+ * then hard left for two names, then centred again. The names are part of the
+ * same column of text and are set the same way. Stated here rather than
+ * inherited, because the caption lives inside .spread__media and the alignment
+ * is declared on .statement, which is its uncle rather than its ancestor. */
 .spread__names {
-  display: flex; flex-direction: column; gap: var(--s-4);
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--s-4);
   margin-top: var(--s-5);
+  text-align: center;
 }
 .spread__n {
   display: block; margin: 0;
@@ -2197,11 +2232,62 @@ body[data-preview] main { padding-top: var(--preview-h); }
 .rail__f img { cursor: zoom-in; }
 .pcard__peek img { cursor: inherit; }
 
-/* Small functional controls preserve the existing visual language. */
-.stage__pause { position:absolute; bottom:var(--s-6); left:var(--s-6); z-index:4; background:var(--surface); color:var(--text-primary); padding:var(--s-3) var(--s-4); min-height:44px; cursor:pointer; }
-.stage__pause[hidden] { display:none; }
-.gallery-controls { display:flex; gap:var(--s-6); padding-top:var(--s-4); }
-.gallery-controls button, [data-gallery-step] { min-width:44px; min-height:44px; cursor:pointer; }
+/* Every control on this site is reset the same way, in one place.
+ *
+ * These were added as a batch at the end of the file and each got its own
+ * ad-hoc declaration. [data-gallery-step] and [data-project-close] were reset
+ * below; .stage__pause was not, so it kept the browser's default 2px OUTSET
+ * border and rendered as a grey bevelled box on top of the opening film. That
+ * is the whole reason it looked wrong — not the idea of a pause control, the
+ * fact that nobody gave it the treatment every other button here already has. */
+.stage__pause,
+.gallery-controls button,
+[data-gallery-step],
+[data-project-close] {
+  background: none;
+  border: 0;
+  padding: var(--s-2);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Quiet, not gone.
+ *
+ * The practice called this ugly and unnecessary. They were right about ugly and
+ * for a reason that had nothing to do with the idea: the rule above never reset
+ * the button, so it carried the browser's default 2px OUTSET border and sat on
+ * the opening film as a grey bevelled box. That is fixed by the reset, not by
+ * deletion.
+ *
+ * It is not unnecessary. The film starts by itself and runs well past five
+ * seconds, which is the case WCAG 2.2.2 exists for — moving content that begins
+ * without asking has to be stoppable. I tried hiding it off-screen and leaving
+ * it keyboard-only; that fails the same obligation from the other side, because
+ * the people most likely to want a moving background stopped are using a mouse.
+ *
+ * So it is set like the film's own caption used to be: small, tracked, upper
+ * case, carrying its own shadow because the photograph behind it is unknown. It
+ * occupies a corner nothing else wants and reads as part of the film rather
+ * than a control dropped on top of it. */
+.stage__pause {
+  position: absolute;
+  left: var(--s-6); bottom: var(--s-6);
+  z-index: 4;
+  min-height: 44px;
+  display: flex; align-items: center;
+  font-size: var(--type-meta);
+  letter-spacing: var(--track-meta);
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.8);
+  text-shadow: var(--shadow-on-image);
+  transition: color var(--dur-hover) var(--ease);
+}
+@media (hover: hover) { .stage__pause:hover { color: #fff; } }
+.stage__pause:focus-visible { color: #fff; outline: 2px solid var(--focus); outline-offset: 2px; }
+.stage__pause[hidden] { display: none; }
+.gallery-controls { display: flex; gap: var(--s-6); padding-top: var(--s-4); }
+.gallery-controls button, [data-gallery-step] { min-width: 44px; min-height: 44px; }
 .rail__f[role="button"]:focus-visible, .rail:focus-visible { outline:2px solid var(--accent); outline-offset:-4px; }
 .privacy { max-width:48rem; }
 .privacy h2 { margin-top:var(--s-7); }
@@ -2211,4 +2297,3 @@ body[data-preview] main { padding-top: var(--preview-h); }
 
 .pcard[data-open="true"] .pcard__nav:not([hidden]) { display:flex; }
 .pcard[data-open="true"] .pcard__t:focus-visible { opacity:1; }
-[data-gallery-step], [data-project-close] { background:none; border:0; padding:var(--s-2); cursor:pointer; }
