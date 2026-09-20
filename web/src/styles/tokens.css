@@ -179,10 +179,25 @@
    * screen. "Three or so to a line" was a description of density, and I read it
    * as a column count and then sized the card to hit it. The card should be
    * small enough to scan a team at a glance; how many fit is the grid's
-   * business. At 17 that is one on a phone, two on a tablet, three at 1024,
-   * four at 1440 — and the card stays between 272 and 400px instead of growing
-   * to fill whatever the count left over. */
-  --team-min:         17rem;
+   * business.
+   *
+   * 16rem, not 17. At 17 a 952px window has 879.5px of content and three cards
+   * need 3 x 272 + 64 = 880 — it missed a third column by half a pixel and
+   * showed two 420px cards instead. A threshold that lands that close to a
+   * common window width is not a choice, it is a coincidence waiting to be
+   * reported; 16 clears three from about 900px up with room either side of it.
+   *
+   * Two on a phone, two on a tablet, three from 900, four from 1440 and never
+   * more than four, with the card between 256 and 340px. */
+  --team-min:         16rem;
+
+  /* And a ceiling on the card itself, for the same reason --card-max exists on
+     the press grid. A 1fr track takes everything the column count leaves over,
+     so just below each threshold the cards swell to fill it — 399px at 900 and
+     350px at 1200, which is the "too big" complaint arriving between
+     breakpoints rather than at one. Bounded at 20rem the leftover stays as
+     space at the end of the row, where it reads as margin. */
+  --team-max:         20rem;
 
   /* How tall a spread photograph may be — and it depends on what it is sharing
      the screen with.

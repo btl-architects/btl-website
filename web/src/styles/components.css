@@ -1373,6 +1373,12 @@ html:has(.menu[data-open="true"]) .header {
    * half a gap is the width two cards can always have, so the floor becomes
    * "half" rather than "all" and the phone keeps a pair. Above that --team-min
    * is the smaller of the two and nothing changes. */
+  /* 1fr, not --team-max, as the track's upper bound. auto-fill takes its
+     repetition count from the track's MAX when that max is a definite length,
+     so capping the track made the count follow the ceiling instead of the
+     floor: one card per line on a phone, two at 952, three at 1440. The count
+     has to come from the minimum. The ceiling goes on the card inside the
+     track, below. */
   grid-template-columns: repeat(auto-fill, minmax(min(var(--team-min), calc(50% - var(--s-6) / 2)), 1fr));
   gap: var(--s-7) var(--s-6);
   margin-top: var(--s-5);
@@ -1389,6 +1395,16 @@ html:has(.menu[data-open="true"]) .header {
   align-content: start;
   padding-block: 0;
   background-image: none;          /* the list hairline has no job on a card */
+  /* The card's own ceiling. A 1fr track takes whatever the column count leaves
+     over, so just below each threshold the cards swelled to fill it — 399px at
+     900, 350px at 1200. Capped here rather than on the track, so the count
+     still follows --team-min and the slack stays inside the track, where it
+     reads as margin.
+
+     Not justify-items: start on the grid — that applies to the <li>, which
+     then shrank to its content and took the card down to 158px with it. The
+     item fills its track; only the card inside is bounded. */
+  max-width: var(--team-max);
 }
 /* Square, not 3/4.
  *
