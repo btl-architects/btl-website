@@ -779,7 +779,20 @@
             var p = range > 0 ? Math.abs(st.scrollLeft) / range : 0;
             var frac = 1 / total;
             bar.style.width = (frac * 100) + "%";
-            bar.style.transform = "translateX(" + (p * (1 - frac) * st.clientWidth) + "px)";
+            /* Across the TRACK, not across the strip.
+             *
+             * This multiplied the travel by st.clientWidth — the width of the
+             * scrolling photographs. The indicator does not live in the strip;
+             * it lives in .pcard__bar, which is a fraction of that width. So at
+             * five of seven it was asked to travel 532px inside a 530px track
+             * and sat jammed against the end, while the counter beside it read
+             * 05 / 07 correctly because that line does its own arithmetic.
+             *
+             * Its width is already a percentage of the track, so its travel has
+             * to be measured against the same thing. Read live rather than
+             * cached: the card is resizable and the nav reflows with it. */
+            var track = bar.parentNode.clientWidth;
+            bar.style.transform = "translateX(" + (p * (1 - frac) * track) + "px)";
             pos.textContent = String(Math.min(total, Math.round(p * (total - 1)) + 1)).padStart(2, "0") +
                               " / " + String(total).padStart(2, "0");
           };

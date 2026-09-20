@@ -635,10 +635,12 @@ html:has(.menu[data-open="true"]) .header {
 .pcard__bar {
   position: relative; flex: 1 1 auto; height: 1px;
   background: var(--border-strong);
-  /* The indicator inside is positioned by transform, and a transform does not
-     care about its parent's edges — at the last frame it translated clean past
-     the end of the track. The track clips it, so the progress can never read as
-     further along than the strip actually is. */
+  /* A transform ignores its parent's edges, so the indicator could translate
+     clean past the end. That was a real bug in the arithmetic — it measured its
+     travel against the photo strip instead of this track — and it is fixed at
+     source in site.js. This clip stays as a floor under sub-pixel rounding, not
+     as the fix; it was hiding the fault before, which is why the bar looked
+     merely "stuck at the end" rather than obviously wrong. */
   overflow: hidden;
 }
 .pcard__bar i {
