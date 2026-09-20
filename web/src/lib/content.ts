@@ -14,7 +14,8 @@
  * that is a genuine editorial state rather than a data-quality workaround.
  */
 
-import { sanity } from "./sanity";
+import { sanity, isPreview } from "./sanity";
+import { visibleProjects, routedProjects } from "../../server/build-mode.js";
 import type { SiteImage } from "./media";
 
 /* ---------------------------------------------------------------- types --- */
@@ -182,9 +183,10 @@ export const getSettings = once(async (): Promise<Settings> => {
   };
 });
 
-export const getProjects = once(async (): Promise<Project[]> => {
+const getAllProjects = once(async (): Promise<Project[]> => {
   const rows = await sanity.fetch(
-    `*[_type == "project" && lifecycle == "published"] | order(order asc) ${PROJECT}`,
+    `*[_type == "project" && lifecycle in $states] | order(order asc) ${PROJECT}`,
+    { states: isPreview ? ["draft", "published", "archived"] : ["published", "archived"] },
   );
   return (rows ?? []).map((p: any): Project => {
     // The cover leads the sequence rather than being held out of it: on the
@@ -201,8 +203,11 @@ export const getProjects = once(async (): Promise<Project[]> => {
   });
 });
 
+export const getProjects = once(async (): Promise<Project[]> => visibleProjects(await getAllProjects(), isPreview));
+export const getProjectRoutes = once(async (): Promise<Project[]> => routedProjects(await getAllProjects(), isPreview));
+
 export async function getProject(slug: string): Promise<Project | undefined> {
-  return (await getProjects()).find((p) => p.slug === slug);
+  return (await getProjectRoutes()).find((p) => p.slug === slug);
 }
 
 /* --- the filter bar is earned, not switched on (design system §05) ---------

@@ -5,7 +5,9 @@
 (function () {
   "use strict";
 
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var reduced = motionPreference.matches;
+  motionPreference.addEventListener("change", function () { reduced = motionPreference.matches; });
 
   /* --- 1. scroll reveals -------------------------------------------------- */
   /* A clip-path left on an element forces it into its own composited layer,
@@ -145,94 +147,68 @@
     var sFrames = [].slice.call(stage.querySelectorAll(".stage__f"));
     /* The opening no longer captions itself, so nothing reads data-label. The
        attribute stays on each frame — it is the clip's name in the CMS. */
-    var saveData = (navigator.connection || {}).saveData === true;
-    var stillsOnly = reduced || saveData;
-    var at = 0, timer = null, preloadNext = null;
-
+    var connection = navigator.connection;
+    var motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     var narrowStage = window.matchMedia("(max-width: 47.99rem)");
-
-    /* the sources live on the <video>, not the <figure> around it */
-    function source(v) {
-      return narrowStage.matches ? v.getAttribute("data-src-portrait")
-                                 : v.getAttribute("data-src");
-    }
-
-    /* The poster has to match the encode about to play. The portrait cut is
-       framed differently from the landscape one, so showing the landscape
-       still and then starting the portrait film made the picture jump — the
-       sun sliding out of the middle of the frame the instant playback began.
-       Set before any source is loaded, and again on rotation. */
-    function poster(v) {
-      return narrowStage.matches ? v.getAttribute("data-poster-portrait")
-                                 : v.getAttribute("data-poster");
-    }
+    var pauseButton = stage.querySelector("[data-stage-pause]");
+    var at = 0, timer = null, preloadNext = null, visible = false, userPaused = false;
+    function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
+    function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
     function matchPosters() {
-      sFrames.forEach(function (f) {
-        var v = f.querySelector("video");
-        if (!v) return;
-        var want = poster(v);
-        if (want && v.getAttribute("poster") !== want) v.setAttribute("poster", want);
+      sFrames.forEach(function (frame) {
+        var v = frame.querySelector("video");
+        var poster = v.getAttribute(narrowStage.matches ? "data-poster-portrait" : "data-poster");
+        if (poster) v.poster = poster;
       });
     }
-    matchPosters();
-
     function load(i) {
-      if (stillsOnly) return;
-      var f = sFrames[i];
-      if (!f) return;
-      var v = f.querySelector("video");
-      var want = source(v);
-      if (!want || v.getAttribute("src") === want) return;
-      v.setAttribute("src", want);
-      v.load();
+      if (stillsOnly()) return;
+      var v = sFrames[i].querySelector("video"), want = source(v);
+      if (want && v.getAttribute("src") !== want) { v.src = want; v.load(); }
     }
-
+    function pause() {
+      clearInterval(timer); clearTimeout(preloadNext); timer = preloadNext = null;
+      sFrames.forEach(function (f) { f.querySelector("video").pause(); });
+    }
     function show(i) {
       at = (i + sFrames.length) % sFrames.length;
       sFrames.forEach(function (f, k) {
-        var on = k === at;
-        f.setAttribute("data-on", on ? "true" : "false");
-        var v = f.querySelector("video");
-        if (!v) return;
-        if (on && !stillsOnly) { load(k); var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
-        else if (!on) { try { v.pause(); } catch (e) {} }
+        f.setAttribute("data-on", k === at ? "true" : "false");
+        if (k !== at) f.querySelector("video").pause();
       });
-      /* The next clip is fetched PART-WAY through this one, not alongside it.
-         Preloading immediately meant an arriving visitor paid for the whole
-         sequence at once — 5.5 MB before they had watched six seconds of it.
-         Three seconds in, the current frame is playing and there is still time
-         to have the next one ready before it is wanted. */
-      window.clearTimeout(preloadNext);
-      preloadNext = window.setTimeout(function () {
-        load((at + 1) % sFrames.length);
-      }, 3000);
+      load(at);
+      sFrames[at].querySelector("video").play().catch(function () {});
+      clearTimeout(preloadNext);
+      preloadNext = setTimeout(function () { load((at + 1) % sFrames.length); }, 3000);
     }
-
-    function play() {
-      if (timer) return;
-      timer = window.setInterval(function () { show(at + 1); }, 6200);
-    }
-    function pause() {
-      window.clearInterval(timer); timer = null;
-      window.clearTimeout(preloadNext); preloadNext = null;
-    }
-
-    show(0);
-    if (sFrames.length > 1) {
-      if ("IntersectionObserver" in window) {
-        new IntersectionObserver(function (es) {
-          es.forEach(function (en) { en.isIntersecting ? play() : pause(); });
-        }, { threshold: 0.25 }).observe(stage);
-      } else {
-        play();
+    function sync() {
+      pause(); matchPosters();
+      if (pauseButton) {
+        pauseButton.hidden = stillsOnly();
+        pauseButton.textContent = userPaused ? "Play film" : "Pause film";
       }
+      if (stillsOnly()) {
+        at = 0;
+        sFrames.forEach(function (f, k) {
+          f.setAttribute("data-on", k === 0 ? "true" : "false");
+          var v = f.querySelector("video");
+          if (v.hasAttribute("src")) { v.removeAttribute("src"); v.load(); }
+        });
+        return;
+      }
+      if (!visible || document.hidden || userPaused) return;
+      show(at);
+      if (sFrames.length > 1) timer = setInterval(function () { show(at + 1); }, 6200);
     }
-    /* a change of orientation changes which encode is the right one */
-    (narrowStage.addEventListener ? narrowStage.addEventListener.bind(narrowStage, "change")
-                                  : narrowStage.addListener.bind(narrowStage))(function () {
-      matchPosters();
-      sFrames.forEach(function (_, k) { if (k === at) load(k); });
-    });
+    if (pauseButton) pauseButton.addEventListener("click", function () { userPaused = !userPaused; sync(); });
+    document.addEventListener("visibilitychange", sync);
+    motion.addEventListener("change", sync);
+    narrowStage.addEventListener("change", sync);
+    if (connection && connection.addEventListener) connection.addEventListener("change", sync);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; sync(); }, {threshold:0.25}).observe(stage);
+    } else { visible = true; }
+    sync();
   }
 
   /* --- 2. header contrast -------------------------------------------------
@@ -282,24 +258,34 @@
     var lastFocus = null;
 
     function focusables() {
-      return menu.querySelectorAll("a[href], button:not([disabled])");
+      return [openBtn].concat([].slice.call(menu.querySelectorAll("a[href], button:not([disabled])")));
+    }
+    var menuBackground = [];
+    function isolateMenu(on) {
+      if (on) {
+        menuBackground = [].slice.call(document.querySelectorAll("main, footer, .skip, .header__logo, .header nav")).filter(function (el) { return !el.inert; });
+        menuBackground.forEach(function (el) { el.inert = true; });
+      } else { menuBackground.forEach(function (el) { el.inert = false; }); menuBackground = []; }
     }
     function open() {
+      isolateMenu(true);
       lastFocus = document.activeElement;
       menu.setAttribute("data-open", "true");
       openBtn.setAttribute("aria-expanded", "true");
       document.documentElement.style.overflow = "hidden";
       if (menuLabel) menuLabel.textContent = "Close";
       var f = focusables();
-      if (f.length) f[0].focus();
+      if (f.length > 1) requestAnimationFrame(function () { f[1].focus(); });
     }
     function close() {
+      isolateMenu(false);
       menu.setAttribute("data-open", "false");
       openBtn.setAttribute("aria-expanded", "false");
       document.documentElement.style.overflow = "";
       if (menuLabel) menuLabel.textContent = "Menu";
       if (lastFocus) lastFocus.focus();
     }
+    window.addEventListener("resize", function () { if (menu.getAttribute("data-open") === "true" && getComputedStyle(openBtn).display === "none") close(); });
     openBtn.addEventListener("click", function () {
       menu.getAttribute("data-open") === "true" ? close() : open();
     });
@@ -335,6 +321,7 @@
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));
     var PEEK = 6;                     /* frames the card renders itself */
     var railCache = {};
+    var expansionVersion = 0;
     var indexUrl = location.href;
     var baseTitle = document.title;
 
@@ -573,7 +560,8 @@
       }
 
       var lead = st.querySelector(".rail__note");
-      card.removeAttribute("data-open");      /* the card starts collapsing now */
+      card.removeAttribute("data-open");
+      st.querySelectorAll('.rail__f[role="button"]').forEach(function (f) { f.tabIndex = -1; });
 
       if (instant || reduced || !lead) { finish(); return; }
 
@@ -619,6 +607,7 @@
     }
 
     function closeAll(push) {
+      expansionVersion++;
       if (!openCard) return;
       var card = openCard;
       openCard = null;
@@ -634,7 +623,9 @@
       if (!card) return Promise.reject(new Error("no card"));
       if (openCard === card) { closeAll(push); return Promise.resolve(); }
 
+      var version = ++expansionVersion;
       return fetchRail(slug).then(function (rail) {
+        if (version !== expansionVersion) return;
         /* Both cards move at once — the old one shrinking, the new one growing
            — and the card under the pointer is held still for the whole of it.
            Anchoring starts BEFORE either transition so the first frame is
@@ -690,6 +681,7 @@
 
         card.querySelector("[data-project]").setAttribute("aria-expanded", "true");
         openCard = card;
+        st.querySelectorAll('.rail__f[role="button"]').forEach(function (f) { f.tabIndex = 0; });
 
         /* flush before opening, or the wipes have no closed state to start from */
         void st.offsetHeight;
@@ -818,6 +810,7 @@
         /* a drag along the open strip ends in a click event — not a choice */
         if (downAt && Math.abs(ev.clientX - downAt[0]) + Math.abs(ev.clientY - downAt[1]) > 8) return;
 
+        if (ev.target.closest("[data-project-close]")) { ev.preventDefault(); closeAll(true); card.querySelector("[data-project]").focus({preventScroll:true}); return; }
         var onCaption = !!(ev.target.closest && ev.target.closest("[data-project]"));
         if (card.getAttribute("data-open") === "true") {
           if (onCaption) { ev.preventDefault(); closeAll(true); }
@@ -829,7 +822,8 @@
     });
 
     document.addEventListener("keydown", function (ev) {
-      if (!openCard) return;
+      if (!openCard || document.querySelector('.lb[data-open="true"], .menu[data-open="true"]')) return;
+      if (!openCard.contains(document.activeElement) || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
       var st = strip(openCard);
       if (ev.key === "Escape") {
         ev.preventDefault();
@@ -839,7 +833,7 @@
       } else if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") {
         ev.preventDefault();
         st._touched = true;
-        st.scrollBy({ left: (ev.key === "ArrowRight" ? 1 : -1) * st.clientWidth * 0.7,
+        st.scrollBy({ left: (ev.key === "ArrowRight" ? 1 : -1) * (getComputedStyle(st).direction === "rtl" ? -1 : 1) * st.clientWidth * 0.7,
                       behavior: reduced ? "auto" : "smooth" });
       }
     });
@@ -887,8 +881,9 @@
 
     window.addEventListener("popstate", function (ev) {
       var slug = ev.state && ev.state.slug;
-      if (slug) expand(slug, false);
-      else closeAll(false);
+      if (slug) {
+        if (!openCard || openCard.getAttribute("data-card") !== slug) expand(slug, false).catch(function () { location.href = hrefBySlug[slug]; });
+      } else closeAll(false);
     });
 
     /* Landing on /projects/<slug> with the index in history: open it directly. */
@@ -1042,9 +1037,12 @@
 
     /* --- opening and closing ------------------------------------------------ */
 
-    function open(list, i) {
+    var viewerBackground = [];
+    function open(list, i, opener) {
       if (!lb) build();
-      items = list; lastFocus = document.activeElement;
+      items = list; lastFocus = opener || document.activeElement;
+      viewerBackground = [].slice.call(document.body.children).filter(function (el) { return el !== lb && !el.inert; });
+      viewerBackground.forEach(function (el) { el.inert = true; });
 
       /* Lock the page by pinning it, not by hiding its overflow. overflow:hidden
          on <html> does nothing on iOS Safari — the page scrolls behind the
@@ -1081,12 +1079,13 @@
 
     function close() {
       lb.setAttribute("data-open", "false");
+      viewerBackground.forEach(function (el) { el.inert = false; }); viewerBackground = [];
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.left = "";
       document.body.style.right = "";
       window.scrollTo(0, scrollY);
-      if (lastFocus && lastFocus.focus) lastFocus.focus();
+      if (lastFocus && lastFocus.focus) lastFocus.focus({preventScroll:true});
     }
 
     function isOpen() { return lb && lb.getAttribute("data-open") === "true"; }
@@ -1229,8 +1228,9 @@
      * The capture phase runs before any of that, while the card still holds the
      * state it had when the reader clicked — which is the state the decision
      * actually depends on. */
-    document.addEventListener("click", function (e) {
-      var picture = e.target.closest && e.target.closest(".rail__f img");
+    function activatePicture(e) {
+      var figure = e.target.closest && e.target.closest('.rail__f[role="button"]');
+      var picture = figure && figure.querySelector("img");
       if (!picture) return;
 
       /* A closed card's photographs are a way in to the project, not something
@@ -1263,6 +1263,30 @@
                  caption: cap ? cap.textContent.trim() : "" };
       });
       var i = figures.indexOf(picture.closest(".rail__f"));
-      open(list, i < 0 ? 0 : i);
-    }, true);
+      open(list, i < 0 ? 0 : i, figure);
+    }
+    document.addEventListener("click", activatePicture, true);
+    document.addEventListener("keydown", function (e) {
+      if ((e.key === "Enter" || e.key === " ") && e.target.matches('.rail__f[role="button"]')) activatePicture(e);
+    });
   })();
+
+(function () {
+  function move(rail, direction) {
+    if (!rail) return;
+    rail._pin = false; rail._touched = true;
+    var rtl = getComputedStyle(rail).direction === "rtl" ? -1 : 1;
+    rail.scrollBy({left:direction * rtl * rail.clientWidth * .7,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+  }
+  document.addEventListener("click", function (e) {
+    var button = e.target.closest("[data-gallery-step]");
+    if (!button) return;
+    var card = button.closest(".pcard");
+    move(card ? card.querySelector("[data-strip]") : document.querySelector("[data-rail]"), Number(button.dataset.galleryStep));
+  });
+  document.addEventListener("keydown", function (e) {
+    var rail = e.target.closest("[data-rail]");
+    if (!rail || document.querySelector('.lb[data-open="true"]') || !["ArrowLeft","ArrowRight"].includes(e.key)) return;
+    e.preventDefault(); move(rail, e.key === "ArrowRight" ? 1 : -1);
+  });
+})();

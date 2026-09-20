@@ -23,36 +23,7 @@
  * sake of about thirty lines, and a validator you cannot read at a glance is
  * one nobody trusts.
  */
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { createClient } from "@sanity/client";
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-
-/* Astro loads web/.env by itself; a plain node script does not. On Netlify the
- * variables come from the environment and this file will not exist. */
-const envFile = resolve(HERE, "..", ".env");
-if (existsSync(envFile)) {
-  for (const line of readFileSync(envFile, "utf8").split("\n")) {
-    const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
-    if (m) process.env[m[1]] ??= m[2].replace(/^["']|["']$/g, "");
-  }
-}
-
-const projectId = process.env.SANITY_PROJECT_ID;
-if (!projectId) {
-  console.log("[content] no SANITY_PROJECT_ID — skipping");
-  process.exit(0);
-}
-
-const client = createClient({
-  projectId,
-  dataset: process.env.SANITY_DATASET ?? "production",
-  apiVersion: "2024-10-01",
-  useCdn: false,
-  perspective: "published",
-});
+import { client, mode } from "./env.mjs";
 
 // Mirrors studio/schemas/objects.ts. Changing a list there means changing it
 // here, and the mismatch this file exists to catch is the reminder.
@@ -91,7 +62,7 @@ function checkFigure(fig, doc, path) {
 }
 
 const data = await client.fetch(`{
-  "projects": *[_type == "project"]{
+  "projects": *[_type == "project" && lifecycle in $states]{
     _id, title, lifecycle, "slug": slug.current,
     "images": images[]{ alt, rights, kind, "hasAsset": defined(asset.asset) }
   },
@@ -104,7 +75,7 @@ const data = await client.fetch(`{
   "settings": *[_type == "settings"][0]{
     "founders": founders{ alt, rights, "hasAsset": defined(asset.asset) }
   }
-}`);
+}`, { states: mode.preview ? ["draft", "published", "archived"] : ["published", "archived"] });
 
 for (const p of data.projects ?? []) {
   const id = p.title || p._id;

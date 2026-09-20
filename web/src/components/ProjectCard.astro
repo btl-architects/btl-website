@@ -38,14 +38,17 @@ const total = String(project.images.length).padStart(2, "0");
 <article class="pcard rvc" data-card={project.slug}>
   <div class="pcard__strip" data-strip>
     {peek.map((image, k) => (
-      <figure class="rail__f pcard__peek">
+      <figure class="rail__f pcard__peek" role="button" tabindex="-1" aria-label={`View photograph ${k + 1}: ${image.alt}`}>
         <Figure image={image} sizes={PEEK_SIZES} priority={priority && k === 0} />
       </figure>
     ))}
   </div>
   <div class="pcard__nav" data-nav hidden>
+    <button class="tl" type="button" data-project-close>Close project</button>
     <span class="pcard__pos" data-pos>01 / {total}</span>
     <span class="pcard__bar"><i data-bar></i></span>
+    <button class="tl" type="button" data-gallery-step="-1" aria-label={`Previous photographs in ${project.title}`}>←</button>
+    <button class="tl" type="button" data-gallery-step="1" aria-label={`Next photographs in ${project.title}`}>→</button>
   </div>
   <a
     class="pcard__t"

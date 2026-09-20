@@ -35,7 +35,7 @@ if (project.year) meta.push(["Year", project.year]);
 if (project.credits.photographer) meta.push(["Photograph", project.credits.photographer]);
 ---
 
-<div class="rail" data-rail data-slug={project.slug} data-title={project.title}>
+<div class="rail" tabindex="0" role="region" aria-label={`${project.title} photographs — use the arrow keys to browse`} data-rail data-slug={project.slug} data-title={project.title}>
   <div class="rail__note">
     <h2 class="rail__title">{project.title}</h2>
     {project.description && <p class="rail__text">{project.description}</p>}
@@ -51,7 +51,7 @@ if (project.credits.photographer) meta.push(["Photograph", project.credits.photo
        name is the same on every project page and appears exactly once per
        document, which is what the API requires — two elements sharing a name
        in one document silently cancels the entire transition. */
-    <figure class="rail__f" style={j === 0 ? "view-transition-name: project-cover" : undefined}>
+    <figure class="rail__f" role="button" tabindex="0" aria-label={`View photograph ${j + 1}: ${image.alt}`} style={j === 0 ? "view-transition-name: project-cover" : undefined}>
       <Figure
         image={image}
         sizes={RAIL_SIZES}

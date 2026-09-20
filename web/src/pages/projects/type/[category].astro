@@ -6,23 +6,25 @@
 import type { GetStaticPaths } from "astro";
 import Base from "../../../layouts/Base.astro";
 import ProjectIndex from "../../../components/ProjectIndex.astro";
-import { getLiveCategories, getProjects } from "../../../lib/content";
+import { getLiveCategories, getProjects, getEarnedCategories } from "../../../lib/content";
 
 export const getStaticPaths = (async () => {
   const [categories, projects] = await Promise.all([getLiveCategories(), getProjects()]);
+  const earned = new Set((await getEarnedCategories()).map(c => c.slug));
   return categories.map((c) => ({
     params: { category: c.slug },
-    props: { category: c, projects: projects.filter((p) => p.category.includes(c.slug)) },
+    props: { indexable: earned.has(c.slug), category: c, projects: projects.filter((p) => p.category.includes(c.slug)) },
   }));
 }) satisfies GetStaticPaths;
 
-const { category, projects } = Astro.props;
+const { category, projects, indexable } = Astro.props;
 ---
 
 <Base
   title={`${category.label} — btl architects`}
   description={`${category.label} by btl architects.`}
   current="projects"
+  noindex={!indexable}
 >
   <ProjectIndex projects={projects} active={category.slug}
     title={category.label} />

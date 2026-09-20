@@ -25,7 +25,7 @@ const c = (await getSettings()).contact;
       <h1 class="t-h1 rv">Contact</h1>
 
       <div class="contact__grid">
-        <form name="enquiry" method="POST" action="/api/enquiry" class="rv">
+        <form name="enquiry" method="POST" action="/api/enquiry" class="rv" data-enquiry>
           {/* Honeypot. Positioned off-screen rather than display:none, because
               a field that is not rendered is not submitted and the trap stops
               working. Off-screen alone is not enough though: a screen reader
@@ -38,38 +38,32 @@ const c = (await getSettings()).contact;
           </p>
           <div class="f">
             <label for="n">Name</label>
-            <input id="n" name="name" type="text" autocomplete="name" required />
+            <input id="n" name="name" maxlength="120" type="text" autocomplete="name" required />
           </div>
           <div class="f">
             <label for="em">Email</label>
-            <input id="em" name="email" type="email" inputmode="email" autocomplete="email" required />
+            <input id="em" name="email" maxlength="200" type="email" inputmode="email" autocomplete="email" required />
           </div>
           <div class="f">
             <label for="ph">Phone <span class="muted">(optional)</span></label>
-            <input id="ph" name="phone" type="tel" inputmode="tel" autocomplete="tel" />
+            <input id="ph" name="phone" maxlength="40" type="tel" inputmode="tel" autocomplete="tel" />
           </div>
           <div class="f">
             <label for="ms">Message</label>
-            <textarea id="ms" name="message" required minlength="20"></textarea>
+            <textarea id="ms" name="message" required minlength="20" maxlength="5000"></textarea>
           </div>
           <button class="b b--solid" type="submit">Send enquiry</button>
-          {/* This said "Nothing is shared", which was true when the form posted
-              to the host and stopped being true the moment it started going
-              through a form service. The service holds a copy for 30 days,
-              which is a fact a visitor is entitled to before they type their
-              name into the box — and a promise a website cannot keep is worse
-              than no promise at all. If the delivery route changes, this
-              sentence changes with it. */}
+          <p data-enquiry-status role="status" aria-live="polite" tabindex="-1"></p>
           <p class="t-caption" style="margin-top:var(--s-4)">
-            Delivered to the studio at {c.formTo} by a form service, which holds a copy
-            for 30 days. Your details are used only to reply — never sold, never passed on.
+            We use your details to respond to your enquiry. Delivered through Web3Forms.
+            Read our <a class="tl" href="/privacy/">privacy notice</a>.
           </p>
         </form>
 
         <div class="contact__aside rv" data-delay="1">
           <div>
             <span class="eyebrow" style="display:block; color:var(--text-tertiary)">Studio</span>
-            <address style="font-style:normal; line-height:1.7" set:html={c.address.join("<br>")} />
+            <address style="font-style:normal; line-height:1.7">{c.address.map((line) => <>{line}<br /></>)}</address>
           </div>
           <p>
             <a class="tl" href={`mailto:${c.email}`}>{c.email}</a><br />
@@ -81,3 +75,5 @@ const c = (await getSettings()).contact;
     </div>
   </main>
 </Base>
+
+<script src="/scripts/enquiry.js" is:inline defer></script>

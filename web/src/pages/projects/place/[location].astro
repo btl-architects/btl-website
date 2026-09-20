@@ -20,6 +20,7 @@ const { place, projects } = Astro.props;
   title={`${place.label} — btl architects`}
   description={`Work by btl architects in ${place.label}.`}
   current="projects"
+  noindex
 >
   <ProjectIndex projects={projects}
     title={place.label} />

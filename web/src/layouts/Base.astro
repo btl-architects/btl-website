@@ -36,7 +36,7 @@ interface Props {
 
 const { title, description, current = "", ground = "dark", noindex = false, share } = Astro.props;
 const settings = await getSettings();
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const canonical = new URL(Astro.url.pathname === "/404/" ? "/404.html" : Astro.url.pathname, Astro.site).href;
 
 /* A shared link is the practice's front door more often than the home page is.
  * The fallback matters more than the parameter: a route that forgets to pass a
@@ -130,7 +130,7 @@ const org = {
       type="font/woff2"
       crossorigin
     />
-    <script type="application/ld+json" set:html={JSON.stringify(org)} is:inline />
+    <script type="application/ld+json" set:html={JSON.stringify(org).replace(/</g, "\\u003c")} is:inline />
   </head>
   <body id="top" data-ground={ground} data-preview={isPreview ? "true" : undefined}>
     <a class="skip" href="#main">Skip to content</a>

@@ -166,9 +166,7 @@ const c = settings.contact;
         <div class="mini mini--2">
           <div class="rv">
             <address
-              style="font-style:normal; line-height:1.7; color:var(--text-secondary)"
-              set:html={c.address.join("<br>")}
-            />
+              style="font-style:normal; line-height:1.7; color:var(--text-secondary)">{c.address.map((line) => <>{line}<br /></>)}</address>
           </div>
           <div class="rv" data-delay="1">
             <p>

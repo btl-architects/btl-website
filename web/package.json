@@ -4,19 +4,28 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "node tools/content-check.mjs && astro check && astro build && node tools/redirects.mjs && node tools/budget.mjs && node tools/warm-images.mjs",
+    "build": "node tools/content-check.mjs && astro check && astro build && node tools/redirects.mjs && node tools/budget.mjs && node tools/site-check.mjs && node tools/warm-images.mjs",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "test:performance": "node tools/performance.mjs",
+    "serve:test": "wrangler pages dev dist --d1 ENQUIRY_DB=00000000-0000-0000-0000-000000000001 --compatibility-date 2026-09-20 --ip 127.0.0.1 --port 8788",
+    "db:local": "wrangler d1 migrations apply btl-local-enquiries --local --config wrangler.local.jsonc"
   },
   "dependencies": {
-    "@sanity/client": "^8.2.0",
+    "@sanity/client": "8.6.2",
     "@sanity/image-url": "^1.2.0",
-    "astro": "7.2.4"
+    "astro": "7.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.5",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
     "@types/node": "^24.10.1",
-    "typescript": "5.9.3"
+    "lighthouse": "13.5.0",
+    "typescript": "5.9.3",
+    "wrangler": "4.135.0"
   },
   "engines": {
     "node": ">=26"

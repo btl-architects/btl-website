@@ -51,9 +51,9 @@ await Promise.all(
     while (list.length) {
       const url = list.pop();
       try {
-        const res = await fetch(url, { method: "GET" });
-        res.ok ? ok++ : failed++;
+        const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(10000) });
         await res.arrayBuffer();
+        res.ok ? ok++ : failed++;
       } catch {
         failed++;
       }

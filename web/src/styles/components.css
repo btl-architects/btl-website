@@ -2196,3 +2196,19 @@ body[data-preview] main { padding-top: var(--preview-h); }
 /* The photographs are clickable, so they should say so. */
 .rail__f img { cursor: zoom-in; }
 .pcard__peek img { cursor: inherit; }
+
+/* Small functional controls preserve the existing visual language. */
+.stage__pause { position:absolute; bottom:var(--s-6); left:var(--s-6); z-index:4; background:var(--surface); color:var(--text-primary); padding:var(--s-3) var(--s-4); min-height:44px; cursor:pointer; }
+.stage__pause[hidden] { display:none; }
+.gallery-controls { display:flex; gap:var(--s-6); padding-top:var(--s-4); }
+.gallery-controls button, [data-gallery-step] { min-width:44px; min-height:44px; cursor:pointer; }
+.rail__f[role="button"]:focus-visible, .rail:focus-visible { outline:2px solid var(--accent); outline-offset:-4px; }
+.privacy { max-width:48rem; }
+.privacy h2 { margin-top:var(--s-7); }
+.privacy p { margin-top:var(--s-4); color:var(--text-secondary); }
+.lb:focus-within .lb__step, .lb:focus-within .lb__bar { opacity:1; }
+[data-enquiry-status]:empty { display:none; }
+
+.pcard[data-open="true"] .pcard__nav:not([hidden]) { display:flex; }
+.pcard[data-open="true"] .pcard__t:focus-visible { opacity:1; }
+[data-gallery-step], [data-project-close] { background:none; border:0; padding:var(--s-2); cursor:pointer; }

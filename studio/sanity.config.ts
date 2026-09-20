@@ -2,6 +2,7 @@ import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { schemaTypes } from "./schemas";
 import { structure } from "./structure";
+import {preserveProjectAddress, protectPublishedProject} from "./actions/projectPublish";
 
 /* The studio the practice actually uses.
  *
@@ -24,5 +25,10 @@ export default defineConfig({
 
   plugins: [structureTool({ structure })],
 
+  document: {
+    actions: (actions, context) => context.schemaType !== 'project' ? actions : actions.map(action =>
+      action.action === 'publish' ? preserveProjectAddress(action) :
+      ['delete', 'unpublish'].includes(action.action || '') ? protectPublishedProject(action) : action),
+  },
   schema: { types: schemaTypes },
 });

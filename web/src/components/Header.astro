@@ -60,14 +60,14 @@ const logo = LOGO_WHITE;
     {/* One control, not two. It reads "Menu" then "Close" to a screen reader
         via aria-expanded, while visually the two rules rotate into a cross —
         a continuous movement rather than one word being replaced by another. */}
-    <button class="burger" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu">
+    <button id="menu-toggle" class="burger" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu">
       <span class="burger__label" data-menu-label>Menu</span>
       <span class="burger__mark" aria-hidden="true"><i></i><i></i></span>
     </button>
   </div>
 </header>
 
-<div class="menu" id="menu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+<div class="menu" id="menu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu" aria-owns="menu-toggle">
   {/* No logo in here. The header's own logo stays visible above the panel, so
       putting a second one at the top of the panel meant the mark slid down and
       landed on top of itself — which is the jarring part. One button too: the
@@ -86,7 +86,7 @@ const logo = LOGO_WHITE;
   </ul>
   <div class="menu__media"><slot name="menu-media" /></div>
   <div class="menu__foot">
-    <address style="font-style:normal" set:html={settings.contact.address.join("<br>")} />
+    <address style="font-style:normal">{settings.contact.address.map((line) => <>{line}<br /></>)}</address>
     <a class="tl" href={`tel:${settings.contact.phoneHref}`}>{settings.contact.phone}</a>
   </div>
 </div>

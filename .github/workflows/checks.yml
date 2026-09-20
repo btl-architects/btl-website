@@ -1,0 +1,70 @@
+name: Website checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      SANITY_PROJECT_ID: aur12nrf
+      SANITY_DATASET: production
+      SANITY_PREVIEW: 'false'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run db:local
+      - run: npm run test:e2e
+      - name: Measure launch performance
+        run: |
+          npm run serve:test > /tmp/btl-preview.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:8788/ >/dev/null && break; sleep 1; done
+          npm run test:performance
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: website-check-results
+          path: |
+            web/playwright-report/
+            web/test-results/
+            web/reports/
+  studio:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio
+    env:
+      SANITY_STUDIO_PROJECT_ID: aur12nrf
+      SANITY_STUDIO_DATASET: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.node-version
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npx tsc --noEmit
+      - run: npm run build

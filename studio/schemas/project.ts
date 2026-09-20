@@ -45,7 +45,7 @@ export default defineType({
           const client = getClient({ apiVersion: "2024-10-01" });
           const id = document?._id.replace(/^drafts\./, "");
           const taken = await client.fetch<boolean>(
-            `count(*[_type=="project" && slug.current==$slug && !(_id in [$id, "drafts."+$id])]) > 0`,
+            `count(*[_type=="project" && (slug.current==$slug || $slug in previousSlugs) && !(_id in [$id, "drafts."+$id])]) > 0`,
             { slug, id },
           );
           return !taken;
@@ -53,6 +53,7 @@ export default defineType({
       },
       validation: (r) => r.required(),
     }),
+    defineField({name: 'previousSlugs', title: 'Previous addresses', type: 'array', of: [{type:'string'}], readOnly: true, group:'meta', description:'Recorded automatically when a published address changes.'}),
     defineField({
       name: "description",
       title: "About the project",
@@ -103,17 +104,23 @@ export default defineType({
       title: "Should the public see it?",
       type: "string",
       group: "meta",
-      description: "Only Published projects appear on the site or in search results.",
+      description: "Published projects appear in the index. Archived projects retain their public address but leave the index.",
       options: {
         list: [
           { title: "Draft — not on the site", value: "draft" },
           { title: "Published", value: "published" },
-          { title: "Archived — off the site, kept here", value: "archived" },
+          { title: "Archived — keep URL, hide from index", value: "archived" },
         ],
         layout: "radio",
       },
       initialValue: "draft",
-      validation: (r) => r.required(),
+      validation: (r) => r.required().custom(async (value, context) => {
+        if (value !== 'draft') return true;
+        const id = context.document?._id.replace(/^drafts\./, '');
+        if (!id) return true;
+        const published = await context.getClient({apiVersion:'2025-02-19'}).fetch('*[_id == $id][0].lifecycle',{id});
+        return ['published','archived'].includes(published) ? 'Use Archived to hide a published project while keeping its address.' : true;
+      }),
     }),
     defineField({
       name: "featured",

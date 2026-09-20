@@ -8,12 +8,14 @@
 import type { GetStaticPaths } from "astro";
 import Base from "../../layouts/Base.astro";
 import ProjectRail from "../../components/ProjectRail.astro";
-import { getProjects } from "../../lib/content";
+import { getProjects, getProjectRoutes } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
 
 export const getStaticPaths = (async () => {
   const projects = await getProjects();
-  return projects.map((project, i) => ({
+  return (await getProjectRoutes()).map((project) => {
+    const i = projects.findIndex(p => p.slug === project.slug);
+    return ({
     params: { slug: project.slug },
     props: {
       project,
@@ -21,7 +23,8 @@ export const getStaticPaths = (async () => {
       prev: projects[(i - 1 + projects.length) % projects.length]!,
       next: projects[(i + 1) % projects.length]!,
     },
-  }));
+  });
+  });
 }) satisfies GetStaticPaths;
 
 const { project, prev, next } = Astro.props;
@@ -51,9 +54,13 @@ const { project, prev, next } = Astro.props;
       </header>
 
       <ProjectRail project={project} priority />
+      <div class="container gallery-controls" aria-label="Photograph navigation">
+        <button class="tl" type="button" data-gallery-step="-1">Previous photographs</button>
+        <button class="tl" type="button" data-gallery-step="1">Next photographs</button>
+      </div>
 
       <div class="container page-end">
-        <nav class="pager" style="margin-top:var(--s-8)" aria-label="Projects">
+        {prev && next && <nav class="pager" style="margin-top:var(--s-8)" aria-label="Projects">
           <a href={`/projects/${prev.slug}/`}>
             <span class="pager__k">Previous</span>
             <span class="pager__n">{prev.title}</span>
@@ -62,7 +69,7 @@ const { project, prev, next } = Astro.props;
             <span class="pager__k">Next</span>
             <span class="pager__n">{next.title}</span>
           </a>
-        </nav>
+        </nav>}
         <Onward href="/projects/" kicker="Back">Every project</Onward>
       </div>
     </article>
