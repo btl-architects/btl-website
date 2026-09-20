@@ -1085,12 +1085,24 @@ html:has(.menu[data-open="true"]) .header {
   }
 }
 
-/* The text column is the measure, so nothing is left over to centre inside.
-   .statement centres its lines; given a column wider than the lines themselves
-   that centring became a void on the left of every spread — 62px on Studio at
-   1920, and growing. Capping the body at the same measure its lines already use
-   makes the column and its contents the same object. */
-.spread__body { max-width: var(--measure-lead); }
+/* The text column is the measure — and a measure has to be placed.
+ *
+ * Capping the body at --measure-lead is right: .statement centres its lines, and
+ * a column wider than the lines themselves turns that centring into a void on
+ * one side. But a max-width on its own does not centre anything. It just makes
+ * the box narrower and leaves it where block layout puts it, which is hard left.
+ *
+ * Above 60rem that went unnoticed, because there the spread is a two-column grid
+ * and the cell is exactly the size of its content — there is no room to sit left
+ * IN. Stacked, below 60rem, the same rule put a 688px box in a 790px column, so
+ * every page ran: centred photograph, then a block of centred text visibly out
+ * of line with it, then centred everything else. The text was centred the whole
+ * time; the box holding it was not.
+ *
+ * margin-inline: auto is the missing half. The photograph beside it has carried
+ * exactly this since its own cap was written, which is why the image looked
+ * right and the words did not. */
+.spread__body { max-width: var(--measure-lead); margin-inline: auto; }
 
 /* The scrim exists so type clears contrast against concrete, which sits around
    mid-grey. A gradient over the frame, not a box around it — R5 holds. */
