@@ -1043,13 +1043,23 @@ html:has(.menu[data-open="true"]) .header {
    `sizes` and the network. The founders photograph laid out at 358px that way. */
 .spread__media img { display: block; width: 100%; height: auto; }
 
-/* The cap applies only where the box carries nothing but the photograph.
+/* Every spread photograph, with no exception.
  *
- * A --type spread has a gradient and the founders' names positioned against the
- * media box, so an image narrower than that box leaves the names stranded on
- * the black beside it. Those spreads keep filling their column; they are the
- * ones whose shape was never the problem. */
-.spread__media:not(.spread__media--type) img {
+ * This used to read :not(.spread__media--type), and the reason was real at the
+ * time: a --type spread carried a scrim and the founders' names POSITIONED
+ * against the media box, so an image narrower than the box left those names
+ * stranded on black beside it.
+ *
+ * The names came off the photograph and became a caption underneath it in
+ * normal flow, and the scrim went with them — but the exception stayed. It left
+ * the founders' portrait as the one image on the site with no height limit
+ * below 60rem, where the rule that caps every other photograph does not reach.
+ * On a tablet that is a 0.75 portrait filling a 752px column: just over a
+ * thousand pixels tall, most of it taller than the screen.
+ *
+ * A condition outliving the thing it was conditional on is worse than never
+ * having had one, because it reads as deliberate. */
+.spread__media img {
 
   /* The cap, applied to width rather than height.
    *
@@ -1109,9 +1119,10 @@ html:has(.menu[data-open="true"]) .header {
 /* The scrim exists so type clears contrast against concrete, which sits around
    mid-grey. A gradient over the frame, not a box around it — R5 holds. */
 /* The scrim over the founders photograph is gone with the type it supported.
-   .spread__media--type now means only "this photograph carries a credit", which
-   sits underneath it — the modifier is kept because the two People spreads still
-   need to be told apart from the studio one. */
+   The --type modifier is gone with it. It marked a spread whose photograph
+   carried the names, and once those became a caption in normal flow nothing
+   distinguished such a spread from any other. The build guard is what noticed:
+   a class left in the markup with no rule behind it. */
 
 /* Names set INTO the photograph's own negative space — the architecture above
    the founders is the type field, which is the whole idea of the page. */

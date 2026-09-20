@@ -177,6 +177,14 @@
      the row switching layout at a breakpoint. */
   --trow-pic:         clamp(4.5rem, 3.2rem + 3.4vw, 7rem);
 
+  /* How tall a spread photograph may be — and it depends on what it is sharing
+     the screen with.
+
+     74svh was chosen for the two-column layout, where the picture stands beside
+     the words and three quarters of the screen is a photograph AND a paragraph.
+     Stacked, the same number means three quarters of the screen is a photograph
+     and nothing else, with the words below the fold. At 817px that is a 888px
+     picture on a 1200px screen before a single line of text. */
   --spread-max-h:     74svh;
   --space-section-lg: clamp(6rem, 3rem + 11vw, 14rem);
 
@@ -223,6 +231,22 @@
 
   /* ---- chrome ------------------------------------------------------------ */
   --header-h: clamp(3.75rem, 3rem + 2.5vw, 5.5rem);
+}
+
+/* Stacked and wide: the photograph is on its own, so it takes less.
+ *
+ * Below 60rem the spread stops being two columns and becomes one, and the
+ * picture stops sharing the screen with the paragraph beside it. The same 74svh
+ * that reads as a generous pairing on a desktop reads on a tablet as a full
+ * screen of photograph with the words pushed under the fold.
+ *
+ * Not applied below 40rem. A phone column is narrow enough that even a 9:16
+ * portrait stays a sensible height by filling it, and tightening there would
+ * shrink the picture to a panel floating in its own margins — the opposite
+ * complaint. The band is the one where the column is wide but the layout has
+ * not split yet, which is exactly where this was reported. */
+@media (min-width: 40rem) and (max-width: 59.99rem) {
+  :root { --spread-max-h: 58svh; }
 }
 
 /* The light register. An editorial choice, applied per section. */
