@@ -1364,6 +1364,12 @@ html:has(.menu[data-open="true"]) .header {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--team-min)), 1fr));
   gap: var(--s-7) var(--s-6);
   margin-top: var(--s-5);
+  /* A ceiling on the grid, not on the column count.
+     Left to the full page a 1920 screen fits six across, which is twice the
+     density that was asked for. Capping the grid's own width bounds it at four
+     without ever naming a number — the card keeps its size, the row stops
+     growing, and the list sits on the content edge like everything else. */
+  max-width: calc(4 * var(--team-min) + 3 * var(--s-6));
 }
 .trow__link {
   display: grid;
@@ -1372,11 +1378,17 @@ html:has(.menu[data-open="true"]) .header {
   padding-block: 0;
   background-image: none;          /* the list hairline has no job on a card */
 }
-/* The portrait leads the card and takes its full width. 3/4 keeps every frame
-   the same shape whatever was uploaded, so a row of cards has one baseline. */
+/* Square, not 3/4.
+ *
+ * A portrait crop is right for a photograph that IS the page — the founders on
+ * their own spread. In a grid it multiplies: at 425px wide a 3/4 frame is 567px
+ * tall, so three of them are most of a screen and four people take two of them.
+ * The card was never the problem; the proportion inside it was. A square holds
+ * a face at the same width and a quarter less height, and object-fit keeps the
+ * centre of whatever was uploaded. */
 .trow__p {
   display: block;
-  width: 100%; aspect-ratio: 3 / 4;
+  width: 100%; aspect-ratio: 1 / 1;
   overflow: hidden;
 }
 .trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }

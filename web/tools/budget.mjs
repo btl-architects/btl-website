@@ -261,7 +261,7 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
  * Layout grids — the 12-column grid, a two-up spread, a header — are legitimately
  * count-based, because the count IS the design. This only applies to grids whose
  * children are a repeating list of content cards. */
-const CARD_GRIDS = [".credits"];
+const CARD_GRIDS = [".credits", ".team__list"];
 
 for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
   const css = readFileSync(join(STYLES, file), "utf8");

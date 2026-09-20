@@ -174,13 +174,15 @@
 
   /* How wide a person's card wants to be, before the grid decides how many fit.
    *
-   * 21rem, and the number is bounded from both ends. At 22 a 768px tablet fits
-   * only one, which is a 706px-wide portrait — the same fault just fixed on the
-   * spreads, arriving by a different route. Below about 20.8 a 1920 screen fits
-   * five, which is more than "three or so" was asking for. Between those it
-   * lands on one per line on a phone, two on a tablet, three at 1440 and four on
-   * a wide monitor, with the card holding 337-425px throughout. */
-  --team-min:         21rem;
+   * 17rem. The first attempt at this was 21, chosen to land on exactly three at
+   * 1440 — which it did, at 425px each, and three 425px cards is most of a
+   * screen. "Three or so to a line" was a description of density, and I read it
+   * as a column count and then sized the card to hit it. The card should be
+   * small enough to scan a team at a glance; how many fit is the grid's
+   * business. At 17 that is one on a phone, two on a tablet, three at 1024,
+   * four at 1440 — and the card stays between 272 and 400px instead of growing
+   * to fill whatever the count left over. */
+  --team-min:         17rem;
 
   /* How tall a spread photograph may be — and it depends on what it is sharing
      the screen with.
