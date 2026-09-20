@@ -1326,7 +1326,11 @@ html:has(.menu[data-open="true"]) .header {
   padding-block: var(--s-4);
   text-decoration: none; color: inherit;
 }
-.team__list li:last-child .trow__link { border-bottom: 1px solid var(--border-subtle); }
+/* No closing rule. In a list of rows separated by hairlines, the last row needs
+   one underneath or the list ends on nothing. In a grid of cards there is no
+   list to close, and the rule landed under whichever card happened to be last —
+   a line under one person and not the others. Third leftover from the list
+   design after the .ruled hairline and the --type exception. */
 /* A name in a list is a name, not a heading. This was set at h3 — 32px at the
    old scale — which made a four-person team read like four section titles. */
 .trow__n {
@@ -1361,7 +1365,15 @@ html:has(.menu[data-open="true"]) .header {
  * reading down a list; between cards it is a grid of boxes. */
 .team__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--team-min)), 1fr));
+  /* Never fewer than two.
+   *
+   * min(100%, --team-min) let the track fall back to the whole row when the
+   * card minimum did not fit, which is one person per line on a phone — a
+   * 349px square portrait each, scrolling one face at a time. Half a row minus
+   * half a gap is the width two cards can always have, so the floor becomes
+   * "half" rather than "all" and the phone keeps a pair. Above that --team-min
+   * is the smaller of the two and nothing changes. */
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--team-min), calc(50% - var(--s-6) / 2)), 1fr));
   gap: var(--s-7) var(--s-6);
   margin-top: var(--s-5);
   /* A ceiling on the grid, not on the column count.
