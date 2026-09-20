@@ -52,6 +52,11 @@ const clips = await getHeroClips();
         label turns it into a slideshow of captioned exhibits. data-label stays
         on the frame because it is the clip's name in the CMS and site.js may
         want it again; nothing renders it now. */}
-    <button type="button" class="stage__pause" data-stage-pause hidden>Pause film</button>
+    {/* No pause control, at the practice's decision. The sequence still stops
+        when the stage leaves the viewport or the tab is hidden, and under
+        reduced motion or Save-Data it never starts and no video is fetched —
+        so the only case without a way out is a visitor who has set no
+        preference and wants the film stopped while looking at it. That is
+        WCAG 2.2.2, and it is knowingly not met. */}
   </div>
 )}

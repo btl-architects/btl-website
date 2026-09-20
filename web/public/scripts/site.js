@@ -150,8 +150,12 @@
     var connection = navigator.connection;
     var motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     var narrowStage = window.matchMedia("(max-width: 47.99rem)");
-    var pauseButton = stage.querySelector("[data-stage-pause]");
-    var at = 0, timer = null, preloadNext = null, visible = false, userPaused = false;
+    /* No userPaused. The pause control was removed at the practice's request, so
+       the only things that stop the sequence are leaving the viewport, the tab
+       being hidden, and reduced motion or Save-Data — all of which sync() still
+       honours. Keeping the flag with nothing able to set it would have left a
+       branch that reads as a feature and can never be reached. */
+    var at = 0, timer = null, preloadNext = null, visible = false;
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
     function matchPosters() {
@@ -183,10 +187,6 @@
     }
     function sync() {
       pause(); matchPosters();
-      if (pauseButton) {
-        pauseButton.hidden = stillsOnly();
-        pauseButton.textContent = userPaused ? "Play film" : "Pause film";
-      }
       if (stillsOnly()) {
         at = 0;
         sFrames.forEach(function (f, k) {
@@ -196,11 +196,10 @@
         });
         return;
       }
-      if (!visible || document.hidden || userPaused) return;
+      if (!visible || document.hidden) return;
       show(at);
       if (sFrames.length > 1) timer = setInterval(function () { show(at + 1); }, 6200);
     }
-    if (pauseButton) pauseButton.addEventListener("click", function () { userPaused = !userPaused; sync(); });
     document.addEventListener("visibilitychange", sync);
     motion.addEventListener("change", sync);
     narrowStage.addEventListener("change", sync);

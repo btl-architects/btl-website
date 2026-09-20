@@ -2250,11 +2250,10 @@ body[data-preview] main { padding-top: var(--preview-h); }
  *
  * These were added as a batch at the end of the file and each got its own
  * ad-hoc declaration. [data-gallery-step] and [data-project-close] were reset
- * below; .stage__pause was not, so it kept the browser's default 2px OUTSET
- * border and rendered as a grey bevelled box on top of the opening film. That
- * is the whole reason it looked wrong — not the idea of a pause control, the
- * fact that nobody gave it the treatment every other button here already has. */
-.stage__pause,
+ * below; the film's pause button was not, so it kept the browser's default 2px
+ * OUTSET border and rendered as a grey bevelled box on the opening. That button
+ * has since been removed, but the reset stays: it is what every control here
+ * shares, and the next one added should not have to rediscover it. */
 .gallery-controls button,
 [data-gallery-step],
 [data-project-close] {
@@ -2266,40 +2265,8 @@ body[data-preview] main { padding-top: var(--preview-h); }
   cursor: pointer;
 }
 
-/* Quiet, not gone.
- *
- * The practice called this ugly and unnecessary. They were right about ugly and
- * for a reason that had nothing to do with the idea: the rule above never reset
- * the button, so it carried the browser's default 2px OUTSET border and sat on
- * the opening film as a grey bevelled box. That is fixed by the reset, not by
- * deletion.
- *
- * It is not unnecessary. The film starts by itself and runs well past five
- * seconds, which is the case WCAG 2.2.2 exists for — moving content that begins
- * without asking has to be stoppable. I tried hiding it off-screen and leaving
- * it keyboard-only; that fails the same obligation from the other side, because
- * the people most likely to want a moving background stopped are using a mouse.
- *
- * So it is set like the film's own caption used to be: small, tracked, upper
- * case, carrying its own shadow because the photograph behind it is unknown. It
- * occupies a corner nothing else wants and reads as part of the film rather
- * than a control dropped on top of it. */
-.stage__pause {
-  position: absolute;
-  left: var(--s-6); bottom: var(--s-6);
-  z-index: 4;
-  min-height: 44px;
-  display: flex; align-items: center;
-  font-size: var(--type-meta);
-  letter-spacing: var(--track-meta);
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.8);
-  text-shadow: var(--shadow-on-image);
-  transition: color var(--dur-hover) var(--ease);
-}
-@media (hover: hover) { .stage__pause:hover { color: #fff; } }
-.stage__pause:focus-visible { color: #fff; outline: 2px solid var(--focus); outline-offset: 2px; }
-.stage__pause[hidden] { display: none; }
+/* The pause control is gone, at the practice's decision — see MediaStage.astro
+   for what that costs and what still stops the film without it. */
 .gallery-controls { display: flex; gap: var(--s-6); padding-top: var(--s-4); }
 .gallery-controls button, [data-gallery-step] { min-width: 44px; min-height: 44px; }
 .rail__f[role="button"]:focus-visible, .rail:focus-visible { outline:2px solid var(--accent); outline-offset:-4px; }

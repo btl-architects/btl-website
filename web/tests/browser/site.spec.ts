@@ -37,10 +37,14 @@ test('menu includes Close in its focus cycle and restores focus',async({page})=>
   await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Menu',exact:true})).toBeFocused();
   await expect(page.locator('main')).toHaveJSProperty('inert',false);
 });
-test('motion can be paused and stays stopped outside viewport',async({page})=>{
-  await page.goto('/');await page.getByRole('button',{name:'Pause film',exact:true}).click();
-  expect(await page.locator('video').evaluateAll(v=>v.every(e=>(e as HTMLVideoElement).paused))).toBeTruthy();
-  await page.getByRole('button',{name:'Play film',exact:true}).click();
+/* The pause control was removed at the practice's decision, so the assertions
+   that clicked it are gone with it. What is still promised — and still worth
+   failing a build over — is that the film stops on its own when nobody is
+   looking at it. The absence of the control is asserted too, so that if one
+   returns it is because somebody chose to add it. */
+test('film stops outside the viewport and offers no pause control',async({page})=>{
+  await page.goto('/');
+  await expect(page.locator('[data-stage-pause]')).toHaveCount(0);
   await page.locator('#contact').scrollIntoViewIfNeeded();
   await expect.poll(()=>page.locator('video').evaluateAll(v=>v.every(e=>(e as HTMLVideoElement).paused))).toBeTruthy();
 });
