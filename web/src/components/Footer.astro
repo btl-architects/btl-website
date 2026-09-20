@@ -26,20 +26,24 @@ const railCarriesSocial = current === "index";
 ---
 
 <footer class="footer" data-ground="dark">
+  {/* Two groups, because there are two kinds of thing here.
+      The left is what this practice IS — name, place, domain. The right is
+      where you can GO. They were one flat row of five items at identical
+      spacing, with the social links carrying a "·" punctuation nothing else
+      used, which is what made Privacy and the socials read as bolted on: they
+      were formatted as an afterthought to a list of facts. Grouped, each half
+      wraps as a unit and the pair sits at opposite ends of one line. */}
   <div class="container footer__base">
-    <span>© {year} {settings.name}</span>
-    <span>{settings.copy.locationLabel}</span>
-    <span>{settings.domain}</span>
-    <a class="tl" href="/privacy/">Privacy</a>
-    {!railCarriesSocial && (
-      <span class="footer__social">
-        {settings.social.map((s, i) => (
-          <>
-            {i > 0 && " · "}
-            <a class="tl" href={s.url} rel="noopener">{s.label}</a>
-          </>
-        ))}
-      </span>
-    )}
+    <span class="footer__meta">
+      <span>© {year} {settings.name}</span>
+      <span>{settings.copy.locationLabel}</span>
+      <span>{settings.domain}</span>
+    </span>
+    <span class="footer__links">
+      <a class="tl" href="/privacy/">Privacy</a>
+      {!railCarriesSocial && settings.social.map((s) => (
+        <a class="tl" href={s.url} rel="noopener">{s.label}</a>
+      ))}
+    </span>
   </div>
 </footer>

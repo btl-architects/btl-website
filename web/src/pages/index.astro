@@ -26,7 +26,10 @@ const home = await getHome();
 const projects = await getProjects();
 const featured = projects.filter((p) => p.featured).slice(0, 3);
 const work = featured.length ? featured : projects.slice(0, 3);
-const press = (await getPublications()).slice(0, 3);
+/* Two, at the practice's request — the latest pair, side by side.
+   Three meant one row of two and a single card stranded under it, because the
+   home grid is two across. Two fills the row exactly. */
+const press = (await getPublications()).slice(0, 2);
 const projectsBySlug = new Map(projects.map((p) => [p.slug, p]));
 // The home preview shows the principals only; the full team lives on /people.
 const principals = (await getPeople()).filter((p) => p.tier === "principal");

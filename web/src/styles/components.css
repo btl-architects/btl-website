@@ -845,21 +845,31 @@ html:has(.menu[data-open="true"]) .header {
 
 .footer__base {
   display: flex; flex-wrap: wrap;
-  gap: var(--s-3) var(--s-5);
+  /* The two groups sit at opposite ends of the line. When the line is too
+     narrow for both they each take a line of their own, and space-between has
+     nothing to distribute — so they left-align instead of one of them stranding
+     itself at the far right, which is what margin-left: auto did. */
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-6);
   align-items: baseline;
   font-size: var(--type-meta);
   letter-spacing: var(--track-meta);
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
-/* One wrapped row, not a row with something pinned to the far end.
- *
- * margin-left: auto pushed the social group to the right edge, which reads as a
- * deliberate pair of columns right up until the line wraps — and then the last
- * item drops onto a second line, still hard right, with a gap the width of the
- * page between it and everything it belongs to. Four short items and a list of
- * three: they are one row that wraps, and they should wrap like one. */
-.footer__social { white-space: nowrap; }
+
+/* Both groups are rows of their own, with the same rhythm inside them, so the
+   footer reads as two phrases rather than five loose items. The links lost the
+   "·" between them: it separated three of the five things in a way the other
+   two did not share, which is exactly what made them look strapped on. Spacing
+   does that job for every item equally. */
+.footer__meta,
+.footer__links {
+  display: flex; flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-3) var(--s-5);
+}
+
 
 /* --- home sections ---------------------------------------------------------
    The page has a rhythm, not a list. Sections alternate between RELEASE
@@ -1333,61 +1343,48 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase; color: var(--text-tertiary);
   transition: color var(--dur-hover) var(--ease);
 }
-/* One team row, at every width, with the portrait in it.
+/* The team is a set of people, not a list of rows.
  *
- * There were two layouts here and the difference between them was hover. A
- * pointer got a name-only list and a portrait that appeared in a slot beside it;
- * everything without a pointer got the portrait inline, in the row, always
- * visible. The practice asked for the photographs to be there — and the layout
- * that already did that was the one written for touch.
+ * It was a full-width index row each: a small portrait, a name, and a job title
+ * pushed to the far right edge of the page. At 1440 that put four names down the
+ * left and four titles a thousand pixels away, with nothing in between — a list
+ * shape carried over from the press index, where the rows are publications and
+ * the width is doing something.
  *
- * So the touch layout becomes the layout. Not because it is a compromise, but
- * because it was the correct one: a portrait that only exists while the mouse is
- * over a name is information the page is withholding, and half the visitors
- * could never get it at all. Keeping two of these meant every change to the team
- * list had to be made twice and looked right in whichever one you happened to be
- * testing.
+ * The practice asked for them side by side, three or so to a line. Size-led, not
+ * count-led, for the reason the press grid is: stating "three across" means the
+ * card is whatever a third of the page happens to be, and it inflates on every
+ * wider screen. Stating the card's width lets the count follow — two on a
+ * tablet, three at 1440, four on a very wide monitor, and one on a phone.
  *
- * The frame scales with the screen rather than switching layout — 4.5rem on a
- * phone, 7rem once there is room — so there is one thing to reason about.
- *
- * This also retires the absolutely-positioned portrait, and with it the
- * containing-block bug documented above it: nothing is positioned out of its row
- * any more, so nothing can be captured by an ancestor that gains a position. */
+ * The hairline that separated the rows goes with the rows. It was a device for
+ * reading down a list; between cards it is a grid of boxes. */
+.team__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--team-min)), 1fr));
+  gap: var(--s-7) var(--s-6);
+  margin-top: var(--s-5);
+}
 .trow__link {
   display: grid;
-  grid-template-columns: var(--trow-pic) minmax(0, 1fr);
-  grid-template-areas:
-    "pic name"
-    "pic role";
-  align-items: center;
-  column-gap: var(--s-4);
-  row-gap: var(--s-1);
-  padding-block: var(--s-4);
+  gap: var(--s-3);
+  align-content: start;
+  padding-block: 0;
+  background-image: none;          /* the list hairline has no job on a card */
 }
+/* The portrait leads the card and takes its full width. 3/4 keeps every frame
+   the same shape whatever was uploaded, so a row of cards has one baseline. */
 .trow__p {
-  grid-area: pic;
   display: block;
-  width: var(--trow-pic); aspect-ratio: 3 / 4;
+  width: 100%; aspect-ratio: 3 / 4;
   overflow: hidden;
-  align-self: center;
 }
 .trow__p img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* Areas rather than source order, so the portrait leads visually while the name
-   stays first in the markup for anyone reading the page aloud.
-
-   Pulled to the boundary between the two rows so the pair reads as one block
-   against the portrait rather than as two lines drifting apart in a tall cell. */
-.trow__n { grid-area: name; align-self: end; }
-.trow__r { grid-area: role; align-self: start; margin-left: 0; }
-
-/* A row with no portrait — the alumni list — must not leave a hole where one
-   would have been. It has no .trow__p at all, so the picture column collapses. */
-.trow__link:not(:has(.trow__p)) {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "name" "role";
-}
+/* margin-left: auto pushed the title to the far end of a full-width row. In a
+   card there is no far end, and it belongs directly under the name. */
+.trow__n { align-self: end; }
+.trow__r { margin-left: 0; }
 
 @media (hover: hover) {
   .trow:hover .trow__r, .trow:focus-within .trow__r { color: var(--text-secondary); }
