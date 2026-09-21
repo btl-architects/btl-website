@@ -123,11 +123,6 @@
      generous on a laptop and as scrolling through nothing on a phone. */
   --space-band:       clamp(2.5rem, 1.5rem + 2.5vw, 4rem);
 
-  /* How tall a photograph on a spread may be.
-     Not a magic number buried in one rule: the Studio page, the home studio
-     section, the People spread and the press spreads all read it, so raising it
-     raises them together. 74svh keeps the heading above and the paragraph
-     beside it on screen at the same time, which is the point of a spread. */
   /* How type is made legible when it has to sit on a photograph.
    *
    * The site used to do this with a gradient scrim under the type, which the
@@ -187,17 +182,11 @@
    * common window width is not a choice, it is a coincidence waiting to be
    * reported; 16 clears three from about 900px up with room either side of it.
    *
-   * Two on a phone, two on a tablet, three from 900, four from 1440 and never
-   * more than four, with the card between 256 and 340px. */
+   * Cards are fixed at this width and do not grow (see .team__list), falling to
+   * half a line on a phone so two always fit: two on a phone and a tablet, three
+   * from about 900, four from 1440, and never more than four. */
   --team-min:         16rem;
 
-  /* And a ceiling on the card itself, for the same reason --card-max exists on
-     the press grid. A 1fr track takes everything the column count leaves over,
-     so just below each threshold the cards swell to fill it — 399px at 900 and
-     350px at 1200, which is the "too big" complaint arriving between
-     breakpoints rather than at one. Bounded at 20rem the leftover stays as
-     space at the end of the row, where it reads as margin. */
-  --team-max:         20rem;
 
   /* How tall a spread photograph may be — and it depends on what it is sharing
      the screen with.

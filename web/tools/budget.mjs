@@ -261,7 +261,10 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
  * Layout grids — the 12-column grid, a two-up spread, a header — are legitimately
  * count-based, because the count IS the design. This only applies to grids whose
  * children are a repeating list of content cards. */
-const CARD_GRIDS = [".credits", ".team__list"];
+/* .team__list was here while it was a grid. It is flex now — it centres its
+   last line, which a grid cannot — so there is no grid-template-columns for this
+   check to read, and an entry that can never fire is not a guard. */
+const CARD_GRIDS = [".credits"];
 
 for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
   const css = readFileSync(join(STYLES, file), "utf8");

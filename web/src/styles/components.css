@@ -1319,7 +1319,6 @@ html:has(.menu[data-open="true"]) .header {
 
 
 .team { position: relative; }
-.team__list { list-style: none; margin: 0; padding: 0; }
 
 .trow__link {
   display: flex; align-items: baseline; gap: var(--s-4);
@@ -1364,30 +1363,32 @@ html:has(.menu[data-open="true"]) .header {
  * The hairline that separated the rows goes with the rows. It was a device for
  * reading down a list; between cards it is a grid of boxes. */
 .team__list {
-  display: grid;
-  /* Never fewer than two.
+  /* Flex with centred rows, not a grid.
    *
-   * min(100%, --team-min) let the track fall back to the whole row when the
-   * card minimum did not fit, which is one person per line on a phone — a
-   * 349px square portrait each, scrolling one face at a time. Half a row minus
-   * half a gap is the width two cards can always have, so the floor becomes
-   * "half" rather than "all" and the phone keeps a pair. Above that --team-min
-   * is the smaller of the two and nothing changes. */
-  /* 1fr, not --team-max, as the track's upper bound. auto-fill takes its
-     repetition count from the track's MAX when that max is a definite length,
-     so capping the track made the count follow the ceiling instead of the
-     floor: one card per line on a phone, two at 952, three at 1440. The count
-     has to come from the minimum. The ceiling goes on the card inside the
-     track, below. */
-  grid-template-columns: repeat(auto-fill, minmax(min(var(--team-min), calc(50% - var(--s-6) / 2)), 1fr));
+   * The practice asked for the team centred. A grid cannot centre an
+   * incomplete last row — its tracks are laid out across the full width first
+   * and the items fill them from the left, so two people on the final line sit
+   * hard left with empty tracks beside them. Flex wraps each line on its own
+   * and justify-content centres every line, full or not.
+   *
+   * Every card the same width, and they do not grow. With flex-grow the cards
+   * stretched to fill each line, so a lone card on the last line grew until it
+   * hit its cap — 320px beside row-mates at 272, one person's portrait a fifth
+   * larger than everyone else's. Centred lines have no need to fill: the slack
+   * sits either side and reads as margin. So the width is fixed at --team-min,
+   * falling to exactly half a line on a phone so two always fit, and the list
+   * is capped at four cards so a wide monitor does not run six across. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--s-7) var(--s-6);
-  margin-top: var(--s-5);
-  /* A ceiling on the grid, not on the column count.
-     Left to the full page a 1920 screen fits six across, which is twice the
-     density that was asked for. Capping the grid's own width bounds it at four
-     without ever naming a number — the card keeps its size, the row stops
-     growing, and the list sits on the content edge like everything else. */
+  margin: var(--s-5) auto 0;
+  padding: 0;
+  list-style: none;
   max-width: calc(4 * var(--team-min) + 3 * var(--s-6));
+}
+.team__list > li {
+  flex: 0 0 min(var(--team-min), calc(50% - var(--s-6) / 2));
 }
 .trow__link {
   display: grid;
@@ -1395,16 +1396,6 @@ html:has(.menu[data-open="true"]) .header {
   align-content: start;
   padding-block: 0;
   background-image: none;          /* the list hairline has no job on a card */
-  /* The card's own ceiling. A 1fr track takes whatever the column count leaves
-     over, so just below each threshold the cards swelled to fill it — 399px at
-     900, 350px at 1200. Capped here rather than on the track, so the count
-     still follows --team-min and the slack stays inside the track, where it
-     reads as margin.
-
-     Not justify-items: start on the grid — that applies to the <li>, which
-     then shrank to its content and took the card down to 158px with it. The
-     item fills its track; only the card inside is bounded. */
-  max-width: var(--team-max);
 }
 /* Square, not 3/4.
  *
@@ -1467,62 +1458,46 @@ html:has(.menu[data-open="true"]) .header {
   letter-spacing: var(--track-h3);
   line-height: var(--lead-tight);
 }
-/* A mark of direction, doing the job the repeated word used to do badly. It
-   travels a little on hover, which is the only movement in the gesture. */
-/* A plain rule. This carried the brand's line element for a while and the
-   practice's own verdict was that it looked forced — at the size a marker
-   needs to be, the peak in that artwork reads as a smudge rather than as a
-   mark anyone chose. It is a good element; this was the wrong place for it,
-   and a brand mark nobody recognises is doing no work. */
-.onward__t::before {
-  content: "";
-  display: inline-block;
-  /* 0.7em, not 1.1. At the old width the rule was nearly as long as the first
-     word behind it and read as a dash in the sentence rather than a marker
-     before it. It scales with the type, so this holds at every size. */
-  width: 0.7em; height: 1px;
-  margin-right: 0.5em;
-  vertical-align: 0.3em;
-  background: currentColor;
-  opacity: 0.5;
-  transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
-}
-@media (hover: hover) {
-  .onward:hover .onward__t::before { transform: translateX(0.3em); opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .onward__t::before { transition: none; }
-}
-/* The underline IS the brand's line element, drawn from its own vector.
- *
- * The practice asked for the mark on the rule that answers the pointer, and the
- * note at the top of this file records why an earlier attempt was pulled: it
- * composited the thing — the knot as a raster image, the flat run as a CSS
- * gradient — and never matched the drawing. This does not composite. It is the
- * single path out of the brand PDF, used as a mask, so the shape is the
- * practice's own artwork and not a reconstruction of it.
- *
- * aspect-ratio is what keeps it honest. A mask stretched to an arbitrary box
- * would flatten or squash the knot on every link of a different width, which is
- * the same near-miss by another route. Tying height to width means the element
- * is only ever scaled, never distorted — the rule thickens slightly on a longer
- * link, which is how the artwork behaves at its three supplied lengths anyway.
- *
- * Scoped to the onward headings, not to .ul and .tl. This is the long variant,
- * 49:1, so on a short inline link the rule would compute below a pixel and
- * disappear. Ordinary links keep the hairline; the headings the practice was
- * pointing at get the mark. */
+/* No leading dash. The practice's word for it was that it looked machine-made,
+   and it was doing less than it seemed: a short rule before a link that already
+   draws a line under itself on hover is two marks for one gesture. The words
+   and the underline are enough. Its hover nudge and reduced-motion override
+   went with it. */
 .onward__t::after {
+  /* The brand's line element, built the way the brand builds it.
+   *
+   * The supplied Short and Medium variants carry an identical knot and an
+   * identical rule thickness; only the flat run is longer. The knot is a mark of
+   * fixed size on a line of any length. The previous version scaled the whole
+   * drawing with the link through aspect-ratio, which made the rule about
+   * 0.94px — thinner than a pixel, so it rendered as a dim smear — and left the
+   * knot at 78% of whatever the text was, which put it under the tail of the
+   * "j" in "project".
+   *
+   * So: two mask layers, unioned. A plain 2px rule the full width, and the knot
+   * cut from the L001 vector itself — with a short piece of its own flat run
+   * either side, so the two overlap inside a flat stretch and meet invisibly.
+   * The knot is 9px tall, which is 4.44 times the rule, the proportion every
+   * one of the supplied variants uses.
+   *
+   * It sits past the last letter rather than under the text, the way the knot
+   * in the artwork sits near the end of its run. That means it can never land
+   * on a descender, whatever the words are. */
   content: "";
-  position: absolute; left: 0; right: 0; bottom: -0.28em;
-  aspect-ratio: 2057.164 / 41.871;
+  position: absolute;
+  left: 0;
+  right: -30px;                 /* room for the knot beyond the last letter */
+  top: calc(100% + 0.05em);     /* rule clears the descenders */
+  height: 9px;
   background-color: var(--mark);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='17.195%2010.402%202057.164%2041.871'%20preserveAspectRatio='none'%3E%3Cpath%20d='M%2017.195312%2052.273438%20L%2017.195312%2042.851562%20L%201578.589844%2042.851562%20C%201607.054688%2042.851562%201634.644531%2010.726562%201634.921875%2010.402344%20L%201642.5%2015.960938%20C%201636.417969%2025.605469%201634.277344%2033.109375%201636.472656%2037.089844%20C%201639.652344%2042.851562%201652.242188%2042.851562%201657.617188%2042.851562%20L%202074.359375%2042.851562%20L%202074.359375%2052.269531%20L%201657.65625%2052.269531%20C%201649.980469%2052.269531%201634.089844%2052.269531%201628.222656%2041.640625%20C%201626.628906%2038.75%201625.96875%2035.464844%201626.246094%2031.753906%20C%201614.34375%2041.488281%201597.007812%2052.269531%201578.589844%2052.269531%20Z%20M%2017.195312%2052.273438'%20fill='%23000'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='17.195%2010.402%202057.164%2041.871'%20preserveAspectRatio='none'%3E%3Cpath%20d='M%2017.195312%2052.273438%20L%2017.195312%2042.851562%20L%201578.589844%2042.851562%20C%201607.054688%2042.851562%201634.644531%2010.726562%201634.921875%2010.402344%20L%201642.5%2015.960938%20C%201636.417969%2025.605469%201634.277344%2033.109375%201636.472656%2037.089844%20C%201639.652344%2042.851562%201652.242188%2042.851562%201657.617188%2042.851562%20L%202074.359375%2042.851562%20L%202074.359375%2052.269531%20L%201657.65625%2052.269531%20C%201649.980469%2052.269531%201634.089844%2052.269531%201628.222656%2041.640625%20C%201626.628906%2038.75%201625.96875%2035.464844%201626.246094%2031.753906%20C%201614.34375%2041.488281%201597.007812%2052.269531%201578.589844%2052.269531%20Z%20M%2017.195312%2052.273438'%20fill='%23000'/%3E%3C/svg%3E");
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='1560%2010.4%20120%2041.87'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M1560%2052.27L1560%2042.85L1578.59%2042.85C1607.05%2042.85%201634.64%2010.73%201634.92%2010.4L1642.5%2015.96C1636.42%2025.61%201634.28%2033.11%201636.47%2037.09C1639.65%2042.85%201652.24%2042.85%201657.62%2042.85L1680%2042.85L1680%2052.27L1657.66%2052.27C1649.98%2052.27%201634.09%2052.27%201628.22%2041.64C1626.63%2038.75%201625.97%2035.46%201626.25%2031.75C1614.34%2041.49%201597.01%2052.27%201578.59%2052.27Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
+          mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='1560%2010.4%20120%2041.87'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M1560%2052.27L1560%2042.85L1578.59%2042.85C1607.05%2042.85%201634.64%2010.73%201634.92%2010.4L1642.5%2015.96C1636.42%2025.61%201634.28%2033.11%201636.47%2037.09C1639.65%2042.85%201652.24%2042.85%201657.62%2042.85L1680%2042.85L1680%2052.27L1657.66%2052.27C1649.98%2052.27%201634.09%2052.27%201628.22%2041.64C1626.63%2038.75%201625.97%2035.46%201626.25%2031.75C1614.34%2041.49%201597.01%2052.27%201578.59%2052.27Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
+  -webkit-mask-size: 25.8px 9px, 100% 2px;
+          mask-size: 25.8px 9px, 100% 2px;
+  -webkit-mask-position: right bottom, left bottom;
+          mask-position: right bottom, left bottom;
   -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
   clip-path: inset(0 100% 0 0);
   transition: clip-path var(--dur-base) var(--ease);
 }
