@@ -8,18 +8,23 @@
    has been removed rather than kept as a near-miss of the practice's own
    mark. */
 
-/* Hover and focus draw a plain rule, not the mark.
-
-   This used to composite the btl line out of a CSS mask — the knot as an image,
-   the flat run as a gradient — and it never became a faithful reproduction of
-   the drawing at underline scale, through several rewrites. A near-miss of a
-   practice's own mark is worse than not using it: it reads as the logo drawn
-   badly. The real element is still on the page where it can be rendered
-   properly, from its own vector, at a size that carries it (see .line). A
-   hairline is honest about being a hairline. R3 still holds — one at a time. */
+/* Hover and focus draw a plain rule, not the mark — on every link, one rule.
+ *
+ * The btl line element has been tried on the underline twice. The first time it
+ * was composited from a raster knot and a gradient and never matched the
+ * drawing; the second time it was cut from the brand vector and scaled or fixed
+ * in size, and at underline scale the knot still read as a mark sitting next to
+ * the words rather than as part of the page. The practice's call was to take it
+ * off and make the onward links behave like every other link, and that is
+ * right: a site-wide gesture should be the same gesture everywhere.
+ *
+ * So the onward headings are in this selector list rather than carrying a copy
+ * of it. There is one underline on the site, and only its vertical position
+ * differs by component — .onward__t has no bottom padding to sit the rule in,
+ * so it hangs just below its own box instead. */
 .ul, .tl { position: relative; display: inline-block; padding-bottom: 0.4em; font-weight: 500; }
 
-.ul::after, .tl::after {
+.ul::after, .tl::after, .onward__t::after {
   content: "";
   position: absolute; left: 0; right: 0; bottom: 0.15em;
   height: 1px;
@@ -28,10 +33,13 @@
   transition: clip-path var(--dur-hover) var(--ease);
   pointer-events: none;
 }
+.onward__t::after { bottom: -0.25em; }
 @media (hover: hover) {
-  .ul:hover::after, .tl:hover::after { clip-path: inset(0 0 0 0); }
+  .ul:hover::after, .tl:hover::after,
+  .onward:hover .onward__t::after { clip-path: inset(0 0 0 0); }
 }
-.ul:focus-visible::after, .tl:focus-visible::after { clip-path: inset(0 0 0 0); }
+.ul:focus-visible::after, .tl:focus-visible::after,
+.onward:focus-visible .onward__t::after { clip-path: inset(0 0 0 0); }
 
 /* --- the navigation ---------------------------------------------------------
    A single indicator used to slide between items. It was a deliberate idea —
@@ -1463,48 +1471,6 @@ html:has(.menu[data-open="true"]) .header {
    draws a line under itself on hover is two marks for one gesture. The words
    and the underline are enough. Its hover nudge and reduced-motion override
    went with it. */
-.onward__t::after {
-  /* The brand's line element, built the way the brand builds it.
-   *
-   * The supplied Short and Medium variants carry an identical knot and an
-   * identical rule thickness; only the flat run is longer. The knot is a mark of
-   * fixed size on a line of any length. The previous version scaled the whole
-   * drawing with the link through aspect-ratio, which made the rule about
-   * 0.94px — thinner than a pixel, so it rendered as a dim smear — and left the
-   * knot at 78% of whatever the text was, which put it under the tail of the
-   * "j" in "project".
-   *
-   * So: two mask layers, unioned. A plain 2px rule the full width, and the knot
-   * cut from the L001 vector itself — with a short piece of its own flat run
-   * either side, so the two overlap inside a flat stretch and meet invisibly.
-   * The knot is 9px tall, which is 4.44 times the rule, the proportion every
-   * one of the supplied variants uses.
-   *
-   * It sits past the last letter rather than under the text, the way the knot
-   * in the artwork sits near the end of its run. That means it can never land
-   * on a descender, whatever the words are. */
-  content: "";
-  position: absolute;
-  left: 0;
-  right: -30px;                 /* room for the knot beyond the last letter */
-  top: calc(100% + 0.05em);     /* rule clears the descenders */
-  height: 9px;
-  background-color: var(--mark);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='1560%2010.4%20120%2041.87'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M1560%2052.27L1560%2042.85L1578.59%2042.85C1607.05%2042.85%201634.64%2010.73%201634.92%2010.4L1642.5%2015.96C1636.42%2025.61%201634.28%2033.11%201636.47%2037.09C1639.65%2042.85%201652.24%2042.85%201657.62%2042.85L1680%2042.85L1680%2052.27L1657.66%2052.27C1649.98%2052.27%201634.09%2052.27%201628.22%2041.64C1626.63%2038.75%201625.97%2035.46%201626.25%2031.75C1614.34%2041.49%201597.01%2052.27%201578.59%2052.27Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
-          mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='1560%2010.4%20120%2041.87'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M1560%2052.27L1560%2042.85L1578.59%2042.85C1607.05%2042.85%201634.64%2010.73%201634.92%2010.4L1642.5%2015.96C1636.42%2025.61%201634.28%2033.11%201636.47%2037.09C1639.65%2042.85%201652.24%2042.85%201657.62%2042.85L1680%2042.85L1680%2052.27L1657.66%2052.27C1649.98%2052.27%201634.09%2052.27%201628.22%2041.64C1626.63%2038.75%201625.97%2035.46%201626.25%2031.75C1614.34%2041.49%201597.01%2052.27%201578.59%2052.27Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
-  -webkit-mask-size: 25.8px 9px, 100% 2px;
-          mask-size: 25.8px 9px, 100% 2px;
-  -webkit-mask-position: right bottom, left bottom;
-          mask-position: right bottom, left bottom;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path var(--dur-base) var(--ease);
-}
-@media (hover: hover) {
-  .onward:hover .onward__t::after { clip-path: inset(0 0 0 0); }
-}
-.onward:focus-visible .onward__t::after { clip-path: inset(0 0 0 0); }
 
 /* Inside a home-page section it closes a passage rather than a whole page. */
 .onward--quiet { margin-top: var(--s-6); }
