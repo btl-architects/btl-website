@@ -32,7 +32,6 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run db:local
       - run: npm run test:e2e
       - name: Measure launch performance
         run: |

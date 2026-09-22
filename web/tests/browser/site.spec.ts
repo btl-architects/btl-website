@@ -54,10 +54,23 @@ test('reduced motion never requests video or advances frames',async({page})=>{
   await page.waitForTimeout(6500);
   await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');expect(media).toEqual([]);
 });
+/* The form posts from the browser to Web3Forms. Nothing here may reach it:
+   every request is intercepted, and a stand-in key is set in the page because
+   test builds are never given the real one. */
 test('failed enquiry keeps typed message and permits recovery',async({page})=>{
-  // Never depend on provider credentials, and never send a test email.
-  await page.route('**/api/enquiry',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({ok:false,message:'Please email the studio.'})}));
-  await page.goto('/contact/');await page.getByLabel('Name',{exact:true}).fill('Local test');await page.getByLabel('Email',{exact:true}).fill('test@example.com');
+  await page.route('https://api.web3forms.com/**',route=>route.fulfill({status:429,contentType:'application/json',body:JSON.stringify({success:false,message:'Rate limit exceeded.'})}));
+  await page.goto('/contact/');
+  await page.locator('[name="access_key"]').evaluate(e=>(e as HTMLInputElement).value='test-only-key');
+  await page.getByLabel('Name',{exact:true}).fill('Local test');await page.getByLabel('Email',{exact:true}).fill('test@example.com');
   await page.getByLabel('Message',{exact:true}).fill('This is a browser test with no external delivery.');await page.getByRole('button',{name:'Send enquiry'}).click();
-  await expect(page.getByRole('status')).toContainText('Please email');await expect(page.getByLabel('Message',{exact:true})).toHaveValue('This is a browser test with no external delivery.');await expect(page.getByRole('button',{name:'Send enquiry'})).toBeEnabled();
+  await expect(page.getByRole('status')).toContainText('has not been sent');await expect(page.getByLabel('Message',{exact:true})).toHaveValue('This is a browser test with no external delivery.');await expect(page.getByRole('button',{name:'Send enquiry'})).toBeEnabled();
+});
+test('a build without the key says so and contacts no one',async({page})=>{
+  const outbound:string[]=[];page.on('request',r=>{if(r.url().includes('web3forms'))outbound.push(r.url());});
+  await page.goto('/contact/');
+  await page.locator('[name="access_key"]').evaluate(e=>(e as HTMLInputElement).value='');
+  await page.getByLabel('Name',{exact:true}).fill('Local test');await page.getByLabel('Email',{exact:true}).fill('test@example.com');
+  await page.getByLabel('Message',{exact:true}).fill('This must never leave the browser in a keyless build.');await page.getByRole('button',{name:'Send enquiry'}).click();
+  await expect(page.getByRole('status')).toContainText('not available on this copy');
+  expect(outbound).toEqual([]);
 });

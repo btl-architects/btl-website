@@ -15,7 +15,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io; font-src 'self'; connect-src 'self' https://aur12nrf.api.sanity.io; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io; font-src 'self'; connect-src 'self' https://aur12nrf.api.sanity.io https://api.web3forms.com; form-action 'self' https://api.web3forms.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # Why style-src allows 'unsafe-inline' — a deliberate, recorded deviation from
 # the contract's blanket ban. The build emits 173 style attributes, 123 of them
@@ -34,9 +34,12 @@
 # script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's only script
 # is /scripts/site.js from this origin, and that is the restriction that matters.
 #
-# form-action 'self' is what keeps the enquiry form posting to our own origin.
-# It is the reason the contact form goes through /api/enquiry here rather than
-# straight to a third-party endpoint.
+# form-action and connect-src each allow exactly one outside address,
+# api.web3forms.com, because the enquiry form now posts there from the
+# visitor's browser. It used to post to our own /api/enquiry relay, but
+# Web3Forms rate-limits by source IP and the relay's Cloudflare IP is shared
+# with a great many other sites, so it was refused 429 on first real use.
+# Everything else is still this origin only.
 
 # Fingerprinted build assets never change under the same name, so they can be
 # cached forever.

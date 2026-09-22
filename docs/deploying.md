@@ -53,7 +53,7 @@ Once, by hand. Everything after this is automatic.
    | --- | --- | --- |
    | `SANITY_PROJECT_ID` | `aur12nrf` | Which Sanity project to read. Not a secret. |
    | `SANITY_DATASET` | `production` | Which dataset. Not a secret. |
-   | `ENQUIRY_ACCESS_KEY` | *see below* | Lets the contact form send mail. **Is** a secret — mark it encrypted. |
+   | `ENQUIRY_ACCESS_KEY` | *see below* | Lets the contact form send mail. Plain text is fine: it is written into the published contact page, so encrypting it would protect nothing. |
 
    The Node version is not in this table on purpose. It is pinned in the
    repository, in `web/.node-version` and `web/package.json`, so it travels with
@@ -68,21 +68,34 @@ Once, by hand. Everything after this is automatic.
 
 ## The contact form
 
-The form posts to `/api/enquiry`, which is a small function that runs on
-Cloudflare's own network — the code is in `web/functions/api/enquiry.js`. It
-checks the submission, then hands it to a form service that emails the studio.
+The form posts from the visitor's browser straight to Web3Forms, which emails
+the studio. There is no server step of our own.
 
-It works this way rather than posting straight to that service from the page for
-two reasons. The site's security policy only permits forms to submit back to
-this site, and relaxing that to allow a third party would trade a real
-protection for a small convenience. And a key sitting in the page can be copied
-by anyone who views the source and used to fill the studio's inbox with someone
-else's spam. Posting to our own address keeps the policy shut and the key on the
-server.
+It used to go through a small relay on Cloudflare (`/api/enquiry`), to keep the
+key off the page. That never worked in production: Web3Forms rate-limits by the
+address a request comes from, and Cloudflare's servers share their outgoing
+addresses with a great many other sites, so the relay was refused
+`429 — IP temporarily blocked` on its first real enquiry. From the browser, the
+address Web3Forms sees is the visitor's own.
+
+**The trade-off, stated plainly:** the access key is now visible to anyone who
+views the page source. Web3Forms is designed for that — its keys normally live
+in public pages — and the worst anyone can do with it is send the studio
+unwanted mail through Web3Forms. Web3Forms filters spam, and the form carries its
+`botcheck` honeypot. If spam ever becomes a real problem, the next steps are
+Web3Forms' captcha option, or moving to a provider that authenticates with a
+secret key from a server.
+
+**Previews never send real email.** The key is only written into the page when
+Cloudflare is building the `main` branch (see `enquiryKey()` in
+`web/server/build-mode.js`). Branch and draft-preview builds have no key, and
+their form says it is unavailable without contacting anyone.
 
 **To get the key:** sign up free at [web3forms.com](https://web3forms.com),
 verify the email address, name the form, and it gives you an access key. Paste
-that into Cloudflare as `ENQUIRY_ACCESS_KEY`. The free tier covers 250 enquiries
+that into Cloudflare as `ENQUIRY_ACCESS_KEY` (Settings → Variables and Secrets,
+Production). It is read at **build** time, so a change to it takes effect on the
+next deploy. The free tier covers 250 enquiries
 a month, which is far more than this practice will receive.
 
 > **Sign up with the address the enquiries should reach.** Web3Forms has no

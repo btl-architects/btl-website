@@ -7,7 +7,8 @@
  * enquiry and is shown the empty form again, with no way to tell whether it
  * went. A page that exists cannot fail that way.
  *
- * Reached by a 303 from /api/enquiry, so it is a GET and can be reloaded
+ * Reached by navigation from the enquiry script once Web3Forms has confirmed
+ * delivery — never before — so it is a GET and can be reloaded
  * without the browser offering to send the enquiry a second time.
  */
 import Base from "../../layouts/Base.astro";

@@ -19,7 +19,6 @@ export async function protectPreview({ request, env, next }) {
   const [a,b] = await Promise.all([hash(wanted),hash(incoming)]);
   let different = 0; for(let i=0;i<a.length;i++) different |= a[i]^b[i];
   if (different) return new Response('Sign in to view this preview.',{status:401,headers:{...headers,'WWW-Authenticate':'Basic realm="BTL preview", charset="UTF-8"'}});
-  if (new URL(request.url).pathname.startsWith('/api/')) return new Response('Enquiry delivery is disabled on draft previews.',{status:503,headers});
   const original = await next();
   const response = new Response(original.body, original);
   for (const [key,value] of Object.entries(headers)) response.headers.set(key,value);

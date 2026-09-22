@@ -1,18 +1,26 @@
 ---
 /* Contact — where the site resolves. Everything needed to reach the studio,
- * stated once, on a light ground so the page reads as an ending rather than
- * another dark section.
+ * stated once.
  *
- * The form posts to /api/enquiry, this site's own origin, which is what lets
- * the CSP keep form-action locked to 'self'. The honeypot is a real field
- * hidden from people, which catches most bots without putting a puzzle in front
- * of a client. Both the trap and the validation are enforced again on the
- * server, because anything checked only in the browser is not checked.
- */
+ * The form posts from the visitor's browser straight to Web3Forms. It used to
+ * post to this site's own /api/enquiry, which relayed to Web3Forms from a
+ * Cloudflare server — and Web3Forms rate-limits by source IP, so the relay was
+ * sharing an outgoing address with a great many other sites and was refused
+ * 429 "IP temporarily blocked" on its first real use. From the browser, the
+ * address Web3Forms sees is the visitor's own.
+ *
+ * The access key is therefore in the page, which is how Web3Forms is designed
+ * to be used. It is only written into production builds — see enquiryKey() —
+ * so a preview or branch build can never send a real email.
+ *
+ * botcheck is Web3Forms' own honeypot field: a submission with it filled is
+ * dropped by Web3Forms before anything is delivered. */
 import Base from "../layouts/Base.astro";
 import { getSettings } from "../lib/content";
+import { enquiryKey } from "../../server/build-mode.js";
 
 const c = (await getSettings()).contact;
+const accessKey = enquiryKey(process.env);
 ---
 
 {/* Dark, like every other page. The white ground was a deliberate idea — the
@@ -25,7 +33,10 @@ const c = (await getSettings()).contact;
       <h1 class="t-h1 rv">Contact</h1>
 
       <div class="contact__grid">
-        <form name="enquiry" method="POST" action="/api/enquiry" class="rv" data-enquiry>
+        <form name="enquiry" method="POST" action="https://api.web3forms.com/submit" class="rv" data-enquiry>
+            <input type="hidden" name="access_key" value={accessKey} />
+            <input type="hidden" name="subject" value="Enquiry — btldesigns.in" />
+            <input type="hidden" name="from_name" value="btldesigns.in" />
           {/* Honeypot. Positioned off-screen rather than display:none, because
               a field that is not rendered is not submitted and the trap stops
               working. Off-screen alone is not enough though: a screen reader
@@ -34,7 +45,7 @@ const c = (await getSettings()).contact;
               of the accessibility tree and tabindex keeps it out of the tab
               order, so only something scraping the DOM ever sees it. */}
           <p class="hp" aria-hidden="true">
-            <label>Company <input name="company" tabindex="-1" autocomplete="off" /></label>
+            <label>Company <input name="botcheck" tabindex="-1" autocomplete="off" /></label>
           </p>
           <div class="f">
             <label for="n">Name</label>

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildMode,visibleProjects,routedProjects} from '../server/build-mode.js';
+import {buildMode,visibleProjects,routedProjects,enquiryKey} from '../server/build-mode.js';
 import {resolveRedirects} from '../server/redirects.js';
 import {protectPreview} from '../server/preview.js';
 const content=['draft','published','archived'].map(lifecycle=>({lifecycle}));
@@ -44,7 +44,13 @@ test('production needs no preview password; missing marker fails closed',async()
   assert.equal((await protectPreview({request,env:preview(false,''),next})).status,200);
   assert.equal((await protectPreview({request,env:{ASSETS:{fetch:async()=>new Response('missing',{status:404})}},next})).status,503);
 });
-test('draft previews cannot send real enquiries',async()=>{
-  const request=new Request('https://preview.example/api/enquiry',{headers:{Authorization:'Basic '+btoa('preview:a-long-test-password')}});
-  assert.equal((await protectPreview({request,env:preview(true),next})).status,503);
+/* The form sends from the browser, so "a preview never sends real email" is
+   now decided by whether the build is given the key at all. */
+test('only a production build carries the enquiry key',()=>{
+  const key={ENQUIRY_ACCESS_KEY:' real-key '};
+  assert.equal(enquiryKey({...key,CF_PAGES:'1',CF_PAGES_BRANCH:'main'}),'real-key');
+  assert.equal(enquiryKey({...key,CF_PAGES:'1',CF_PAGES_BRANCH:'redesign'}),'', 'branch builds get no key');
+  assert.equal(enquiryKey({...key,CF_PAGES:'1',CF_PAGES_BRANCH:'main',SANITY_PREVIEW:'true'}),'', 'draft previews get no key');
+  assert.equal(enquiryKey({CF_PAGES:'1',CF_PAGES_BRANCH:'main'}),'', 'no key configured means none');
+  assert.equal(enquiryKey({...key}),'real-key', 'a local or CI build uses a key only if one is given');
 });
