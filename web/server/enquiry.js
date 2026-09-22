@@ -116,13 +116,22 @@ export async function handleEnquiry(request, env, sendFetch = fetch) {
       if (response.status < 500 && result?.success === false) {
         await db.prepare('DELETE FROM enquiry_receipts WHERE key=?').bind(fingerprint).run();
       }
-      console.error('[enquiry] provider rejected submission');
+      /* Say WHY. This used to log only "provider rejected submission", which
+         meant the first real failure in production arrived with its reason
+         already thrown away. The provider's own status and message are logged;
+         the visitor's name, email and message never are. */
+      console.error('[enquiry] provider rejected submission', JSON.stringify({
+        status: response.status,
+        message: String(result?.message ?? '').slice(0, 300),
+      }));
       return respond(request,502,'Delivery could not be confirmed. Your message is kept below; please email the studio or try again later.',values);
     }
     await db.prepare("UPDATE enquiry_receipts SET status='sent' WHERE key=?").bind(fingerprint).run();
     return respond(request,200,'Thank you. Your enquiry has been received.');
-  } catch {
-    console.error('[enquiry] delivery could not be confirmed');
+  } catch (error) {
+    // The error's kind (TimeoutError, SyntaxError for a non-JSON reply, …),
+    // not its contents — enough to tell a slow provider from a broken one.
+    console.error('[enquiry] delivery could not be confirmed', error?.name ?? 'unknown');
     return respond(request,502,'Delivery could not be confirmed. Please wait before retrying, or email the studio.',values);
   }
 }
