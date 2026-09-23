@@ -25,9 +25,19 @@ for(const page of inventory) {
       if(!target.html.includes(`id="${id}"`))fail('Missing anchor '+href);
     }
   }
+  /* Where a page starts is decided once, on <main> in base.css. Eight pages
+     used to decide it inline and the ninth, the 404, forgot. */
+  if(/<main\b[^>]*style="[^"]*padding-top/.test(page.html))fail('<main> sets its own top offset; change --page-gap instead');
+  if(/style="[^"]*--header-h/.test(page.html))fail('an inline style offsets from the header; the page offset belongs to <main> in base.css');
   for(const [,raw] of page.html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
     try {JSON.parse(raw);}catch {fail('Invalid structured data');}
   }
 }
+/* The browser tests are served a copy with these two removed (serve-test.mjs),
+   because WebKit applies them to plain-http loopback. Production must keep them,
+   so their absence from the deployed build is a build failure, not a test one. */
+const headers=readFileSync(join(dist,'_headers'),'utf8');
+if(!/^\s*Strict-Transport-Security:\s*max-age=\d+/m.test(headers))errors.push('_headers: Strict-Transport-Security missing from the production build');
+if(!/Content-Security-Policy:[^\n]*upgrade-insecure-requests/.test(headers))errors.push('_headers: CSP lost upgrade-insecure-requests in the production build');
 if(errors.length)throw new Error(errors.join('\n'));
-console.log(`[site] ${inventory.length} pages: headings, metadata, internal links, anchors, JSON-LD, and sitemap valid`);
+console.log(`[site] ${inventory.length} pages: headings, metadata, internal links, anchors, JSON-LD, sitemap and transport headers valid`);

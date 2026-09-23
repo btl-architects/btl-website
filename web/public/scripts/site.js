@@ -9,6 +9,15 @@
   var reduced = motionPreference.matches;
   motionPreference.addEventListener("change", function () { reduced = motionPreference.matches; });
 
+  /* Durations from tokens.css: the card timers wait on CSS transitions. */
+  function durationToken(name, fallback) {
+    var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    var n = parseFloat(raw);
+    if (isNaN(n)) return fallback;
+    return /ms$/.test(raw) ? n : /s$/.test(raw) ? n * 1000 : n;
+  }
+  var DUR = { hover: durationToken("--dur-hover", 420), slow: durationToken("--dur-slow", 700) };
+
   /* --- 1. scroll reveals -------------------------------------------------- */
   /* A clip-path left on an element forces it into its own composited layer,
      and a layer whose height is fractional (card heights come from vh)
@@ -295,9 +304,11 @@
       if (e.key !== "Tab") return;
       var f = focusables();
       if (!f.length) return;
-      var first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      /* Every step, not just the ends: Safari's own tab order skips links. */
+      e.preventDefault();
+      var i = f.indexOf(document.activeElement);
+      var next = i < 0 ? (e.shiftKey ? f.length - 1 : 0) : (i + (e.shiftKey ? -1 : 1) + f.length) % f.length;
+      f[next].focus();
     });
   }
 
@@ -580,7 +591,7 @@
       var lead_w = -(lead.getBoundingClientRect().width + gap);
       var shift = st.scrollLeft + lead_w;
       var travel = Math.abs(shift);
-      var dur = Math.min(640, Math.max(340, 340 + travel * 0.16));
+      var dur = Math.min(CLOSE_SLIDE_MAX, Math.max(340, 340 + travel * 0.16));
 
       st.style.setProperty("--close-shift", shift + "px");
       st.style.setProperty("--close-dur", Math.round(dur) + "ms");
@@ -588,6 +599,9 @@
 
       card._shutting = window.setTimeout(finish, Math.round(dur) + 40);
     }
+
+    /* Longest close slide (shut); the close anchor must outlast it. */
+    var CLOSE_SLIDE_MAX = 640;
 
     var holdTimer = null;
     function holdHeight(px) {
@@ -602,7 +616,7 @@
       holdTimer = window.setTimeout(function () {
         pindex.removeAttribute("data-holding");
         holdTimer = null;
-      }, 620);
+      }, DUR.hover + 200);   /* the closing card's collapse, and a little */
     }
 
     function closeAll(push) {
@@ -612,7 +626,7 @@
       openCard = null;
       holdHeight(Math.ceil(card.getBoundingClientRect().height));   /* reserve first */
       shut(card);
-      anchor(card, 760);
+      anchor(card, CLOSE_SLIDE_MAX + 120);   /* the slide back, its clean-up, and a little */
       document.title = baseTitle;
       if (push) history.pushState({}, "", indexUrl);
     }
@@ -641,7 +655,7 @@
            to disappear, so reserve exactly that. */
         var prev = openCard;
         if (prev && prev !== card) holdHeight(Math.ceil(prev.getBoundingClientRect().height));
-        anchor(card, 900);
+        anchor(card, DUR.slow + 200);   /* the card's growth, and a little */
         if (prev) shut(prev);                   /* P4: one open at a time */
 
         if (card._shutting) { clearTimeout(card._shutting); card._shutting = null; }
@@ -651,6 +665,13 @@
         /* The card already shows PEEK frames, so injection starts after them —
            slicing from the wrong index silently duplicated photographs. */
         var figs = [].slice.call(rail.querySelectorAll(".rail__f")).slice(PEEK);
+
+        /* Kept thumbnails are drawn larger once open: give them the rail's own
+           `sizes` (RAIL_SIZES, media.ts) or they stay on the thumbnail's file. */
+        var railImg = rail.querySelector(".rail__f img[sizes]");
+        if (railImg) st.querySelectorAll(".pcard__peek img[srcset]").forEach(function (im) {
+          im.sizes = railImg.getAttribute("sizes");
+        });
 
         /* Inject once. Expanding a card that is already expanded appended the
            remaining frames a second time — the last photograph appearing twice
@@ -713,12 +734,12 @@
                stretches 620ms of wall time across very few frames and the loop
                would otherwise still be running minutes later. */
             st._pin = true;
-            var until = performance.now() + 620, frames = 0;
+            var until = performance.now() + DUR.slow - 80, frames = 0;   /* the growth, all but its tail */
             (function pin(now) {
               if (!st._pin || openCard !== card) return;
               st.scrollLeft = hold;
               if (now < until && ++frames < 60) requestAnimationFrame(pin);
-              else { st._pin = false; settleTo(st, card, 0, 420); }
+              else { st._pin = false; settleTo(st, card, 0, DUR.hover); }
             })(performance.now());
 
             /* The pin must end on a clock, not on frames. Throttle the tab and
@@ -726,8 +747,8 @@
                position long after it should have released, overriding the
                settle and stranding the strip with the note off the edge. */
             window.setTimeout(function () {
-              if (st._pin && openCard === card) { st._pin = false; settleTo(st, card, 0, 420); }
-            }, 700);
+              if (st._pin && openCard === card) { st._pin = false; settleTo(st, card, 0, DUR.hover); }
+            }, DUR.slow);
           }
         }
 

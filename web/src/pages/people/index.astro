@@ -14,6 +14,7 @@
  */
 import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
+import { spreadSizes, coverSizes } from "../../lib/media";
 import { getPeople, getHome, getSettings } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
 import Statement from "../../components/Statement.astro";
@@ -37,14 +38,14 @@ const withBios = principals.filter((p) => p.bio);
   description="The people behind btl architects."
   current="people"
 >
-  <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+  <main id="main" data-ground="dark">
     <div class="container page-end">
       <h1 class="sr-only">People — btl architects</h1>
 
-      <div class="spread" style="margin-top:var(--s-8)">
+      <div class="spread">
         {founders && (
           <div class="spread__media rv">
-            <Figure image={founders} sizes="(min-width:60rem) 34rem, 92vw" priority />
+            <Figure image={founders} sizes={spreadSizes(founders)} priority />
             <div class="spread__names">
               {principals.map((p) => (
                 <span>
@@ -90,7 +91,7 @@ const withBios = principals.filter((p) => p.bio);
                   <a class="trow__link" href={`/people/${p.slug}/`}>
                     {p.portrait && (
                       <span class="trow__p">
-                        <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
+                        <Figure image={p.portrait} sizes={coverSizes(p.portrait, "16rem", "50vw")} />
                       </span>
                     )}
                     <span class="trow__n">{p.prefix} {p.name}</span>
@@ -100,7 +101,7 @@ const withBios = principals.filter((p) => p.bio);
                   <span class="trow__link">
                     {p.portrait && (
                       <span class="trow__p">
-                        <Figure image={p.portrait} sizes="(min-width:60rem) 20rem, 3rem" />
+                        <Figure image={p.portrait} sizes={coverSizes(p.portrait, "16rem", "50vw")} />
                       </span>
                     )}
                     <span class="trow__n">{p.prefix} {p.name}</span>

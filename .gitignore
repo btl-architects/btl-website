@@ -4,6 +4,7 @@ node_modules/
 
 # build output
 dist/
+.test-dist/
 .astro/
 .netlify/
 studio/dist/

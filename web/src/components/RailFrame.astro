@@ -1,0 +1,24 @@
+---
+/* One photograph in a rail — the frame, not the strip.
+ *
+ * Shared by a project's gallery and the Studio's photographs, so a picture in a
+ * rail is marked up one way wherever it appears: set to the strip's height,
+ * focusable, and opening the photograph viewer (site.js binds to
+ * .rail__f[role="button"] inside [data-rail], and nothing else). The Studio
+ * used to lay its photographs out as centred plates, a second way of showing a
+ * set of photographs that lined up with nothing on the page.
+ *
+ * style — the project cover passes its view-transition-name through here; no
+ * other frame should, since that name may appear once per document.
+ */
+import Figure from "./Figure.astro";
+import { RAIL_SIZES, type SiteImage } from "../lib/media";
+
+interface Props { image: SiteImage; index: number; priority?: boolean; style?: string }
+const { image, index, priority = false, style } = Astro.props;
+---
+
+<figure class="rail__f" role="button" tabindex="0" aria-label={`View photograph ${index + 1}: ${image.alt}`} style={style}>
+  <Figure image={image} sizes={RAIL_SIZES} priority={priority} />
+  {image.caption && <figcaption>{image.caption}</figcaption>}
+</figure>

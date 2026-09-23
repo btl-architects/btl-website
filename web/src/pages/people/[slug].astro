@@ -8,6 +8,7 @@
 import type { GetStaticPaths } from "astro";
 import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
+import { spreadSizes } from "../../lib/media";
 import { getProfiles } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
 
@@ -26,12 +27,12 @@ const fullName = `${person.prefix} ${person.name}`.trim();
   current="people"
   share={person.portrait}
 >
-  <main id="main" data-ground="dark" style="padding-top:var(--header-h)">
+  <main id="main" data-ground="dark">
     <div class="container page-end">
-      <div class="spread spread--flip" style="margin-top:var(--s-8)">
+      <div class="spread spread--flip">
         {person.portrait && (
           <div class="spread__media rv">
-            <Figure image={person.portrait} sizes="(min-width:60rem) 34rem, 92vw" priority />
+            <Figure image={person.portrait} sizes={spreadSizes(person.portrait)} priority />
           </div>
         )}
         <div class="spread__body rv" data-delay="1">

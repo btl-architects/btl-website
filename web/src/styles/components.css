@@ -91,7 +91,7 @@
 /* --- header ---------------------------------------------------------------- */
 
 .header {
-  position: fixed; inset: 0 0 auto 0; z-index: 100;
+  position: fixed; inset: 0 0 auto 0; z-index: var(--z-header);
   height: var(--header-h);
   display: flex; align-items: center;
   /* No gutter here. .container applies --page-margin INSIDE its max-width and
@@ -161,7 +161,7 @@
   background: var(--n-0);
   border-bottom-color: var(--n-200);
 }
-.header[data-over="media"] { color: #fff;          --mark: var(--btl-green); }
+.header[data-over="media"] { color: var(--on-media);          --mark: var(--btl-green); }
 .header[data-over="dark"]  { color: var(--n-0);    --mark: var(--btl-green); }
 .header[data-over="light"] { color: var(--n-950);  --mark: var(--btl-red); }
 
@@ -170,7 +170,7 @@
 html:has(.menu[data-open="true"]) .header {
   background: var(--n-950);
   color: var(--n-0);
-  --mark: var(--btl-green, #00FF66);
+  --mark: var(--btl-green);
 }
 
 .nav { display: none; }
@@ -203,7 +203,7 @@ html:has(.menu[data-open="true"]) .header {
    inside the panel — the mark appearing to jump. The header never moves now;
    only the panel does, and the button in it changes state in place. */
 .menu {
-  position: fixed; inset: 0; z-index: 90;
+  position: fixed; inset: 0; z-index: var(--z-menu);
   background: var(--n-950); color: var(--n-0);
   display: flex; flex-direction: column;
   padding: calc(var(--header-h) + var(--s-6)) var(--page-margin)
@@ -238,15 +238,14 @@ html:has(.menu[data-open="true"]) .header {
 .landing {
   position: relative;
   height: 100svh; min-height: 32rem;
-  background: #0a0a0a;
+  background: var(--n-950);
 }
 .landing > img, .landing > video {
   width: 100%; height: 100%; object-fit: cover;
 }
 .landing::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 30%,
-                                      rgba(0,0,0,0) 72%, rgba(0,0,0,.4) 100%);
+  background: var(--film-shade);
 }
 
 /* the one line after the opening: the compression that follows the immersion */
@@ -317,7 +316,11 @@ html:has(.menu[data-open="true"]) .header {
    first panel, so it scrolls away with the pictures instead of holding a
    column of the screen for the whole project. */
 
+/* The strip's height belongs to the rail, not to the page it is on: a
+   project's gallery and the Studio's photographs are the same object and must
+   not drift apart. It was written as .pj .rail when only projects had one. */
 .rail {
+  height: clamp(18rem, 56vh, 34rem);
   display: flex; align-items: stretch; gap: var(--s-5);
   overflow-x: auto; overflow-y: hidden;
   scroll-padding-left: var(--page-margin);
@@ -326,6 +329,9 @@ html:has(.menu[data-open="true"]) .header {
   scrollbar-width: none;
 }
 .rail::-webkit-scrollbar { display: none; }
+@media (max-width: 51.99rem) {
+  .rail { height: clamp(14rem, 40vh, 22rem); }
+}
 
 .rail__note {
   flex: 0 0 min(20rem, 76vw);
@@ -504,7 +510,7 @@ html:has(.menu[data-open="true"]) .header {
 .pcard__name {
   grid-row: 1; font-weight: 700; line-height: 1.1;
   font-size: clamp(1rem, 0.85rem + 0.55vw, 1.375rem);
-  letter-spacing: -0.02em; color: #fff;
+  letter-spacing: -0.02em; color: var(--on-media);
   text-shadow: var(--shadow-on-image);
 }
 .pcard__place {
@@ -512,7 +518,7 @@ html:has(.menu[data-open="true"]) .header {
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   /* Opaque white, not 78%. The name can afford to be slightly transparent over
      a gradient; over bare photograph the tint is the first thing to disappear. */
-  text-transform: uppercase; color: #fff;
+  text-transform: uppercase; color: var(--on-media);
   text-shadow: var(--shadow-on-image);
 }
 
@@ -702,7 +708,11 @@ html:has(.menu[data-open="true"]) .header {
    No index row above the rail here, so the project names itself — on the same
    grid and at the same weight as a card's caption, stated once. */
 
-.pj__head { padding-top: calc(var(--header-h) + var(--s-6)); padding-bottom: var(--s-4); }
+/* The project's name sits closer under the header than other pages start, so
+   the photographs reach higher on the first screen. A different gap, stated as
+   one — the offset itself is still the single rule on <main>. */
+.pj { --page-gap: var(--s-6); }
+.pj__head { padding-bottom: var(--s-4); }
 .pjh__id { align-items: baseline; }
 .pjh__name {
   /* It is an <h1> now — the heading defaults must not reintroduce space the
@@ -717,13 +727,11 @@ html:has(.menu[data-open="true"]) .header {
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; color: var(--text-tertiary);
 }
-.pj .rail { height: clamp(18rem, 56vh, 34rem); }
 
 @media (max-width: 51.99rem) {
   .pjh__id { grid-template-columns: repeat(6, 1fr); }
   .pjh__name { grid-column: 1 / 7; }
   .pjh__place { grid-column: 1 / 7; text-align: left; margin-top: var(--s-2); }
-  .pj .rail { height: clamp(14rem, 40vh, 22rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1163,16 +1171,20 @@ html:has(.menu[data-open="true"]) .header {
  * same column of text and are set the same way. Stated here rather than
  * inherited, because the caption lives inside .spread__media and the alignment
  * is declared on .statement, which is its uncle rather than its ancestor. */
+/* One line, side by side, at body size: a credit under a photograph, not two
+   headings stacked beneath it. Each name keeps itself together and the pair
+   only wraps if a screen genuinely cannot hold both. */
 .spread__names {
-  display: flex; flex-direction: column; align-items: center;
-  gap: var(--s-4);
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: var(--s-3) var(--s-6);
   margin-top: var(--s-5);
   text-align: center;
 }
+.spread__names > span { white-space: nowrap; }
 .spread__n {
   display: block; margin: 0;
-  font-size: var(--type-h3); letter-spacing: var(--track-h3);
-  line-height: var(--lead-tight); font-weight: 500;
+  font-size: var(--type-body);
+  line-height: var(--lead-snug); font-weight: 500;
   color: var(--text-primary);
 }
 .spread__r {
@@ -1193,11 +1205,15 @@ html:has(.menu[data-open="true"]) .header {
    from the word count and both are set here. */
 .spread__say { margin: 0; text-wrap: balance; }
 
+/* h2, not h1, and the lead measure rather than 18ch. At h1 in 18ch a ten-word
+   line broke into a narrow block with a wide margin either side of it, which
+   the practice asked to run longer and quieter. Inside a spread the column is
+   the narrower limit, so there it is only the size that changes. */
 .spread__say--display {
-  font-size: var(--type-h1);
-  letter-spacing: var(--track-h1);
-  line-height: var(--lead-tight);
-  max-width: 18ch;
+  font-size: var(--type-h2);
+  letter-spacing: var(--track-h2);
+  line-height: var(--lead-snug);
+  max-width: var(--measure-lead);
 }
 .spread__say--lead {
   font-size: var(--type-lead);
@@ -1309,21 +1325,8 @@ html:has(.menu[data-open="true"]) .header {
 }
 
 /* --- the studio's own photographs ------------------------------------------
-/* "How a project runs" is gone at the practice's request — they would rather
-   show the studio than describe a process — and its rows go with it rather than
-   sitting here unused. The hairline gesture they shared with the team list stays
-   on .trow__link, which is now its only user.
-
-   In its place, plates: photographs at the page's own measure, uncovered as they
-   arrive like everything else on the site. */
-.studio-plates {
-  display: grid;
-  gap: var(--space-band);
-  margin-inline: auto;
-  max-width: 46rem;
-}
-.plate { margin: 0; }
-.plate img { width: 100%; height: auto; display: block; }
+   A rail (RailFrame), styled with the projects' rail above. The plates that
+   stood here centred one photograph in a narrow column, lined up with nothing. */
 
 
 .team { position: relative; }
@@ -1482,9 +1485,9 @@ html:has(.menu[data-open="true"]) .header {
    something you thought was live. So it says so, at the top, on every page,
    and the build tells search engines to ignore it. */
 .preview-flag {
-  position: sticky; top: 0; z-index: 200;
+  position: sticky; top: 0; z-index: var(--z-preview);
   margin: 0; padding: var(--s-2) var(--page-margin);
-  background: var(--btl-crimson, #ED2941); color: #fff;
+  background: var(--btl-crimson); color: var(--on-media);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   text-transform: uppercase; text-align: center;
 }
@@ -1741,8 +1744,9 @@ html:has(.menu[data-open="true"]) .header {
 .statement { text-align: center; }
 .statement > .spread__say,
 .statement > .spread__note { margin-inline: auto; }
+/* No top padding: <main> places every page below the header (base.css). */
 .index-head {
-  padding-block: clamp(var(--s-7), 9vh, var(--s-8)) var(--s-8);
+  padding-block: 0 var(--s-8);
 }
 /* A page title at display scale was the loudest thing on the site.
  *
@@ -1766,9 +1770,10 @@ html:has(.menu[data-open="true"]) .header {
   color: var(--text-secondary);
 }
 
-/* Everything shifts down by the preview banner's height while previewing. */
+/* Everything shifts down by the preview banner's height while previewing. The
+   page offset adds it (base.css) rather than being replaced by it. */
+body[data-preview] { --preview-offset: var(--preview-h); }
 body[data-preview] .header { top: var(--preview-h); }
-body[data-preview] main { padding-top: var(--preview-h); }
 
 @media (min-width: 60rem) {
   /* Type first, always — the alternating flip belongs to People and Studio,
@@ -1822,7 +1827,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
    * rail floating above an open lightbox would be a bug, and choosing a number
    * below all three is what prevents it. */
   position: fixed;
-  z-index: 50;
+  z-index: var(--z-rail);
   right: 0;
   top: 50%;
   display: flex;
@@ -1897,11 +1902,11 @@ body[data-preview] main { padding-top: var(--preview-h); }
   letter-spacing: 0.16em;
   text-transform: uppercase;
   text-decoration: none;
-  color: rgb(255 255 255 / 0.82);
+  color: var(--on-media-secondary);
   /* The film is unpredictable — sunrise on one clip, a dark interior on the
      next — so these carry their own contrast rather than depending on the
      photograph behind them being helpfully dark. */
-  text-shadow: 0 1px 14px rgb(0 0 0 / 0.75);
+  text-shadow: var(--shadow-on-image);
   padding-inline: 0.3em;
   transition: color var(--dur-hover) var(--ease);
 }
@@ -1913,10 +1918,10 @@ body[data-preview] main { padding-top: var(--preview-h); }
   transition: transform var(--dur-base) var(--ease);
 }
 @media (hover: hover) {
-  .landing .srail__i:hover { color: #fff; }
+  .landing .srail__i:hover { color: var(--on-media); }
   .landing .srail__i:hover::after { transform: scaleY(1); }
 }
-.landing .srail__i:focus-visible { color: #fff; }
+.landing .srail__i:focus-visible { color: var(--on-media); }
 .landing .srail__i:focus-visible::after { transform: scaleY(1); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1924,15 +1929,11 @@ body[data-preview] main { padding-top: var(--preview-h); }
 }
 
 /* --- a publication's mark -------------------------------------------------
-   The one place the site steps outside its single typeface, and it does so
-   because it is quoting somebody else's identity rather than expressing btl's.
-   "AD" in a high-contrast serif reads as the magazine; "Architectural Digest"
-   set in Satoshi reads as a caption about the magazine — which is the whole
-   difference between evidence and a mention.
-
-   A system stack, so nothing is downloaded. Didot and Bodoni are the shapes
-   most magazine wordmarks actually use; the rest are fallbacks that keep the
-   species right even where those are missing. */
+   Set in Satoshi like everything else. This was the one place the site stepped
+   outside its typeface — a Didot stack, to quote the magazine's look — and the
+   practice asked for one face throughout. A publication that wants its real
+   identity shown does it with an uploaded logo (.masthead__img), which is the
+   honest way to quote a mark anyway. */
 
 /* Marks are normalised by HEIGHT, never by width.
  *
@@ -1949,10 +1950,9 @@ body[data-preview] main { padding-top: var(--preview-h); }
 
 .masthead {
   display: block;
-  font-family: Didot, "Bodoni 72", "Bodoni MT", "Playfair Display",
-               Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  /* A serif's cap-height is roughly 0.7 of its size, so this lands a text mark
+  font-family: var(--font);
+  font-weight: 500;
+  /* Satoshi's cap-height is roughly 0.7 of its size, so this lands a text mark
      on the same optical band as an image one. */
   font-size: calc(var(--mark-h) / 0.7);
   line-height: 1;
@@ -1984,7 +1984,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
   max-width: 100%;
   object-fit: contain;
   object-position: left bottom;
-  filter: drop-shadow(0 2px 20px rgb(0 0 0 / 0.7));
+  filter: var(--drop-on-image);
 }
 
 /* --- the press index ------------------------------------------------------
@@ -2016,11 +2016,6 @@ body[data-preview] main { padding-top: var(--preview-h); }
      website. The rows now answer the way every other link here answers, by
      drawing a line. See .row-line below; the practice is called between the
      lines and this is the only motif it has. */
-}
-
-/* On a phone the four columns become two: the photograph keeps the left, and
-   the mark, headline and year stack beside it. */
-@media (max-width: 44rem) {
 }
 
 /* The home page shows the first few, in the same shape. */
@@ -2090,9 +2085,9 @@ body[data-preview] main { padding-top: var(--preview-h); }
    ------------------------------------------------------------------------- */
 
 .lb {
-  position: fixed; inset: 0; z-index: 300;
+  position: fixed; inset: 0; z-index: var(--z-viewer);
   display: grid; place-items: center;
-  background: rgb(4 4 4 / 0.97);
+  background: var(--overlay);
   opacity: 0;
   visibility: hidden;
   /* visibility is stepped, not eased, and the delay carries the direction:
@@ -2172,7 +2167,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
 
 .lb__count {
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: rgb(255 255 255 / 0.62);
+  text-transform: uppercase; color: var(--on-media-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2182,9 +2177,9 @@ body[data-preview] main { padding-top: var(--preview-h); }
   padding: var(--s-2);
   font: inherit;
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
-  text-transform: uppercase; color: rgb(255 255 255 / 0.82);
+  text-transform: uppercase; color: var(--on-media-secondary);
 }
-.lb__x:hover, .lb__x:focus-visible { color: #fff; }
+.lb__x:hover, .lb__x:focus-visible { color: var(--on-media); }
 .lb__x svg { width: 16px; height: 16px; }
 
 .lb__cap {
@@ -2198,7 +2193,7 @@ body[data-preview] main { padding-top: var(--preview-h); }
   max-width: var(--measure);
   margin-inline: auto;
   font-size: var(--type-caption);
-  color: rgb(255 255 255 / 0.72);
+  color: var(--on-media-secondary);
   text-align: center;
   pointer-events: none;
 }
@@ -2211,14 +2206,14 @@ body[data-preview] main { padding-top: var(--preview-h); }
   appearance: none; background: none; border: 0; cursor: pointer;
   width: 3.5rem; height: 3.5rem;
   display: grid; place-items: center;
-  color: rgb(255 255 255 / 0.7);
+  color: var(--on-media-secondary);
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease), color var(--dur-hover) var(--ease);
 }
 .lb__step--prev { left: var(--s-3); }
 .lb__step--next { right: var(--s-3); }
 .lb__step svg { width: 26px; height: 26px; }
-.lb__step:hover, .lb__step:focus-visible { color: #fff; }
+.lb__step:hover, .lb__step:focus-visible { color: var(--on-media); }
 .lb[data-idle="false"] .lb__step,
 .lb__step:focus-visible { opacity: 1; }
 .lb__step[hidden] { display: none; }

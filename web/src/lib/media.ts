@@ -106,10 +106,20 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
     ? { w: image.dimensions.width, h: image.dimensions.height }
     : intrinsic(source) ?? { w: image.width ?? 1600, h: image.height ?? 1067 };
 
-  // Never offer a width larger than the original — upscaling costs bytes and
-  // buys nothing.
-  const widths = LADDER.filter((w) => w <= dims.w * 1.1);
-  if (widths.length === 0) widths.push(Math.min(dims.w, LADDER[0]!));
+  /* Never offer more than the original, and never less than it either.
+   *
+   * This used to keep the rungs at or under 1.1x the original and stop there,
+   * which lost whatever lay between the last rung and the original: a 720px
+   * upload was offered at 480 and nothing else, a third of its pixels thrown
+   * away before the browser was even asked. The same rule also let a 1280px
+   * original be listed as "1400w" — Sanity will not upscale, so the file was
+   * 1280 and the browser was told it was sharper than it is.
+   *
+   * So the rungs below the original are kept, and the top rung is the original
+   * itself (capped at the largest rung). */
+  const top = Math.min(dims.w, LADDER[LADDER.length - 1]!);
+  const widths = LADDER.filter((w) => w < top);
+  widths.push(top);
 
   /* q=68 rather than the 76 this started at. Measured on a 1400px frame of the
    * Nelly House exterior: 336 kB against 394 kB, for a difference no one has
@@ -141,6 +151,57 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
     lqip: image.lqip,
   };
 }
+
+/* What a spread photograph is actually going to be, in one place.
+ *
+ * A spread's picture is height-driven above 60rem: the CSS caps its WIDTH at
+ * --spread-max-h times the image's own ratio, or the column, whichever is
+ * smaller (see .spread__media img). So its width depends on the shape of the
+ * photograph, and the pages were stating a flat "420px" for all of them — true
+ * of nothing. The landscape studio picture renders 664px at 1440 and 1107px at
+ * 1920, and was being given the 900px file to stretch over both.
+ *
+ * A constant cannot express that, but `sizes` can: it takes lengths and maths,
+ * and the ratio is known at build time. The numbers mirror the two CSS limits
+ * exactly; a browser too old for min()/calc here simply assumes 100vw and
+ * over-fetches, which is the safe way to be wrong. */
+export function spreadSizes(image: SiteImage): string {
+  const ratio = resolveImage(image)?.ratio || 1.5;
+  const cap = `calc(74svh * ${ratio})`;
+  // The cap holds below 60rem too, so a stacked portrait is asked for at the
+  // size it is drawn rather than at the full column.
+  return `(min-width: 60rem) min(46vw, ${cap}), min(92vw, ${cap})`;
+}
+
+/* A photograph cropped to fill a box (object-fit: cover), given the box's width
+ * wide (60rem up) and narrow.
+ *
+ * Cropping to fill scales the image until its SHORT side covers the box, so a
+ * landscape photograph in a square is drawn wider than the box by its ratio —
+ * a 16:9 portrait of a person in a 256px square is really 455px wide. Asking for
+ * the box's width alone under-asks for every landscape upload.
+ *
+ * Written for the team cards, whose old value, "20rem, 3rem", described a 48px
+ * row thumbnail that no longer exists; on a phone it asked for a twentieth of
+ * the card and got a sharp picture only because the smallest file offered is
+ * 480px. The square is the only shape any caller uses, so the box is square. */
+export function coverSizes(image: SiteImage, wide: string, narrow: string): string {
+  const k = Math.max(1, resolveImage(image)?.ratio || 1);
+  return `(min-width: 60rem) calc(${wide} * ${k}), calc(${narrow} * ${k})`;
+}
+
+/* A frame in a rail (RailFrame): a project's gallery or the Studio's photographs.
+ *
+ * Measured, not guessed. These frames render 335–892 CSS px wide depending on
+ * each photograph's aspect, clustering around 750. At 56vw on a 1440px retina
+ * screen the browser was told it needed 1612 device pixels and pulled the
+ * 2000px file — 822 kB apiece, 5.7 MB for a seven-frame project.
+ *
+ * 700px asks for 1400 device pixels on a retina screen, which lands exactly on
+ * the 1400px rung: 394 kB, and 1.6–1.8x density over the rendered size, which
+ * for a photograph is indistinguishable from 2x. Half the bytes, same picture.
+ * An opened project card hands this to its kept thumbnails too (site.js). */
+export const RAIL_SIZES = "700px";
 
 /* The one image nobody on the site ever sees.
  *

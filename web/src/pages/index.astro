@@ -17,6 +17,7 @@ import Statement from "../components/Statement.astro";
 import MediaStage from "../components/MediaStage.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 import Figure from "../components/Figure.astro";
+import { spreadSizes } from "../lib/media";
 import Onward from "../components/Onward.astro";
 import Credit from "../components/Credit.astro";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
@@ -37,7 +38,7 @@ const c = settings.contact;
 ---
 
 <Base title="btl architects" description={settings.tagline} current="index" ground="media">
-  <main id="main">
+  <main id="main" data-under-header>
     <section class="landing" data-ground="media" data-stage>
       <h1 class="sr-only">btl architects — architecture and interiors, Kozhikode</h1>
       <MediaStage />
@@ -116,7 +117,7 @@ const c = settings.contact;
         <div class="spread spread--flip">
           {home.studio.image && (
             <div class="spread__media rv">
-              <Figure image={home.studio.image} sizes="420px" />
+              <Figure image={home.studio.image} sizes={spreadSizes(home.studio.image)} />
             </div>
           )}
           <div class="spread__body rv" data-delay="1">
@@ -139,7 +140,7 @@ const c = settings.contact;
         <div class="spread">
           {home.founders && (
             <div class="spread__media rv">
-              <Figure image={home.founders} sizes="420px" />
+              <Figure image={home.founders} sizes={spreadSizes(home.founders)} />
               <div class="spread__names">
                 {principals.map((p) => (
                   <span>

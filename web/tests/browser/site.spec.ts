@@ -16,6 +16,48 @@ for(const {route} of pages()) {
     expect(result.violations).toEqual([]);expect(errors).toEqual([]);
   });
 }
+/* A photograph must be fetched at the size it is drawn.
+   `sizes` is a promise about layout that nothing checks, and when it under-asks
+   the browser picks a smaller file and stretches it — blur that looks like a
+   bad upload. It happened to the first six frames of every opened project,
+   declared as 400px thumbnails and drawn at 645. So: on a 2x screen, every
+   picture's file must carry at least 1.5 pixels per CSS pixel, unless it is
+   already the largest file offered. */
+async function underResolved(page:import('@playwright/test').Page) {
+  await page.evaluate(async()=>{document.querySelectorAll('img').forEach(i=>i.loading='eager');
+    await Promise.all([...document.images].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;})));});
+  return page.evaluate(()=>[...document.querySelectorAll('img[srcset]')].flatMap(i=>{
+    const im=i as HTMLImageElement,w=im.getBoundingClientRect().width;
+    if(w<2||!im.currentSrc)return [];
+    const widths=im.srcset.split(/,\s+/).map(c=>+c.trim().split(/\s+/)[1]!.slice(0,-1));
+    const got=widths[im.srcset.split(/,\s+/).findIndex(c=>c.trim().split(/\s+/)[0]===im.currentSrc)] ?? 0;
+    /* Excused only when nothing sharper exists: the file is the largest offered
+       AND the largest offered is the original (Sanity puts it in the URL). The
+       looser "largest offered" hid a ladder that offered a 720px upload at 480. */
+    const original=+(im.currentSrc.match(/-(\d+)x\d+\.\w+\?/)?.[1] ?? 0);
+    const exhausted=got===Math.max(...widths) && (!original || got>=Math.min(original,2000));
+    return got && !exhausted && got/w<1.5 ? [`${im.alt.slice(0,40)}: ${got}px file drawn at ${Math.round(w)}px (sizes="${im.sizes}")`] : [];
+  }));
+}
+test.describe('photographs are fetched at the size they are drawn',()=>{
+  test.use({deviceScaleFactor:2});
+  for(const width of [375,1024,1440]) test(`at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:900});
+    const found:string[]=[];
+    /* domcontentloaded, not load: this walks every route in one test, and the
+       home page's film keeps a media request open long enough for `load` to
+       outlast the timeout in WebKit and Firefox. The images are awaited
+       explicitly below, which is what this actually measures. */
+    /* .html is stripped because the server 308s /404.html to /404, and WebKit
+       will not settle that redirect inside this test's budget. Same page,
+       asked for by the address the site actually publishes. */
+    for(const {route} of pages()){await page.goto(route.replace(/\.html$/,''),{waitUntil:'domcontentloaded'});found.push(...(await underResolved(page)).map(s=>`${route} ${s}`));}
+    await page.goto('/projects/',{waitUntil:'domcontentloaded'});await page.locator('[data-project]').first().click();
+    await expect(page.locator('.pcard[data-open="true"] .rail__f:not(.pcard__peek)').first()).toBeAttached();
+    found.push(...(await underResolved(page)).map(s=>`open project ${s}`));
+    expect(found).toEqual([]);
+  });
+});
 test('gallery keyboard access, nested Escape, and browser history',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/projects/');
   const entry=page.locator('[data-project]').first();

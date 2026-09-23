@@ -21,7 +21,21 @@ export const figure = defineType({
       // size keeps that point in frame. Editors choose the subject; the system
       // chooses the geometry.
       options: { hotspot: true },
-      validation: (r) => r.required(),
+      /* A warning, not a block: a small photograph is better than none, but the
+       * editor should know at upload time rather than hear it from a client.
+       * The site draws photographs up to about 900px wide, which a sharp screen
+       * needs about twice over. The dimensions are in the asset reference
+       * itself (image-<hash>-720x1280-jpg), so this costs no request. */
+      validation: (r) => [
+        r.required(),
+        r.custom((value?: { asset?: { _ref?: string } }) => {
+          const m = value?.asset?._ref?.match(/-(\d+)x(\d+)-[a-z]+$/i);
+          if (!m) return true;
+          const w = Number(m[1]), h = Number(m[2]);
+          return Math.max(w, h) >= 2000 ? true
+            : `This photograph is only ${w} × ${h} pixels. That is fine for a small portrait, but anywhere the site shows it large it will look soft. If you have it, use the original file from the camera — at least 2000 pixels on its longer side, not a copy sent over WhatsApp or a still taken from a video.`;
+        }).warning(),
+      ],
     }),
     defineField({
       name: "alt",

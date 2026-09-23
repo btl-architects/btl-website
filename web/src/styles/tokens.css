@@ -67,6 +67,19 @@
   --danger:         #FF5C7A;
   --focus:          var(--btl-cyan);
 
+  /* Type on a photograph or on the viewer's dark overlay — always light,
+     whichever register the page is in. These were written out as white at five
+     different opacities in twelve places; three steps are all the site uses. */
+  --on-media:           var(--n-0);
+  --on-media-secondary: rgb(255 255 255 / 0.82);
+  --on-media-tertiary:  rgb(255 255 255 / 0.62);
+  --overlay:            rgb(5 5 5 / 0.97);
+  --drop-on-image:      drop-shadow(0 2px 20px rgb(5 5 5 / 0.7));
+  /* The opening film darkens at its top and foot so the header and the rail
+     read against any frame. */
+  --film-shade: linear-gradient(180deg, rgb(5 5 5 / 0.5) 0%, rgb(5 5 5 / 0) 30%,
+                                        rgb(5 5 5 / 0) 72%, rgb(5 5 5 / 0.4) 100%);
+
   /* Light register — Studio, Journal, drawings, Press. Opt in with
      [data-ground="light"], never from prefers-color-scheme. */
 
@@ -242,6 +255,22 @@
 
   /* ---- chrome ------------------------------------------------------------ */
   --header-h: clamp(3.75rem, 3rem + 2.5vw, 5.5rem);
+
+  /* Page-level layers, bottom to top. The order is the design: the menu slides
+     out BENEATH the header, the skip link and the preview banner sit over both,
+     and the photograph viewer covers everything. Small numbers inside one
+     component (a caption over its own photograph) stay local and literal. */
+  --z-rail:    50;
+  --z-menu:    90;
+  --z-header:  100;
+  --z-skip:    200;
+  --z-preview: 200;
+  --z-viewer:  300;
+
+  /* The space between the header and a page's first content. Read only by the
+     one rule on <main> in base.css. Fluid on HEIGHT, not width: a short laptop
+     screen gets 48px back, a tall one keeps 64. */
+  --page-gap: clamp(var(--s-7), 9vh, var(--s-8));
 }
 
 /* Stacked and wide: the photograph is on its own, so it takes less.

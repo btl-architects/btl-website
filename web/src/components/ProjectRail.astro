@@ -11,7 +11,7 @@
  * beside it, so it scrolls away with the photographs instead of holding the
  * screen for the whole project.
  */
-import Figure from "./Figure.astro";
+import RailFrame from "./RailFrame.astro";
 import type { Project } from "../lib/content";
 
 interface Props { project: Project; priority?: boolean }
@@ -20,15 +20,6 @@ const { project, priority = false } = Astro.props;
 // Title and location are dropped from the meta: the index row above the rail
 // already carries both, and repeating them was the loudest thing in the panel.
 // Architect is dropped too — it is btl on every project, so it says nothing.
-/* Measured, not guessed. These frames render 335–892 CSS px wide depending on
- * each photograph's aspect, clustering around 750. At 56vw on a 1440px retina
- * screen the browser was told it needed 1612 device pixels and pulled the
- * 2000px file — 822 kB apiece, 5.7 MB for a seven-frame project.
- *
- * 700px asks for 1400 device pixels on a retina screen, which lands exactly on
- * the 1400px rung: 394 kB, and 1.6–1.8x density over the rendered size, which
- * for a photograph is indistinguishable from 2x. Half the bytes, same picture. */
-const RAIL_SIZES = "700px";
 
 const meta: [string, string | number][] = [];
 if (project.year) meta.push(["Year", project.year]);
@@ -51,13 +42,7 @@ if (project.credits.photographer) meta.push(["Photograph", project.credits.photo
        name is the same on every project page and appears exactly once per
        document, which is what the API requires — two elements sharing a name
        in one document silently cancels the entire transition. */
-    <figure class="rail__f" role="button" tabindex="0" aria-label={`View photograph ${j + 1}: ${image.alt}`} style={j === 0 ? "view-transition-name: project-cover" : undefined}>
-      <Figure
-        image={image}
-        sizes={RAIL_SIZES}
-        priority={priority && j === 0}
-      />
-      {image.caption && <figcaption>{image.caption}</figcaption>}
-    </figure>
+    <RailFrame image={image} index={j} priority={priority && j === 0}
+      style={j === 0 ? "view-transition-name: project-cover" : undefined} />
   ))}
 </div>

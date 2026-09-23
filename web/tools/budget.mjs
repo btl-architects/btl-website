@@ -310,6 +310,67 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
   }
 }
 
+/* --- breakpoints: a fixed set, each with a meaning -------------------------
+ *
+ * CSS cannot use a custom property inside a media query, so a breakpoint is a
+ * literal wherever it appears — in the stylesheets and again in site.js, which
+ * has to agree with them about when the layout changes. That is how a site ends
+ * up with nine values for four ideas. This is the list; a value that is not on
+ * it fails the build, in CSS or in a matchMedia call, so a new one is a decision
+ * written down here rather than a number typed into a rule. */
+const BREAKPOINTS = {
+  "40rem":    "a phone column ends; the tall-photograph cap starts tightening",
+  "44rem":    "two-up mini lists",
+  "47.99rem": "phone / tablet (paired with 48rem)",
+  "48rem":    "tablet up: header mark, press marks",
+  "51.99rem": "a project's note leaves the strip and stacks under it",
+  "59.99rem": "stacked spreads (paired with 60rem)",
+  "60rem":    "two-column spreads and cards",
+  "64rem":    "hover-capable wide screens: the header wordmark",
+};
+const bpSources = [
+  ...readdirSync(STYLES).filter((f) => f.endsWith(".css")).map((f) => [f, readFileSync(join(STYLES, f), "utf8")]),
+  ["site.js", readFileSync(resolve(DIST, "scripts", "site.js"), "utf8")],
+];
+for (const [file, text] of bpSources) {
+  // Only media conditions: @media preludes and matchMedia("…") arguments.
+  for (const q of text.matchAll(/@media([^{]*)\{|matchMedia\(\s*["'`]([^"'`]*)/g)) {
+    for (const m of (q[1] ?? q[2]).matchAll(/(?:min|max)-width:\s*([0-9.]+(?:rem|px|em))/g)) {
+      if (m[1] in BREAKPOINTS) continue;
+      const line = text.slice(0, q.index).split("\n").length;
+      failures.push(`${file}:${line} uses breakpoint ${m[1]}, which is not in the list in tools/budget.mjs — use one of ${Object.keys(BREAKPOINTS).join(", ")} or add it there with what it means`);
+    }
+  }
+}
+
+/* --- colour lives in tokens.css ---------------------------------------------
+ *
+ * tokens.css says it is the only place a colour is defined. It was not: white
+ * on a photograph alone was written twelve times at five opacities, and a
+ * fallback named the wrong brand red. Any hex, rgb() or hsl() outside tokens.css
+ * now fails the build. mask-image is exempt — a mask's colour is only its alpha. */
+for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css") && f !== "tokens.css")) {
+  const css = readFileSync(join(STYLES, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, " "));
+  css.split("\n").forEach((line, i) => {
+    if (/mask-image\s*:/.test(line)) return;
+    const hit = line.match(/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\(/);
+    if (hit) failures.push(`${file}:${i + 1} writes a colour literal (${hit[0]}) — use or add a token in tokens.css`);
+  });
+}
+
+/* --- page-level layers are named ------------------------------------------
+ * A z-index of 10 or more competes with the header, the menu and the viewer,
+ * so it must be one of the --z-* layers in tokens.css. Single digits are local
+ * to one component and may stay literal. */
+for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css") && f !== "tokens.css")) {
+  const css = readFileSync(join(STYLES, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, " "));
+  for (const m of css.matchAll(/z-index:\s*(-?\d+)/g)) {
+    if (Math.abs(Number(m[1])) < 10) continue;
+    const line = css.slice(0, m.index).split("\n").length;
+    failures.push(`${file}:${line} sets z-index ${m[1]} — a page-level layer must be a --z-* token in tokens.css`);
+  }
+}
+
 console.log("\n[budget] gzipped, first paint");
 for (const [label, size, limit, note] of report) {
   const pct = Math.round((size / limit) * 100);

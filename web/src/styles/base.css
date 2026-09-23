@@ -50,7 +50,7 @@ a { color: inherit; text-decoration: none; }
 /* --- skip link ------------------------------------------------------------ */
 .skip {
   position: absolute; left: var(--s-4); top: var(--s-4);
-  z-index: 200;
+  z-index: var(--z-skip);
   padding: var(--s-3) var(--s-5);
   background: var(--text-primary); color: var(--surface);
   font-size: var(--type-meta); font-weight: 500;
@@ -69,6 +69,23 @@ a { color: inherit; text-decoration: none; }
 /* ==========================================================================
    Layout primitives — nothing else writes raw spacing
    ========================================================================== */
+
+/* Where a page starts — defined once, on <main>.
+ *
+ * The header is fixed, so every page has to begin below it. That used to be
+ * decided by each page for itself, inline, in eight places with three answers
+ * (the header alone, the header plus 64px, the header plus a height-fluid 48–64)
+ * — and the one page that forgot, the 404, set its heading 84px underneath the
+ * header where nobody could read it. Same failure as the content edge below:
+ * several definitions, one of them wrong, and nothing to notice.
+ *
+ * A page may change the GAP (--page-gap), never the formula. The home page opts
+ * out entirely with data-under-header, because its film is meant to run
+ * beneath a transparent header. The draft-preview banner adds its own height
+ * here rather than replacing the offset, which is what its old rule did.
+ * The build fails any template that sets padding-top on <main> itself. */
+main { padding-top: calc(var(--preview-offset, 0px) + var(--header-h) + var(--page-gap)); }
+main[data-under-header] { padding-top: var(--preview-offset, 0px); }
 
 /* The content edge — defined once, for everything that sits on it.
  *
