@@ -192,16 +192,26 @@ export function coverSizes(image: SiteImage, wide: string, narrow: string): stri
 
 /* A frame in a rail (RailFrame): a project's gallery or the Studio's photographs.
  *
- * Measured, not guessed. These frames render 335–892 CSS px wide depending on
- * each photograph's aspect, clustering around 750. At 56vw on a 1440px retina
- * screen the browser was told it needed 1612 device pixels and pulled the
- * 2000px file — 822 kB apiece, 5.7 MB for a seven-frame project.
+ * The rail is height-driven — .rail sets the strip's height and every frame is
+ * that height times its own ratio — so this states exactly that, with the same
+ * two heights .rail uses either side of 52rem.
  *
- * 700px asks for 1400 device pixels on a retina screen, which lands exactly on
- * the 1400px rung: 394 kB, and 1.6–1.8x density over the rendered size, which
- * for a photograph is indistinguishable from 2x. Half the bytes, same picture.
- * An opened project card hands this to its kept thumbnails too (site.js). */
-export const RAIL_SIZES = "700px";
+ * It used to be a flat "700px", measured on a 1440px retina screen, where it
+ * was right: the 1400px file at 1.6–1.8x density, half the bytes of the 2000px
+ * one and indistinguishable. The cap keeps that on wide screens. But 700px was
+ * true of nothing else: on a phone a landscape frame is ~490px wide and still
+ * pulled the 1400px file, and a portrait on a desktop asked for twice its
+ * width. On the launch performance check's phone, the four frames that loaded
+ * before first paint came to 601 kB and held the project page's largest paint
+ * past its 2-second target.
+ *
+ * An opened project card hands each frame's value to the matching kept
+ * thumbnail (site.js). */
+export function railSizes(image: SiteImage): string {
+  const ratio = resolveImage(image)?.ratio || 1.5;
+  return `(max-width: 51.99rem) calc(clamp(14rem, 40vh, 22rem) * ${ratio}), ` +
+         `min(700px, calc(clamp(18rem, 56vh, 34rem) * ${ratio}))`;
+}
 
 /* The one image nobody on the site ever sees.
  *

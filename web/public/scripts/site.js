@@ -165,6 +165,12 @@
        honours. Keeping the flag with nothing able to set it would have left a
        branch that reads as a feature and can never be reached. */
     var at = 0, timer = null, preloadNext = null, visible = false;
+    /* The film waits for the page. Started on arrival, an 11 MB encode raced
+       the still frame the page is shown on, on the phone the launch check
+       measures, and held first paint past its target. The still is the first
+       thing seen either way; the film now begins once the page has loaded. */
+    var pageReady = document.readyState === "complete";
+    if (!pageReady) window.addEventListener("load", function () { pageReady = true; sync(); }, { once: true });
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
     function matchPosters() {
@@ -205,7 +211,7 @@
         });
         return;
       }
-      if (!visible || document.hidden) return;
+      if (!visible || document.hidden || !pageReady) return;
       show(at);
       if (sFrames.length > 1) timer = setInterval(function () { show(at + 1); }, 6200);
     }
@@ -666,11 +672,12 @@
            slicing from the wrong index silently duplicated photographs. */
         var figs = [].slice.call(rail.querySelectorAll(".rail__f")).slice(PEEK);
 
-        /* Kept thumbnails are drawn larger once open: give them the rail's own
-           `sizes` (RAIL_SIZES, media.ts) or they stay on the thumbnail's file. */
-        var railImg = rail.querySelector(".rail__f img[sizes]");
-        if (railImg) st.querySelectorAll(".pcard__peek img[srcset]").forEach(function (im) {
-          im.sizes = railImg.getAttribute("sizes");
+        /* Kept thumbnails are drawn larger once open: each takes its own
+           frame's `sizes` (railSizes, media.ts) or stays on the thumbnail file. */
+        var railImgs = rail.querySelectorAll(".rail__f img");
+        st.querySelectorAll(".pcard__peek img[srcset]").forEach(function (im, k) {
+          var own = railImgs[k] && railImgs[k].getAttribute("sizes");
+          if (own) im.sizes = own;
         });
 
         /* Inject once. Expanding a card that is already expanded appended the
