@@ -1906,7 +1906,7 @@ body[data-preview] .header { top: var(--preview-h); }
   /* The film is unpredictable — sunrise on one clip, a dark interior on the
      next — so these carry their own contrast rather than depending on the
      photograph behind them being helpfully dark. */
-  text-shadow: var(--shadow-on-image);
+  text-shadow: var(--shadow-on-image-quiet);
   padding-inline: 0.3em;
   transition: color var(--dur-hover) var(--ease);
 }

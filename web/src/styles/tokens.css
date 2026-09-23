@@ -151,6 +151,11 @@
     0 2px 8px rgba(5, 5, 5, 0.7),
     0 4px 24px rgba(5, 5, 5, 0.55);
 
+  /* The same job for small, spaced-out labels (the social links on the film).
+     The tight dark edge above outlines every letter of a 12px word and reads as
+     a heavy smudge; one soft halo is enough at that size. */
+  --shadow-on-image-quiet: 0 1px 14px rgba(5, 5, 5, 0.75);
+
   /* The scroll reveal's transition, as a token rather than a literal.
      A component that is also a .rvc has to restate it — the `transition`
      shorthand replaces rather than adds — and restating a literal is how the
