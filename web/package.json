@@ -23,7 +23,7 @@
     "@playwright/test": "1.63.0",
     "@types/node": "^24.10.1",
     "lighthouse": "13.5.0",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "wrangler": "4.135.0"
   },
   "engines": {
