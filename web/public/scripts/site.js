@@ -149,8 +149,7 @@
 
      Video is fetched lazily and only when it will actually be watched. Under
      reduced motion, or on a metered connection, the poster frames alone carry
-     the sequence and not a byte of video is requested — the encodes are 5 MB,
-     which is a real cost to put on someone's phone plan without asking. */
+     the sequence and no video is requested. */
   var stage = document.querySelector("[data-stage-frames]");
   if (stage) {
     var sFrames = [].slice.call(stage.querySelectorAll(".stage__f"));
@@ -165,10 +164,8 @@
        honours. Keeping the flag with nothing able to set it would have left a
        branch that reads as a feature and can never be reached. */
     var at = 0, timer = null, preloadNext = null, visible = false;
-    /* The film waits until the page has been PAINTED, not just loaded: a
-       decoder starting before the first frame held a slow device's first paint
-       back two seconds (CI's filmstrip: blank until 2.2s, load at 0.44s). Two
-       frames after load means at least one has been drawn. */
+    /* The film starts two frames after load, i.e. after first paint: a decoder
+       starting earlier held a slow device's first paint back ~2s. */
     var pageReady = false;
     function afterPaint() { requestAnimationFrame(function () { requestAnimationFrame(function () { pageReady = true; sync(); }); }); }
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
