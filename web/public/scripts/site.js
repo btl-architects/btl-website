@@ -165,12 +165,13 @@
        honours. Keeping the flag with nothing able to set it would have left a
        branch that reads as a feature and can never be reached. */
     var at = 0, timer = null, preloadNext = null, visible = false;
-    /* The film waits for the page. Started on arrival, an 11 MB encode raced
-       the still frame the page is shown on, on the phone the launch check
-       measures, and held first paint past its target. The still is the first
-       thing seen either way; the film now begins once the page has loaded. */
-    var pageReady = document.readyState === "complete";
-    if (!pageReady) window.addEventListener("load", function () { pageReady = true; sync(); }, { once: true });
+    /* The film waits until the page has been PAINTED, not just loaded: a
+       decoder starting before the first frame held a slow device's first paint
+       back two seconds (CI's filmstrip: blank until 2.2s, load at 0.44s). Two
+       frames after load means at least one has been drawn. */
+    var pageReady = false;
+    function afterPaint() { requestAnimationFrame(function () { requestAnimationFrame(function () { pageReady = true; sync(); }); }); }
+    if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
     function matchPosters() {
