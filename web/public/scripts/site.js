@@ -269,8 +269,12 @@
   if (menu && openBtn) {
     var lastFocus = null;
 
+    /* Only what is actually rendered. A display:none link cannot take focus,
+       so one left in the cycle makes the trap's .focus() on it silently fail
+       and lets Tab out of the menu. */
     function focusables() {
-      return [openBtn].concat([].slice.call(menu.querySelectorAll("a[href], button:not([disabled])")));
+      return [openBtn].concat([].slice.call(menu.querySelectorAll("a[href], button:not([disabled])"))
+        .filter(function (el) { return el.getClientRects().length > 0; }));
     }
     var menuBackground = [];
     function isolateMenu(on) {
@@ -330,6 +334,148 @@
      if a fetch fails, the browser simply navigates. The rail is lifted out of
      the project's own page on first open and cached, so an index of two
      hundred projects ships no project markup at all. */
+  /* --- the rail's control row (RailNav.astro) --------------------------------
+     One implementation for every rail: an open card, a project's own page, the
+     Studio. The step buttons find their strip by where the row sits — inside a
+     .pcard, or immediately after the [data-rail] it belongs to. */
+
+  /* Counter and progress rule for one scroller. A passive listener on that
+     strip alone — not on the page (R10 forbids that); there is no other way to
+     report where a horizontal scroller has got to. Re-binding replaces the
+     previous listener, and shut() removes it through st._report. */
+  function railProgress(st, nav) {
+    var pos = nav.querySelector("[data-pos]");
+    var bar = nav.querySelector("[data-bar]");
+    var total = st.querySelectorAll(".rail__f").length;
+    var report = function () {
+      var range = st.scrollWidth - st.clientWidth;
+      /* A standalone row has nothing to do when every photograph fits. An open
+         card's row stays, because it also carries the card's close cross. */
+      if (nav._fits) nav.hidden = range <= 1;
+      var p = range > 0 ? Math.abs(st.scrollLeft) / range : 0;
+      var frac = 1 / total;
+      bar.style.width = (frac * 100) + "%";
+      /* Across the TRACK, not across the strip.
+       *
+       * This multiplied the travel by st.clientWidth — the width of the
+       * scrolling photographs. The indicator does not live in the strip; it
+       * lives in .railnav__bar, which is a fraction of that width. So at five
+       * of seven it was asked to travel 532px inside a 530px track and sat
+       * jammed against the end, while the counter beside it read 05 / 07
+       * correctly because that line does its own arithmetic.
+       *
+       * Its width is already a percentage of the track, so its travel has to
+       * be measured against the same thing. Read live rather than cached: the
+       * card is resizable and the nav reflows with it. */
+      var track = bar.parentNode.clientWidth;
+      bar.style.transform = "translateX(" + (p * (1 - frac) * track) + "px)";
+      pos.textContent = String(Math.min(total, Math.round(p * (total - 1)) + 1)).padStart(2, "0") +
+                        " / " + String(total).padStart(2, "0");
+    };
+    st.removeEventListener("scroll", st._report || function () {});
+    st._report = report;
+    st.addEventListener("scroll", report, { passive: true });
+    report();
+    return report;
+  }
+
+  function stepRail(rail, direction) {
+    if (!rail) return;
+    rail._pin = false; rail._touched = true;
+    var rtl = getComputedStyle(rail).direction === "rtl" ? -1 : 1;
+    rail.scrollBy({ left: direction * rtl * rail.clientWidth * .7, behavior: reduced ? "auto" : "smooth" });
+  }
+
+  document.addEventListener("click", function (e) {
+    var button = e.target.closest("[data-gallery-step]");
+    if (!button) return;
+    var card = button.closest(".pcard");
+    var nav = button.closest("[data-nav]");
+    var rail = card ? card.querySelector("[data-strip]")
+             : nav && nav.previousElementSibling && nav.previousElementSibling.matches("[data-rail]") ? nav.previousElementSibling
+             : document.querySelector("[data-rail]");
+    stepRail(rail, Number(button.dataset.galleryStep));
+  });
+  document.addEventListener("keydown", function (e) {
+    var rail = e.target.closest("[data-rail]");
+    if (!rail || document.querySelector('.lb[data-open="true"]') || ["ArrowLeft", "ArrowRight"].indexOf(e.key) < 0) return;
+    e.preventDefault(); stepRail(rail, e.key === "ArrowRight" ? 1 : -1);
+  });
+
+  /* Standalone rails: a project's own page and the Studio. Re-measured once
+     everything has loaded and on resize, since whether the photographs fit is
+     a question of the window. */
+  [].slice.call(document.querySelectorAll("[data-rail] + [data-nav]")).forEach(function (nav) {
+    nav._fits = true;
+    var report = railProgress(nav.previousElementSibling, nav);
+    window.addEventListener("load", report);
+    window.addEventListener("resize", report, { passive: true });
+  });
+
+  /* --- the studio's email and phone, on a computer ----------------------------
+     A computer hands mailto: and tel: to another app, and when there is none —
+     no calling app, mail kept in a browser tab — it drops the click without a
+     word. The link highlighted on hover and then did nothing.
+
+     So on a device with a mouse, a click copies what the link holds and a
+     small tooltip over it says "Copied", then fades. The link's own words never
+     change. The phone number is not dialled (there is nothing to dial with);
+     the address still asks for a mail app as well, since nothing can tell
+     whether one opened. Touch devices keep the ordinary behaviour — there, both
+     work. Tried first and rejected: a green label beside the link, and swapping
+     the link's own text for "Copied". */
+  var desk = window.matchMedia("(hover: hover) and (pointer: fine)");
+  var tip = null, tipTimer = null;
+
+  function say(a, text, ms) {
+    if (!tip) {
+      tip = document.createElement("span");
+      tip.className = "tip"; tip.setAttribute("role", "status");
+      document.body.appendChild(tip);
+    }
+    tip.textContent = text;
+    /* Placed in page coordinates, so it rides with the link if the page
+       scrolls in the moment it is showing. */
+    var r = a.getBoundingClientRect();
+    tip.style.left = (r.left + r.width / 2 + window.scrollX) + "px";
+    tip.style.top = (r.top + window.scrollY) + "px";
+    tip.removeAttribute("data-show"); void tip.offsetWidth; tip.setAttribute("data-show", "");
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(function () { tip.removeAttribute("data-show"); }, ms);
+  }
+
+  /* The clipboard API refuses whenever the page is not focused or permission
+     is withheld, and a refusal that ends in silence is the very fault this is
+     here to fix. So: the API, then the older execCommand path, and if both
+     fail the words are selected and the tooltip says how to copy them. */
+  function legacyCopy(text) {
+    var t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", "");
+    t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+    t.remove();
+    return ok ? Promise.resolve() : Promise.reject();
+  }
+  function copy(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
+    }
+    return legacyCopy(text);
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="tel:"], a[href^="mailto:"]');
+    if (!a || !desk.matches || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    if (a.getAttribute("href").indexOf("tel:") === 0) e.preventDefault();
+    copy(a.textContent.trim()).then(function () { say(a, "Copied", 1400); }, function () {
+      var range = document.createRange(); range.selectNodeContents(a);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      say(a, /Mac|iP(hone|ad)/.test(navigator.platform) ? "Press ⌘C to copy" : "Press Ctrl+C to copy", 2600);
+    });
+  });
+
   var pindex = document.querySelector("[data-pindex]");
   if (pindex) {
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));
@@ -794,38 +940,7 @@
            the page (R10 forbids that); there is no other way to report where a
            horizontal scroller has got to. */
         var nav = card.querySelector("[data-nav]");
-        if (nav) {
-          nav.hidden = false;
-          var pos = nav.querySelector("[data-pos]");
-          var bar = nav.querySelector("[data-bar]");
-          var total = st.querySelectorAll(".rail__f").length;
-          var report = function () {
-            var range = st.scrollWidth - st.clientWidth;
-            var p = range > 0 ? Math.abs(st.scrollLeft) / range : 0;
-            var frac = 1 / total;
-            bar.style.width = (frac * 100) + "%";
-            /* Across the TRACK, not across the strip.
-             *
-             * This multiplied the travel by st.clientWidth — the width of the
-             * scrolling photographs. The indicator does not live in the strip;
-             * it lives in .pcard__bar, which is a fraction of that width. So at
-             * five of seven it was asked to travel 532px inside a 530px track
-             * and sat jammed against the end, while the counter beside it read
-             * 05 / 07 correctly because that line does its own arithmetic.
-             *
-             * Its width is already a percentage of the track, so its travel has
-             * to be measured against the same thing. Read live rather than
-             * cached: the card is resizable and the nav reflows with it. */
-            var track = bar.parentNode.clientWidth;
-            bar.style.transform = "translateX(" + (p * (1 - frac) * track) + "px)";
-            pos.textContent = String(Math.min(total, Math.round(p * (total - 1)) + 1)).padStart(2, "0") +
-                              " / " + String(total).padStart(2, "0");
-          };
-          st.removeEventListener("scroll", st._report || function () {});
-          st._report = report;
-          st.addEventListener("scroll", report, { passive: true });
-          report();
-        }
+        if (nav) { nav.hidden = false; railProgress(st, nav); }
 
         document.title = (rail.getAttribute("data-title") || "Project") + " — btl architects";
         if (push) history.pushState({ slug: slug }, "", hrefBySlug[slug]);
@@ -845,8 +960,15 @@
       card.addEventListener("click", function (ev) {
         /* let the browser handle modified clicks on the real link */
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
-        /* a drag along the open strip ends in a click event — not a choice */
-        if (downAt && Math.abs(ev.clientX - downAt[0]) + Math.abs(ev.clientY - downAt[1]) > 8) return;
+        /* A drag along the open strip ends in a click event — not a choice.
+           Only a pointer can drag, and each press is measured once. The press
+           used to be kept forever, and a click from the keyboard (detail 0)
+           lands at 0,0 — so after any mouse use of a card, Enter measured as a
+           long drag from the old press and was handed to the browser as a full
+           page load. Escape puts focus on this link, inviting exactly that. */
+        var from = downAt;
+        downAt = null;
+        if (ev.detail !== 0 && from && Math.abs(ev.clientX - from[0]) + Math.abs(ev.clientY - from[1]) > 8) return;
 
         if (ev.target.closest("[data-project-close]")) { ev.preventDefault(); closeAll(true); card.querySelector("[data-project]").focus({preventScroll:true}); return; }
         var onCaption = !!(ev.target.closest && ev.target.closest("[data-project]"));
@@ -937,8 +1059,9 @@
   /* --- 5. the viewer --------------------------------------------------------
      A photograph on its own, at whatever size the reader wants.
 
-     Three input languages, one model. A pointer zooms with the wheel and pans
-     by dragging; fingers zoom by pinching and pan by dragging; a keyboard steps
+     Three input languages, one model. A mouse zooms with a click or the wheel
+     and pans by simply moving (see follow); fingers zoom by pinching or a tap
+     and pan by dragging; a keyboard steps
      with the arrows and zooms with + and -. They all move the same two numbers
      — a scale and an offset — so there is no separate touch mode to keep in
      step with a separate mouse mode.
@@ -1011,8 +1134,11 @@
 
     /* --- the transform ----------------------------------------------------- */
 
+    /* settle: true eases to the new position (a click, a reset); "follow" is a
+       short glide for a view steered continuously by the mouse or the wheel;
+       false tracks exactly, for a finger, which must never lag. */
     function apply(settle) {
-      img.setAttribute("data-settling", settle ? "true" : "false");
+      img.setAttribute("data-settling", settle === "follow" ? "follow" : settle ? "true" : "false");
       img.style.transform =
         "translate(-50%, -50%) translate(" + tx + "px, " + ty + "px) scale(" + scale + ")";
       var z = scale > 1.01;
@@ -1035,8 +1161,8 @@
     }
 
     /* Zoom about a point, so whatever is under the pointer stays under it. */
-    function zoomAt(nextScale, cx, cy) {
-      nextScale = Math.min(6, Math.max(1, nextScale));
+    function zoomAt(nextScale, cx, cy, settle) {
+      nextScale = Math.min(MAX_SCALE, Math.max(1, nextScale));
       var r = stage.getBoundingClientRect();
       var ox = cx - r.left - r.width / 2;
       var oy = cy - r.top - r.height / 2;
@@ -1045,7 +1171,77 @@
       ty = oy - (oy - ty) * k;
       scale = nextScale;
       clamp();
-      apply(false);
+      apply(settle || false);
+      sharpen();
+    }
+    var MAX_SCALE = 6;
+
+    /* With a mouse the view follows the pointer: move toward an edge of the
+       screen and that edge of the photograph comes into view, with no button
+       held. Dragging a zoomed photograph around with a grab cursor is how a
+       phone has to do it; on a desk it made looking at a detail feel like
+       moving furniture. The pointer's position across the photograph's fitted
+       frame maps onto the whole pan range, so every part is reachable without
+       leaving the frame — and a click zooms to the spot that was clicked,
+       because the same mapping that pans the view also places it. */
+    var steering = false;   /* the last pointer was a mouse */
+    function follow(x, y) {
+      var r = stage.getBoundingClientRect();
+      var maxX = Math.max(0, (natural.w * scale - r.width) / 2);
+      var maxY = Math.max(0, (natural.h * scale - r.height) / 2);
+      var fx = (x - (r.left + (r.width - natural.w) / 2)) / (natural.w || 1);
+      var fy = (y - (r.top + (r.height - natural.h) / 2)) / (natural.h || 1);
+      fx = Math.min(1, Math.max(0, fx)); fy = Math.min(1, Math.max(0, fy));
+      tx = maxX * (1 - 2 * fx);
+      ty = maxY * (1 - 2 * fy);
+    }
+
+    /* How far a click zooms: to the photograph's own detail — one pixel of the
+       file to one pixel of the screen — within 2x to 4x. A fixed 2.5x was too
+       little for a 6000px original on an ordinary monitor and past the file's
+       resolution for a small one. */
+    function detailScale() {
+      var full = fullWidth(img.src);
+      if (!full || !natural.w) return 2.5;
+      var s = full / (natural.w * (window.devicePixelRatio || 1));
+      return Math.min(4, Math.max(2, s));
+    }
+
+    /* The viewer opens on the 2000px rendition, which is plenty to fit a
+       screen and a third of what a zoomed retina view needs — at 2.5x it was
+       visibly soft, the one moment somebody had asked to see more. On zooming,
+       fetch what the current scale actually needs (Sanity renders any width up
+       to the original's) and swap it in once it has arrived, so the picture
+       sharpens in place rather than going blank. Its drawn size is pinned
+       first, because a larger file would otherwise lay out larger. */
+    function fullWidth(src) {
+      var m = /-(\d+)x(\d+)\.[a-z]+(\?|$)/i.exec(src || "");
+      return m ? parseInt(m[1], 10) : 0;
+    }
+    function loadedWidth(src) {
+      var m = /[?&]w=(\d+)/.exec(src || "");
+      return m ? parseInt(m[1], 10) : 0;
+    }
+    function sharpen() {
+      if (scale <= 1.01 || !natural.w) return;
+      var src = img.src, full = fullWidth(src), have = loadedWidth(src);
+      if (!full || !have) return;
+      /* The smallest rung that covers what this scale needs, from the fixed set
+         the build pre-renders (ZOOM_LADDER, media.ts). */
+      var need = natural.w * scale * (window.devicePixelRatio || 1);
+      var rungs = (document.body.getAttribute("data-zoom-widths") || "").split(",").map(Number).filter(Boolean);
+      var top = Math.min(full, rungs.length ? rungs[rungs.length - 1] : full);
+      var fits = rungs.filter(function (w) { return w < top; }).concat([top]);
+      var want = fits.filter(function (w) { return w >= need; })[0] || top;
+      if (want <= have * 1.15) return;
+      var next = src.replace(/([?&])w=\d+/, "$1w=" + want);
+      var shown = items[at], pre = new Image();
+      pre.onload = function () {
+        if (items[at] !== shown || loadedWidth(img.src) >= want) return;   /* moved on, or already sharper */
+        img.style.width = natural.w + "px"; img.style.height = natural.h + "px";
+        img.src = next;
+      };
+      pre.src = next;
     }
 
     /* --- showing ----------------------------------------------------------- */
@@ -1054,6 +1250,7 @@
       at = (i + items.length) % items.length;
       var it = items[at];
       reset(false);
+      img.style.width = ""; img.style.height = "";   /* unpin a sharpened predecessor */
       img.src = it.src;
       img.alt = it.alt || "";
       capEl.textContent = it.caption || "";
@@ -1144,15 +1341,21 @@
       var pointers = new Map();
       var startDist = 0, startScale = 1;
       var panFrom = null;
+      var pressAt = null, gestured = false;   /* read by the click handler */
 
       stage.addEventListener("pointerdown", function (e) {
         stage.setPointerCapture(e.pointerId);
+        steering = e.pointerType === "mouse";
         pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 1) { pressAt = { x: e.clientX, y: e.clientY }; gestured = false; }
         if (pointers.size === 2) {
+          gestured = true;
           var p = [...pointers.values()];
           startDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
           startScale = scale;
           panFrom = null;
+        } else if (scale > 1.01 && e.pointerType === "mouse") {
+          panFrom = null;                   /* the mouse steers by moving; no drag */
         } else if (scale > 1.01) {
           panFrom = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };
           stage.setAttribute("data-dragging", "true");
@@ -1163,6 +1366,8 @@
 
       stage.addEventListener("pointermove", function (e) {
         wake();
+        steering = e.pointerType === "mouse";
+        if (steering && scale > 1.01) { follow(e.clientX, e.clientY); apply("follow"); return; }
         if (!pointers.has(e.pointerId)) return;
         pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -1200,20 +1405,46 @@
 
       /* A click on the photograph toggles between fit and a close look; a click
          on the dark around it closes, which is what every viewer has taught
-         people to expect. */
+         people to expect.
+
+         "On the photograph" is decided by where the click landed, not by its
+         target. pointerdown captures the pointer to the stage, and a captured
+         pointer's click is delivered to the capturing element — so the target
+         was always the stage, never the image, and the magnifier cursor closed
+         the viewer instead of zooming. The same capture made releasing a pan
+         of a zoomed photograph close it too.
+
+         And a click that ends a drag, a swipe or a pinch is not a click: the
+         photograph was being moved, not chosen. */
       stage.addEventListener("click", function (e) {
-        if (e.target === img) {
+        var from = pressAt, wasGesture = gestured;
+        pressAt = null; gestured = false;
+        if (wasGesture || (from && Math.hypot(e.clientX - from.x, e.clientY - from.y) > 8)) return;
+        var r = img.getBoundingClientRect();
+        var onPhoto = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        if (onPhoto) {
           if (scale > 1.01) reset(true);
-          else zoomAt(2.5, e.clientX, e.clientY);
+          else if (steering) { scale = detailScale(); follow(e.clientX, e.clientY); apply(true); sharpen(); }
+          else zoomAt(detailScale(), e.clientX, e.clientY, true);
         } else {
           close();
         }
       });
 
+      /* Proportional to how far the wheel actually turned. Every event used to
+         multiply the scale by a fixed 1.16, and a trackpad sends dozens of tiny
+         events per gesture where a mouse wheel sends one large one — so the same
+         small movement of two fingers shot straight to maximum zoom. A trackpad
+         pinch arrives as a wheel event with ctrlKey and much smaller deltas, so
+         it gets a finer rate of its own. */
       stage.addEventListener("wheel", function (e) {
         e.preventDefault();
         wake();
-        zoomAt(scale * (e.deltaY < 0 ? 1.16 : 1 / 1.16), e.clientX, e.clientY);
+        steering = true;
+        var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+        scale = Math.min(MAX_SCALE, Math.max(1, scale * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.002))));
+        if (scale <= 1.01) { reset("follow"); return; }
+        follow(e.clientX, e.clientY); apply("follow"); sharpen();
       }, { passive: false });
     }
 
@@ -1249,7 +1480,13 @@
       }
     });
 
-    window.addEventListener("resize", function () { if (isOpen()) reset(false); });
+    window.addEventListener("resize", function () {
+      if (!isOpen()) return;
+      /* A sharpened photograph is pinned to the fitted size of the old window. */
+      img.style.width = ""; img.style.height = "";
+      natural.w = img.clientWidth; natural.h = img.clientHeight;
+      reset(false);
+    });
 
     /* --- what opens it -------------------------------------------------------
        Delegated, because the rails that hold these photographs are fetched and
@@ -1309,22 +1546,3 @@
     });
   })();
 
-(function () {
-  function move(rail, direction) {
-    if (!rail) return;
-    rail._pin = false; rail._touched = true;
-    var rtl = getComputedStyle(rail).direction === "rtl" ? -1 : 1;
-    rail.scrollBy({left:direction * rtl * rail.clientWidth * .7,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
-  }
-  document.addEventListener("click", function (e) {
-    var button = e.target.closest("[data-gallery-step]");
-    if (!button) return;
-    var card = button.closest(".pcard");
-    move(card ? card.querySelector("[data-strip]") : document.querySelector("[data-rail]"), Number(button.dataset.galleryStep));
-  });
-  document.addEventListener("keydown", function (e) {
-    var rail = e.target.closest("[data-rail]");
-    if (!rail || document.querySelector('.lb[data-open="true"]') || !["ArrowLeft","ArrowRight"].includes(e.key)) return;
-    e.preventDefault(); move(rail, e.key === "ArrowRight" ? 1 : -1);
-  });
-})();

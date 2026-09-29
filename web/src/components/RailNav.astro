@@ -1,0 +1,37 @@
+---
+/* The control row under a set of photographs that runs off the edge: where you
+ * are ("03 / 07"), a progress rule, and a step either way.
+ *
+ * One row for every rail on the site — an open project card, a project's own
+ * page, the Studio. The two pages used to have "Previous photographs" / "Next
+ * photographs" spelled out as a pair of buttons instead, which read as a form
+ * control under the gallery rather than as part of it.
+ *
+ * site.js (railProgress) fills the counter and moves the rule, and hides the
+ * row outright when every photograph already fits and there is nowhere to go.
+ * The step buttons find their strip by where this row sits: inside a .pcard,
+ * or immediately after the [data-rail] it belongs to — so render it directly
+ * after the rail, not inside some other wrapper.
+ *
+ * The slot is for anything that leads the row; the open card puts its close
+ * cross there.
+ */
+interface Props {
+  /** How many photographs, for the counter before the script has run. */
+  total: number;
+  /** Names the photographs in the arrows' labels: "Next photographs in Nelly House". */
+  name?: string;
+  class?: string;
+  hidden?: boolean;
+}
+const { total, name, class: extra, hidden = false } = Astro.props;
+const of = name ? ` in ${name}` : "";
+---
+
+<div class:list={["railnav", extra]} data-nav hidden={hidden} aria-label="Photograph navigation" role="group">
+  <slot />
+  <span class="railnav__pos" data-pos>01 / {String(total).padStart(2, "0")}</span>
+  <span class="railnav__bar" aria-hidden="true"><i data-bar></i></span>
+  <button class="tl" type="button" data-gallery-step="-1" aria-label={`Previous photographs${of}`}>←</button>
+  <button class="tl" type="button" data-gallery-step="1" aria-label={`Next photographs${of}`}>→</button>
+</div>

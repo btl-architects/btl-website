@@ -15,7 +15,7 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { getSettings, getHome } from "../lib/content";
 import { isPreview } from "../lib/sanity";
-import { socialImage, type SiteImage } from "../lib/media";
+import { socialImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
 
 interface Props {
   title: string;
@@ -132,7 +132,7 @@ const org = {
     />
     <script type="application/ld+json" set:html={JSON.stringify(org).replace(/</g, "\\u003c")} is:inline />
   </head>
-  <body id="top" data-ground={ground} data-preview={isPreview ? "true" : undefined}>
+  <body id="top" data-ground={ground} data-preview={isPreview ? "true" : undefined} data-zoom-widths={ZOOM_LADDER.join(",")}>
     <a class="skip" href="#main">Skip to content</a>
     {/* Unmissable, because the most expensive mistake with a preview build is
         not realising you are looking at one. */}

@@ -8,6 +8,7 @@
 import type { GetStaticPaths } from "astro";
 import Base from "../../layouts/Base.astro";
 import ProjectRail from "../../components/ProjectRail.astro";
+import RailNav from "../../components/RailNav.astro";
 import { getProjects, getProjectRoutes } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
 
@@ -54,10 +55,7 @@ const { project, prev, next } = Astro.props;
       </header>
 
       <ProjectRail project={project} priority />
-      <div class="container gallery-controls" aria-label="Photograph navigation">
-        <button class="tl" type="button" data-gallery-step="-1">Previous photographs</button>
-        <button class="tl" type="button" data-gallery-step="1">Next photographs</button>
-      </div>
+      <RailNav class="container" total={project.images.length} name={project.title} />
 
       <div class="container page-end">
         {prev && next && <nav class="pager" style="margin-top:var(--s-8)" aria-label="Projects">

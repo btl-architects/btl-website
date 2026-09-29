@@ -63,6 +63,15 @@ export interface ResolvedImage {
  * number of images that have to exist. */
 const LADDER = [480, 900, 1400, 2000];
 
+/* The widths the photograph viewer sharpens to when someone zooms in, above
+ * the ladder's 2000px. Few and fixed for the same reason the ladder is: each is
+ * a cold render the first time it is asked for — 4.7s for a 6000px Nelly House
+ * frame — so tools/warm-images.mjs renders them at build time, and it can only
+ * do that for widths it knows in advance. The top rung is capped by the
+ * original's own width. Written onto <body> by Base.astro; site.js and the
+ * warmer both read it from there, so this is the only place it is set. */
+export const ZOOM_LADDER = [3500, 6000];
+
 /** Sanity encodes the original's dimensions in the asset id:
  *  `image-<hash>-3000x2000-jpg`. Reading them here avoids a second round trip
  *  just to learn the aspect ratio. */

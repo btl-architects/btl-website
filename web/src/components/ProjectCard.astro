@@ -17,6 +17,7 @@
  * markup and behaviour — renaming one silently breaks the expansion.
  */
 import Figure from "./Figure.astro";
+import RailNav from "./RailNav.astro";
 import type { Project } from "../lib/content";
 
 interface Props { project: Project; priority?: boolean }
@@ -32,28 +33,14 @@ const { project, priority = false } = Astro.props;
 const PEEK_SIZES = "400px";
 
 const peek = project.images.slice(0, 6);
-const total = String(project.images.length).padStart(2, "0");
 ---
 
 <article class="pcard rvc" data-card={project.slug}>
-  <div class="pcard__strip" data-strip>
-    {peek.map((image, k) => (
-      <figure class="rail__f pcard__peek" role="button" tabindex="-1" aria-label={`View photograph ${k + 1}: ${image.alt}`}>
-        <Figure image={image} sizes={PEEK_SIZES} priority={priority && k === 0} />
-      </figure>
-    ))}
-  </div>
-  <div class="pcard__nav" data-nav hidden>
-    {/* A cross, not two words. It sits in a row with a counter, a progress track
-        and two arrows; "Close project" was the only thing in it spelled out, and
-        it set the row's height. The name is still there for anyone who cannot
-        see the mark. */}
-    <button class="tl pcard__x" type="button" data-project-close aria-label={`Close ${project.title}`}>×</button>
-    <span class="pcard__pos" data-pos>01 / {total}</span>
-    <span class="pcard__bar"><i data-bar></i></span>
-    <button class="tl" type="button" data-gallery-step="-1" aria-label={`Previous photographs in ${project.title}`}>←</button>
-    <button class="tl" type="button" data-gallery-step="1" aria-label={`Next photographs in ${project.title}`}>→</button>
-  </div>
+  {/* The link comes first in the source although it is drawn on top of the
+      strip (it is absolutely positioned, so order does not move it). It is the
+      control that opens the gallery, and what it opens must follow it: with the
+      link last, the first Tab after opening left for the next project and the
+      photographs and their controls could only be reached going backwards. */}
   <a
     class="pcard__t"
     href={`/projects/${project.slug}/`}
@@ -63,4 +50,18 @@ const total = String(project.images.length).padStart(2, "0");
     <span class="pcard__name">{project.title}</span>
     <span class="pcard__place">{project.location}</span>
   </a>
+  <div class="pcard__strip" data-strip>
+    {peek.map((image, k) => (
+      <figure class="rail__f pcard__peek" role="button" tabindex="-1" aria-label={`View photograph ${k + 1}: ${image.alt}`}>
+        <Figure image={image} sizes={PEEK_SIZES} priority={priority && k === 0} />
+      </figure>
+    ))}
+  </div>
+  <RailNav class="pcard__nav" total={project.images.length} name={project.title} hidden>
+    {/* A cross, not two words. It sits in a row with a counter, a progress track
+        and two arrows; "Close project" was the only thing in it spelled out, and
+        it set the row's height. The name is still there for anyone who cannot
+        see the mark. */}
+    <button class="tl pcard__x" type="button" data-project-close aria-label={`Close ${project.title}`}>×</button>
+  </RailNav>
 </article>

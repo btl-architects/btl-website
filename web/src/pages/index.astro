@@ -124,7 +124,11 @@ const c = settings.contact;
             <Statement text={home.studio.lead} note={home.studio.body[0]} />
           </div>
         </div>
-        <Onward href="/studio/" quiet>How the practice works</Onward>
+        {/* Says what is there. It promised "How the practice works" after the
+            practice took the written method off the Studio page in favour of
+            photographs of the studio, so the link led to a paragraph already
+            read here and a set of pictures. */}
+        <Onward href="/studio/" quiet>Inside the studio</Onward>
       </div>
     </section>
 
@@ -167,7 +171,7 @@ const c = settings.contact;
         <div class="home-sec__head">
           <h2 class="home-sec__k">Contact</h2>
         </div>
-        <div class="mini mini--2">
+        <div class="home-contact">
           <div class="rv">
             <address
               style="font-style:normal; line-height:1.7; color:var(--text-secondary)">{c.address.map((line) => <>{line}<br /></>)}</address>

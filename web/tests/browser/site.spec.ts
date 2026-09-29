@@ -70,6 +70,81 @@ test('gallery keyboard access, nested Escape, and browser history',async({page})
   await page.goBack();await expect(entry).toHaveAttribute('aria-expanded','false');
   await page.goForward();await expect(entry).toHaveAttribute('aria-expanded','true');
 });
+/* Mouse first, keyboard after — the way most people actually mix them. A
+   card's last pointer press used to be kept for ever, so Enter after any click
+   read as a drag and the browser left the index for the project's own page. */
+test('a project opened by mouse and closed can be reopened from the keyboard in place',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/projects/');
+  const entry=page.locator('[data-project]').first();
+  await page.locator('.pcard').first().click({position:{x:120,y:60}});
+  await expect(entry).toHaveAttribute('aria-expanded','true');
+  /* Safari does not focus what a mouse clicks, so the keyboard user's first
+     step there is to reach the card; the pointer press is still on record. */
+  await entry.focus();
+  await page.keyboard.press('Escape');await expect(entry).toBeFocused();
+  await expect(entry).toHaveAttribute('aria-expanded','false');
+  await page.evaluate(()=>{(window as any).stayed=true;});
+  await page.keyboard.press('Enter');await expect(entry).toHaveAttribute('aria-expanded','true');
+  expect(await page.evaluate(()=>(window as any).stayed)).toBe(true);
+});
+/* The viewer captures the pointer, so every click arrived addressed to the
+   stage and a click on the photograph — under a magnifier cursor — closed it. */
+test('clicking the photograph in the viewer zooms; clicking around it closes',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/projects/nelly-house/');
+  await page.locator('.rail__f').first().click();
+  const viewer=page.getByRole('dialog',{name:'Photograph viewer'});await expect(viewer).toBeVisible();
+  const stage=page.locator('.lb__stage');const photo=page.locator('.lb__img');
+  await expect(photo).toHaveJSProperty('complete',true);
+  const box=(await photo.boundingBox())!;
+  await photo.click();await expect(stage).toHaveAttribute('data-zoomed','true');await expect(viewer).toBeVisible();
+  /* Zooming fetches a sharper rendition than the 2000px one it opened on. */
+  await expect(photo).toHaveAttribute('src',/[?&]w=(3500|6000)\b/,{timeout:20000});
+  /* The mouse steers without a button: at the fitted frame's left edge the
+     photograph's left edge is on screen, at its right edge its right edge. */
+  const view=page.viewportSize()!;
+  await page.mouse.move(Math.max(1,box.x-6),box.y+box.height/2);
+  await expect.poll(async()=>Math.round((await photo.boundingBox())!.x)).toBeGreaterThanOrEqual(-1);
+  await page.mouse.move(Math.min(view.width-2,box.x+box.width+6),box.y+box.height/2);
+  await expect.poll(async()=>{const b=(await photo.boundingBox())!;return Math.round(b.x+b.width)}).toBeLessThanOrEqual(view.width+1);
+  await expect(viewer).toBeVisible();
+  await page.mouse.click(box.x+box.width/2,box.y+box.height/2);await expect(stage).toHaveAttribute('data-zoomed','false');await expect(viewer).toBeVisible();
+  await page.mouse.click(box.x+box.width/2,Math.max(2,box.y-20));
+  await expect(viewer).toBeHidden();
+});
+/* A project's own page steps its photographs with the same row an open card
+   has (RailNav): the arrow moves the strip, and the counter follows it. */
+test('a project page steps its photographs with the shared control row',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/projects/nelly-house/');
+  const row=page.locator('[data-rail] + [data-nav]');
+  await expect(row).toBeVisible();await expect(row.locator('[data-pos]')).toHaveText(/^01 \/ \d\d$/);
+  await row.getByRole('button',{name:'Next photographs in Nelly House'}).click();
+  await expect(row.locator('[data-pos]')).not.toHaveText(/^01 /);
+  await expect(page.getByRole('button',{name:'Next photographs',exact:true})).toHaveCount(0);
+});
+/* On a computer tel: has nothing to open, so the click copies the number and a
+   tooltip says so; the link's own text is left alone. Chromium only: WebKit's
+   test browser grants no clipboard access. */
+test('clicking the phone number on a computer copies it with a tooltip',async({page,context,browserName})=>{
+  test.skip(browserName!=='chromium','clipboard permission is Chromium-only in Playwright');
+  await context.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.goto('/contact/');
+  const phone=page.locator('main a[href^="tel:"]').first();
+  const number=(await phone.textContent())!.trim();
+  await phone.click();
+  await expect(page.locator('.tip[data-show]')).toHaveText('Copied');
+  await expect(phone).toHaveText(number);
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(number);
+  await expect(page).toHaveURL(/\/contact\/$/);
+  await expect(page.locator('.tip[data-show]')).toHaveCount(0);
+});
+/* What a trigger opens must follow it in the tab order. */
+test('Tab after opening a project moves into its photographs',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/projects/');
+  const entry=page.locator('[data-project]').first();
+  await entry.press('Enter');await expect(entry).toHaveAttribute('aria-expanded','true');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.pcard[data-open="true"] .rail__f').first()).toBeFocused();
+});
 test('menu includes Close in its focus cycle and restores focus',async({page})=>{
   await page.setViewportSize({width:375,height:812});await page.goto('/contact/');
   await page.getByRole('button',{name:'Menu',exact:true}).click();

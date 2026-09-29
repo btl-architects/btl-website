@@ -13,6 +13,7 @@
 import Base from "../layouts/Base.astro";
 import Figure from "../components/Figure.astro";
 import RailFrame from "../components/RailFrame.astro";
+import RailNav from "../components/RailNav.astro";
 import { spreadSizes } from "../lib/media";
 import { getHome, getSettings } from "../lib/content";
 import Onward from "../components/Onward.astro";
@@ -66,12 +67,7 @@ const [lead, ...rest] = st.body;
         <div class="rail" tabindex="0" role="region" aria-label="Studio photographs — use the arrow keys to browse" data-rail>
           {st.images.map((img, i) => <RailFrame image={img} index={i} />)}
         </div>
-        {st.images.length > 1 && (
-          <div class="container gallery-controls" aria-label="Photograph navigation">
-            <button class="tl" type="button" data-gallery-step="-1">Previous photographs</button>
-            <button class="tl" type="button" data-gallery-step="1">Next photographs</button>
-          </div>
-        )}
+        {st.images.length > 1 && <RailNav class="container" total={st.images.length} name="the studio" />}
       </section>
     )}
 

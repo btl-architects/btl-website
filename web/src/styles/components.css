@@ -628,12 +628,19 @@ html:has(.menu[data-open="true"]) .header {
  * photographs. This control row inherited that width, so "Close" sat hard
  * against the left edge of the screen and the arrows hard against the right,
  * past where every other line on the page stops. It is type and controls, not
- * imagery, so it takes the gutter the rest of the page takes. */
-.pcard__nav {
-  display: none;
+ * imagery, so it takes the gutter the rest of the page takes.
+ *
+ * .railnav is the row itself (RailNav.astro), wherever a set of photographs
+ * runs off the edge: an open card, a project's own page, the Studio. Those two
+ * pages had "Previous photographs" / "Next photographs" as a pair of spelled-out
+ * buttons instead — a second, much louder way of saying the same thing. */
+.railnav {
+  display: flex;
   align-items: center; gap: var(--s-4);
   padding-top: var(--s-3);
 }
+.railnav[hidden] { display: none; }
+.pcard__nav { display: none; }   /* shown only while its card is open */
 /* Sized to match the arrows it sits beside, so the row reads as one set of
    controls rather than a word followed by three symbols. */
 .pcard__x {
@@ -641,12 +648,12 @@ html:has(.menu[data-open="true"]) .header {
   font-size: 1.35rem; line-height: 1;
   min-width: 44px; min-height: 44px;
 }
-.pcard__pos {
+.railnav__pos {
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
   color: var(--text-tertiary); font-variant-numeric: tabular-nums;
   flex: 0 0 auto;
 }
-.pcard__bar {
+.railnav__bar {
   position: relative; flex: 1 1 auto; height: 1px;
   background: var(--border-strong);
   /* A transform ignores its parent's edges, so the indicator could translate
@@ -657,7 +664,7 @@ html:has(.menu[data-open="true"]) .header {
      merely "stuck at the end" rather than obviously wrong. */
   overflow: hidden;
 }
-.pcard__bar i {
+.railnav__bar i {
   position: absolute; inset: 0 auto 0 0;
   width: 20%;
   background: var(--mark);
@@ -969,17 +976,21 @@ html:has(.menu[data-open="true"]) .header {
 
 .home-sec--compress .home-sec__head { margin-bottom: var(--s-6); }
 
-/* --- small media grids ----------------------------------------------------- */
-
-/* On the home page these are previews, not the subject. Capped so a portrait
-   never out-weighs the work above it — P1. */
-.mini { display: grid; gap: var(--s-5); }
-@media (min-width: 44rem) {
-  .mini--2 { grid-template-columns: repeat(2, 1fr); gap: var(--s-6); max-width: 44rem; }
+/* --- the home page's contact details ----------------------------------------
+   Laid out the way the Studio and People spreads above it are: the section's
+   label on the content edge, and the content itself as a centred block with its
+   type centred. It was a two-column grid capped at 44rem and packed to the
+   left, which on a wide page left the right third empty and made Contact the
+   one section on the page whose text hugged the margin — the "missing column"
+   the .spread notes below describe. Each column is sized by its own lines, and
+   the slack is margin either side rather than a void on one. */
+.home-contact {
+  display: grid; gap: var(--s-6);
+  justify-content: center; text-align: center;
 }
-.mini figure { margin: 0; }
-.mini img { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: var(--surface-sunken); }
-.mini figcaption { margin-top: var(--s-3); }
+@media (min-width: 44rem) {
+  .home-contact { grid-template-columns: auto auto; gap: var(--s-9); align-items: start; }
+}
 
 /* ==========================================================================
    The editorial spread — People and Studio
@@ -2117,7 +2128,9 @@ body[data-preview] .header { top: var(--preview-h); }
   touch-action: none;
   cursor: zoom-in;
 }
-.lb__stage[data-zoomed="true"] { cursor: grab; }
+/* Zoomed, a mouse steers by moving and a click comes back out, so the cursor
+   says that. A grab hand promised a drag the mouse no longer needs. */
+.lb__stage[data-zoomed="true"] { cursor: zoom-out; }
 .lb__stage[data-dragging="true"] { cursor: grabbing; }
 
 .lb__img {
@@ -2140,10 +2153,19 @@ body[data-preview] .header { top: var(--preview-h); }
   will-change: transform;
   user-select: none; -webkit-user-drag: none;
 }
-/* Only the settling is animated. While a finger or a wheel is driving it the
-   transform must track the input exactly, or it feels like rubber. */
-.lb__img[data-settling="true"] {
-  transition: transform var(--dur-base) var(--ease);
+/* A finger drives the transform exactly, or it feels like rubber. A click
+   eases to its new view — zooming in used to snap while zooming out eased, so
+   the two halves of one gesture felt like different viewers. A view steered by
+   the mouse or the wheel glides a short way behind the input, which turns a
+   stream of pointer events into movement instead of a tremor.
+
+   Inside no-preference rather than switched off below: the reduced-motion
+   `.lb__img { transition: none }` is less specific than these attribute
+   selectors, so it never won, and the settle ran for people who had asked
+   for no motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .lb__img[data-settling="true"]   { transition: transform var(--dur-base) var(--ease); }
+  .lb__img[data-settling="follow"] { transition: transform var(--dur-fast) var(--ease); }
 }
 
 /* --- chrome --------------------------------------------------------------- */
@@ -2238,7 +2260,6 @@ body[data-preview] .header { top: var(--preview-h); }
  * OUTSET border and rendered as a grey bevelled box on the opening. That button
  * has since been removed, but the reset stays: it is what every control here
  * shares, and the next one added should not have to rediscover it. */
-.gallery-controls button,
 [data-gallery-step],
 [data-project-close] {
   background: none;
@@ -2251,8 +2272,7 @@ body[data-preview] .header { top: var(--preview-h); }
 
 /* The pause control is gone, at the practice's decision — see MediaStage.astro
    for what that costs and what still stops the film without it. */
-.gallery-controls { display: flex; gap: var(--s-6); padding-top: var(--s-4); }
-.gallery-controls button, [data-gallery-step] { min-width: 44px; min-height: 44px; }
+[data-gallery-step] { min-width: 44px; min-height: 44px; }
 .rail__f[role="button"]:focus-visible, .rail:focus-visible { outline:2px solid var(--accent); outline-offset:-4px; }
 .privacy { max-width:48rem; }
 .privacy h2 { margin-top:var(--s-7); }
@@ -2262,3 +2282,25 @@ body[data-preview] .header { top: var(--preview-h); }
 
 .pcard[data-open="true"] .pcard__nav:not([hidden]) { display:flex; }
 .pcard[data-open="true"] .pcard__t:focus-visible { opacity:1; }
+
+
+
+/* "Copied", over the studio's email or phone number once a click on a
+   computer has copied it (site.js). Inverted — light on the dark page — and in
+   the pill of the site's one solid button, so it reads as the site answering
+   rather than as more content. It sits just above the link and settles into
+   place; it is not a link and takes no pointer. */
+.tip {
+  position: absolute; z-index: var(--z-tip);
+  transform: translate(-50%, calc(-100% - var(--s-1)));
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--radius-pill);
+  background: var(--text-primary); color: var(--surface);
+  font-size: var(--type-meta); letter-spacing: var(--track-meta); font-weight: 500;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0;
+}
+.tip[data-show] { opacity: 1; transform: translate(-50%, calc(-100% - var(--s-2))); }
+@media (prefers-reduced-motion: no-preference) {
+  .tip { transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease); }
+}
