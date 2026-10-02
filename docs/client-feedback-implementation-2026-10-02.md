@@ -29,7 +29,14 @@ The first GitHub browser run reached Firefox successfully and exposed an extra
 Tab stop on an open project’s scroll container. The container now has
 `tabindex="-1"`; its photographs remain keyboard controls. The existing Tab
 check also verifies moving to the next photograph and back. The focused Chrome
-and Safari checks passed after this follow-up; the new GitHub run verifies Firefox.
+and Safari checks passed after this follow-up. The next GitHub run passed all
+97 browser checks, including Firefox, with two intentional clipboard skips.
+
+That run exposed slow homepage startup: its trace attributed forced style and
+layout work to the startup token and header measurements. Both now run after
+first paint; event handlers remain available immediately, and the opening film
+keeps its existing scheduling. Fourteen focused Chrome/Safari checks passed
+for gallery access, menus, video, reduced motion and the statement reveal.
 
 ## How ordering protects other edits
 
@@ -78,6 +85,11 @@ reload/close also warns about pending changes.
 - Both dependency scans report zero vulnerabilities at verification time.
   Website checking retains five existing informational hints, with no errors
   or warnings.
+- After the startup adjustment, local performance scored 100 on all three
+  measured routes: Home LCP 1.738s, project 1.515s and Contact 1.518s, all with
+  CLS 0. The preceding GitHub run measured Home at score 76 and LCP 2.180s,
+  which prompted the trace investigation. Final GitHub checks are tracked on
+  [PR #16](https://github.com/btl-architects/btl-website/pull/16).
 - After the logo fix, the website build and all 12 website tests passed again.
   Press accessibility and Home scroll/Back/no-script checks passed in Chrome
   and Safari (6 checks). Both published logos load and are visibly white at

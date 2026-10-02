@@ -9,6 +9,10 @@
   var reduced = motionPreference.matches;
   motionPreference.addEventListener("change", function () { reduced = motionPreference.matches; });
 
+  function afterFirstPaint(callback) {
+    requestAnimationFrame(function () { requestAnimationFrame(callback); });
+  }
+
   /* Durations from tokens.css: the card timers wait on CSS transitions. */
   function durationToken(name, fallback) {
     var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -16,7 +20,14 @@
     if (isNaN(n)) return fallback;
     return /ms$/.test(raw) ? n : /s$/.test(raw) ? n * 1000 : n;
   }
-  var DUR = { hover: durationToken("--dur-hover", 420), slow: durationToken("--dur-slow", 700) };
+  // Read styles after the browser's first layout rather than forcing a full
+  // page style calculation inside the startup script. Until then, use the
+  // existing fallbacks; controls and their handlers are available immediately.
+  var DUR = { hover: 420, slow: 700 };
+  afterFirstPaint(function () {
+    DUR.hover = durationToken("--dur-hover", 420);
+    DUR.slow = durationToken("--dur-slow", 700);
+  });
 
   /* --- 1. scroll reveals -------------------------------------------------- */
   /* A clip-path left on an element forces it into its own composited layer,
@@ -167,7 +178,7 @@
     /* The film starts two frames after load, i.e. after first paint: a decoder
        starting earlier held a slow device's first paint back ~2s. */
     var pageReady = false;
-    function afterPaint() { requestAnimationFrame(function () { requestAnimationFrame(function () { pageReady = true; sync(); }); }); }
+    function afterPaint() { afterFirstPaint(function () { pageReady = true; sync(); }); }
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
@@ -229,19 +240,23 @@
   if (header) {
     var grounds = document.querySelectorAll("[data-ground]");
     if (grounds.length && "IntersectionObserver" in window) {
-      var hh = header.offsetHeight;
-      var gio = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            header.setAttribute("data-over", e.target.getAttribute("data-ground"));
-          }
-        });
-        /* Both margins must be whole pixels — offsetHeight is fractional on a
-           zoomed or scaled display, and a fractional rootMargin throws, taking
-           the rest of this file down with it. */
-      }, { rootMargin: "-" + Math.round(hh / 2) + "px 0px -" +
-                       Math.max(0, Math.round(window.innerHeight - hh)) + "px 0px" });
-      grounds.forEach(function (g) { gio.observe(g); });
+      // Measuring the header before first paint forced layout for the whole
+      // homepage. Its initial contrast already comes from the page's ground.
+      afterFirstPaint(function () {
+        var hh = header.offsetHeight;
+        var gio = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              header.setAttribute("data-over", e.target.getAttribute("data-ground"));
+            }
+          });
+          /* Both margins must be whole pixels — offsetHeight is fractional on a
+             zoomed or scaled display, and a fractional rootMargin throws, taking
+             the rest of this file down with it. */
+        }, { rootMargin: "-" + Math.round(hh / 2) + "px 0px -" +
+                         Math.max(0, Math.round(window.innerHeight - hh)) + "px 0px" });
+        grounds.forEach(function (g) { gio.observe(g); });
+      });
     }
   }
 
