@@ -24,7 +24,7 @@
     "@types/node": "26.6.4",
     "esbuild": "0.28.2",
     "lighthouse": "13.5.0",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "wrangler": "4.147.0"
   },
   "overrides": {
