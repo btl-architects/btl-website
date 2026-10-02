@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "node tools/content-check.mjs && astro check && astro build && node tools/minify-scripts.mjs && node tools/redirects.mjs && node tools/budget.mjs && node tools/site-check.mjs && node tools/warm-images.mjs",
+    "build": "node tools/content-check.mjs && astro check && astro build && node tools/inline-home-styles.mjs && node tools/minify-scripts.mjs && node tools/redirects.mjs && node tools/budget.mjs && node tools/site-check.mjs && node tools/warm-images.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "test": "node --test tests/*.test.mjs",

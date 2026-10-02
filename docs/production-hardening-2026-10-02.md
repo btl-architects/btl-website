@@ -16,6 +16,7 @@ Instagram is updated to the supplied profile; LinkedIn and YouTube stay present.
 | Medium | `web/src/layouts/Base.astro`, robots, sitemap, build marker | Published branch previews were still indexable. | Separate draft visibility from indexing; branch previews emit noindex metadata, disallow crawling, have an empty sitemap and get a Pages noindex response header. |
 | Medium | `web/astro.config.mjs` | Canonicals and sitemap pointed to a hostname without a working website address. | Use the working Pages hostname; an HTTPS-origin-only `SITE_URL` switches every metadata URL together after custom-domain setup. |
 | Medium | `web/public/scripts/site.js` | The main CI trace attributed about 72ms to a reveal sweep repeatedly writing styles and reading geometry. | Measure all pending elements before applying classes. Preserve the statement’s separate scroll-triggered fade. |
+| Medium | `web/tools/inline-home-styles.mjs` | Home waits on a separate stylesheet before first paint; the repeated CI Home LCP was 2116ms against a 2000ms budget. | Embed Astro’s generated stylesheet in Home’s HTML, preserving one authored cascade. Other routes retain the shared cacheable file. No deferred-style flash or JavaScript dependency. |
 | Medium | `MediaStage.astro`, `ResponsiveFigure.astro`, styles | Initial phone stills used landscape framing until JavaScript ran, then fetched/switched to portrait; without scripts the phone still stayed landscape. | Browser-selected responsive picture through the existing Figure/CDN pipeline. The matching still remains until video playback; failed playback leaves a still. No film controls were added. |
 | Medium | `studio/schemas/articleContent.ts`, publication schema, reader components | Existing features were headline-plus-cover previews. | Intro, separate hero, body headings/paragraphs, nested ordered/unordered lists, figures, captions, pull quotes, credits and a BTL publication date, using one static reader renderer. All three opening modes retain one panel and native page fallback. |
 | Medium | `studio/scripts/seed-press-readers.ts` | AD and ELLE had no authored reader body. | Prepare original, labelled BTL project notes with existing photos, captions and verified project credits. Apply only article fields after the compatible renderer deploys; back up touched documents and guard every revision. Preserve unrelated draft edits. |
@@ -83,8 +84,14 @@ these breaking changes are handled. See [image-url releases](https://github.com/
 
 Local browser testing initially passed Chromium/WebKit (91 tests, one platform
 skip); local Firefox could not launch its temporary profile on this Mac.
-Firefox remains in CI and is not skipped there. Final CI and deployment results
-will be added after the reviewed revision is verified.
+GitHub’s Linux run passed 136 browser tests across Chromium, WebKit and Firefox,
+with two platform-specific skips. It also passed 20 website and eight Studio unit
+tests, both type checks and production builds. The initial CI performance runs
+missed the Home launch target (79 / 2076ms and 99 / 2116ms respectively); the release remains gated on that check.
+
+Both Cloudflare and Netlify previews were verified to return noindex metadata
+and response headers, disallow crawling, publish an empty sitemap and omit the
+live enquiry key. The updated Studio editor was deployed successfully.
 
 ## Performance
 
@@ -92,21 +99,22 @@ Mobile Lighthouse uses the existing default simulated throttling and unchanged
 launch targets: score at least 95, LCP below 2000ms, CLS below 0.02. Reports retain
 trace evidence. These are lab measurements; no real-user INP is claimed.
 
-| Route | Local before score / LCP / CLS / TBT | Initial local after score / LCP / CLS / TBT |
+| Route | Local before score / LCP / CLS / TBT | Final local after score / LCP / CLS / TBT |
 | --- | --- | --- |
-| Home | 100 / 1750ms / 0 / 0ms | 96 / 1993ms / 0 / 210ms |
-| Nelly House | 100 / 1515ms / 0 / 0ms | 100 / 1515ms / 0 / 0ms |
-| Contact | 100 / 1517ms / 0 / 0ms | 100 / 1529ms / 0 / 0ms |
+| Home | 100 / 1750ms / 0 / 0ms | 100 / 1743ms / 0 / 0ms |
+| Nelly House | 100 / 1515ms / 0 / 0ms | 100 / 1514ms / 0 / 0ms |
+| Contact | 100 / 1517ms / 0 / 0ms | 100 / 1515ms / 0 / 0ms |
 
-The local initial after run meets the budget but does **not** establish a speed
-improvement. The old main CI run scored Home 69, LCP 2318ms, CLS 0 and TBT 1370ms;
+The final local run meets the budget and retains a score of 100 on every route;
+these small differences do **not** establish a meaningful speed improvement. An
+intermediate Home run was 96 / 1993ms / 0 / 210ms, illustrating lab variability. The old main CI run scored Home 69, LCP 2318ms, CLS 0 and TBT 1370ms;
 its Nelly House and Contact results were both 100. CI and laptop scores must not
 be compared as a before/after improvement. Final CI measurements will be compared
 with the old CI environment separately. The revised local trace reports no
 forced-reflow attribution for the reveal sweep.
 
 Build byte budgets remain unchanged. Current output is about 9.2KB CSS, 12.5KB
-JavaScript, 41.5KB fonts and 20KB for the largest HTML page (all gzip); two eager
+JavaScript, 41.5KB fonts and 28.6KB for the largest HTML page (all gzip); two eager
 images on Home. The image warmer is bounded to eight concurrent requests and
 reports CDN failures without blocking valid output. Build duration grows with
 content and rendition count; serving traffic is independent of CMS availability.
@@ -144,7 +152,9 @@ content and rendition count; serving traffic is independent of CMS availability.
 
 ## Release record
 
-Pending final CI and production verification. The code must deploy before the
+PR [#18](https://github.com/btl-architects/btl-website/pull/18) contains this pass.
+The compatible editor is live at https://btldesigns.sanity.studio/.
+Pending final CI and website production verification. The code must deploy before the
 new pull-quote content is published; the previous reader cannot render that block.
 Studio deployment does not publish drafts. Content patches affect only article
 fields and the supplied Instagram URL and retain all unrelated data.
