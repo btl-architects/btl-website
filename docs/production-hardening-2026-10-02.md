@@ -137,9 +137,9 @@ content and rendition count; serving traffic is independent of CMS availability.
 4. **Editorial content:** the two publisher headlines, dates and writers are now
    verified. AD: Vaishnavi Nayel Talawadekar, 5 August 2026. ELLE DECOR: Disha
    Kalyankar, 28 September 2026. The previous ELLE headline/date were incorrect.
-   Reader content is explicitly labelled as an article summary; invented pull
-   quotes were removed. Full publisher wording awaits text supplied for licensed
-   republication. Incomplete architectural project descriptions remain deferred
+   Invented pull quotes were removed. After the client supplied both full
+   articles, their text replaced the temporary summaries, preserving the
+   original paragraphs, headings and inline quotations. Incomplete architectural project descriptions remain deferred
    by the client; no project gallery was rewritten.
 5. **Publisher embeds:** browsers enforce publisher framing restrictions; no
    website can guarantee every third-party article embeds. All modes keep the
@@ -211,4 +211,30 @@ overflow. Final local performance passed all unchanged targets: Home 100 /
 1588ms / CLS 0, project 100 / 1516ms / CLS 0, Contact 100 / 1516ms / CLS 0.
 The newest full Linux runs were still in progress at publication; the earlier
 CI lab discrepancy remains recorded above. Public website and Sanity editor
-both include these corrections. No full publisher article has been republished.
+both include these corrections. At that release stage, publisher articles had
+not been republished; the later supplied-text update is recorded below.
+
+## Supplied full article update
+
+The client provided both publisher articles as local text attachments. These
+replace the interim summaries in Sanity without copying site navigation,
+newsletters, suggested stories or subscription prompts. ELLE contains all nine
+narrative paragraphs and three original headings; AD contains all five narrative
+paragraphs and its original heading. Body text preserves the supplied wording
+and inline quotations. The reader uses matching photographs already in the
+project archive: six for ELLE and nine for AD, including the opening image.
+Card artwork, caption anchors, related projects and opening choices are unchanged.
+
+The import backs up both existing records, checks their summary state and
+uses revision guards. It does not publish unrelated draft fields or add article
+text or photographs to the public code repository. Sanity identifies the content
+as an article; summary labels and BTL summary bylines are removed. Writers,
+publication dates, publication names and photography credits remain visible.
+Article search metadata now attributes supplied articles to their original
+writer (Person) and publisher, using the original date and headline. BTL notes
+and summaries retain BTL authorship and their separate reader publication date.
+
+Validation for the supplied-text update: all 14 narrative paragraphs and four
+original headings match the supplied text in the generated pages; original
+author/date/source metadata is correct. All 22 web unit tests, the Studio type
+check, the production build and 16 focused Chromium/WebKit reader checks passed.

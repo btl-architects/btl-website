@@ -22,6 +22,20 @@ export function articleUrl(value?: string): string | null {
   } catch {return null;}
 }
 
+/** Supplied publisher text keeps its original authorship and publication date.
+ * Notes and summaries remain attributed to BTL, with a source citation. */
+export function articleMetadata(item: Publication) {
+  const supplied = item.readerKind === "article";
+  return {
+    headline: item.title,
+    date: supplied ? item.date : item.readerPublishedAt ?? "",
+    author: supplied && item.sourceAuthor ? item.sourceAuthor : "btl architects",
+    authorType: supplied && item.sourceAuthor ? "Person" as const : "Organization" as const,
+    ...(supplied ? {publisher: item.publication} : {}),
+    source: articleUrl(item.url) ?? undefined,
+  };
+}
+
 export function hasArticleContent(blocks?: ArticleBlock[]): boolean {
   return Boolean(blocks?.some(b => b._type === "figure" ? Boolean(b.source || b.static) :
     b._type === "block" && b.children?.some(s => s.text?.trim())));
