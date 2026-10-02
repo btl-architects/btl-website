@@ -33,7 +33,7 @@ export default defineType({
     defineField({ name: "short", title: "Short name", type: "string", description: "“AD”." }),
     defineField({
       name: "image", title: "Complete Press artwork", type: "figure",
-      description: "Upload the complete PNG with the photograph and publication name composed together. Transparent areas keep the website's dark background. The whole artwork is shown on Home and Press, without cropping or an extra logo underneath. A square canvas fits the card closely; other proportions remain fully visible.",
+      description: "Upload the complete PNG with photograph and publication name together. The entire artwork stays visible. In the image editor, place the hotspot at the centre of the photograph inside the artwork: this aligns the caption beneath the photograph on Home and Press. Transparent areas retain the dark background.",
     }),
     defineField({
       name: "useProjectImage", title: "Use the project photograph if there is no Press image",

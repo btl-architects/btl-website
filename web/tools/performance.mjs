@@ -1,6 +1,23 @@
 import {spawnSync} from 'node:child_process';
 import {mkdirSync,readFileSync} from 'node:fs';
 mkdirSync('reports',{recursive:true});
+// Exercise the local serving runtime before timing the client. A freshly
+// started Wrangler process otherwise initializes its asset-serving paths while
+// Chrome is competing for the same CI CPUs. This does not warm Chrome's cache:
+// every Lighthouse run still launches a fresh browser with default throttling.
+const origin = 'http://127.0.0.1:8788';
+const response = await fetch(origin);
+if (!response.ok) throw new Error('Performance server is not ready');
+const home = await response.text();
+const resources = [...new Set([...home.matchAll(/(?:src|href)="(\/[^"#]*)"/g)].map(m => m[1]))];
+for (let i = 0; i < resources.length; i += 4) {
+  await Promise.all(resources.slice(i, i + 4).map(async path => {
+    const asset = await fetch(origin + path);
+    if (!asset.ok) throw new Error(`Performance server resource unavailable: ${path}`);
+    await asset.arrayBuffer();
+  }));
+}
+console.log(`Serving runtime ready; ${resources.length} local resources checked. Lighthouse browser caches remain cold.`);
 const failed=[];
 for(const [name,path] of [['home','/'],['project','/projects/nelly-house/'],['contact','/contact/']]) {
   const report=`reports/${name}.json`;

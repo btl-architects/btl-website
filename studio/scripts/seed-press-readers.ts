@@ -1,4 +1,5 @@
-/* One-time original BTL notes. Deploy the compatible reader before applying.
+/* One-time original BTL notes. Standard Portable Text blocks remain compatible
+ * with the previous reader while the richer renderer deploys.
  * Revision guards protect concurrent edits; no draft is published wholesale. */
 import {getCliClient} from "sanity/cli";
 import {mkdirSync, writeFileSync} from "node:fs";
@@ -7,7 +8,7 @@ import {resolve} from "node:path";
 const client = getCliClient({apiVersion: "2026-09-01"});
 const pressIds = ["publication-architectural-digest-5-august-2026", "placeholder-dezeen"];
 type Figure = {_key?: string; alt: string; kind?: string; asset: unknown; rights: string; [key: string]: unknown};
-type Doc = {_id: string; _rev: string; _type: string; readerContent?: unknown[]; social?: {label: string; url: string; _key?: string}[]; [key: string]: unknown};
+type Doc = {_id: string; _rev: string; _type: string; image?: {asset?: {asset?: {_ref?: string}; hotspot?: Record<string, unknown>}}; readerContent?: unknown[]; social?: {label: string; url: string; _key?: string}[]; [key: string]: unknown};
 const ids = ["settings", "drafts.settings", ...pressIds.flatMap(id => [id, `drafts.${id}`])];
 const [docs, project] = await Promise.all([
   client.fetch<Doc[]>("*[_id in $ids]", {ids}),
@@ -31,7 +32,7 @@ const notes = [
       image(3, "The verandah connects the rooms with the landscape.", "ad-verandah"),
       paragraph("Earth and memory", "ad-heading-2", "h2"),
       paragraph("Soil excavated for the pond becomes rammed-earth walls. Reclaimed timber, old doors and windows, and terracotta roofing bring existing materials into the new building. The palette gives the house a close relationship with its site.", "ad-body-2"),
-      {_type: "pullQuote", _key: "ad-quote", text: "The landscape remains present in the rooms and the spaces between them."},
+      paragraph("The landscape remains present in the rooms and the spaces between them.", "ad-quote", "blockquote"),
       paragraph("Spaces for retreat", "ad-heading-3", "h2"),
       paragraph("The library, shaded verandah and private courtyards offer different places to pause. Water and planting sit alongside the living spaces. These notes introduce the project; the source link below opens the complete published feature.", "ad-body-3"),
       image(5, "The living room, in the house’s earthen palette.", "ad-living"),
@@ -46,7 +47,7 @@ const notes = [
       image(9, "The courtyard beside the main bedroom.", "elle-courtyard"),
       paragraph("Materials with another life", "elle-heading-2", "h2"),
       paragraph("Earth from the pond excavation forms the walls. Stone, bamboo, terracotta and reclaimed timber sit alongside reused doors, windows and furniture. Existing materials carry their texture and history into the house.", "elle-body-2"),
-      {_type: "pullQuote", _key: "elle-quote", text: "The spaces hold the trees close to daily life."},
+      paragraph("The spaces hold the trees close to daily life.", "elle-quote", "blockquote"),
       paragraph("A place to read and gather", "elle-heading-3", "h2"),
       paragraph("A library nook offers a place to settle with a book. The verandah extends everyday living outdoors, while the living and dining spaces make room for company. The full ELLE DECOR article is linked below for the publisher’s account.", "elle-body-3"),
       image(6, "The library nook, with a view beyond its window.", "elle-library"),
@@ -60,7 +61,12 @@ const patches = docs.map(doc => {
     return {doc, fields: {social}};
   }
   const index = pressIds.indexOf(doc._id.replace(/^drafts\./, ""));
-  return {doc, fields: {...notes[index], openingMode: "reader", readerPublishedAt: "2026-10-02", byline: "BTL project notes · accompanying the original feature", articleCredits: {...project.credits, _type: "credits"}}};
+  // Both current layouts have the photograph on the right of a portrait canvas.
+  // Set the caption anchor only on these verified assets, preserving artwork.
+  const currentArtwork = doc.image?.asset;
+  const verifiedArtwork = ["image-70e813f09229ccdd0b7d3200050d92ae614e36e0-2970x4200-png", "image-71b77da823e424528935546cdc80a2eb1a5f73c9-2970x4200-png"][index];
+  const alignment = currentArtwork?.asset?._ref === verifiedArtwork ? {"image.asset.hotspot": {_type: "sanity.imageHotspot", y: .5, height: 1, ...currentArtwork.hotspot, x: .618, width: .75}} : {};
+  return {doc, fields: {...notes[index], ...alignment, openingMode: "reader", readerPublishedAt: "2026-10-02", byline: "BTL project notes · accompanying the original feature", articleCredits: {...project.credits, _type: "credits"}}};
 });
 const apply = process.argv.includes("--apply");
 console.log(JSON.stringify({apply, records: patches.map(({doc, fields}) => ({id: doc._id, fields: Object.keys(fields)})), notes}, null, 2));

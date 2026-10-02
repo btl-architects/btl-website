@@ -2,6 +2,7 @@
 /* A Press entry owns its image. Older records can retain their project-photo
  * fallback. Complete client artwork keeps its full frame without another logo. */
 import Figure from "./Figure.astro";
+import {resolveImage} from "../lib/media";
 import type { Publication, Project } from "../lib/content";
 import {articlePagePath, articleUrl} from "../lib/press";
 
@@ -9,6 +10,17 @@ interface Props { item: Publication; project?: Project }
 const { item, project } = Astro.props;
 const image = item.image ?? (item.useProjectImage ? project?.hook : null);
 const custom = Boolean(item.image);
+// The uploaded canvas can include off-centre photographs and lettering. The
+// editor marks the photograph's centre with Sanity's existing image hotspot;
+// only the caption follows it, while Figure retains the complete artwork.
+const source = image?.source && typeof image.source === "object" ? image.source as {hotspot?: {x?: number}} : null;
+const anchor = source?.hotspot?.x;
+const center = typeof anchor === "number" && Number.isFinite(anchor) && anchor >= 0 && anchor <= 1 ? anchor : .5;
+const fullImage = image && image.source && typeof image.source === "object"
+  ? {...image, source: {...image.source, crop: undefined, hotspot: undefined}} : image;
+const ratio = fullImage ? resolveImage(fullImage)?.ratio ?? 1 : 1;
+// Custom frames are square; portrait artwork occupies ratio * frame width.
+const captionOffset = custom ? (center - .5) * Math.min(1, ratio) * 200 : 0;
 
 const original = articleUrl(item.url);
 const reader = articlePagePath(item);
@@ -29,6 +41,7 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
   data-article={reader ? "" : undefined}
   data-publication={reader ? item.publication : undefined}
   data-original={reader ? original : undefined}
+  data-caption-anchor={custom ? center : undefined}
   aria-haspopup={reader ? "dialog" : undefined}
   aria-label={`${item.publication} · ${meta}`}
 >
@@ -39,5 +52,5 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
   <span class="pc__img">
     {image && <Figure image={image} sizes="(min-width: 48rem) 26rem, 45vw" fit={custom ? "contain" : "cover"} />}
   </span>
-  <span class="pc__m">{meta}</span>
+  <span class="pc__m" style={captionOffset ? `--caption-offset:${captionOffset.toFixed(4)}%;` : undefined}>{meta}</span>
 </Tag>

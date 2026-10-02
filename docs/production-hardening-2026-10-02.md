@@ -2,7 +2,8 @@
 
 This pass starts from main commit `8def530c524d6bb5e3fe50a9368029b9e9424956`.
 The requested “thin project pages” are the Press readers, not the architectural
-project galleries. Captions are centered beneath complete artwork, not over it.
+project galleries. Captions sit beneath the photograph within the complete artwork, using its
+Sanity hotspot as the centre. The complete artwork and logo remain visible.
 The film keeps its existing control-free behavior by explicit user instruction.
 Instagram is updated to the supplied profile; LinkedIn and YouTube stay present.
 
@@ -19,10 +20,11 @@ Instagram is updated to the supplied profile; LinkedIn and YouTube stay present.
 | Medium | `web/tools/inline-home-styles.mjs` | Home waits on a separate stylesheet before first paint; the repeated CI Home LCP was 2116ms against a 2000ms budget. | Embed Astro’s generated stylesheet in Home’s HTML, preserving one authored cascade. Other routes retain the shared cacheable file. No deferred-style flash or JavaScript dependency. |
 | Medium | `MediaStage.astro`, `ResponsiveFigure.astro`, styles | Initial phone stills used landscape framing until JavaScript ran, then fetched/switched to portrait; without scripts the phone still stayed landscape. | Browser-selected responsive picture through the existing Figure/CDN pipeline. The matching still remains until video playback; failed playback leaves a still. No film controls were added. |
 | Medium | `studio/schemas/articleContent.ts`, publication schema, reader components | Existing features were headline-plus-cover previews. | Intro, separate hero, body headings/paragraphs, nested ordered/unordered lists, figures, captions, pull quotes, credits and a BTL publication date, using one static reader renderer. All three opening modes retain one panel and native page fallback. |
-| Medium | `studio/scripts/seed-press-readers.ts` | AD and ELLE had no authored reader body. | Prepare original, labelled BTL project notes with existing photos, captions and verified project credits. Apply only article fields after the compatible renderer deploys; back up touched documents and guard every revision. Preserve unrelated draft edits. |
+| Medium | `studio/scripts/seed-press-readers.ts` | AD and ELLE had no authored reader body. | Prepare original, labelled BTL project notes with existing photos, captions and verified project credits. Applied original BTL notes with standard Portable Text quotes compatible with the previous renderer, after backing up touched documents and guarding every revision. Unrelated drafts were preserved. |
 | Medium | `web/tools/content-check.mjs`, `web/server/article-validation.js` | API imports bypass Studio validation; article heroes, Studio photos, movie stills and malformed rich text were not covered. | Validate these before rendering. Reject malformed spans, unsupported blocks, unsafe links and invalid list depth; retain normal empty states. |
 | Medium | settings/publication schemas, `web/src/lib/content.ts` | Unsafe social URLs or malformed navigation keys could be introduced via editing/API imports. | Require valid public web addresses, disallow URL credentials, constrain internal page keys and safely filter invalid links at the data boundary. |
-| Low | `web/src/styles/components.css` | Card metadata was left aligned with an unnecessary gap. | Center and balance captions, reduce the shared gap, and bottom-align complete artwork within the frame. Long text is checked at 320, 375, 768 and 1440px. Transparent padding inside PNGs remains authored content. |
+| Low | `web/src/styles/components.css` | Card metadata was left aligned with an unnecessary gap. | Use the image hotspot to centre captions beneath the photograph within the uploaded canvas. Complete artwork remains uncropped. Set both current artwork hotspots to the visually verified photograph centre; long captions are checked at 320, 375, 768 and 1440px. |
+| Medium | Press reader mobile toolbar and spacing | The toolbar wrapped into three rows on a phone, reducing the reading area. | One compact row with publication name, original link and Close, each control at least 44px. Safe-area padding and tighter mobile editorial spacing. |
 | Low | package manifests/lockfiles | Astro was two patches behind; client/editor/tooling updates and obsolete image-url imports were outstanding. | Upgrade compatible dependencies; fix image-url 2 public exports/named builder. Fresh npm installs and zero-advisory audits pass. |
 | Low | `.github/workflows/checks.yml` | Actions were on old major versions and mutable tags. | Update official actions to current verified releases, pin commit SHAs and retain existing least-privilege permissions. |
 | Low | `.gitignore` | An unanchored `projects/` rule also matched new source routes. | Ignore only the repository’s original-media folder, keeping new project source files trackable. |
@@ -113,7 +115,7 @@ be compared as a before/after improvement. Final CI measurements will be compare
 with the old CI environment separately. The revised local trace reports no
 forced-reflow attribution for the reveal sweep.
 
-Build byte budgets remain unchanged. Current output is about 9.2KB CSS, 12.5KB
+Build byte budgets remain unchanged. Current output is about 9.3KB CSS, 12.5KB
 JavaScript, 41.5KB fonts and 28.6KB for the largest HTML page (all gzip); two eager
 images on Home. The image warmer is bounded to eight concurrent requests and
 reports CDN failures without blocking valid output. Build duration grows with
@@ -158,3 +160,9 @@ Pending final CI and website production verification. The code must deploy befor
 new pull-quote content is published; the previous reader cannot render that block.
 Studio deployment does not publish drafts. Content patches affect only article
 fields and the supplied Instagram URL and retain all unrelated data.
+
+The performance harness checks local asset-serving readiness before launching
+Lighthouse so cold Wrangler initialization does not compete with Chrome. Each
+measurement still uses a fresh browser cache and default simulated throttling;
+score, LCP and CLS thresholds are unchanged. Raw CI runs before this harness
+change are retained as context, not a strictly equivalent speed comparison.

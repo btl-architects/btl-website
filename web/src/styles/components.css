@@ -1720,6 +1720,8 @@ html:has(.menu[data-open="true"]) .header {
   letter-spacing: var(--track-meta);
   text-transform: uppercase;
   color: var(--text-tertiary);
+  margin-left: max(0%, var(--caption-offset, 0%));
+  margin-right: max(0%, calc(-1 * var(--caption-offset, 0%)));
 }
 
 /* The photograph answers the pointer, the way the project cards do. */
@@ -2024,11 +2026,17 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__frame { display: block; width: 100%; height: 70dvh; border: 1px solid var(--border-subtle); background: var(--surface); }
 @media (max-width: 47.99rem) {
   .press-reader { width: 100%; height: 100dvh; border: 0; }
-  .press-reader__bar { flex-wrap: wrap; gap: 0 var(--s-3); padding-inline: var(--page-margin); }
-  .press-reader__label { flex-basis: calc(100% - 5rem); }
-  .press-reader__close { order: 2; }
-  .press-reader__original { order: 3; flex-basis: 100%; }
-  .press-reader__content { padding: var(--s-6) var(--page-margin); }
+  .press-reader__bar { gap: var(--s-2); padding: max(var(--s-2), env(safe-area-inset-top)) var(--page-margin) var(--s-2); }
+  .press-reader__original, .press-reader__close { width: 2.75rem; justify-content: center; padding: 0; }
+  .press-reader__original-text, .press-reader__close-text { display: none; }
+  .press-reader__content { padding: var(--s-5) var(--page-margin) max(var(--s-5), env(safe-area-inset-bottom)); scrollbar-gutter: auto; }
+  .press-article__head { margin-bottom: var(--s-5); }
+  .press-article__publication { margin-bottom: var(--s-3); }
+  .press-article__head h1 { line-height: 1.15; }
+  .press-article__intro { margin-top: var(--s-4); font-size: var(--type-body); line-height: 1.6; }
+  .press-article__image { margin-bottom: var(--s-5); }
+  .press-article__body figure, .press-article__quote { margin-block: var(--s-6); }
+  .press-article__body h2 { margin-top: var(--s-6); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .press-reader[open] { animation: press-reader-in var(--dur-base) var(--ease); }
