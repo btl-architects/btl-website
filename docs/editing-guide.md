@@ -312,13 +312,15 @@ margins, remains visible. Trim unnecessary space below the logo in the source
 artwork if needed; the website never cuts off the logo.
 
 The AD and ELLE headlines, dates and writers were verified against their
-publisher pages on 2 October 2026. The client subsequently supplied the full article text. Both readers now
-contain that text, including original headings and quotations, with photographs
-from the existing project archive.
+publisher pages on 2 October 2026. Both readers use brief, original summaries
+with three project photographs each, clear summary labels, original writer
+credits and links to the complete publisher articles. Full article text and
+publisher-written image captions were removed after the client chose summaries.
 **Reader content** distinguishes project notes, summaries and articles supplied
 for republication. **Original article writer** credits the publisher’s writer;
 **Article byline** credits the author of the content shown here. Use article
-mode when the studio has supplied text it can republish. Attribute a pull quote
+mode only when the studio has permission to republish the text. New entries
+default to summary content. Attribute a pull quote
 to a person only when the wording is verified.
 
 Embed uses the same panel but keeps the publisher's appearance. A publisher can
