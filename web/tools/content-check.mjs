@@ -70,7 +70,8 @@ const data = await client.fetch(`{
     _id, name, "portrait": portrait{ alt, rights, "hasAsset": defined(asset.asset) }
   },
   "publications": *[_type == "publication"]{
-    _id, publication, "logo": logo{ alt, rights, "hasAsset": defined(asset.asset) }
+    _id, publication, "logo": logo{ alt, rights, "hasAsset": defined(asset.asset) },
+    "image": image{ alt, rights, "hasAsset": defined(asset.asset) }
   },
   "settings": *[_type == "settings"][0]{
     "founders": founders{ alt, rights, "hasAsset": defined(asset.asset) }
@@ -92,7 +93,10 @@ for (const p of data.projects ?? []) {
 }
 
 for (const p of data.people ?? []) checkFigure(p.portrait, p.name || p._id, "portrait");
-for (const p of data.publications ?? []) checkFigure(p.logo, p.publication || p._id, "logo");
+for (const p of data.publications ?? []) {
+  checkFigure(p.logo, p.publication || p._id, "logo");
+  checkFigure(p.image, p.publication || p._id, "Press image");
+}
 checkFigure(data.settings?.founders, "Settings", "founders photograph");
 
 if (errors.length) {
@@ -105,5 +109,5 @@ if (errors.length) {
 const n =
   (data.projects ?? []).reduce((a, p) => a + (p.images?.length ?? 0), 0) +
   (data.people ?? []).filter((p) => p.portrait).length +
-  (data.publications ?? []).filter((p) => p.logo).length;
+  (data.publications ?? []).reduce((n, p) => n + Number(Boolean(p.logo)) + Number(Boolean(p.image)), 0);
 console.log(`[content] ${n} figures valid`);

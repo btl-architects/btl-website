@@ -143,12 +143,17 @@ test('Tab after opening a project moves into its photographs',async({page})=>{
   const entry=page.locator('[data-project]').first();
   await entry.press('Enter');await expect(entry).toHaveAttribute('aria-expanded','true');
   await page.keyboard.press('Tab');
-  await expect(page.locator('.pcard[data-open="true"] .rail__f').first()).toBeFocused();
+  const photographs=page.locator('.pcard[data-open="true"] .rail__f');
+  await expect(photographs.first()).toBeFocused();
+  await page.keyboard.press('Tab');await expect(photographs.nth(1)).toBeFocused();
+  await page.keyboard.press('Shift+Tab');await expect(photographs.first()).toBeFocused();
 });
 test('menu includes Close in its focus cycle and restores focus',async({page})=>{
   await page.setViewportSize({width:375,height:812});await page.goto('/contact/');
   await page.getByRole('button',{name:'Menu',exact:true}).click();
   await page.getByRole('link',{name:'Home',exact:true}).press('Shift+Tab');
+  // Let deferred opening focus finish before checking that it did not undo Tab.
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
   await expect(page.getByRole('button',{name:'Close',exact:true})).toBeFocused();
   await expect(page.locator('main')).toHaveJSProperty('inert',true);
   await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Menu',exact:true})).toBeFocused();
@@ -168,8 +173,30 @@ test('film stops outside the viewport and offers no pause control',async({page})
 test('reduced motion never requests video or advances frames',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});const media:string[]=[];page.on('request',r=>{if(r.resourceType()==='media')media.push(r.url());});
   await page.goto('/');await expect(page.locator('video[src]')).toHaveCount(0);
+  await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
   await page.waitForTimeout(6500);
   await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');expect(media).toEqual([]);
+});
+
+test('the homepage statement reveals on scroll and remains readable after returning',async({page})=>{
+  await page.goto('/');
+  const statement=page.locator('#statement .rv');
+  await expect(statement).not.toHaveClass(/\bin\b/);
+  await statement.scrollIntoViewIfNeeded();
+  await expect(statement).toHaveClass(/\bin\b/);
+  await expect(statement).toHaveCSS('opacity','1');
+  await page.goto('/people/');await page.goBack();
+  await page.locator('#statement').scrollIntoViewIfNeeded();
+  await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
+});
+
+test('the homepage statement remains readable without scripts',async({browser})=>{
+  const context=await browser.newContext({javaScriptEnabled:false});
+  try {
+    const page=await context.newPage();await page.goto('http://127.0.0.1:8788/');
+    await page.locator('#statement').scrollIntoViewIfNeeded();
+    await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
+  } finally {await context.close();}
 });
 /* The form posts from the browser to Web3Forms. Nothing here may reach it:
    every request is intercepted, and a stand-in key is set in the page because

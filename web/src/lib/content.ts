@@ -63,6 +63,8 @@ export interface Publication {
   kind: PublicationKind;
   publication: string;
   logo: SiteImage | null;
+  image: SiteImage | null;
+  useProjectImage: boolean;
   short: string;
   title: string;
   date: string;
@@ -185,7 +187,7 @@ export const getSettings = once(async (): Promise<Settings> => {
 
 const getAllProjects = once(async (): Promise<Project[]> => {
   const rows = await sanity.fetch(
-    `*[_type == "project" && lifecycle in $states] | order(order asc) ${PROJECT}`,
+    `*[_type == "project" && lifecycle in $states] | order(coalesce(order, 0) asc, _id asc) ${PROJECT}`,
     { states: isPreview ? ["draft", "published", "archived"] : ["published", "archived"] },
   );
   return (rows ?? []).map((p: any): Project => {
@@ -264,13 +266,13 @@ export async function getLocations(): Promise<{ slug: string; label: string }[]>
 }
 
 export const getPeople = once(async (): Promise<Person[]> => {
-  const rows = await sanity.fetch(`*[_type == "person" && active == true] | order(order asc) {
-    "prefix": coalesce(prefix, ""), name, role, "bio": coalesce(bio, ""),
+  const rows = await sanity.fetch(`*[_type == "person" && active == true] | order(coalesce(order, 0) asc, _id asc) {
+    "prefix": coalesce(prefix, ""), name, "role": coalesce(role, ""), "bio": coalesce(bio, ""),
     "slug": coalesce(slug.current, ""),
     "portrait": portrait ${FIGURE},
     tier, "order": coalesce(order, 0), active
   }`);
-  return (rows ?? []).map((p: any) => ({ ...p, portrait: p.portrait?.source?.asset ? p.portrait : null }));
+  return (rows ?? []).map((p: any) => ({ ...p, role: p.role.trim(), portrait: p.portrait?.source?.asset ? p.portrait : null }));
 });
 
 /* Who gets a page of their own.
@@ -289,11 +291,14 @@ export const getPublications = once(async (): Promise<Publication[]> => {
     kind, publication, "short": coalesce(short, ""), title,
     "date": coalesce(date, ""), "url": coalesce(url, ""),
     "logo": logo ${FIGURE},
+    "image": image ${FIGURE},
+    "useProjectImage": coalesce(useProjectImage, true),
     "relatedProject": relatedProject->slug.current
   }`);
   return (rows ?? []).map((x: any) => ({
     ...x,
     logo: x.logo?.source?.asset ? x.logo : null,
+    image: x.image?.source?.asset ? x.image : null,
     relatedProject: x.relatedProject ?? null,
   }));
 });

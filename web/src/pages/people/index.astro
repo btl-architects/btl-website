@@ -14,7 +14,8 @@
  */
 import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
-import { spreadSizes, coverSizes } from "../../lib/media";
+import { spreadSizes } from "../../lib/media";
+import PersonCard from "../../components/PersonCard.astro";
 import { getPeople, getHome, getSettings } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
 import Statement from "../../components/Statement.astro";
@@ -50,7 +51,7 @@ const withBios = principals.filter((p) => p.bio);
               {principals.map((p) => (
                 <span>
                   <span class="spread__n">{p.prefix} {p.name}</span>
-                  <span class="spread__r">{p.role}</span>
+                  {p.role && <span class="spread__r">{p.role}</span>}
                 </span>
               ))}
             </div>
@@ -84,32 +85,7 @@ const withBios = principals.filter((p) => p.bio);
         <section class="roster team">
           <h2 class="eyebrow roster__k">The team</h2>
           <ul class="team__list">
-            {team.map((p) => (
-              <li class="trow">
-                {/* A row is only a link where there is a page worth reaching. */}
-                {p.slug && p.bio ? (
-                  <a class="trow__link" href={`/people/${p.slug}/`}>
-                    {p.portrait && (
-                      <span class="trow__p">
-                        <Figure image={p.portrait} sizes={coverSizes(p.portrait, "16rem", "50vw")} />
-                      </span>
-                    )}
-                    <span class="trow__n">{p.prefix} {p.name}</span>
-                    <span class="trow__r">{p.role}</span>
-                  </a>
-                ) : (
-                  <span class="trow__link">
-                    {p.portrait && (
-                      <span class="trow__p">
-                        <Figure image={p.portrait} sizes={coverSizes(p.portrait, "16rem", "50vw")} />
-                      </span>
-                    )}
-                    <span class="trow__n">{p.prefix} {p.name}</span>
-                    <span class="trow__r">{p.role}</span>
-                  </span>
-                )}
-              </li>
-            ))}
+            {team.map((person) => <PersonCard person={person} />)}
           </ul>
         </section>
       )}
@@ -118,14 +94,7 @@ const withBios = principals.filter((p) => p.bio);
         <section class="roster team">
           <h2 class="eyebrow roster__k">Previously at btl</h2>
           <ul class="team__list">
-            {alumni.map((p) => (
-              <li class="trow">
-                <span class="trow__link">
-                  <span class="trow__n">{p.prefix} {p.name}</span>
-                  <span class="trow__r">{p.role}</span>
-                </span>
-              </li>
-            ))}
+            {alumni.map((person) => <PersonCard person={person} />)}
           </ul>
         </section>
       )}

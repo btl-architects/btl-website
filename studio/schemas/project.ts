@@ -134,7 +134,7 @@ export default defineType({
       title: "Position in the index",
       type: "number",
       group: "meta",
-      description: "Lower numbers come first.",
+      description: "Lower numbers come first. Use Arrange projects in the sidebar to drag projects into order.",
       initialValue: 0,
     }),
     defineField({ name: "credits", type: "credits", group: "meta" }),

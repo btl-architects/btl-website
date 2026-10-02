@@ -27,6 +27,9 @@
     "typescript": "5.9.3",
     "wrangler": "4.135.0"
   },
+  "overrides": {
+    "miniflare": {"undici": "7.29.1"}
+  },
   "engines": {
     "node": ">=26"
   }

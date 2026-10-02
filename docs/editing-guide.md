@@ -38,6 +38,9 @@ happen. There is no "save" button — it saves as you type.
      photograph being reused by accident.
    - **Role.** Mark exactly one as the **Cover** — it's the frame the project
      leads with, and the one already on screen when a card opens.
+     Use **Photograph** for the other finished-project photos, and **Drawing**
+     for plans, sections or diagrams. These choices belong to project images;
+     portraits and Press images do not need a project role.
    - Click the crop icon and drag the circle to what the photograph is *of*.
      Every size the site generates keeps that point in frame. You mark the
      subject; the site handles the geometry.
@@ -49,11 +52,15 @@ It's live on the next publish.
 
 **People → the pencil icon → Person**
 
-Name, role, and **Where they appear**:
+Name, portrait, role, and **Where they appear**. Principals may leave the role
+blank; Team and Alumni need a role:
 
 - **Principal** — in the founders composition at the top of the People page
-- **Team** — in the list, which reveals their portrait on hover
-- **Alumni** — the "Previously at btl" list
+- **Team** — portrait cards below the founders
+- **Alumni** — portrait cards in "Previously at btl", using the same treatment
+
+After replacing a portrait, publish the person and wait for the website rebuild
+to finish. Saving a draft alone does not change the public website.
 
 To remove someone, turn off **Currently shown**. Don't delete them — switching
 it off takes them off the site and keeps the record, so nothing that referred to
@@ -69,12 +76,47 @@ something to hold.
 
 One entry type covers both — choose **Press feature** or **Award** at the top.
 
-Add the publication's name, the headline, the date, and the link. If you can
-tie it to **the work that earned it**, do: that project's photograph rises
-behind the masthead when someone hovers it.
+Add the publication's name, the headline, the date, and the link. Upload the
+magazine cover or feature photograph under **Press image / magazine cover**.
+The whole image stays visible, including the cover's lettering. Each entry can
+have its own image even when several entries feature the same project.
+
+**Publication logo** is a separate, optional small mark below the main image.
+Upload a logo with a transparent background; its lettering is displayed in white
+on both Home and Press. Magazine covers and photographs keep their own colours.
+To replace a Press picture, open its entry, replace **Press image / magazine
+cover**, and publish. The public site shows it after the next successful rebuild;
+publishing does not change the public image instantly.
+
+**Related project** supplies the project name and context. **Use the project
+photograph if there is no Press image** is an explicit fallback: older entries retain
+it for compatibility, while new entries start with it off. A Press image always
+takes priority.
 
 **A missing logo is fine.** The publication's name set large *is* the design,
 not a placeholder. Add the logo whenever it turns up and nothing else moves.
+
+To remove a dummy Press entry, open that entry, use the document's **…** menu,
+choose **Delete**, and confirm the deletion. Published entries disappear from the
+website after the next successful rebuild. Delete only the entry you intend to
+remove; this does not delete its related project or uploaded assets.
+
+### Arrange people or projects
+
+Open **Arrange people** or **Arrange projects** in the sidebar. Drag the ↕
+handles, use **Move up / Move down**, or focus a handle and press the arrow keys.
+People move within Principals, Team or Alumni. Hidden records stay in the list
+so they keep their position if shown again.
+
+Choose **Publish order** to save positions. It changes only order values, leaving
+unfinished text, images and other edits unpublished. New records still need to
+be published in their own editor. Existing drafts receive the same position so
+publishing them later keeps the arrangement. The public website changes after
+the next successful rebuild.
+
+Use **Discard changes** to undo an arrangement before publishing it. If another
+editor changes the list, publishing stops with a message; use **Reload list** and
+arrange it again. Publish or discard before leaving this view.
 
 ### Change the opening film
 

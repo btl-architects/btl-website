@@ -149,7 +149,7 @@ const c = settings.contact;
                 {principals.map((p) => (
                   <span>
                     <span class="spread__n">{p.prefix} {p.name}</span>
-                    <span class="spread__r">{p.role}</span>
+                    {p.role && <span class="spread__r">{p.role}</span>}
                   </span>
                 ))}
               </div>
@@ -161,7 +161,7 @@ const c = settings.contact;
             </div>
           )}
         </div>
-        <Onward href="/people/" quiet>Everyone at btl</Onward>
+        <Onward href="/people/" quiet muted>Everyone at btl</Onward>
       </div>
     </section>
 
@@ -183,7 +183,7 @@ const c = settings.contact;
             </p>
           </div>
         </div>
-        <Onward href="/contact/" quiet>Send an enquiry</Onward>
+        <Onward href="/contact/" quiet muted>Send an enquiry</Onward>
       </div>
     </section>
   </main>

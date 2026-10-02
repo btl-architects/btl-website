@@ -9,6 +9,10 @@
   var reduced = motionPreference.matches;
   motionPreference.addEventListener("change", function () { reduced = motionPreference.matches; });
 
+  function afterFirstPaint(callback) {
+    requestAnimationFrame(function () { requestAnimationFrame(callback); });
+  }
+
   /* Durations from tokens.css: the card timers wait on CSS transitions. */
   function durationToken(name, fallback) {
     var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -16,7 +20,14 @@
     if (isNaN(n)) return fallback;
     return /ms$/.test(raw) ? n : /s$/.test(raw) ? n * 1000 : n;
   }
-  var DUR = { hover: durationToken("--dur-hover", 420), slow: durationToken("--dur-slow", 700) };
+  // Read styles after the browser's first layout rather than forcing a full
+  // page style calculation inside the startup script. Until then, use the
+  // existing fallbacks; controls and their handlers are available immediately.
+  var DUR = { hover: 420, slow: 700 };
+  afterFirstPaint(function () {
+    DUR.hover = durationToken("--dur-hover", 420);
+    DUR.slow = durationToken("--dur-slow", 700);
+  });
 
   /* --- 1. scroll reveals -------------------------------------------------- */
   /* A clip-path left on an element forces it into its own composited layer,
@@ -167,7 +178,7 @@
     /* The film starts two frames after load, i.e. after first paint: a decoder
        starting earlier held a slow device's first paint back ~2s. */
     var pageReady = false;
-    function afterPaint() { requestAnimationFrame(function () { requestAnimationFrame(function () { pageReady = true; sync(); }); }); }
+    function afterPaint() { afterFirstPaint(function () { pageReady = true; sync(); }); }
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
@@ -229,19 +240,23 @@
   if (header) {
     var grounds = document.querySelectorAll("[data-ground]");
     if (grounds.length && "IntersectionObserver" in window) {
-      var hh = header.offsetHeight;
-      var gio = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            header.setAttribute("data-over", e.target.getAttribute("data-ground"));
-          }
-        });
-        /* Both margins must be whole pixels — offsetHeight is fractional on a
-           zoomed or scaled display, and a fractional rootMargin throws, taking
-           the rest of this file down with it. */
-      }, { rootMargin: "-" + Math.round(hh / 2) + "px 0px -" +
-                       Math.max(0, Math.round(window.innerHeight - hh)) + "px 0px" });
-      grounds.forEach(function (g) { gio.observe(g); });
+      // Measuring the header before first paint forced layout for the whole
+      // homepage. Its initial contrast already comes from the page's ground.
+      afterFirstPaint(function () {
+        var hh = header.offsetHeight;
+        var gio = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              header.setAttribute("data-over", e.target.getAttribute("data-ground"));
+            }
+          });
+          /* Both margins must be whole pixels — offsetHeight is fractional on a
+             zoomed or scaled display, and a fractional rootMargin throws, taking
+             the rest of this file down with it. */
+        }, { rootMargin: "-" + Math.round(hh / 2) + "px 0px -" +
+                         Math.max(0, Math.round(window.innerHeight - hh)) + "px 0px" });
+        grounds.forEach(function (g) { gio.observe(g); });
+      });
     }
   }
 
@@ -268,6 +283,7 @@
   var menuLabel = document.querySelector("[data-menu-label]");
   if (menu && openBtn) {
     var lastFocus = null;
+    var menuFocusFrame = null;
 
     /* Only what is actually rendered. A display:none link cannot take focus,
        so one left in the cycle makes the trap's .focus() on it silently fail
@@ -291,9 +307,14 @@
       document.documentElement.style.overflow = "hidden";
       if (menuLabel) menuLabel.textContent = "Close";
       var f = focusables();
-      if (f.length > 1) requestAnimationFrame(function () { f[1].focus(); });
+      if (f.length > 1) menuFocusFrame = requestAnimationFrame(function () {
+        menuFocusFrame = null;
+        // A quick Tab or Escape must not be undone by deferred initial focus.
+        if (menu.getAttribute("data-open") === "true" && document.activeElement === lastFocus) f[1].focus();
+      });
     }
     function close() {
+      if (menuFocusFrame !== null) { cancelAnimationFrame(menuFocusFrame); menuFocusFrame = null; }
       isolateMenu(false);
       menu.setAttribute("data-open", "false");
       openBtn.setAttribute("aria-expanded", "false");
@@ -308,6 +329,9 @@
 
     document.addEventListener("keydown", function (e) {
       if (menu.getAttribute("data-open") !== "true") return;
+      if ((e.key === "Tab" || e.key === "Escape") && menuFocusFrame !== null) {
+        cancelAnimationFrame(menuFocusFrame); menuFocusFrame = null;
+      }
       if (e.key === "Escape") { close(); return; }
       if (e.key !== "Tab") return;
       var f = focusables();
@@ -1545,4 +1569,3 @@
       if ((e.key === "Enter" || e.key === " ") && e.target.matches('.rail__f[role="button"]')) activatePicture(e);
     });
   })();
-

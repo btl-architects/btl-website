@@ -1,4 +1,5 @@
 import type { StructureResolver } from "sanity/structure";
+import { OrderPane } from "./components/OrderPane";
 
 /* The studio's own navigation.
  *
@@ -11,7 +12,11 @@ export const structure: StructureResolver = (S) =>
     .title("btl architects")
     .items([
       S.documentTypeListItem("project").title("Projects"),
+      S.listItem().title("Arrange projects").id("arrange-projects")
+        .child(S.component().id("project-order").title("Arrange projects").component(OrderPane).options({type: "project"})),
       S.documentTypeListItem("person").title("People"),
+      S.listItem().title("Arrange people").id("arrange-people")
+        .child(S.component().id("person-order").title("Arrange people").component(OrderPane).options({type: "person"})),
       S.documentTypeListItem("publication").title("Press & awards"),
       S.documentTypeListItem("category").title("Categories"),
       S.documentTypeListItem("location").title("Locations"),

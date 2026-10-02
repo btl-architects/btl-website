@@ -1,46 +1,26 @@
 ---
-/* One credit: the building, then who published it.
- *
- * This has been a card, then an index row, and is now a card again — which is
- * worth writing down, because the reasons the card failed the first time are
- * real and this shape only works because it avoids both of them.
- *
- * The first version floated the publication's mark ON the photograph. Matched
- * to a common height, "AD" measured 44x32 and "ArchDaily" 150x32 — the same
- * height and three and a half times the visual mass. That cannot be tuned away:
- * a two-letter monogram and a nine-letter word are not the same object, and
- * free on an image the difference shouts. Here the mark sits underneath, in its
- * own line of a text block, where marks of different lengths read as a list of
- * names of different lengths — which is what they are.
- *
- * The second was density: six tall cards left the page mostly empty and the
- * practice looking thinly published. These are wide rather than tall and run at
- * least two across, so six of them is a block of work rather than a long fall.
- *
- * The headline is gone at the practice's request. A credit is recognition, and
- * the recognition is the building plus the masthead; the article's own sentence
- * belongs to the article, one click away.
- */
+/* A Press entry owns its image. Older records can retain their project-photo
+ * fallback, while magazine covers keep their full frame and separate logo. */
 import Figure from "./Figure.astro";
 import Masthead from "./Masthead.astro";
 import type { Publication, Project } from "../lib/content";
 
 interface Props { item: Publication; project?: Project }
 const { item, project } = Astro.props;
+const image = item.image ?? (item.useProjectImage ? project?.hook : null);
+const custom = Boolean(item.image);
 
 const live = !!item.url && item.url !== "#";
 const Tag = live ? "a" : "div";
 const year = item.date ? item.date.slice(0, 4) : "";
 
-/* The photograph is the point, so a credit with no project behind it has
- * nothing to show and says so in type instead of leaving a grey rectangle. */
 const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
   .filter(Boolean)
   .join(" · ");
 ---
 
 <Tag
-  class="pc"
+  class:list={["pc", custom && "pc--custom"]}
   href={live ? item.url : undefined}
   rel={live ? "noopener" : undefined}
   target={live ? "_blank" : undefined}
@@ -50,7 +30,7 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
       shorter than its neighbour's and dragged that whole row's caption out of
       line. Empty it draws nothing; it just keeps the row straight. */}
   <span class="pc__img">
-    {project && <Figure image={project.hook} sizes="(min-width: 60rem) 22rem, 45vw" />}
+    {image && <Figure image={image} sizes="(min-width: 48rem) 26rem, 45vw" fit={custom ? "contain" : "cover"} />}
   </span>
   {/* The mark carries the height of a line so a monogram and a long wordmark
       leave the same gap above the meta line — the one part of the old card

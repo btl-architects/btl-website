@@ -36,10 +36,16 @@ interface Props {
   style?: string;
   priority?: boolean;
   eager?: boolean;
+  fit?: "cover" | "contain";
 }
 
-const { image, sizes, class: cls, style, priority = false, eager = false } = Astro.props;
-const r = requireImage(image);
+const { image, sizes, class: cls, style, priority = false, eager = false, fit = "cover" } = Astro.props;
+// Covers must include the full uploaded frame, even if a prior CMS crop exists.
+// Project photos and portraits keep their usual crop and hotspot behaviour.
+const wholeImage = fit === "contain" && image.source && typeof image.source === "object"
+  ? {...image, source: {...image.source, crop: undefined, hotspot: undefined}}
+  : image;
+const r = requireImage(wholeImage);
 
 // alt="" is a legitimate, deliberate value: it marks an image as decorative to a
 // screen reader. A *missing* alt is not — it leaves the reader to announce the
@@ -49,7 +55,7 @@ if (image.alt === undefined || image.alt === null) {
 }
 
 const placeholder = r.lqip
-  ? `background-image:url('${r.lqip}');background-size:cover;background-position:center;`
+  ? `background-image:url('${r.lqip}');background-size:${fit};background-position:center;background-repeat:no-repeat;`
   : "";
 
 /* The image's own proportions, published to CSS.

@@ -42,7 +42,7 @@ export const figure = defineType({
       title: "Alt text",
       type: "string",
       description:
-        "What the photograph shows, for someone who cannot see it. Describe the building, not the file — “rammed earth walls under a terracotta roof”, not “exterior 1”.",
+        "Describe what someone can see: a building, the person in a portrait, or the magazine name and subject on a cover. Use a short description, not a filename.",
       // Not optional, ever. An image with no alt is unusable to a screen
       // reader, and the site's Figure component refuses to render one.
       validation: (r) => r.required().min(8).max(160),
@@ -80,7 +80,8 @@ export const figure = defineType({
       name: "kind",
       title: "Role in the project",
       type: "string",
-      description: "The cover is the frame the project leads with.",
+      description: "Cover: the one opening image for this project. Photograph: another gallery photo. Drawing: a plan, section or elevation, shown in the same gallery. Choose exactly one Cover per published project.",
+      hidden: ({ document }) => document?._type !== "project",
       options: {
         list: [
           { title: "Cover", value: "cover" },
@@ -90,7 +91,8 @@ export const figure = defineType({
         layout: "radio",
       },
       initialValue: "photograph",
-      validation: (r) => r.required(),
+      validation: (r) => r.custom((value, context) =>
+        context.document?._type !== "project" || value ? true : "Choose Cover, Photograph or Drawing."),
     }),
   ],
   preview: {
