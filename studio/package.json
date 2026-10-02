@@ -15,7 +15,7 @@
     "@sanity/client": "8.6.2",
     "@sanity/ui": "4.2.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react-dom": "19.3.0",
     "sanity": "6.15.0",
     "styled-components": "6.5.3"
   },
