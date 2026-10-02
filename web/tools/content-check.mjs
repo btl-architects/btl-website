@@ -70,11 +70,13 @@ const data = await client.fetch(`{
     _id, name, "portrait": portrait{ alt, rights, "hasAsset": defined(asset.asset) }
   },
   "publications": *[_type == "publication"]{
-    _id, publication, "logo": logo{ alt, rights, "hasAsset": defined(asset.asset) },
-    "image": image{ alt, rights, "hasAsset": defined(asset.asset) }
+    _id, kind, publication, openingMode, url,
+    "image": image{ alt, rights, "hasAsset": defined(asset.asset) },
+    "readerContent": readerContent[]{_type, children[]{text}, alt, rights, "hasAsset": defined(asset.asset)}
   },
   "settings": *[_type == "settings"][0]{
-    "founders": founders{ alt, rights, "hasAsset": defined(asset.asset) }
+    "founders": foundersImage{ alt, rights, "hasAsset": defined(asset.asset) },
+    "teamImage": teamImage{ alt, rights, "hasAsset": defined(asset.asset) }
   }
 }`, { states: mode.preview ? ["draft", "published", "archived"] : ["published", "archived"] });
 
@@ -94,10 +96,22 @@ for (const p of data.projects ?? []) {
 
 for (const p of data.people ?? []) checkFigure(p.portrait, p.name || p._id, "portrait");
 for (const p of data.publications ?? []) {
-  checkFigure(p.logo, p.publication || p._id, "logo");
   checkFigure(p.image, p.publication || p._id, "Press image");
+  const blocks = p.readerContent ?? [];
+  blocks.forEach((b, i) => {if (b._type === "figure") checkFigure(b, p.publication || p._id, `article image ${i + 1}`);});
+  if (p.openingMode && !["reader", "embed", "external"].includes(p.openingMode))
+    errors.push(`${p.publication || p._id} has an unknown article opening mode`);
+  if (p.openingMode === "reader" && !blocks.some(b => b._type === "figure" ? b.hasAsset : b.children?.some(s => s.text?.trim())))
+    errors.push(`${p.publication || p._id} needs text or magazine pages for its BTL reader`);
+  if (p.openingMode === "embed" || p.openingMode === "external" && p.kind !== "award") {
+    try {
+      const url = new URL(p.url);
+      if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || p.openingMode === "embed" && url.protocol !== "https:") throw new Error();
+    } catch {errors.push(`${p.publication || p._id} needs a valid ${p.openingMode === "embed" ? "HTTPS" : "web"} article address`);}
+  }
 }
 checkFigure(data.settings?.founders, "Settings", "founders photograph");
+checkFigure(data.settings?.teamImage, "Settings", "team photograph");
 
 if (errors.length) {
   console.error(`\n[content] refusing to build — ${errors.length} problem${errors.length > 1 ? "s" : ""}:\n`);
@@ -109,5 +123,5 @@ if (errors.length) {
 const n =
   (data.projects ?? []).reduce((a, p) => a + (p.images?.length ?? 0), 0) +
   (data.people ?? []).filter((p) => p.portrait).length +
-  (data.publications ?? []).reduce((n, p) => n + Number(Boolean(p.logo)) + Number(Boolean(p.image)), 0);
+  (data.publications ?? []).reduce((n, p) => n + Number(Boolean(p.image)) + (p.readerContent ?? []).filter(b => b._type === "figure").length, 0) + Number(Boolean(data.settings?.teamImage));
 console.log(`[content] ${n} figures valid`);

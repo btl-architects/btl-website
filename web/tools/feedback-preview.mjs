@@ -14,8 +14,8 @@ const container = await experimental_AstroContainer.create();
 const Credit = (await vite.ssrLoadModule("/src/components/Credit.astro")).default;
 const {getPublications, getProjects} = await vite.ssrLoadModule("/src/lib/content.ts");
 const [publications, projects] = await Promise.all([getPublications(), getProjects()]);
-const entries = publications.filter((entry) => entry.logo).slice(0, 2);
-if (entries.length !== 2) throw new Error("Two existing magazine image uploads are needed for this local fixture.");
+const entries = publications.filter((entry) => entry.image).slice(0, 2);
+if (entries.length !== 2) throw new Error("Two existing Press entries with images are needed for this local fixture.");
 const covers = ["#e5ded0", "#b9c5bc"].map((colour, index) => `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800"><rect width="600" height="800" fill="${colour}"/><rect x="4" y="4" width="592" height="792" fill="none" stroke="#202020" stroke-width="8"/><text x="30" y="80" font-family="sans-serif" font-size="50">TEST COVER ${index + 1}</text><rect x="50" y="160" width="500" height="470" fill="#6e7d6d"/><path d="M90 580V310L300 220L510 310V580Z" fill="#d2b490"/><path d="M90 310L300 220L510 310" fill="none" stroke="#202020" stroke-width="12"/><text x="30" y="755" font-family="sans-serif" font-size="38">FULL FRAME VISIBLE</text></svg>`);
 const cards = await Promise.all(entries.map((entry, index) => container.renderToString(Credit, {props: {
   item: {...entry, image: {static: {src: `/fixture-cover-${index}.svg`, width: 600, height: 800}, alt: `Test magazine cover ${index + 1}, with lettering at both edges`}, logo: null},

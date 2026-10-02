@@ -1,16 +1,18 @@
 ---
 /* A Press entry owns its image. Older records can retain their project-photo
- * fallback, while magazine covers keep their full frame and separate logo. */
+ * fallback. Complete client artwork keeps its full frame without another logo. */
 import Figure from "./Figure.astro";
-import Masthead from "./Masthead.astro";
 import type { Publication, Project } from "../lib/content";
+import {articlePagePath, articleUrl} from "../lib/press";
 
 interface Props { item: Publication; project?: Project }
 const { item, project } = Astro.props;
 const image = item.image ?? (item.useProjectImage ? project?.hook : null);
 const custom = Boolean(item.image);
 
-const live = !!item.url && item.url !== "#";
+const original = articleUrl(item.url);
+const reader = articlePagePath(item);
+const live = Boolean(reader || original);
 const Tag = live ? "a" : "div";
 const year = item.date ? item.date.slice(0, 4) : "";
 
@@ -21,9 +23,14 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
 
 <Tag
   class:list={["pc", custom && "pc--custom"]}
-  href={live ? item.url : undefined}
+  href={reader || original || undefined}
   rel={live ? "noopener" : undefined}
-  target={live ? "_blank" : undefined}
+  target={original && !reader ? "_blank" : undefined}
+  data-article={reader ? "" : undefined}
+  data-publication={reader ? item.publication : undefined}
+  data-original={reader ? original : undefined}
+  aria-haspopup={reader ? "dialog" : undefined}
+  aria-label={`${item.publication} · ${meta}`}
 >
   {/* Rendered even with nothing in it. One credit here — a Young Practice
       award — has no project behind it, and without the frame its card was
@@ -32,9 +39,5 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
   <span class="pc__img">
     {image && <Figure image={image} sizes="(min-width: 48rem) 26rem, 45vw" fit={custom ? "contain" : "cover"} />}
   </span>
-  {/* The mark carries the height of a line so a monogram and a long wordmark
-      leave the same gap above the meta line — the one part of the old card
-      that was worth keeping. */}
-  <span class="pc__mark"><Masthead item={item} /></span>
   <span class="pc__m">{meta}</span>
 </Tag>

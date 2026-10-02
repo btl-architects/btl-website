@@ -32,28 +32,67 @@ export default defineType({
     }),
     defineField({ name: "short", title: "Short name", type: "string", description: "“AD”." }),
     defineField({
-      name: "image", title: "Press image / magazine cover", type: "figure",
-      description: "The main picture on Home and Press. Upload the magazine cover or a custom image; the whole image is shown. This is separate from the publication logo.",
+      name: "image", title: "Complete Press artwork", type: "figure",
+      description: "Upload the complete PNG with the photograph and publication name composed together. Transparent areas keep the website's dark background. The whole artwork is shown on Home and Press, without cropping or an extra logo underneath. A square canvas fits the card closely; other proportions remain fully visible.",
     }),
     defineField({
       name: "useProjectImage", title: "Use the project photograph if there is no Press image",
       type: "boolean", initialValue: false,
       description: "Optional fallback. Turn off for a text-only entry until its own image is ready. A Press image always takes priority.",
     }),
-    defineField({
-      name: "logo",
-      title: "Publication logo",
-      type: "figure",
-      description:
-        "Optional small publication mark below the main picture. Upload transparent artwork; the website displays the mark in white. Put a full magazine cover in Press image instead. Without a logo, the publication name is shown.",
-    }),
     defineField({ name: "title", title: "Headline", type: "string", validation: (r) => r.required() }),
     defineField({ name: "date", type: "date", options: { dateFormat: "D MMMM YYYY" } }),
     defineField({
+      name: "openingMode", title: "How the article opens", type: "string",
+      initialValue: "external",
+      options: {layout: "radio", list: [
+        {title: "BTL reader — text and images added here", value: "reader"},
+        {title: "Embedded publisher page — where the publisher allows it", value: "embed"},
+        {title: "Feature preview — link to the original article", value: "external"},
+      ]},
+      description: "All three choices open the same BTL reading panel. Choose BTL reader for article text and images, embed where the publisher allows it, or a feature preview with a link to read the original in a new tab. Embedded pages keep the publisher's own appearance and may be blocked.",
+    }),
+    defineField({
+      name: "byline", title: "Article byline", type: "string",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      description: "Optional author or publication credit, shown below the headline.",
+    }),
+    defineField({
+      name: "readerContent", title: "Article content", type: "array",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      description: "Add the article text, photographs or scanned magazine pages in reading order. Images display their full frame. Switching modes keeps this content saved.",
+      of: [
+        {type: "block", styles: [
+          {title: "Paragraph", value: "normal"}, {title: "Heading", value: "h2"},
+          {title: "Small heading", value: "h3"}, {title: "Quote", value: "blockquote"},
+        ], lists: [], marks: {decorators: [
+          {title: "Bold", value: "strong"}, {title: "Italic", value: "em"},
+        ], annotations: [{name: "link", type: "object", title: "Link", fields: [
+          {name: "href", type: "url", title: "Web address", validation: r => r.required().uri({scheme: ["https", "http"]})},
+        ]}]}},
+        {type: "figure", title: "Photograph or magazine page"},
+      ],
+      validation: r => r.custom((value, context) => {
+        if (context.document?.openingMode !== "reader") return true;
+        const blocks = (value ?? []) as {_type?: string; children?: {text?: string}[]; asset?: {asset?: {_ref?: string}}}[];
+        return blocks.some(b => b._type === "figure" ? Boolean(b.asset?.asset?._ref) :
+          b._type === "block" && b.children?.some(s => s.text?.trim())) ||
+          "Add article text or at least one magazine page for the BTL reader.";
+      }),
+    }),
+    defineField({
       name: "url",
       type: "url",
-      description: "Links out to the publication's own page.",
-      validation: (r) => r.uri({ scheme: ["http", "https"] }),
+      description: "The original publication address. Required for an external link or embedded page; optional for the BTL reader. Embedded pages need HTTPS and the publisher's permission to embed. Architectural Digest currently blocks embedding.",
+      validation: (r) => [r.uri({ scheme: ["http", "https"] }), r.custom((value, context) => {
+        const mode = context.document?.openingMode;
+        if (mode === "reader") return true;
+        // Older records may intentionally have no link (for example an award).
+        if (!value && (!mode || context.document?.kind === "award" && mode === "external")) return true;
+        if (!value) return "Add the original article address.";
+        if (mode === "embed" && !String(value).startsWith("https://")) return "Embedded articles need an HTTPS address.";
+        return true;
+      })],
     }),
     defineField({
       name: "relatedProject",
@@ -66,11 +105,11 @@ export default defineType({
   ],
   orderings: [{ name: "date", title: "Newest", by: [{ field: "date", direction: "desc" }] }],
   preview: {
-    select: { title: "publication", subtitle: "title", media: "image.asset", logo: "logo.asset", kind: "kind" },
-    prepare: ({ title, subtitle, media, logo, kind }) => ({
+    select: { title: "publication", subtitle: "title", media: "image.asset", kind: "kind" },
+    prepare: ({ title, subtitle, media, kind }) => ({
       title: `${title || "Untitled entry"}${kind === "award" ? " · award" : ""}`,
       subtitle,
-      media: media || logo,
+      media,
     }),
   },
 });

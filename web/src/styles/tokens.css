@@ -78,6 +78,8 @@
   --on-media-secondary: rgb(255 255 255 / 0.82);
   --on-media-tertiary:  rgb(255 255 255 / 0.62);
   --overlay:            rgb(5 5 5 / 0.97);
+  --overlay-press:      rgb(5 5 5 / 0.78);
+  --reader-width:       64rem;
   --drop-on-image:      drop-shadow(0 2px 20px rgb(5 5 5 / 0.7));
   /* The opening film darkens at its top and foot so the header and the rail
      read against any frame. */
@@ -206,8 +208,8 @@
    * reported; 16 clears three from about 900px up with room either side of it.
    *
    * Cards are fixed at this width and do not grow (see .team__list), falling to
-   * half a line on a phone so two always fit: two on a phone and a tablet, three
-   * from about 900, four from 1440, and never more than four. */
+   * half a line on a phone so two always fit. The client now caps the desktop
+   * list at three, including on a wide monitor. */
   --team-min:         16rem;
 
 
@@ -262,6 +264,7 @@
   --dur-hover: 420ms;
   --dur-slow:  700ms;
   --dur-draw:  900ms;
+  --dur-statement: 1100ms; /* Client requested a more visible homepage fade. */
 
   /* ---- chrome ------------------------------------------------------------ */
   --header-h: clamp(3.75rem, 3rem + 2.5vw, 5.5rem);

@@ -1,17 +1,5 @@
 ---
-/* People.
- *
- * The founders photograph is the page and the names sit inside it — the
- * architecture above them is the type field. Paired with the practice
- * statement at display scale, because with two principals and no bios yet
- * there is not enough prose to carry a page on its own, and pretending
- * otherwise is what made the first version of this read as unfinished.
- *
- * Everything below the spread is conditional. Bios appear when they are
- * written, the team list when there are real names, alumni when someone
- * leaves. The composition does not change when any of that happens — it just
- * gets longer.
- */
+/* People has its own team photograph; Home retains the founders. */
 import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
 import { spreadSizes } from "../../lib/media";
@@ -21,16 +9,12 @@ import Onward from "../../components/Onward.astro";
 import Statement from "../../components/Statement.astro";
 
 const people = await getPeople();
-const principals = people.filter((p) => p.tier === "principal");
 const team = people.filter((p) => p.tier === "team");
 const alumni = people.filter((p) => p.tier === "alumni");
 
 const home = await getHome();
 const copy = (await getSettings()).copy;
-// The founders photograph is settings content, not a file: the practice can
-// replace it the day they have a better frame, without anyone touching code.
-const founders = home.founders;
-const withBios = principals.filter((p) => p.bio);
+const teamImage = home.teamImage;
 
 ---
 
@@ -38,23 +22,16 @@ const withBios = principals.filter((p) => p.bio);
   title="People — btl architects"
   description="The people behind btl architects."
   current="people"
+  share={teamImage}
 >
   <main id="main" data-ground="dark">
     <div class="container page-end">
       <h1 class="sr-only">People — btl architects</h1>
 
       <div class="spread">
-        {founders && (
+        {teamImage && (
           <div class="spread__media rv">
-            <Figure image={founders} sizes={spreadSizes(founders)} priority />
-            <div class="spread__names">
-              {principals.map((p) => (
-                <span>
-                  <span class="spread__n">{p.prefix} {p.name}</span>
-                  {p.role && <span class="spread__r">{p.role}</span>}
-                </span>
-              ))}
-            </div>
+            <Figure image={teamImage} sizes={spreadSizes(teamImage)} priority />
           </div>
         )}
 
@@ -64,22 +41,6 @@ const withBios = principals.filter((p) => p.bio);
           </div>
         )}
       </div>
-
-      {withBios.length > 0 && (
-        <section class="roster">
-          <h2 class="eyebrow roster__k">The principals</h2>
-          {withBios.map((p, i) => (
-            <p class="bio rv" data-delay={i}>
-              {/* The name carries the link to the full profile. Without this the
-                  profile page exists and nothing on the site reaches it. */}
-              {p.slug
-                ? <a class="bio__n ul" href={`/people/${p.slug}/`}>{p.prefix} {p.name}</a>
-                : <span class="bio__n">{p.prefix} {p.name}</span>}
-              {p.bio}
-            </p>
-          ))}
-        </section>
-      )}
 
       {team.length > 0 && (
         <section class="roster team">

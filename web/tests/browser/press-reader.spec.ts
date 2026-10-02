@@ -1,0 +1,122 @@
+import {test, expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test('BTL reader keeps the page, traps focus, restores scroll and dismisses with Back', async ({page}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await page.goto('/__reader-demo/');
+  const entry = page.locator('a[data-article]').first();
+  await entry.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => window.scrollY);
+  await entry.press('Enter');
+  const reader = page.getByRole('dialog', {name: 'Press reader'});
+  await expect(reader).toBeVisible();
+  await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  await expect(reader.getByRole('button', {name: 'Close article'})).toBeFocused();
+  await expect(page).toHaveURL(/\/__reader-demo\/$/);
+  await expect(reader.locator('iframe')).toHaveCount(0);
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press('Tab');
+    expect(await reader.evaluate(el => el.contains(document.activeElement))).toBe(true);
+  }
+  const result = await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+  expect(result.violations).toEqual([]);
+  await page.goBack();
+  await expect(reader).not.toBeVisible();
+  await expect(entry).toBeFocused();
+  expect(await page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, 0);
+  await entry.press('Enter');
+  await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(reader).not.toBeVisible();
+  await expect(entry).toBeFocused();
+});
+
+test('a publisher frame loads only on opening and is removed on close', async ({page}) => {
+  let requests = 0;
+  await page.route('https://example.com/embedded-article', async route => {
+    requests++;
+    await route.fulfill({contentType: 'text/html', body: '<!doctype html><html lang="en"><title>Publisher</title><h1>Publisher article</h1><p>Test publisher content.</p></html>'});
+  });
+  await page.goto('/__reader-demo/');
+  expect(requests).toBe(0);
+  await page.locator('a[data-article]').nth(1).click();
+  const reader = page.getByRole('dialog', {name: 'Press reader'});
+  await expect(reader.locator('iframe')).toHaveAttribute('src', 'https://example.com/embedded-article');
+  await expect(page.frameLocator('.press-article__frame').getByRole('heading', {name: 'Publisher article'})).toBeVisible();
+  expect(requests).toBe(1);
+  await expect(reader.getByRole('link', {name: 'Open original'})).toHaveAttribute('target', '_blank');
+  await reader.getByRole('button', {name: 'Close article'}).click();
+  await expect(reader).not.toBeVisible();
+  await expect(reader.locator('iframe')).toHaveCount(0);
+});
+
+test('a blocked publisher retains its escape route and leaves BTL usable', async ({page}) => {
+  await page.route('https://example.com/embedded-article', route => route.fulfill({headers: {'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'"}, contentType: 'text/html', body: '<h1>Embedding blocked</h1>'}));
+  await page.goto('/__reader-demo/');
+  await page.locator('a[data-article]').nth(1).click();
+  const reader = page.getByRole('dialog', {name: 'Press reader'});
+  await expect(reader.locator('.press-article__help')).toContainText('If the article does not appear');
+  await expect(reader.getByRole('link', {name: 'Open original'})).toHaveAttribute('href', 'https://example.com/embedded-article');
+  await reader.getByRole('button', {name: 'Close article'}).click();
+  await expect(page.getByRole('heading', {name: 'Press', exact: true})).toBeVisible();
+});
+
+test('a failed or cancelled fetch cannot leave the visitor trapped or reopen the panel', async ({page}) => {
+  await page.route('**/press/reader-fixture/', route => route.fulfill({status: 503, body: 'Unavailable'}));
+  await page.goto('/__reader-demo/');
+  await page.locator('a[data-article]').first().click();
+  const reader = page.getByRole('dialog', {name: 'Press reader'});
+  await expect(reader.getByRole('link', {name: 'Open article page'})).toBeVisible();
+  await reader.getByRole('button', {name: 'Close article'}).click();
+  await expect(reader).not.toBeVisible();
+  await page.unroute('**/press/reader-fixture/');
+  await page.route('**/press/reader-fixture/', async route => {await new Promise(r => setTimeout(r, 300)); await route.continue().catch(() => {});});
+  await page.locator('a[data-article]').first().click();
+  await reader.getByRole('button', {name: 'Close article'}).click();
+  await page.waitForTimeout(450);
+  await expect(reader).not.toBeVisible();
+  expect(await page.evaluate(() => document.body.style.position)).toBe('');
+});
+
+test('reader fits phones and honours reduced motion', async ({page}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await page.setViewportSize({width: 320, height: 650});
+  await page.goto('/__reader-demo/');
+  await page.locator('a[data-article]').first().click();
+  const reader = page.getByRole('dialog', {name: 'Press reader'});
+  await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  expect(await reader.evaluate(el => el.scrollWidth)).toBeLessThanOrEqual(320);
+  expect(await reader.locator('.press-reader__content').evaluate(el => el.scrollWidth)).toBeLessThanOrEqual(320);
+  await expect(reader).toHaveCSS('animation-name', 'none');
+  await reader.getByRole('button', {name: 'Close article'}).click();
+  await expect(reader).not.toBeVisible();
+});
+
+test('external mode uses the same panel and its source opens a new tab; modifier clicks retain native article pages', async ({page, context}) => {
+  await context.route('https://example.com/original', route => route.fulfill({contentType: 'text/html', body: '<h1>Original article</h1>'}));
+  await page.goto('/__reader-demo/');
+  await page.locator('a[data-article]').nth(2).click();
+  const reader = page.getByRole('dialog', {name: 'Press reader'});
+  await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  await expect(reader.locator('.press-article__body')).toBeEmpty();
+  const [external] = await Promise.all([context.waitForEvent('page'), reader.getByRole('link', {name: 'Read the original on External publication'}).click()]);
+  await expect(external).toHaveURL('https://example.com/original');
+  await external.close();
+  await reader.getByRole('button', {name: 'Close article'}).click();
+  const [article] = await Promise.all([context.waitForEvent('page'), page.locator('a[data-article]').first().click({modifiers: ['ControlOrMeta']})]);
+  await expect(article).toHaveURL(/\/press\/reader-fixture\/$/);
+  await expect(article.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  await expect(reader).not.toBeVisible();
+  await article.close();
+});
+
+test('BTL-managed article links remain readable without JavaScript', async ({browser}) => {
+  const context = await browser.newContext({javaScriptEnabled: false});
+  const page = await context.newPage();
+  await page.goto('http://127.0.0.1:8788/__reader-demo/');
+  await page.locator('a[data-article]').first().click();
+  await expect(page).toHaveURL(/\/press\/reader-fixture\/$/);
+  await expect(page.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  await expect(page.locator('.press-article__body')).toContainText('This is sample content');
+  await context.close();
+});

@@ -1,0 +1,41 @@
+---
+import Figure from "./Figure.astro";
+import ArticleText from "./ArticleText.astro";
+import type {Publication, Project} from "../lib/content";
+import {articleUrl} from "../lib/press";
+interface Props {item: Publication; project?: Project}
+const {item, project} = Astro.props;
+const image = item.image ?? (item.useProjectImage ? project?.hook : null);
+const original = articleUrl(item.url);
+const embed = item.openingMode === "embed" && original?.startsWith("https://");
+const managed = item.openingMode === "reader";
+const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, item.date?.slice(0, 4)].filter(Boolean).join(" · ");
+---
+<article class:list={["press-article", embed && "press-article--embed"]} data-article-content>
+  <header class="press-article__head">
+    <p class="press-article__publication">{item.publication}</p>
+    <h1>{item.title}</h1>
+    <p class="press-article__meta">{meta}</p>
+    {item.byline && managed && <p class="press-article__byline">{item.byline}</p>}
+  </header>
+  {embed ? (
+    <>
+      <p class="press-article__help">Reading on {item.publication}. If the article does not appear, <a href={original!} target="_blank" rel="noopener noreferrer">open the original <span aria-hidden="true">↗</span></a>.</p>
+      <iframe class="press-article__frame" title={`Article on ${item.publication}`} data-article-frame={original}
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <noscript><p>Read this article <a href={original!} target="_blank" rel="noopener noreferrer">on {item.publication}</a>.</p></noscript>
+    </>
+  ) : (
+    <>
+      {image && <figure class="press-article__image"><Figure image={image} fit="contain" sizes="(min-width: 60rem) 52rem, 92vw" priority />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>}
+      <div class="press-article__body">
+        {(managed ? item.readerContent ?? [] : []).map(block => block._type === "figure" ?
+          <figure><Figure image={block} fit="contain" sizes="(min-width: 60rem) 52rem, 92vw" />
+            {(block.caption || block.credit) && <figcaption>{[block.caption, block.credit].filter(Boolean).join(" · ")}</figcaption>}
+          </figure> : <ArticleText block={block} />)}
+      </div>
+    </>
+  )}
+  {original && <p class="press-article__source"><a href={original} target="_blank" rel="noopener noreferrer">Read the original on {item.publication} <span aria-hidden="true">↗</span></a></p>}
+</article>

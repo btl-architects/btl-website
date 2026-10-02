@@ -46,7 +46,8 @@
      animation and nothing else. */
   document.documentElement.classList.add("js");
 
-  var reveals = document.querySelectorAll(".rv, .rvc, .ruled");
+  var statement = document.querySelector("[data-statement-reveal]");
+  var reveals = document.querySelectorAll(".rv:not([data-statement-reveal]), .rvc, .ruled");
 
   /* One way in, used by every path that reveals something.
    *
@@ -81,6 +82,7 @@
   /* The end state, reached without animating: reduced motion, a hidden tab, or
      a browser with no IntersectionObserver. Here the inline clip IS correct. */
   function revealAll() {
+    if (statement) statement.classList.add("in");
     reveals.forEach(function (el) {
       el.classList.add("in");
       if (el.classList.contains("rvc")) el.style.clipPath = "none";
@@ -151,6 +153,35 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     setTimeout(sweep, 1200);
+  }
+
+  /* Fade the statement once its words are comfortably in frame. The general
+     sweep reveals at the first pixel, so it can finish before a slow scroll
+     reaches the writing. Keep this section out of that early sweep. */
+  if (statement && !statement.classList.contains("in")) {
+    var statementObserver = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) showStatement();
+    }, {threshold: 0.5, rootMargin: "0px 0px -22% 0px"});
+    function showStatement() {
+      statement.classList.add("in");
+      statementObserver.disconnect();
+      window.removeEventListener("scroll", checkStatement);
+      window.removeEventListener("resize", checkStatement);
+    }
+    var statementTick = false;
+    function checkStatement() {
+      if (statementTick) return;
+      statementTick = true;
+      requestAnimationFrame(function () {
+        statementTick = false;
+        var box = statement.getBoundingClientRect();
+        if (box.top < window.innerHeight * 0.68 && box.bottom > 0) showStatement();
+      });
+    }
+    statementObserver.observe(statement);
+    window.addEventListener("scroll", checkStatement, {passive: true});
+    window.addEventListener("resize", checkStatement, {passive: true});
+    setTimeout(checkStatement, 1200);
   }
 
   /* --- 1b. the opening sequence --------------------------------------------

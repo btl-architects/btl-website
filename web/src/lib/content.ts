@@ -17,6 +17,7 @@
 import { sanity, isPreview } from "./sanity";
 import { visibleProjects, routedProjects } from "../../server/build-mode.js";
 import type { SiteImage } from "./media";
+import type {ArticleBlock, OpeningMode} from "./press";
 
 /* ---------------------------------------------------------------- types --- */
 
@@ -60,6 +61,7 @@ export interface Person {
 }
 
 export interface Publication {
+  id?: string;
   kind: PublicationKind;
   publication: string;
   logo: SiteImage | null;
@@ -70,6 +72,9 @@ export interface Publication {
   date: string;
   url: string;
   relatedProject: string | null;
+  openingMode?: OpeningMode;
+  byline?: string;
+  readerContent?: ArticleBlock[];
 }
 
 /** The lines that carry the practice's voice. Each has a default, so an empty
@@ -288,16 +293,20 @@ export async function getProfiles(): Promise<Person[]> {
 
 export const getPublications = once(async (): Promise<Publication[]> => {
   const rows = await sanity.fetch(`*[_type == "publication"] | order(date desc) {
+    "id": _id, "openingMode": coalesce(openingMode, "external"), byline,
+    "readerContent": readerContent[]{
+      _type, style, children[]{text, marks}, markDefs[]{_key, _type, href},
+      _type == "figure" => ${FIGURE}
+    },
     kind, publication, "short": coalesce(short, ""), title,
     "date": coalesce(date, ""), "url": coalesce(url, ""),
-    "logo": logo ${FIGURE},
     "image": image ${FIGURE},
     "useProjectImage": coalesce(useProjectImage, true),
     "relatedProject": relatedProject->slug.current
   }`);
   return (rows ?? []).map((x: any) => ({
     ...x,
-    logo: x.logo?.source?.asset ? x.logo : null,
+    logo: null,
     image: x.image?.source?.asset ? x.image : null,
     relatedProject: x.relatedProject ?? null,
   }));
@@ -347,7 +356,8 @@ export const getHome = once(async () => {
     statement, studioLead, peopleLead, studioBody,
     "studioImages": studioImages[] ${FIGURE},
     "studioImage": studioImage ${FIGURE},
-    "foundersImage": foundersImage ${FIGURE}
+    "foundersImage": foundersImage ${FIGURE},
+    "teamImage": teamImage ${FIGURE}
   }`);
   return {
     statement: s?.statement ?? "",
@@ -377,5 +387,6 @@ export const getHome = once(async () => {
       image: (s?.studioImage?.source?.asset ? s.studioImage : null) as SiteImage | null,
     },
     founders: (s?.foundersImage?.source?.asset ? s.foundersImage : null) as SiteImage | null,
+    teamImage: (s?.teamImage?.source?.asset ? s.teamImage : null) as SiteImage | null,
   };
 });
