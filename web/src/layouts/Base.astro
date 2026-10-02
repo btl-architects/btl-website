@@ -14,7 +14,7 @@ import "../styles/components.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { getSettings, getHome } from "../lib/content";
-import { isPreview } from "../lib/sanity";
+import { isPreview, isNoindex } from "../lib/sanity";
 import { socialImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
 
 interface Props {
@@ -33,9 +33,10 @@ interface Props {
    *  no page can be shared as a bare text card by omission. */
   share?: SiteImage | null;
   articleReader?: boolean;
+  article?: {date: string; author: string; source?: string};
 }
 
-const { title, description, current = "", ground = "dark", noindex = false, share, articleReader = false } = Astro.props;
+const { title, description, current = "", ground = "dark", noindex = false, share, articleReader = false, article } = Astro.props;
 const settings = await getSettings();
 const canonical = new URL(Astro.url.pathname === "/404/" ? "/404.html" : Astro.url.pathname, Astro.site).href;
 
@@ -92,11 +93,12 @@ const org = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#050505" />
-    {(isPreview || noindex) && <meta name="robots" content="noindex, nofollow" />}
+    {(isNoindex || noindex) && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={article ? "article" : "website"} />
+    {article?.date && <meta property="article:published_time" content={article.date} />}
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={settings.name} />
     <meta property="og:locale" content="en_IN" />
@@ -132,6 +134,15 @@ const org = {
       crossorigin
     />
     <script type="application/ld+json" set:html={JSON.stringify(org).replace(/</g, "\\u003c")} is:inline />
+    {article && <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org", "@type": "Article", headline: title,
+      description, mainEntityOfPage: canonical,
+      ...(article.date ? {datePublished: article.date} : {}),
+      author: {"@type": "Organization", name: article.author},
+      publisher: {"@type": "Organization", name: settings.name},
+      ...(shareImage ? {image: [shareImage]} : {}),
+      ...(article.source ? {citation: article.source} : {}),
+    }).replace(/</g, "\\u003c")} is:inline />}
   </head>
   <body id="top" data-ground={ground} data-preview={isPreview ? "true" : undefined} data-zoom-widths={ZOOM_LADDER.join(",")}>
     <a class="skip" href="#main">Skip to content</a>

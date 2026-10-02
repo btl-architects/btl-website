@@ -15,7 +15,7 @@
  */
 
 import { urlFor } from "./sanity";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import type { SanityImageSource } from "@sanity/image-url";
 
 /** What a route asks for: an image, not a URL. */
 export interface SiteImage {
@@ -75,11 +75,15 @@ export const ZOOM_LADDER = [3500, 6000];
 /** Sanity encodes the original's dimensions in the asset id:
  *  `image-<hash>-3000x2000-jpg`. Reading them here avoids a second round trip
  *  just to learn the aspect ratio. */
+function sourceRef(source: unknown): unknown {
+  if (typeof source === "string") return source;
+  if (!source || typeof source !== "object") return null;
+  const object = source as {asset?: {_ref?: string}; _ref?: string};
+  return object.asset?._ref ?? object._ref;
+}
+
 function intrinsic(source: SanityImageSource): { w: number; h: number } | null {
-  const ref =
-    typeof source === "string"
-      ? source
-      : (source as any)?.asset?._ref ?? (source as any)?._ref ?? null;
+  const ref = sourceRef(source);
   if (typeof ref !== "string") return null;
   const m = ref.match(/-(\d+)x(\d+)-[a-z]+$/i);
   return m ? { w: Number(m[1]), h: Number(m[2]) } : null;
@@ -90,8 +94,7 @@ function intrinsic(source: SanityImageSource): { w: number; h: number } | null {
  * wordmarks are the case that matters here: served whole, at whatever size the
  * layout asks for, at a few kilobytes. */
 function isSvg(source: unknown): boolean {
-  const ref = typeof source === "string" ? source
-    : (source as any)?.asset?._ref ?? (source as any)?._ref ?? "";
+  const ref = sourceRef(source);
   return typeof ref === "string" && ref.endsWith("-svg");
 }
 

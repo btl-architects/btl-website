@@ -275,6 +275,9 @@ html:has(.menu[data-open="true"]) .header {
 .stage__f[data-on="true"] { opacity: 1; }
 .stage__f video,
 .stage__f img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stage__f picture { display: block; width: 100%; height: 100%; }
+.stage__f video { position: absolute; inset: 0; opacity: 0; }
+.stage__f video[data-playing="true"] { opacity: 1; }
 
 /* The opening carries no caption. It named each clip in the bottom-left corner
    and the practice asked for it off — the sequence is atmosphere, and naming the
@@ -1702,18 +1705,17 @@ html:has(.menu[data-open="true"]) .header {
 /* Magazine lettering must stay inside the frame, including on hover. Keep a
    common height when a row mixes covers with older project-photo entries. */
 .credits:has(.pc--custom) .pc__img { aspect-ratio: 1 / 1; }
-.pc--custom .pc__img img { object-fit: contain; }
+.pc--custom .pc__img img { object-fit: contain; object-position: center bottom; }
 .pc--custom .pc__img { background: none; }
 /* The composite PNG supplies the mark. A photo-style blur placeholder would
    colour the clear areas behind its publication lettering. */
 .pc--custom .pc__img img { background-image: none !important; }
 
-/* The mark gets a line's height whatever its length, so a monogram and a long
-   wordmark leave the same gap above the meta line beneath them. */
-
 .pc__m {
   display: block;
-  margin-top: var(--s-4);
+  margin-top: var(--s-3);
+  text-align: center;
+  text-wrap: balance;
   font-size: var(--type-meta);
   letter-spacing: var(--track-meta);
   text-transform: uppercase;
@@ -1937,37 +1939,6 @@ body[data-preview] .header { top: var(--preview-h); }
   .landing .srail__i, .landing .srail__i::after { transition: none; }
 }
 
-/* --- the press index ------------------------------------------------------
-   Rows, not cards.
-
-   As cards, six credits left most of the page empty and made the practice look
-   thinly published — and the marks floating on photographs made every
-   difference in their width look like a mistake. In a column set to one
-   measure, "AD" and "ArchDaily" read as two names of different lengths, which
-   is all they are. The page is dense at six credits and still an index at
-   sixty.
-   ------------------------------------------------------------------------- */
-
-
-/* An award has no photograph. The column still holds its place, so every row
-   starts at the same margin whether it has an image or not. */
-
-/* The mark's measure. Whatever it is — monogram, wordmark, a name in type — it
-   sits left-aligned in this column and never grows beyond it. */
-/* A logo is set a little larger than type on the same line.
-   A monogram is compact by design — "AD" at a word's cap-height measures 30px
-   against ArchDaily's 147 — so matching them exactly leaves the logo looking
-   like an afterthought. Every press list does this: the mark gets a shade more
-   room than the words around it. Still capped by the column. */
-
-@media (hover: hover) {
-  /* The wash that used to live here — a 3% white rectangle — was the one
-     generic gesture on the site: it could have belonged to any table on any
-     website. The rows now answer the way every other link here answers, by
-     drawing a line. See .row-line below; the practice is called between the
-     lines and this is the only motif it has. */
-}
-
 /* The home page shows the first few, in the same shape. */
 /* The relationship owns the gap, not either element on its own. This is the
    space .credits used to carry as its own margin-top, which is why it also
@@ -2022,6 +1993,7 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__head h1 { font-size: var(--type-page-title); font-weight: 400; line-height: 1.2; letter-spacing: -.03em; }
 .press-article__meta { margin-top: var(--s-4); }
 .press-article__byline { margin-top: var(--s-3); color: var(--text-secondary); font-size: var(--type-body-sm); }
+.press-article__intro { margin-top: var(--s-5); font-size: var(--type-lead); line-height: 1.5; color: var(--text-secondary); }
 .press-article__image { margin: 0 0 var(--s-7); }
 .press-article__image img, .press-article__body figure img { width: 100%; height: auto; object-fit: contain; }
 .press-article__image img { background-image: none !important; }
@@ -2029,6 +2001,19 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__body { display: flow-root; }
 .press-article__body > :is(p, h2, h3, blockquote) { max-width: var(--measure); margin-inline: auto; }
 .press-article__body p { color: var(--text-secondary); line-height: 1.75; margin-bottom: var(--s-5); }
+.press-article__body :is(p, li, blockquote) { white-space: pre-line; overflow-wrap: anywhere; }
+.press-article__body > :is(ul, ol) { max-width: var(--measure); margin: 0 auto var(--s-5); padding-left: var(--s-5); color: var(--text-secondary); line-height: 1.75; }
+.press-article__body ul { list-style: disc; }
+.press-article__body ol { list-style: decimal; }
+.press-article__body li > :is(ul, ol) { padding-left: var(--s-5); margin-top: var(--s-3); }
+.press-article__body li + li { margin-top: var(--s-3); }
+.press-article__quote { max-width: var(--measure); margin: var(--s-8) auto; border-block: 1px solid var(--border-subtle); padding-block: var(--s-6); }
+.press-article__quote > p:first-child { font-size: var(--type-h3); color: var(--text-primary); line-height: 1.4; margin: 0; }
+.press-article__quote .press-article__attribution { font-size: var(--type-body-sm); margin: var(--s-4) 0 0; }
+.press-article__credits { max-width: var(--measure); margin: var(--s-7) auto 0; border-top: 1px solid var(--border-subtle); padding-top: var(--s-5); font-size: var(--type-body-sm); }
+.press-article__credits > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--s-4); margin-top: var(--s-3); }
+.press-article__credits dt { color: var(--text-tertiary); }
+.press-article__credits dd { margin: 0; overflow-wrap: anywhere; }
 .press-article__body h2 { font-size: var(--type-h3); font-weight: 400; margin-block: var(--s-7) var(--s-4); }
 .press-article__body h3 { font-size: var(--type-lead); font-weight: 500; margin-block: var(--s-6) var(--s-3); }
 .press-article__body blockquote { border-left: 1px solid var(--border-strong); padding-left: var(--s-5); font-size: var(--type-lead); margin-block: var(--s-6); }

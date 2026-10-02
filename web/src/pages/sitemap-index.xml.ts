@@ -5,14 +5,14 @@
  * content that damages the pages that matter. They enter the sitemap by
  * themselves on the publish that earns them.
  */
-import { isPreview } from "../lib/sanity";
+import { isNoindex } from "../lib/sanity";
 import type { APIRoute } from "astro";
 import { getProjectRoutes, getEarnedCategories, getProfiles, getPublications } from "../lib/content";
 import {articlePath} from "../lib/press";
 
 export const GET: APIRoute = async ({ site }) => {
   const base = site?.href.replace(/\/$/, "") ?? "";
-  const paths = isPreview ? [] : [
+  const paths = isNoindex ? [] : [
     "/",
     "/projects/",
     ...(await getProjectRoutes()).map((p) => `/projects/${p.slug}/`),

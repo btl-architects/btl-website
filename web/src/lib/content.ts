@@ -18,6 +18,7 @@ import { sanity, isPreview } from "./sanity";
 import { visibleProjects, routedProjects } from "../../server/build-mode.js";
 import type { SiteImage } from "./media";
 import type {ArticleBlock, OpeningMode} from "./press";
+import {articleUrl} from "./press";
 
 /* ---------------------------------------------------------------- types --- */
 
@@ -64,7 +65,6 @@ export interface Publication {
   id?: string;
   kind: PublicationKind;
   publication: string;
-  logo: SiteImage | null;
   image: SiteImage | null;
   useProjectImage: boolean;
   short: string;
@@ -74,6 +74,10 @@ export interface Publication {
   relatedProject: string | null;
   openingMode?: OpeningMode;
   byline?: string;
+  intro?: string;
+  articleHero?: SiteImage | null;
+  articleCredits?: Project["credits"];
+  readerPublishedAt?: string;
   readerContent?: ArticleBlock[];
 }
 
@@ -100,6 +104,15 @@ export interface Settings {
   };
   categories: Category[];
 }
+
+type SettingsRow = Partial<Omit<Settings, "copy" | "contact" | "categories" | "social"> & Copy & Settings["contact"]> & {
+  social?: {label: string; url: string}[];
+};
+type ProjectRow = Omit<Project, "hook" | "images"> & {images: (SiteImage & {kind?: string})[]};
+type CmsImage = SiteImage & {source: {asset: {_ref: string} | null}};
+type PublicationRow = Omit<Publication, "image" | "articleHero"> & {image?: CmsImage; articleHero?: CmsImage};
+type PersonRow = Omit<Person, "portrait"> & {portrait?: CmsImage};
+type HeroClipRow = Omit<HeroClip, "poster" | "posterPortrait"> & {poster?: CmsImage; posterPortrait?: CmsImage};
 
 /* ------------------------------------------------------------- fragments --- */
 
@@ -153,12 +166,12 @@ const once = <T>(fn: () => Promise<T>): (() => Promise<T>) => {
 };
 
 export const getSettings = once(async (): Promise<Settings> => {
-  const s = await sanity.fetch(`*[_type == "settings"][0]{
-    name, domain, tagline, nav, social,
+  const s = await sanity.fetch<SettingsRow | null>(`*[_type == "settings"][0]{
+    name, domain, tagline, nav[]{label, href}, social[]{label, url},
     footerCta, locationLabel, projectsLead, pressLead, peopleOnward, studioOnward, notFoundLead,
     address, email, formTo, phone, phoneHref, gstin
   }`);
-  const categories = await sanity.fetch(
+  const categories = await sanity.fetch<Category[]>(
     `*[_type == "category"] | order(order asc) { label, "slug": slug.current }`,
   );
   return {
@@ -176,8 +189,11 @@ export const getSettings = once(async (): Promise<Settings> => {
       notFoundLead: s?.notFoundLead ||
         "It may have moved, or the link may be wrong. Here is what we did build.",
     },
-    nav: s?.nav ?? [],
-    social: (s?.social ?? []).map((x: any) => ({ label: x.label, short: x.label, url: x.url })),
+    nav: (s?.nav ?? []).filter(n => /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/.test(n.href)),
+    social: (s?.social ?? []).flatMap(x => {
+      const url = articleUrl(x.url);
+      return url && x.label?.trim() ? [{label: x.label, short: x.label, url}] : [];
+    }),
     contact: {
       address: s?.address ?? [],
       email: s?.email ?? "",
@@ -191,15 +207,15 @@ export const getSettings = once(async (): Promise<Settings> => {
 });
 
 const getAllProjects = once(async (): Promise<Project[]> => {
-  const rows = await sanity.fetch(
+  const rows = await sanity.fetch<ProjectRow[]>(
     `*[_type == "project" && lifecycle in $states] | order(coalesce(order, 0) asc, _id asc) ${PROJECT}`,
     { states: isPreview ? ["draft", "published", "archived"] : ["published", "archived"] },
   );
-  return (rows ?? []).map((p: any): Project => {
+  return (rows ?? []).map((p): Project => {
     // The cover leads the sequence rather than being held out of it: on the
     // project page it would otherwise be missing, and on a card it is the frame
     // already on screen when the card opens.
-    const imgs: any[] = p.images ?? [];
+    const imgs = p.images ?? [];
     const cover = imgs.find((i) => i?.kind === "cover") ?? imgs[0];
     const ordered = cover ? [cover, ...imgs.filter((i) => i !== cover)] : imgs;
     return {
@@ -271,13 +287,13 @@ export async function getLocations(): Promise<{ slug: string; label: string }[]>
 }
 
 export const getPeople = once(async (): Promise<Person[]> => {
-  const rows = await sanity.fetch(`*[_type == "person" && active == true] | order(coalesce(order, 0) asc, _id asc) {
+  const rows = await sanity.fetch<PersonRow[]>(`*[_type == "person" && active == true] | order(coalesce(order, 0) asc, _id asc) {
     "prefix": coalesce(prefix, ""), name, "role": coalesce(role, ""), "bio": coalesce(bio, ""),
     "slug": coalesce(slug.current, ""),
     "portrait": portrait ${FIGURE},
     tier, "order": coalesce(order, 0), active
   }`);
-  return (rows ?? []).map((p: any) => ({ ...p, role: p.role.trim(), portrait: p.portrait?.source?.asset ? p.portrait : null }));
+  return (rows ?? []).map((p) => ({ ...p, role: (p.role ?? "").trim(), portrait: p.portrait?.source?.asset ? p.portrait : null }));
 });
 
 /* Who gets a page of their own.
@@ -292,10 +308,12 @@ export async function getProfiles(): Promise<Person[]> {
 }
 
 export const getPublications = once(async (): Promise<Publication[]> => {
-  const rows = await sanity.fetch(`*[_type == "publication"] | order(date desc) {
-    "id": _id, "openingMode": coalesce(openingMode, "external"), byline,
+  const rows = await sanity.fetch<PublicationRow[]>(`*[_type == "publication"] | order(date desc) {
+    "id": _id, "openingMode": coalesce(openingMode, "external"), byline, intro, readerPublishedAt,
+    "articleHero": articleHero ${FIGURE},
+    "articleCredits": articleCredits{architect, photographer, "collaborators": coalesce(collaborators, [])},
     "readerContent": readerContent[]{
-      _type, style, children[]{text, marks}, markDefs[]{_key, _type, href},
+      _type, style, listItem, level, children[]{text, marks}, markDefs[]{_key, _type, href}, text, attribution,
       _type == "figure" => ${FIGURE}
     },
     kind, publication, "short": coalesce(short, ""), title,
@@ -304,10 +322,10 @@ export const getPublications = once(async (): Promise<Publication[]> => {
     "useProjectImage": coalesce(useProjectImage, true),
     "relatedProject": relatedProject->slug.current
   }`);
-  return (rows ?? []).map((x: any) => ({
+  return (rows ?? []).map(x => ({
     ...x,
-    logo: null,
     image: x.image?.source?.asset ? x.image : null,
+    articleHero: x.articleHero?.source?.asset ? x.articleHero : null,
     relatedProject: x.relatedProject ?? null,
   }));
 });
@@ -325,7 +343,7 @@ export interface HeroClip {
 /** The opening sequence, straight from the CMS. Empty is a legitimate state:
  *  the landing simply has no film in it and the page still works. */
 export const getHeroClips = once(async (): Promise<HeroClip[]> => {
-  const rows = await sanity.fetch(`*[_type == "settings"][0].heroClips[]{
+  const rows = await sanity.fetch<HeroClipRow[]>(`*[_type == "settings"][0].heroClips[]{
     "key": _key,
     "label": coalesce(label, ""),
     "video": video.asset->url,
@@ -338,8 +356,8 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
                 "dimensions": posterPortrait.asset->metadata.dimensions{width, height} }
   }`);
   return (rows ?? [])
-    .filter((c: any) => c.video)
-    .map((c: any): HeroClip => ({
+    .filter(c => c.video)
+    .map((c): HeroClip => ({
       key: c.key,
       label: c.label,
       video: c.video,
@@ -352,7 +370,10 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
 });
 
 export const getHome = once(async () => {
-  const s = await sanity.fetch(`*[_type == "settings"][0]{
+  const s = await sanity.fetch<{
+    statement?: string; studioLead?: string; peopleLead?: string; studioBody?: string[];
+    studioImages?: CmsImage[]; studioImage?: CmsImage; foundersImage?: CmsImage; teamImage?: CmsImage;
+  } | null>(`*[_type == "settings"][0]{
     statement, studioLead, peopleLead, studioBody,
     "studioImages": studioImages[] ${FIGURE},
     "studioImage": studioImage ${FIGURE},
@@ -381,9 +402,7 @@ export const getHome = once(async () => {
        * upload was never finished is an object with no asset behind it, and it
        * renders as a broken frame in the middle of the page rather than as
        * nothing — the same reasoning the method stages used to need. */
-      images: ((s?.studioImages ?? []) as SiteImage[]).filter(
-        (i) => (i as unknown as { source?: { asset?: unknown } })?.source?.asset,
-      ),
+      images: (s?.studioImages ?? []).filter(i => i.source?.asset),
       image: (s?.studioImage?.source?.asset ? s.studioImage : null) as SiteImage | null,
     },
     founders: (s?.foundersImage?.source?.asset ? s.foundersImage : null) as SiteImage | null,

@@ -1,9 +1,9 @@
 ---
 import type {TextBlock} from "../lib/press";
 import {articleUrl} from "../lib/press";
-interface Props {block: TextBlock}
-const {block} = Astro.props;
-const Tag = ["h2", "h3", "blockquote"].includes(block.style ?? "") ? block.style as "h2" | "h3" | "blockquote" : "p";
+interface Props {block: TextBlock; as?: "li"}
+const {block, as} = Astro.props;
+const Tag = as ?? (["h2", "h3", "blockquote"].includes(block.style ?? "") ? block.style as "h2" | "h3" | "blockquote" : "p");
 ---
 <Tag>{block.children.map(span => {
   const strong = span.marks?.includes("strong");
@@ -14,4 +14,4 @@ const Tag = ["h2", "h3", "blockquote"].includes(block.style ?? "") ? block.style
   const Em = italic ? "em" : "span";
   return href ? <a href={href} target="_blank" rel="noopener noreferrer"><Strong><Em>{span.text}</Em></Strong></a> :
     <Strong><Em>{span.text}</Em></Strong>;
-})}</Tag>
+})}<slot /></Tag>

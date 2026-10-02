@@ -1,0 +1,10 @@
+---
+import ArticleText from "./ArticleText.astro";
+import type {ArticleListGroup} from "../lib/press";
+interface Props {group: ArticleListGroup}
+const {group} = Astro.props;
+const List = group.list === "number" ? "ol" : "ul";
+---
+<List>{group.items.map(item => <ArticleText block={item.block} as="li">
+  {item.children.map(child => <Astro.self group={child} />)}
+</ArticleText>)}</List>

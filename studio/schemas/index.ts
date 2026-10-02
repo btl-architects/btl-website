@@ -7,10 +7,11 @@ import location from "./location";
 import heroClip from "./heroClip";
 import redirect from "./redirect";
 import settings from "./settings";
+import articleContent from "./articleContent";
 
 export const schemaTypes = [
   // documents
   project, person, publication, category, location, settings, redirect,
   // objects
-  figure, credits, seo, heroClip,
+  figure, credits, seo, heroClip, articleContent,
 ];

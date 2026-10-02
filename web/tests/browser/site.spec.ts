@@ -179,6 +179,17 @@ test('reduced motion never requests video or advances frames',async({page})=>{
   await page.waitForTimeout(6500);
   await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');expect(media).toEqual([]);
 });
+test('the opening still uses the matching phone framing before JavaScript runs',async({browser})=>{
+  const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:375,height:812}});
+  try {
+    const page=await context.newPage(); await page.goto('http://127.0.0.1:8788/');
+    const frame=page.locator('.stage__f').first();
+    const candidates=(await frame.locator('source').getAttribute('srcset'))!.split(', ').map(s=>s.split(' ')[0]);
+    await expect.poll(()=>frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
+    expect(candidates).toContain(await frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc));
+    expect(await frame.locator('video').getAttribute('src')).toBeNull();
+  } finally {await context.close();}
+});
 
 test('the homepage statement reveals on scroll and remains readable after returning',async({page})=>{
   await page.goto('/');

@@ -14,6 +14,10 @@ test('BTL reader keeps the page, traps focus, restores scroll and dismisses with
   await expect(reader.getByRole('button', {name: 'Close article'})).toBeFocused();
   await expect(page).toHaveURL(/\/__reader-demo\/$/);
   await expect(reader.locator('iframe')).toHaveCount(0);
+  await expect(reader.locator('.press-article__intro')).toContainText('introduction');
+  await expect(reader.locator('.press-article__quote')).toContainText('A place to read');
+  await expect(reader.locator('.press-article__credits')).toContainText('Photography');
+  await expect(reader.locator('.press-article__body ul > li > ol')).toHaveCount(1);
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('Tab');
     expect(await reader.evaluate(el => el.contains(document.activeElement))).toBe(true);
@@ -29,6 +33,26 @@ test('BTL reader keeps the page, traps focus, restores scroll and dismisses with
   await page.keyboard.press('Escape');
   await expect(reader).not.toBeVisible();
   await expect(entry).toBeFocused();
+});
+
+test('Press captions stay centered beneath complete artwork with long text at every breakpoint', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  for (const route of ['/', '/press/']) {
+    await page.goto(route);
+    const caption = page.locator('.pc__m').first();
+    await caption.evaluate(el => el.textContent = 'Feature · A house with a deliberately longer project name in Wayanad · 2026');
+    for (const width of [320,375,768,1440]) {
+      await page.setViewportSize({width,height:900});
+      const card = page.locator('.pc').first();
+      const image = (await card.locator('.pc__img').boundingBox())!;
+      const text = (await card.locator('.pc__m').boundingBox())!;
+      expect(Math.abs(image.x + image.width / 2 - text.x - text.width / 2)).toBeLessThan(1);
+      expect(text.y - image.y - image.height).toBeGreaterThanOrEqual(0);
+      expect(text.y - image.y - image.height).toBeLessThan(20);
+      await expect(card.locator('.pc__m')).toHaveCSS('text-align','center');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+  }
 });
 
 test('a publisher frame loads only on opening and is removed on close', async ({page}) => {

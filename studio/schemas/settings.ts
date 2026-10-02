@@ -153,7 +153,8 @@ export default defineType({
           type: "object",
           fields: [
             defineField({ name: "label", type: "string", validation: (r) => r.required() }),
-            defineField({ name: "href", type: "string", validation: (r) => r.required() }),
+            defineField({ name: "href", type: "string", description: "Page key, such as index, projects or projects/type/houses. No leading slash.",
+              validation: r => r.required().regex(/^[a-z0-9]+(?:[-/][a-z0-9]+)*$/, {name: "a page key"}) }),
           ],
           preview: { select: { title: "label", subtitle: "href" } },
         },
@@ -167,8 +168,17 @@ export default defineType({
         {
           type: "object",
           fields: [
-            defineField({ name: "label", type: "string" }),
-            defineField({ name: "url", type: "url" }),
+            defineField({ name: "label", type: "string", validation: r => r.required() }),
+            defineField({ name: "url", type: "url", description: "Use the studio's profile address, not the platform homepage.",
+              validation: r => [r.required().uri({scheme: ["https", "http"]}), r.custom(value => {
+                if (!value) return true;
+                try {const url = new URL(value); return !url.username && !url.password || "Use a public profile address without login credentials.";}
+                catch {return "Enter a complete profile address.";}
+              }), r.custom(value => {
+                if (!value) return true;
+                try {return new URL(value).pathname.replace(/\/+$/, "").length > 0 || "This points to the platform homepage. Add the studio's profile address.";}
+                catch {return true;}
+              }).warning()] }),
           ],
           preview: { select: { title: "label", subtitle: "url" } },
         },

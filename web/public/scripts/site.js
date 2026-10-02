@@ -128,16 +128,19 @@
     function sweep() {
       ticking = false;
       var vh = window.innerHeight;
-      var n = 0;
+      // Read every box before changing classes. Interleaving reads and writes
+      // forced a new page layout for each revealed element on slower devices.
+      var ready = [];
       pending = pending.filter(function (el) {
         if (el.classList.contains("in")) return false;
         var r = el.getBoundingClientRect();
         if (r.top < vh && r.bottom > 0) {
-          reveal(el, n++ * STAGGER_MS);
+          ready.push(el);
           return false;
         }
         return true;
       });
+      ready.forEach(function (el, n) { reveal(el, n * STAGGER_MS); });
       if (!pending.length) {
         window.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", onScroll);
@@ -213,13 +216,11 @@
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
-    function matchPosters() {
-      sFrames.forEach(function (frame) {
-        var v = frame.querySelector("video");
-        var poster = v.getAttribute(narrowStage.matches ? "data-poster-portrait" : "data-poster");
-        if (poster) v.poster = poster;
-      });
-    }
+    sFrames.forEach(function (frame) {
+      var v = frame.querySelector("video");
+      v.addEventListener("playing", function () { v.setAttribute("data-playing", "true"); });
+      v.addEventListener("emptied", function () { v.removeAttribute("data-playing"); });
+    });
     function load(i) {
       if (stillsOnly()) return;
       var v = sFrames[i].querySelector("video"), want = source(v);
@@ -241,7 +242,7 @@
       preloadNext = setTimeout(function () { load((at + 1) % sFrames.length); }, 3000);
     }
     function sync() {
-      pause(); matchPosters();
+      pause();
       if (stillsOnly()) {
         at = 0;
         sFrames.forEach(function (f, k) {

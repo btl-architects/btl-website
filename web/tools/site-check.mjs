@@ -3,11 +3,13 @@ import {join} from 'node:path';
 import {pages,dist} from './pages.mjs';
 const errors=[];const inventory=pages();const known=new Map(inventory.map(p=>[p.route,p]));
 const sitemap=readFileSync(join(dist,'sitemap-index.xml'),'utf8');
-const preview=JSON.parse(readFileSync(join(dist,'build-status.json'),'utf8')).preview;
+const marker=JSON.parse(readFileSync(join(dist,'build-status.json'),'utf8'));
+const preview=marker.preview || marker.noindex;
 for(const page of inventory) {
   const fail=message=>errors.push(page.route+': '+message);
   if ((page.html.match(/<h1\b/g)||[]).length!==1) fail('Expected one h1');
-  for(const tag of page.html.match(/<img\b[^>]*>/g)||[]) if(!/\balt="[^"]*"/.test(tag)) fail('Missing image alternative');
+  // Astro may serialize an explicitly empty decorative alt as the bare `alt`.
+  for(const tag of page.html.match(/<img\b[^>]*>/g)||[]) if(!/\salt(?:="[^"]*"|(?=\s|>))/.test(tag)) fail('Missing image alternative');
   if(!/<title>[^<]+<\/title>/.test(page.html))fail('Missing title');
   const canonical=/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/.exec(page.html)?.[1];
   if(!canonical || new URL(canonical).pathname!==page.route)fail('Incorrect canonical');

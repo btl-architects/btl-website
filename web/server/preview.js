@@ -10,7 +10,13 @@ export async function protectPreview({ request, env, next }) {
   } catch {
     return new Response('The website is temporarily unavailable.', {status:503,headers:{'Cache-Control':'no-store'}});
   }
-  if (!marker.preview) return next();
+  if (!marker.preview) {
+    const original = await next();
+    if (!marker.noindex) return original;
+    const response = new Response(original.body, original);
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return response;
+  }
   const headers = {'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow','Referrer-Policy':'no-referrer'};
   if (!env.PREVIEW_PASSWORD || env.PREVIEW_PASSWORD.length < 16) return new Response('Preview access is not configured.',{status:503,headers});
   const wanted = 'Basic '+btoa((env.PREVIEW_USERNAME || 'preview')+':'+env.PREVIEW_PASSWORD);
