@@ -32,10 +32,12 @@ async function underResolved(page:import('@playwright/test').Page) {
     const widths=im.srcset.split(/,\s+/).map(c=>+c.trim().split(/\s+/)[1]!.slice(0,-1));
     const got=widths[im.srcset.split(/,\s+/).findIndex(c=>c.trim().split(/\s+/)[0]===im.currentSrc)] ?? 0;
     /* Excused only when nothing sharper exists: the file is the largest offered
-       AND the largest offered is the original (Sanity puts it in the URL). The
+       AND reaches the source width after Sanity's crop. The
        looser "largest offered" hid a ladder that offered a 720px upload at 480. */
     const original=+(im.currentSrc.match(/-(\d+)x\d+\.\w+\?/)?.[1] ?? 0);
-    const exhausted=got===Math.max(...widths) && (!original || got>=Math.min(original,2000));
+    const cropWidth=Number(new URL(im.currentSrc).searchParams.get('rect')?.split(',')[2]);
+    const sourceWidth=cropWidth>0?Math.min(original||cropWidth,cropWidth):original;
+    const exhausted=got===Math.max(...widths) && (!sourceWidth || got>=Math.min(sourceWidth,2000));
     return got && !exhausted && got/w<1.5 ? [`${im.alt.slice(0,40)}: ${got}px file drawn at ${Math.round(w)}px (sizes="${im.sizes}")`] : [];
   }));
 }
@@ -197,6 +199,42 @@ test('the homepage statement remains readable without scripts',async({browser})=
     await page.locator('#statement').scrollIntoViewIfNeeded();
     await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
   } finally {await context.close();}
+});
+
+test('the homepage statement stays hidden at the viewport edge and visibly fades in the reading area',async({page})=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('/');
+  const statement=page.locator('[data-statement-reveal]');
+  await statement.evaluate(el=>window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-window.innerHeight+20,behavior:'instant'}));
+  // Includes the general reveal backstop: it must not reveal this statement early.
+  await page.waitForTimeout(1350);
+  await expect(statement).not.toHaveClass(/\bin\b/);
+  await expect(statement).toHaveCSS('opacity','0');
+  await statement.evaluate(el=>window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-window.innerHeight*.55,behavior:'instant'}));
+  await expect(statement).toHaveClass(/\bin\b/);
+  await expect.poll(()=>statement.evaluate(el=>Number(getComputedStyle(el).opacity))).toBeGreaterThan(0);
+  expect(await statement.evaluate(el=>Number(getComputedStyle(el).opacity))).toBeLessThan(1);
+  await expect(statement).toHaveCSS('opacity','1');
+});
+
+test('People uses a separate team photograph and desktop rows have three portraits',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/');
+  const founders=await page.locator('#people .spread__media img').getAttribute('src');
+  await page.getByRole('link',{name:'Everyone at btl',exact:true}).click();
+  const teamPhoto=page.locator('main .spread__media img');
+  await expect(teamPhoto).toHaveCount(1);
+  expect(await teamPhoto.getAttribute('src')).not.toBe(founders);
+  await expect(teamPhoto).toHaveAttribute('alt',/The btl team gathered/);
+  await expect(page.getByText('The principals',{exact:true})).toHaveCount(0);
+  for(const width of [1024,1440,1920,375]) {
+    await page.setViewportSize({width,height:900});
+    const firstRow=await page.locator('.team__list').first().locator('li').evaluateAll(items=>{
+      const top=items[0].getBoundingClientRect().top;
+      return items.filter(el=>Math.abs(el.getBoundingClientRect().top-top)<1).length;
+    });
+    expect(firstRow).toBe(width>=1024?3:2);
+  }
 });
 /* The form posts from the browser to Web3Forms. Nothing here may reach it:
    every request is intercepted, and a stand-in key is set in the page because

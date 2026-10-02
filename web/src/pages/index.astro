@@ -20,6 +20,7 @@ import Figure from "../components/Figure.astro";
 import { spreadSizes } from "../lib/media";
 import Onward from "../components/Onward.astro";
 import Credit from "../components/Credit.astro";
+import {articlePagePath} from "../lib/press";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
 
 const settings = await getSettings();
@@ -37,7 +38,7 @@ const principals = (await getPeople()).filter((p) => p.tier === "principal");
 const c = settings.contact;
 ---
 
-<Base title="btl architects" description={settings.tagline} current="index" ground="media">
+<Base title="btl architects" description={settings.tagline} current="index" ground="media" articleReader={press.some(item => articlePagePath(item))}>
   <main id="main" data-under-header>
     <section class="landing" data-ground="media" data-stage>
       <h1 class="sr-only">btl architects — architecture and interiors, Kozhikode</h1>
@@ -55,7 +56,7 @@ const c = settings.contact;
     {/* COMPRESSION — one line, a lot of air */}
     <section class="home-sec home-sec--compress home-sec--midpage" id="statement" data-ground="dark">
       <div class="container">
-        <Statement text={home.statement} class="rv" />
+        <Statement text={home.statement} class="rv statement--scroll" scrollReveal />
       </div>
     </section>
 

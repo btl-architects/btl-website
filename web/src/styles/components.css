@@ -1376,11 +1376,9 @@ html:has(.menu[data-open="true"]) .header {
  * shape carried over from the press index, where the rows are publications and
  * the width is doing something.
  *
- * The practice asked for them side by side, three or so to a line. Size-led, not
- * count-led, for the reason the press grid is: stating "three across" means the
- * card is whatever a third of the page happens to be, and it inflates on every
- * wider screen. Stating the card's width lets the count follow — two on a
- * tablet, three at 1440, four on a very wide monitor, and one on a phone.
+ * The practice asked for three portraits per desktop row. Cards retain their
+ * fixed width, and the list stops at three cards so wider screens add margins
+ * instead of a fourth portrait. On phones, each row holds two portraits.
  *
  * The hairline that separated the rows goes with the rows. It was a device for
  * reading down a list; between cards it is a grid of boxes. */
@@ -1399,7 +1397,7 @@ html:has(.menu[data-open="true"]) .header {
    * larger than everyone else's. Centred lines have no need to fill: the slack
    * sits either side and reads as margin. So the width is fixed at --team-min,
    * falling to exactly half a line on a phone so two always fit, and the list
-   * is capped at four cards so a wide monitor does not run six across. */
+   * is capped at three cards, as requested for the desktop team layout. */
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -1407,7 +1405,7 @@ html:has(.menu[data-open="true"]) .header {
   margin: var(--s-5) auto 0;
   padding: 0;
   list-style: none;
-  max-width: calc(4 * var(--team-min) + 3 * var(--s-6));
+  max-width: calc(3 * var(--team-min) + 2 * var(--s-6));
 }
 .team__list > li {
   flex: 0 0 min(var(--team-min), calc(50% - var(--s-6) / 2));
@@ -1703,39 +1701,19 @@ html:has(.menu[data-open="true"]) .header {
 .pc__img:empty { background: none; }
 /* Magazine lettering must stay inside the frame, including on hover. Keep a
    common height when a row mixes covers with older project-photo entries. */
-.credits:has(.pc--custom) .pc__img { aspect-ratio: 3 / 4; }
+.credits:has(.pc--custom) .pc__img { aspect-ratio: 1 / 1; }
 .pc--custom .pc__img img { object-fit: contain; }
+.pc--custom .pc__img { background: none; }
+/* The composite PNG supplies the mark. A photo-style blur placeholder would
+   colour the clear areas behind its publication lettering. */
+.pc--custom .pc__img img { background-image: none !important; }
 
 /* The mark gets a line's height whatever its length, so a monogram and a long
    wordmark leave the same gap above the meta line beneath them. */
-.pc__mark {
-  --mark-h: 1.125rem;
-  display: flex;
-  align-items: center;
-  /* A fixed two lines, not a minimum. "AD" is one line and "Kerala State
-     Architecture Awards" is two, and with a minimum the long one pushed its own
-     caption down while its neighbour's stayed put — every row hung at a
-     different height. Reserving both lines everywhere costs one line of space
-     on the short marks and buys a straight baseline across the row. */
-  height: calc(var(--mark-h) * 2.7);
-  margin-top: var(--s-4);
-  min-width: 0;
-}
-.pc__mark .masthead { color: var(--text-primary); white-space: nowrap; }
-.pc__mark .masthead--long { font-size: calc(var(--mark-h) / 1.3); white-space: normal; }
-.pc__mark .masthead__img {
-  height: calc(var(--mark-h) * 1.55);
-  max-width: 100%;
-  /* Transparent dark wordmarks need light lettering on the site's black
-     ground. Restrict this to the small mark, leaving covers and photos intact.
-     A photo-style blurred placeholder would fill its transparent background. */
-  filter: brightness(0) invert(1);
-  background-image: none !important;
-}
 
 .pc__m {
   display: block;
-  margin-top: var(--s-2);
+  margin-top: var(--s-4);
   font-size: var(--type-meta);
   letter-spacing: var(--track-meta);
   text-transform: uppercase;
@@ -1765,6 +1743,13 @@ html:has(.menu[data-open="true"]) .header {
  * The parts carry their own measures already — 18ch for a display line, the
  * standard measure for the note — so centring is margin, not width. */
 .statement { text-align: center; }
+@media (prefers-reduced-motion: no-preference) {
+  :where(.js) .statement--scroll {
+    transform: translateY(var(--s-5));
+    transition: opacity var(--dur-statement) var(--ease), transform var(--dur-statement) var(--ease);
+  }
+  :where(.js) .statement--scroll.in { transform: none; }
+}
 .statement > .spread__say,
 .statement > .spread__note { margin-inline: auto; }
 /* No top padding: <main> places every page below the header (base.css). */
@@ -1952,65 +1937,6 @@ body[data-preview] .header { top: var(--preview-h); }
   .landing .srail__i, .landing .srail__i::after { transition: none; }
 }
 
-/* --- a publication's mark -------------------------------------------------
-   Set in Satoshi like everything else. This was the one place the site stepped
-   outside its typeface — a Didot stack, to quote the magazine's look — and the
-   practice asked for one face throughout. A publication that wants its real
-   identity shown does it with an uploaded logo (.masthead__img), which is the
-   honest way to quote a mark anyway. */
-
-/* Marks are normalised by HEIGHT, never by width.
- *
- * Publication marks have nothing in common dimensionally: AD's monogram is
- * 1.4:1, a spelled-out wordmark is 15:1, an awarding body is a line of text.
- * Sized to a share of their container they came out looking nothing like each
- * other — one a huge square, the next a thin strip — which is what made a row
- * of them look broken rather than curated.
- *
- * Every logo row that works does the same thing: fix the optical height and let
- * width fall where it may, so each mark reads at the same weight regardless of
- * its shape. --mark-h is that band, set by whatever is placing them. */
-:root { --mark-h: 2rem; }
-
-.masthead {
-  display: block;
-  font-family: var(--font);
-  font-weight: 500;
-  /* Satoshi's cap-height is roughly 0.7 of its size, so this lands a text mark
-     on the same optical band as an image one. */
-  font-size: calc(var(--mark-h) / 0.7);
-  line-height: 1;
-  letter-spacing: 0.01em;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-/* A spelled-out name cannot hold that size without running off the card, so it
-   drops to a band it can keep and is allowed to wrap. */
-.masthead--long {
-  /* A step, not a demotion. It still belongs to the same row. */
-  font-size: calc(var(--mark-h) / 1.05);
-  line-height: 1.05;
-  letter-spacing: 0;
-  white-space: normal;
-  /* Two lines at most: a mark that runs to three has stopped being a mark. */
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-/* An uploaded logo has to carry the same weight as the type it replaces, or
-   supplying the real asset would make the credit quieter — the opposite of the
-   point. Sized against the composition, not left at its natural pixel size. */
-.masthead__img {
-  display: block;
-  /* Height fixed, width free — the whole point. */
-  height: var(--mark-h);
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  object-position: left bottom;
-  filter: var(--drop-on-image);
-}
-
 /* --- the press index ------------------------------------------------------
    Rows, not cards.
 
@@ -2048,6 +1974,83 @@ body[data-preview] .header { top: var(--preview-h); }
    appeared under the press page's masthead where it was not wanted. Stated as
    a sibling rule it applies exactly where the pairing occurs. */
 .home-sec__head + .credits { margin-top: var(--s-7); }
+
+/* Press reader: the site's dark ground and fine rules, with the page still
+   visible around a quiet reading panel. Full height on a narrow phone. */
+.press-reader {
+  padding: 0; margin: auto;
+  width: min(var(--reader-width), calc(100% - 2 * var(--page-margin)));
+  height: calc(100dvh - 2 * var(--s-7));
+  max-width: none; max-height: none;
+  color: var(--text-primary); background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.press-reader[open] { display: flex; flex-direction: column; }
+.press-reader::backdrop { background: var(--overlay-press); }
+.press-reader__bar {
+  display: flex; align-items: center; flex: none; gap: var(--s-4);
+  padding: var(--s-3) var(--s-5); border-bottom: 1px solid var(--border-subtle);
+}
+.press-reader__label {
+  flex: 1; min-width: 0; font-size: var(--type-meta); letter-spacing: .12em;
+  text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.press-reader__original, .press-reader__close {
+  flex: none; display: inline-flex; align-items: center; gap: var(--s-2);
+  min-height: 2.75rem; font: inherit; font-size: var(--type-body-sm);
+  color: var(--text-secondary); background: none; border: 0; padding: 0;
+  text-decoration: none; cursor: pointer;
+}
+.press-reader__original[hidden] { display: none; }
+.press-reader__close { padding-inline: var(--s-2); }
+.press-reader__original:hover, .press-reader__close:hover { color: var(--text-primary); }
+.press-reader__close span { font-size: var(--type-h3); font-weight: 300; }
+.press-reader__content {
+  min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--s-7) var(--s-5); scrollbar-gutter: stable;
+}
+.press-reader__status { color: var(--text-secondary); }
+.press-reader__status a { display: inline-block; margin-top: var(--s-4); text-decoration: underline; }
+.press-article { max-width: 52rem; margin-inline: auto; }
+.press-article__head { max-width: var(--measure-lead); margin-bottom: var(--s-7); }
+.press-article__publication, .press-article__meta {
+  color: var(--text-tertiary); font-size: var(--type-meta);
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.press-article__publication { margin-bottom: var(--s-4); }
+.press-article__head h1 { font-size: var(--type-page-title); font-weight: 400; line-height: 1.2; letter-spacing: -.03em; }
+.press-article__meta { margin-top: var(--s-4); }
+.press-article__byline { margin-top: var(--s-3); color: var(--text-secondary); font-size: var(--type-body-sm); }
+.press-article__image { margin: 0 0 var(--s-7); }
+.press-article__image img, .press-article__body figure img { width: 100%; height: auto; object-fit: contain; }
+.press-article__image img { background-image: none !important; }
+.press-article figcaption { margin-top: var(--s-3); font-size: var(--type-caption); color: var(--text-secondary); }
+.press-article__body { display: flow-root; }
+.press-article__body > :is(p, h2, h3, blockquote) { max-width: var(--measure); margin-inline: auto; }
+.press-article__body p { color: var(--text-secondary); line-height: 1.75; margin-bottom: var(--s-5); }
+.press-article__body h2 { font-size: var(--type-h3); font-weight: 400; margin-block: var(--s-7) var(--s-4); }
+.press-article__body h3 { font-size: var(--type-lead); font-weight: 500; margin-block: var(--s-6) var(--s-3); }
+.press-article__body blockquote { border-left: 1px solid var(--border-strong); padding-left: var(--s-5); font-size: var(--type-lead); margin-block: var(--s-6); }
+.press-article__body figure { margin: var(--s-7) 0; }
+.press-article__body a, .press-article__help a, .press-article__source a { text-decoration: underline; text-underline-offset: .2em; }
+.press-article__source { border-top: 1px solid var(--border-subtle); padding-top: var(--s-5); margin-top: var(--s-7); color: var(--text-secondary); font-size: var(--type-body-sm); }
+.press-article__help { font-size: var(--type-body-sm); color: var(--text-secondary); margin-bottom: var(--s-4); }
+.press-article__frame { display: block; width: 100%; height: 70dvh; border: 1px solid var(--border-subtle); background: var(--surface); }
+@media (max-width: 47.99rem) {
+  .press-reader { width: 100%; height: 100dvh; border: 0; }
+  .press-reader__bar { flex-wrap: wrap; gap: 0 var(--s-3); padding-inline: var(--page-margin); }
+  .press-reader__label { flex-basis: calc(100% - 5rem); }
+  .press-reader__close { order: 2; }
+  .press-reader__original { order: 3; flex-basis: 100%; }
+  .press-reader__content { padding: var(--s-6) var(--page-margin); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .press-reader[open] { animation: press-reader-in var(--dur-base) var(--ease); }
+  .press-reader[open]::backdrop { animation: press-reader-backdrop var(--dur-base) var(--ease); }
+  @keyframes press-reader-in { from {opacity: 0; transform: translateY(var(--s-3));} to {opacity: 1; transform: none;} }
+  @keyframes press-reader-backdrop { from {opacity: 0;} to {opacity: 1;} }
+}
 
 /* --- the menu button ------------------------------------------------------
    One control that changes state, rather than two controls that swap places.

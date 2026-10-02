@@ -23,9 +23,10 @@ interface Props {
   note?: string;
   /** Extra classes for the wrapper. */
   class?: string;
+  scrollReveal?: boolean;
 }
 
-const { text, note, class: cls } = Astro.props;
+const { text, note, class: cls, scrollReveal = false } = Astro.props;
 
 /* Abbreviations that end in a full stop and are not the end of anything.
  * "Ar." is the one that matters on an architecture practice's website — every
@@ -65,7 +66,7 @@ const size =
 ---
 
 {parts.lead && (
-  <div class:list={["statement", cls]}>
+  <div class:list={["statement", cls]} data-statement-reveal={scrollReveal ? "" : undefined}>
     <p class:list={["spread__say", size]}>{parts.lead}</p>
     {parts.rest && <p class="spread__note">{parts.rest}</p>}
   </div>

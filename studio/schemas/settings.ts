@@ -137,7 +137,11 @@ export default defineType({
       type: "figure",
       group: "studio",
       description:
-        "Carries the People page. A portrait frame with room above the founders — their names are set into the architecture in the upper half, so leave that area uncluttered.",
+        "Shown in the People section on the home page. This is separate from the team photograph on the People page.",
+    }),
+    defineField({
+      name: "teamImage", title: "People page — team photograph", type: "figure", group: "studio",
+      description: "The group photograph at the top of the People page. Crop excess headroom in the image editor and keep the whole team inside the frame. It does not replace the home page's founders photograph.",
     }),
 
     defineField({

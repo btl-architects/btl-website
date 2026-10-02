@@ -177,6 +177,9 @@ const FULL_BLEED = new Set([
   ".preview-flag", // pinned to the window, not to the page
   ".lb__bar",      // lightbox chrome sits over the viewport
   ".lb__cap",
+  ".press-reader",           // modal panel is placed against the viewport
+  ".press-reader__bar",      // modal chrome has its own internal gutter
+  ".press-reader__content",  // independently scrolling modal content
 ]);
 
 for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {

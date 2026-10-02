@@ -1,0 +1,17 @@
+---
+import type {TextBlock} from "../lib/press";
+import {articleUrl} from "../lib/press";
+interface Props {block: TextBlock}
+const {block} = Astro.props;
+const Tag = ["h2", "h3", "blockquote"].includes(block.style ?? "") ? block.style as "h2" | "h3" | "blockquote" : "p";
+---
+<Tag>{block.children.map(span => {
+  const strong = span.marks?.includes("strong");
+  const italic = span.marks?.includes("em");
+  const annotation = block.markDefs?.find(m => m._type === "link" && span.marks?.includes(m._key));
+  const href = articleUrl(annotation?.href);
+  const Strong = strong ? "strong" : "span";
+  const Em = italic ? "em" : "span";
+  return href ? <a href={href} target="_blank" rel="noopener noreferrer"><Strong><Em>{span.text}</Em></Strong></a> :
+    <Strong><Em>{span.text}</Em></Strong>;
+})}</Tag>

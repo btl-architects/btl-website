@@ -55,8 +55,8 @@ It's live on the next publish.
 Name, portrait, role, and **Where they appear**. Principals may leave the role
 blank; Team and Alumni need a role:
 
-- **Principal** — in the founders composition at the top of the People page
-- **Team** — portrait cards below the founders
+- **Principal** — retained profile record; the separate principals list has been removed
+- **Team** — portrait cards below the team photograph, including founders with team records
 - **Alumni** — portrait cards in "Previously at btl", using the same treatment
 
 After replacing a portrait, publish the person and wait for the website rebuild
@@ -77,15 +77,15 @@ something to hold.
 One entry type covers both — choose **Press feature** or **Award** at the top.
 
 Add the publication's name, the headline, the date, and the link. Upload the
-magazine cover or feature photograph under **Press image / magazine cover**.
-The whole image stays visible, including the cover's lettering. Each entry can
-have its own image even when several entries feature the same project.
+client's complete PNG under **Complete Press artwork**, with the photograph and
+publication name already composed into it. A square canvas fits the card closely;
+other proportions stay fully visible, without cropping or hover zoom. Transparent
+areas show the website's dark background. The artwork retains its original colours.
+Each entry can have its own image even when several entries feature the same project.
 
-**Publication logo** is a separate, optional small mark below the main image.
-Upload a logo with a transparent background; its lettering is displayed in white
-on both Home and Press. Magazine covers and photographs keep their own colours.
-To replace a Press picture, open its entry, replace **Press image / magazine
-cover**, and publish. The public site shows it after the next successful rebuild;
+The website adds no separate publication logo: the feature, project and year
+caption remains beneath the artwork. To replace it, change **Complete Press
+artwork** and publish. The public site shows it after the next successful rebuild;
 publishing does not change the public image instantly.
 
 **Related project** supplies the project name and context. **Use the project
@@ -93,8 +93,36 @@ photograph if there is no Press image** is an explicit fallback: older entries r
 it for compatibility, while new entries start with it off. A Press image always
 takes priority.
 
-**A missing logo is fine.** The publication's name set large *is* the design,
-not a placeholder. Add the logo whenever it turns up and nothing else moves.
+**How the article opens** is a separate choice for every entry:
+
+- **BTL reader** opens a reading panel on Home or Press. Add text and full-frame
+  photographs or scanned magazine pages under **Article content**, in reading
+  order. A byline is optional. The original address becomes a source link;
+  an address alone cannot supply the reader content. Text or a magazine page is
+  required before publishing this mode.
+- **Embedded publisher page** opens the same panel with the publisher's actual
+  website inside it. Add its HTTPS address, then check the published result.
+  The publisher's typography, advertisements and cookie prompts remain theirs.
+  Some publishers block embedding, including Architectural Digest at the time
+  of this implementation. Choose BTL reader or a new tab for those publishers.
+  An **Open original** link is always available if a frame stops working.
+- **Feature preview** shows the artwork and feature details in the same reading
+  panel, with a link to read the original in a new tab. Existing entries use this
+  mode until you choose another. Every mode uses the same opening, closing and
+  return-to-page behaviour; only the content inside changes.
+
+Changing modes preserves the article content. Each linked feature
+also has its own BTL page; opening in a new tab, sharing the link, or disabling
+JavaScript still leaves a usable destination. Close, Escape (when focus is in
+BTL), or browser Back dismisses the panel and restores the page position.
+Keyboard events inside a publisher's frame belong to that publisher, so use the
+visible **Close** control to return to BTL from an embedded page.
+Previously shared article pages remain available when you switch to a feature
+preview. Only BTL reader versions are included in the search sitemap; publisher
+frames and external-link previews stay out of search results.
+
+The publication name remains required for the reader header and accessible card
+label, even when its lettering is already included in the PNG.
 
 To remove a dummy Press entry, open that entry, use the document's **…** menu,
 choose **Delete**, and confirm the deletion. Published entries disappear from the
@@ -102,6 +130,12 @@ website after the next successful rebuild. Delete only the entry you intend to
 remove; this does not delete its related project or uploaded assets.
 
 ### Arrange people or projects
+
+**Site settings → The practice** has two independent image slots:
+**Founders photograph** is for Home; **People page — team photograph** is for
+the People page. Use Sanity's crop controls to remove excess headroom while
+keeping everyone visible. The original uploaded image is preserved. Desktop
+Team and Alumni rows hold three portraits; narrow screens hold two.
 
 Open **Arrange people** or **Arrange projects** in the sidebar. Drag the ↕
 handles, use **Move up / Move down**, or focus a handle and press the arrow keys.
@@ -140,7 +174,7 @@ is a wait rather than an opening.
 **Site settings** holds everything that isn't a project or a person:
 
 - **The practice** — the home page statement, the Studio headline and
-  paragraphs, the People headline, the studio and founders photographs
+  paragraphs, the People headline, the studio, founders and team photographs
 - **Page wording** — the footer line, the Press headline, the closing lines on
   People and Studio, the 404 message
 - **Contact** — address, email, phone, where enquiries are delivered, GSTIN

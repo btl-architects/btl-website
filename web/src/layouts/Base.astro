@@ -32,9 +32,10 @@ interface Props {
   /** The photograph a shared link should show. Falls back to the founders, so
    *  no page can be shared as a bare text card by omission. */
   share?: SiteImage | null;
+  articleReader?: boolean;
 }
 
-const { title, description, current = "", ground = "dark", noindex = false, share } = Astro.props;
+const { title, description, current = "", ground = "dark", noindex = false, share, articleReader = false } = Astro.props;
 const settings = await getSettings();
 const canonical = new URL(Astro.url.pathname === "/404/" ? "/404.html" : Astro.url.pathname, Astro.site).href;
 
@@ -145,5 +146,6 @@ const org = {
     <slot />
     <Footer settings={settings} current={current} />
     <script src="/scripts/site.js" is:inline defer></script>
+    {(articleReader || current === "press") && <script src="/scripts/press-reader.js" is:inline defer></script>}
   </body>
 </html>

@@ -111,9 +111,18 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
     // width descriptors are what `sizes` is resolved against.)
     return { src: urlFor(source).url(), srcset: "", width: 0, height: 0, ratio: 0 };
   }
-  const dims = image.dimensions
+  const original = image.dimensions
     ? { w: image.dimensions.width, h: image.dimensions.height }
     : intrinsic(source) ?? { w: image.width ?? 1600, h: image.height ?? 1067 };
+  // Sanity returns the cropped frame. Its HTML dimensions, size requests and
+  // CSS ratio must describe that frame, rather than the uncropped upload.
+  const crop = typeof source === "object" ? (source as {crop?: {left?: number; right?: number; top?: number; bottom?: number}}).crop : undefined;
+  // Match @sanity/image-url's pixel rounding: it rounds the left/top offsets
+  // before subtracting them from the remaining width/height.
+  const dims = crop ? {
+    w: Math.max(1, Math.round(original.w - original.w * (crop.right ?? 0) - Math.round(original.w * (crop.left ?? 0)))),
+    h: Math.max(1, Math.round(original.h - original.h * (crop.bottom ?? 0) - Math.round(original.h * (crop.top ?? 0)))),
+  } : original;
 
   /* Never offer more than the original, and never less than it either.
    *

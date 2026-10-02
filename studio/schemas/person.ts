@@ -2,8 +2,8 @@ import { defineField, defineType } from "sanity";
 
 /* A person.
  *
- * Tier drives the composition, not the editor: principals are the founders
- * photograph, Team and Alumni use the same portrait-card treatment.
+ * Team and Alumni use portrait cards. Principal records are retained for
+ * individual profiles; the removed founders list does not render them.
  * `active` retires someone without deleting them, so the record — and anything
  * that references it — survives.
  */
@@ -16,7 +16,7 @@ export default defineType({
     defineField({ name: "name", type: "string", validation: (r) => r.required() }),
     defineField({
       name: "role", type: "string",
-      description: "Optional for principals. Leave blank to show only their name below the founders photograph.",
+      description: "Optional for principal profile records. Team and Alumni portrait cards need a role.",
       validation: (r) => r.custom((value, context) =>
         context.document?.tier === "principal" || (typeof value === "string" && value.trim())
           ? true : "Add a role for a team member or alumnus."),
@@ -31,7 +31,7 @@ export default defineType({
       name: "bio",
       type: "text",
       rows: 4,
-      description: "Optional. Shown for principals.",
+      description: "Optional. Creates an individual profile page when a slug is also present.",
       validation: (r) => r.max(500),
     }),
     defineField({ name: "portrait", type: "figure" }),
@@ -41,8 +41,8 @@ export default defineType({
       type: "string",
       options: {
         list: [
-          { title: "Principal — in the founders composition", value: "principal" },
-          { title: "Team — in the list", value: "team" },
+          { title: "Principal — profile record only", value: "principal" },
+          { title: "Team — portrait cards", value: "team" },
           { title: "Alumni — previously at btl", value: "alumni" },
         ],
         layout: "radio",

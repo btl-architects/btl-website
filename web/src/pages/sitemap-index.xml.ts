@@ -7,7 +7,8 @@
  */
 import { isPreview } from "../lib/sanity";
 import type { APIRoute } from "astro";
-import { getProjectRoutes, getEarnedCategories, getProfiles } from "../lib/content";
+import { getProjectRoutes, getEarnedCategories, getProfiles, getPublications } from "../lib/content";
+import {articlePath} from "../lib/press";
 
 export const GET: APIRoute = async ({ site }) => {
   const base = site?.href.replace(/\/$/, "") ?? "";
@@ -21,6 +22,7 @@ export const GET: APIRoute = async ({ site }) => {
     ...(await getProfiles()).map((p) => `/people/${p.slug}/`),
     "/privacy/",
     "/press/",
+    ...(await getPublications()).filter(item => item.openingMode === "reader").map(articlePath).filter((path): path is string => Boolean(path)),
     "/contact/",
   ];
   const body = `<?xml version="1.0" encoding="UTF-8"?>
