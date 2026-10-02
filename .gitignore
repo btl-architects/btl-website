@@ -64,3 +64,6 @@ test-results/
 .lighthouseci/
 web/reports/
 backups/
+
+# Local browser evidence includes photographs; keep it outside the code remote.
+/docs/client-feedback-evidence-2026-10-02/

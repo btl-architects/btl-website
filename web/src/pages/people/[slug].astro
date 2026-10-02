@@ -37,10 +37,10 @@ const fullName = `${person.prefix} ${person.name}`.trim();
         )}
         <div class="spread__body rv" data-delay="1">
           <h1 class="spread__say spread__say--display">{fullName}</h1>
-          <p
+          {person.role && <p
             class="eyebrow"
             style="display:block; color:var(--text-tertiary); margin-top:var(--s-4)"
-          >{person.role}</p>
+          >{person.role}</p>}
           <p class="spread__note">{person.bio}</p>
         </div>
       </div>

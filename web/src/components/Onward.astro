@@ -19,8 +19,9 @@ interface Props {
   kicker?: string;
   /** Quieter inside a home-page section than at the end of a whole page. */
   quiet?: boolean;
+  muted?: boolean;
 }
-const { href, kicker, quiet = false } = Astro.props;
+const { href, kicker, quiet = false, muted = false } = Astro.props;
 ---
 
 {/* No kicker by default.
@@ -30,7 +31,7 @@ const { href, kicker, quiet = false } = Astro.props;
     text says where it goes; where a word genuinely adds something the caller
     passes one, and at the end of a page "Next" does add something, because it
     marks leaving the subject rather than going deeper into it. */}
-<a class:list={["onward", quiet && "onward--quiet"]} href={href}>
+<a class:list={["onward", quiet && "onward--quiet", muted && "onward--muted"]} href={href}>
   {kicker && <span class="onward__k">{kicker}</span>}
   <span class="onward__t"><slot /></span>
 </a>

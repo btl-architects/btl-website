@@ -179,7 +179,7 @@ html:has(.menu[data-open="true"]) .header {
 }
 .nav__link {
   display: block;
-  font-size: var(--type-nav); font-weight: 500;
+  font-size: var(--type-nav); font-weight: 400;
   text-transform: uppercase; letter-spacing: var(--track-nav);
   padding-block: 0.35em 0.75em;
 }
@@ -216,7 +216,7 @@ html:has(.menu[data-open="true"]) .header {
 .menu[data-open="true"] { transform: none; visibility: visible; }
 .menu__list { display: flex; flex-direction: column; gap: var(--s-3); }
 .menu__link {
-  font-size: var(--type-h3); font-weight: 900;
+  font-size: var(--type-h3); font-weight: 400;
   letter-spacing: var(--track-h1); line-height: 1;
   color: var(--n-450);
   display: inline-block; padding-block: 0.2em;
@@ -1701,6 +1701,10 @@ html:has(.menu[data-open="true"]) .header {
 }
 .pc__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pc__img:empty { background: none; }
+/* Magazine lettering must stay inside the frame, including on hover. Keep a
+   common height when a row mixes covers with older project-photo entries. */
+.credits:has(.pc--custom) .pc__img { aspect-ratio: 3 / 4; }
+.pc--custom .pc__img img { object-fit: contain; }
 
 /* The mark gets a line's height whatever its length, so a monogram and a long
    wordmark leave the same gap above the meta line beneath them. */
@@ -1719,7 +1723,15 @@ html:has(.menu[data-open="true"]) .header {
 }
 .pc__mark .masthead { color: var(--text-primary); white-space: nowrap; }
 .pc__mark .masthead--long { font-size: calc(var(--mark-h) / 1.3); white-space: normal; }
-.pc__mark .masthead__img { height: calc(var(--mark-h) * 1.55); max-width: 100%; }
+.pc__mark .masthead__img {
+  height: calc(var(--mark-h) * 1.55);
+  max-width: 100%;
+  /* Transparent dark wordmarks need light lettering on the site's black
+     ground. Restrict this to the small mark, leaving covers and photos intact.
+     A photo-style blurred placeholder would fill its transparent background. */
+  filter: brightness(0) invert(1);
+  background-image: none !important;
+}
 
 .pc__m {
   display: block;
@@ -1733,7 +1745,7 @@ html:has(.menu[data-open="true"]) .header {
 /* The photograph answers the pointer, the way the project cards do. */
 @media (hover: hover) {
   .pc__img img { transition: transform var(--dur-hover) var(--ease); }
-  .pc:hover .pc__img img { transform: scale(1.03); }
+  .pc:not(.pc--custom):hover .pc__img img { transform: scale(1.03); }
 }
 @media (prefers-reduced-motion: reduce) {
   .pc__img img, .pc:hover .pc__img img { transition: none; transform: none; }
@@ -1759,15 +1771,12 @@ html:has(.menu[data-open="true"]) .header {
 .index-head {
   padding-block: 0 var(--s-8);
 }
-/* A page title at display scale was the loudest thing on the site.
- *
- * --type-display runs to 5.75rem and exists for a moment the page has earned;
- * spending it on the word "Press" at the top of every index made the label
- * bigger than any of the work under it. --type-h1 tops out at 3.5rem, which is
- * still unmistakably the page's title and no longer the whole screen. */
+/* Ordinary page titles use a compact scale. Statements and the settled
+ * Thank-you title retain their established sizes. */
 .index-head__t {
   margin: 0;
-  font-size: var(--type-h1);
+  font-size: var(--type-page-title);
+  font-weight: 500;
   letter-spacing: var(--track-display);
   line-height: var(--lead-tight);
   color: var(--text-primary);
@@ -1780,6 +1789,10 @@ html:has(.menu[data-open="true"]) .header {
   line-height: var(--lead-snug);
   color: var(--text-secondary);
 }
+
+.onward--muted .onward__t { color: var(--text-secondary); }
+.onward--muted:hover .onward__t,
+.onward--muted:focus-visible .onward__t { color: var(--text-primary); }
 
 /* Everything shifts down by the preview banner's height while previewing. The
    page offset adds it (base.css) rather than being replaced by it. */

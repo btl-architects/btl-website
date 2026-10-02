@@ -268,6 +268,7 @@
   var menuLabel = document.querySelector("[data-menu-label]");
   if (menu && openBtn) {
     var lastFocus = null;
+    var menuFocusFrame = null;
 
     /* Only what is actually rendered. A display:none link cannot take focus,
        so one left in the cycle makes the trap's .focus() on it silently fail
@@ -291,9 +292,14 @@
       document.documentElement.style.overflow = "hidden";
       if (menuLabel) menuLabel.textContent = "Close";
       var f = focusables();
-      if (f.length > 1) requestAnimationFrame(function () { f[1].focus(); });
+      if (f.length > 1) menuFocusFrame = requestAnimationFrame(function () {
+        menuFocusFrame = null;
+        // A quick Tab or Escape must not be undone by deferred initial focus.
+        if (menu.getAttribute("data-open") === "true" && document.activeElement === lastFocus) f[1].focus();
+      });
     }
     function close() {
+      if (menuFocusFrame !== null) { cancelAnimationFrame(menuFocusFrame); menuFocusFrame = null; }
       isolateMenu(false);
       menu.setAttribute("data-open", "false");
       openBtn.setAttribute("aria-expanded", "false");
@@ -308,6 +314,9 @@
 
     document.addEventListener("keydown", function (e) {
       if (menu.getAttribute("data-open") !== "true") return;
+      if ((e.key === "Tab" || e.key === "Escape") && menuFocusFrame !== null) {
+        cancelAnimationFrame(menuFocusFrame); menuFocusFrame = null;
+      }
       if (e.key === "Escape") { close(); return; }
       if (e.key !== "Tab") return;
       var f = focusables();
@@ -1545,4 +1554,3 @@
       if ((e.key === "Enter" || e.key === " ") && e.target.matches('.rail__f[role="button"]')) activatePicture(e);
     });
   })();
-

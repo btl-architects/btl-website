@@ -102,6 +102,7 @@
    * used. */
   --type-display:  clamp(2.5rem, 1.4rem + 5vw,      5.75rem);
   --type-h1:       clamp(1.875rem, 1.25rem + 3vw,   3.5rem);
+  --type-page-title: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem);
   --type-h2:       clamp(1.5rem, 1.1rem + 1.8vw,    2.375rem);
   --type-h3:       clamp(1.25rem, 1.05rem + 0.9vw,  1.75rem);
   --type-lead:     clamp(1.0625rem, 0.95rem + 0.8vw, 1.5rem);

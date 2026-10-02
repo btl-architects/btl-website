@@ -1,18 +1,5 @@
 ---
-/* Press and awards — one content type with a `kind`, never two systems.
- *
- * The first version was a masthead wall with the project photograph hidden
- * behind a hover. With one credit that is a page containing a name and a
- * sentence, which is not a page — and hover is a state half the visitors do not
- * have. The recognition means something because of the building that earned it,
- * so the building is on the page rather than one gesture away from it.
- *
- * Each entry is the same spread the rest of the site is built from: photograph
- * one side, type the other, alternating down the page. Where a publication has
- * supplied a logo it is set as the object; where it has not, the name typeset
- * at display scale is the designed fallback and nothing moves when the asset
- * arrives.
- */
+/* Press features and awards share one content type and independent imagery. */
 import Base from "../layouts/Base.astro";
 import Credit from "../components/Credit.astro";
 import { getPublications, getProjects, getSettings } from "../lib/content";
@@ -24,16 +11,15 @@ const projects = await getProjects();
 const projectFor = (slug: string | null) =>
   slug ? projects.find((p) => p.slug === slug) : undefined;
 
-/* The press page shares as the building that got written about, not as a
-   masthead: the recognition means something because of the work behind it. */
-const firstFeatured = items.map((i) => projectFor(i.relatedProject)).find(Boolean);
+/* Prefer the entry's own cover when sharing the page. */
+const shareImage = items.map((i) => i.image ?? (i.useProjectImage ? projectFor(i.relatedProject)?.hook : null)).find(Boolean);
 ---
 
 <Base
   title="Press — btl architects"
   description="Where the practice has been published."
   current="press"
-  share={firstFeatured?.hook}
+  share={shareImage}
 >
   <main id="main" data-ground="dark">
     <header class="index-head">

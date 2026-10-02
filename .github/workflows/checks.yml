@@ -65,5 +65,6 @@ jobs:
           cache-dependency-path: studio/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=high
+      - run: npm test
       - run: npx tsc --noEmit
       - run: npm run build
