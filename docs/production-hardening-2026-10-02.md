@@ -160,7 +160,10 @@ content and rendition count; serving traffic is independent of CMS availability.
 
 PR [#18](https://github.com/btl-architects/btl-website/pull/18) contains this pass.
 The compatible editor is live at https://btldesigns.sanity.studio/.
-Pending final website production verification. Both current Press entries now
+Merged to main as `c2a21eba39ce4d70620ae57dcec82ab5e390c53c` through PR #18.
+Cloudflare production deployment passed and the public Press reader was verified
+on 2 October 2026: Close label 15px, fixed 16px icon, verified headline/writer/date,
+and clearly labelled summary content. Both current Press entries now
 have verified source headlines, dates and writer credits, clearly labelled
 short summaries, three credited project photographs each and project credits
 in Sanity. Revision-guarded patches were backed up locally and preserve unrelated
@@ -200,3 +203,12 @@ browser checks and Studio checks, but missed lab performance targets: Home
 1534ms / CLS 0. Earlier local runs passed all targets (Home 100 / 1586ms).
 This CI performance discrepancy remains open; budgets have not been relaxed
 and the release is not described as passing every production-readiness gate.
+
+After the source/control correction: 21 web unit tests, 8 Studio unit tests,
+strict checks and builds passed; 16 focused Chromium/WebKit reader checks passed.
+Actual phone reader width was 390px, toolbar 61px tall, with no horizontal
+overflow. Final local performance passed all unchanged targets: Home 100 /
+1588ms / CLS 0, project 100 / 1516ms / CLS 0, Contact 100 / 1516ms / CLS 0.
+The newest full Linux runs were still in progress at publication; the earlier
+CI lab discrepancy remains recorded above. Public website and Sanity editor
+both include these corrections. No full publisher article has been republished.
