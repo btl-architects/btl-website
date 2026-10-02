@@ -30,8 +30,8 @@ studio/.migrate-cache.json
 # practice's own storage — because git is not a photo archive and should not be
 # asked to be one.
 # ---------------------------------------------------------------------------
-references and inspirations/
-projects/
+/references and inspirations/
+/projects/
 
 # The site's OWN assets must be tracked, or a fresh clone builds a site with no
 # logo and no opening film — which is exactly what Netlify does on every deploy.

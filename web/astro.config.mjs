@@ -1,11 +1,18 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 
+// Use the working public host until the custom domain is connected. An explicit
+// SITE_URL changes every canonical, sitemap and share URL together on rebuild.
+const site = new URL(process.env.SITE_URL || "https://btl-website-3wo.pages.dev");
+if (site.protocol !== "https:" || site.username || site.password || site.pathname !== "/" || site.search || site.hash) {
+  throw new Error("SITE_URL must be a public HTTPS origin without a path or credentials.");
+}
+
 // Static output: every route is rendered at build time and served as a file.
 // Content changes reach the site through a CMS webhook that triggers a rebuild,
 // not through a server rendering on request (implementation contract §1, §4).
 export default defineConfig({
-  site: "https://btldesigns.in",
+  site: site.href,
   output: "static",
   build: { format: "directory" },
   // The design system is hand-written CSS in one cascade layer order. Astro's

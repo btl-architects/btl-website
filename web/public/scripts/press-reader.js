@@ -30,8 +30,9 @@
     dialog.setAttribute("aria-label", "Press reader");
     dialog.innerHTML = '<div class="press-reader__bar">' +
       '<span class="press-reader__label"></span>' +
-      '<a class="press-reader__original" target="_blank" rel="noopener noreferrer">Open original <span aria-hidden="true">↗</span></a>' +
-      '<button class="press-reader__close" type="button" aria-label="Close article">Close <span aria-hidden="true">×</span></button>' +
+      '<a class="press-reader__original" target="_blank" rel="noopener noreferrer" aria-label="Open original">' +
+      '<span class="press-reader__original-text">Open original</span><span aria-hidden="true">↗</span></a>' +
+      '<button class="press-reader__close" type="button" aria-label="Close article"><span class="press-reader__close-text">Close</span><svg class="press-reader__close-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m3 3 10 10M13 3 3 13" stroke="currentColor" stroke-width="1.2"/></svg></button>' +
       '</div><div class="press-reader__content" tabindex="0" role="region" aria-label="Article content"></div>';
     document.body.appendChild(dialog);
     content = dialog.querySelector(".press-reader__content");

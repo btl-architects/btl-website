@@ -33,7 +33,7 @@ export default defineType({
     defineField({ name: "short", title: "Short name", type: "string", description: "“AD”." }),
     defineField({
       name: "image", title: "Complete Press artwork", type: "figure",
-      description: "Upload the complete PNG with the photograph and publication name composed together. Transparent areas keep the website's dark background. The whole artwork is shown on Home and Press, without cropping or an extra logo underneath. A square canvas fits the card closely; other proportions remain fully visible.",
+      description: "Upload the complete PNG with photograph and publication name together. The entire artwork stays visible. In the image editor, place the hotspot at the centre of the photograph inside the artwork: this aligns the caption beneath the photograph on Home and Press. Transparent areas retain the dark background.",
     }),
     defineField({
       name: "useProjectImage", title: "Use the project photograph if there is no Press image",
@@ -53,25 +53,49 @@ export default defineType({
       description: "All three choices open the same BTL reading panel. Choose BTL reader for article text and images, embed where the publisher allows it, or a feature preview with a link to read the original in a new tab. Embedded pages keep the publisher's own appearance and may be blocked.",
     }),
     defineField({
-      name: "byline", title: "Article byline", type: "string",
+      name: "intro", title: "Article introduction", type: "text", rows: 3,
       hidden: ({document}) => document?.openingMode !== "reader",
-      description: "Optional author or publication credit, shown below the headline.",
+      description: "A short standfirst below the headline. Use your own project notes unless you have the publication's article text to republish.",
+      validation: r => r.max(450),
     }),
     defineField({
-      name: "readerContent", title: "Article content", type: "array",
+      name: "articleHero", title: "Article opening photograph", type: "figure",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      description: "Separate from the PNG artwork used on the Press card. If empty, the article uses its related project's cover, then its Press artwork.",
+    }),
+    defineField({
+      name: "articleCredits", title: "Article credits", type: "credits",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      description: "Design, photography and collaborators for this article. Only add verified credits.",
+    }),
+    defineField({
+      name: "sourceAuthor", title: "Original article writer", type: "string",
+      description: "Verified writer credited by the original publication. Displayed separately from the author of BTL's reader content, in all three opening modes.",
+    }),
+    defineField({
+      name: "readerKind", title: "Reader content", type: "string",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      options: {list: [
+        {title: "BTL project notes", value: "notes"},
+        {title: "Summary of the original article", value: "summary"},
+        {title: "Article supplied for republication", value: "article"},
+      ], layout: "radio"},
+      description: "Notes and summaries are labelled in the reader. Use the article option for text supplied for republication. The original writer's credit stays separate.",
+    }),
+    defineField({
+      name: "byline", title: "Article byline", type: "string",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      description: "Author of the content shown in this reader. For a summary, credit its author here and the publication's writer in Original article writer.",
+    }),
+    defineField({
+      name: "readerPublishedAt", title: "BTL reader publication date", type: "date",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      description: "Optional date these notes were published on BTL. Separate from the publication's feature date above; used for search metadata.",
+    }),
+    defineField({
+      name: "readerContent", title: "Article content", type: "articleContent",
       hidden: ({document}) => document?.openingMode !== "reader",
       description: "Add the article text, photographs or scanned magazine pages in reading order. Images display their full frame. Switching modes keeps this content saved.",
-      of: [
-        {type: "block", styles: [
-          {title: "Paragraph", value: "normal"}, {title: "Heading", value: "h2"},
-          {title: "Small heading", value: "h3"}, {title: "Quote", value: "blockquote"},
-        ], lists: [], marks: {decorators: [
-          {title: "Bold", value: "strong"}, {title: "Italic", value: "em"},
-        ], annotations: [{name: "link", type: "object", title: "Link", fields: [
-          {name: "href", type: "url", title: "Web address", validation: r => r.required().uri({scheme: ["https", "http"]})},
-        ]}]}},
-        {type: "figure", title: "Photograph or magazine page"},
-      ],
       validation: r => r.custom((value, context) => {
         if (context.document?.openingMode !== "reader") return true;
         const blocks = (value ?? []) as {_type?: string; children?: {text?: string}[]; asset?: {asset?: {_ref?: string}}}[];
@@ -85,6 +109,10 @@ export default defineType({
       type: "url",
       description: "The original publication address. Required for an external link or embedded page; optional for the BTL reader. Embedded pages need HTTPS and the publisher's permission to embed. Architectural Digest currently blocks embedding.",
       validation: (r) => [r.uri({ scheme: ["http", "https"] }), r.custom((value, context) => {
+        if (value) {
+          try {const url = new URL(value); if (url.username || url.password) return "Use a public article address without login credentials.";}
+          catch {return "Enter a complete web address.";}
+        }
         const mode = context.document?.openingMode;
         if (mode === "reader") return true;
         // Older records may intentionally have no link (for example an award).

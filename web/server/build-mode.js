@@ -3,7 +3,9 @@ export function buildMode(env) {
   if (!env.SANITY_PROJECT_ID) throw new Error('SANITY_PROJECT_ID is required.');
   if (preview && !env.SANITY_PREVIEW_TOKEN) throw new Error('A preview requires SANITY_PREVIEW_TOKEN; published content cannot substitute for drafts.');
   if (preview && (env.CF_PAGES_BRANCH === 'main' || env.CONTEXT === 'production')) throw new Error('Draft content cannot be built on the production branch.');
-  return {preview, client:{projectId:env.SANITY_PROJECT_ID,dataset:env.SANITY_DATASET || 'production',apiVersion:'2025-02-19',useCdn:false,perspective:preview ? 'drafts' : 'published',...(preview ? {token:env.SANITY_PREVIEW_TOKEN} : {})}};
+  if (preview && env.NETLIFY === 'true') throw new Error('Netlify does not run the draft-preview authentication middleware. Use a protected Cloudflare preview.');
+  const noindex = preview || Boolean(env.CF_PAGES_BRANCH && env.CF_PAGES_BRANCH !== 'main') || Boolean(env.CONTEXT && env.CONTEXT !== 'production');
+  return {preview, noindex, client:{projectId:env.SANITY_PROJECT_ID,dataset:env.SANITY_DATASET || 'production',apiVersion:'2025-02-19',useCdn:false,perspective:preview ? 'drafts' : 'published',...(preview ? {token:env.SANITY_PREVIEW_TOKEN} : {})}};
 }
 /* Which builds may carry the enquiry key.
  *
@@ -23,6 +25,7 @@ export function enquiryKey(env) {
   if (!key) return '';
   if (env.SANITY_PREVIEW === 'true') return '';
   if (env.CF_PAGES === '1' && env.CF_PAGES_BRANCH !== 'main') return '';
+  if (env.CONTEXT && env.CONTEXT !== 'production') return '';
   return key;
 }
 export function visibleProjects(projects, preview = false) {

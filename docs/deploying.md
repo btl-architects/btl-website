@@ -9,9 +9,9 @@ the Studio fires a webhook, the host rebuilds, and a minute or so later the page
 is live.
 
 It deploys to **Cloudflare Pages**. It used to be Netlify, and `netlify.toml` is
-still here and still correct — the move was made because Netlify's free plan
-stopped allowing production deploys partway through a billing cycle, not because
-anything was wrong with it. Going back is a matter of pointing DNS.
+still here for published-content previews. Netlify does not run the Cloudflare
+draft authentication middleware. Moving production back would require matching
+authentication before draft previews, plus deployment and domain verification.
 
 ---
 
@@ -41,13 +41,15 @@ Once, by hand. Everything after this is automatic.
    configuration**, and during first setup it is sometimes folded away behind
    the optional or advanced settings. Enter it as `web`, with no slashes.
 
-   Everything else is relative to it: the output directory really is `dist`, not
-   `web/dist`, and the contact form's function is found at `web/functions/`
-   because of this setting. Getting it wrong is also what would make the form
-   quietly 404 rather than fail loudly.
+   Everything else is relative to it: the output directory is `dist`, not
+   `web/dist`. Pages finds authentication middleware at `web/functions/`.
+   The form posts directly to Web3Forms; it is not a Pages function.
 
 3. **Environment variables** (Settings → Environment variables → Production).
-   Add the same three to Preview if you want branch builds to work.
+   Preview needs the Sanity project and dataset, but no enquiry key. Draft
+   previews also need `SANITY_PREVIEW_TOKEN`, `SANITY_PREVIEW=true` and runtime
+   `PREVIEW_PASSWORD` (at least 16 characters). Never enable drafts on `main`.
+   Netlify previews use published content only.
 
    | Name | Value | What it is |
    | --- | --- | --- |
@@ -87,7 +89,7 @@ Web3Forms' captcha option, or moving to a provider that authenticates with a
 secret key from a server.
 
 **Previews never send real email.** The key is only written into the page when
-Cloudflare is building the `main` branch (see `enquiryKey()` in
+Cloudflare is building `main` or Netlify its production context (see `enquiryKey()` in
 `web/server/build-mode.js`). Branch and draft-preview builds have no key, and
 their form says it is unavailable without contacting anyone.
 
@@ -95,8 +97,7 @@ their form says it is unavailable without contacting anyone.
 verify the email address, name the form, and it gives you an access key. Paste
 that into Cloudflare as `ENQUIRY_ACCESS_KEY` (Settings → Variables and Secrets,
 Production). It is read at **build** time, so a change to it takes effect on the
-next deploy. The free tier covers 250 enquiries
-a month, which is far more than this practice will receive.
+next deploy. Check the provider account for its current submission quota.
 
 > **Sign up with the address the enquiries should reach.** Web3Forms has no
 > recipient parameter: it delivers to whichever email the account was registered
@@ -116,22 +117,14 @@ running, and its MX, SPF and DKIM records are not ours to touch.
 short message telling the visitor to email the studio directly. It fails in the
 open, honestly, rather than pretending to have sent something.
 
-Where enquiries land can be changed without touching code, with an optional
-`ENQUIRY_TO` variable.
+The delivery address belongs to the Web3Forms account. Changing `formTo` in
+Sanity changes the email fallback shown on the page, not the provider recipient.
+There is no `ENQUIRY_TO` override in this application.
 
-**Working on it locally.** `npm run dev` serves the pages but not the function —
-Astro's dev server knows nothing about Cloudflare — so submitting the form there
-gives a 404. To exercise it for real, build first and then run Cloudflare's own
-local server:
-
-```
-npm run build
-npx wrangler pages dev dist
-```
-
-That serves the site at `localhost:8788` with the function live, the headers
-applied and the redirects working, which is as close to production as it gets
-without deploying.
+**Working locally.** Astro development serves the browser form directly too.
+No key means no request to Web3Forms. To check Pages middleware, headers and
+redirects, run `npm run build`, then `npm run serve:test` from `web/`.
+It serves http://127.0.0.1:8788. Restart it after each new build.
 
 ---
 
@@ -166,8 +159,7 @@ branch to `main`. It gives you a long URL.
 **Drafts off is the one that matters.** The Studio saves a draft every few
 seconds while somebody is typing, and the site only ever reads published
 content — so leaving it on would spend a build on every pause for thought, and
-rebuild a site whose pages had not changed. The free plan allows 500 builds a
-month; a practice publishing a project a week will use about four.
+rebuild a site whose pages had not changed. Build allowances depend on the hosting account; check the dashboard.
 
 **3. Test it.** Change something small in the Studio and publish. A new
 deployment should appear in Cloudflare within about half a minute, and the
@@ -199,7 +191,9 @@ duplicate, or a redirect pointing at a page that does not exist.
 
 ## What the build refuses to ship
 
-Four checks run on every build, and each one fails it rather than warning:
+The build runs content validation, Astro type checking, static rendering,
+minification, redirects, budgets and page integrity checks. Invalid output
+fails the build; image warming is best effort:
 
 - **`content-check.mjs`** — the content against the Studio's own rules: every
   photograph has alt text of a real length, a licence, and a valid role, and
@@ -209,7 +203,8 @@ Four checks run on every build, and each one fails it rather than warning:
 - **`budget.mjs`** — page weight, CSS, JavaScript and fonts against fixed
   ceilings.
 - **`warm-images.mjs`** — every image size the site asks for is generated and
-  cached before a visitor is the one waiting for it.
+  cached before a visitor is the one waiting for it. CDN timeouts are reported
+  without blocking an otherwise valid deployment.
 
 If a build fails, the message says which check and why. Nothing partial is ever
 published: the previous version stays live.
@@ -227,3 +222,14 @@ Add **only** the records it asks for — a `CNAME` for `www` and the apex record
 **Do not touch `MX`, `SPF`, `DKIM` or `DMARC`.** Those carry the studio's email,
 they have nothing to do with the website, and changing one silently stops mail
 arriving.
+
+
+## Canonical hostname
+
+Until the custom domain is connected, metadata and sitemap URLs use
+`https://btl-website-3wo.pages.dev`. After verifying the custom domain serves
+this deployment over HTTPS, set `SITE_URL=https://btldesigns.in` in the host
+build environment and rebuild. Use one preferred hostname and redirect its
+`www` alternative. `SITE_URL` accepts a public HTTPS origin, not a subpath.
+Website hostname records are separate from mail records; preserve all existing
+MX, SPF, DKIM and DMARC records.

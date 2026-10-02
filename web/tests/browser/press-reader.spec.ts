@@ -12,8 +12,22 @@ test('BTL reader keeps the page, traps focus, restores scroll and dismisses with
   await expect(reader).toBeVisible();
   await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   await expect(reader.getByRole('button', {name: 'Close article'})).toBeFocused();
+  // A heading-size rule once enlarged the Close label when the mobile label
+  // was wrapped in a span. Check actual typography, not just button geometry.
+  const controlSizes = await reader.evaluate(el => {
+    const fontSize = (selector: string) => parseFloat(getComputedStyle(el.querySelector(selector)!).fontSize);
+    return {close: fontSize('.press-reader__close-text'), original: fontSize('.press-reader__original-text'), button: fontSize('.press-reader__close')};
+  });
+  expect(controlSizes.close).toBe(controlSizes.button);
+  expect(controlSizes.close).toBe(controlSizes.original);
+  expect(controlSizes.close).toBeLessThanOrEqual(18);
+  await expect(reader.locator('.press-reader__close-icon')).toHaveCSS('width', '16px');
   await expect(page).toHaveURL(/\/__reader-demo\/$/);
   await expect(reader.locator('iframe')).toHaveCount(0);
+  await expect(reader.locator('.press-article__intro')).toContainText('introduction');
+  await expect(reader.locator('.press-article__quote')).toContainText('A place to read');
+  await expect(reader.locator('.press-article__credits')).toContainText('Photography');
+  await expect(reader.locator('.press-article__body ul > li > ol')).toHaveCount(1);
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('Tab');
     expect(await reader.evaluate(el => el.contains(document.activeElement))).toBe(true);
@@ -29,6 +43,30 @@ test('BTL reader keeps the page, traps focus, restores scroll and dismisses with
   await page.keyboard.press('Escape');
   await expect(reader).not.toBeVisible();
   await expect(entry).toBeFocused();
+});
+
+test('Press captions follow the photograph anchor inside complete artwork at every breakpoint', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  for (const route of ['/', '/press/']) {
+    await page.goto(route);
+    const caption = page.locator('.pc__m').first();
+    await caption.evaluate(el => el.textContent = 'Feature · A house with a deliberately longer project name in Wayanad · 2026');
+    for (const width of [320,375,768,1440]) {
+      await page.setViewportSize({width,height:900});
+      const card = page.locator('.pc').first();
+      const image = (await card.locator('.pc__img').boundingBox())!;
+      const text = (await card.locator('.pc__m').boundingBox())!;
+      const anchor = Number(await card.getAttribute('data-caption-anchor') ?? .5);
+      const dimensions = await card.locator('img').evaluate(el => ({width: Number(el.getAttribute('width')),height:Number(el.getAttribute('height'))}));
+      const artworkWidth = Math.min(image.width,image.height * dimensions.width / dimensions.height);
+      const photographCenter = image.x + (image.width - artworkWidth) / 2 + artworkWidth * anchor;
+      expect(Math.abs(photographCenter - text.x - text.width / 2)).toBeLessThan(1);
+      expect(text.y - image.y - image.height).toBeGreaterThanOrEqual(0);
+      expect(text.y - image.y - image.height).toBeLessThan(20);
+      await expect(card.locator('.pc__m')).toHaveCSS('text-align','center');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+  }
 });
 
 test('a publisher frame loads only on opening and is removed on close', async ({page}) => {
@@ -87,6 +125,13 @@ test('reader fits phones and honours reduced motion', async ({page}) => {
   await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   expect(await reader.evaluate(el => el.scrollWidth)).toBeLessThanOrEqual(320);
   expect(await reader.locator('.press-reader__content').evaluate(el => el.scrollWidth)).toBeLessThanOrEqual(320);
+  const bar = (await reader.locator('.press-reader__bar').boundingBox())!;
+  expect(bar.height).toBeLessThanOrEqual(72);
+  const source = (await reader.getByRole('link',{name:'Open original',exact:true}).boundingBox())!;
+  const close = (await reader.getByRole('button',{name:'Close article'}).boundingBox())!;
+  expect(Math.abs(source.y-close.y)).toBeLessThan(1);
+  expect(source.width).toBeGreaterThanOrEqual(44);
+  expect(close.width).toBeGreaterThanOrEqual(44);
   await expect(reader).toHaveCSS('animation-name', 'none');
   await reader.getByRole('button', {name: 'Close article'}).click();
   await expect(reader).not.toBeVisible();

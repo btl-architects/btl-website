@@ -1,3 +1,3 @@
 import type { APIRoute } from 'astro';
-import { isPreview } from '../lib/sanity';
-export const GET: APIRoute = () => Response.json({preview:isPreview});
+import { isPreview, isNoindex } from '../lib/sanity';
+export const GET: APIRoute = () => Response.json({preview:isPreview, noindex:isNoindex});

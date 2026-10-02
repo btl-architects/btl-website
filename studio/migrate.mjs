@@ -2,11 +2,9 @@
  *
  *     node migrate.mjs            # needs SANITY_WRITE_TOKEN in studio/.env
  *
- * Safe to run more than once. Every document gets a deterministic id derived
- * from its slug, so a second run updates the same records instead of creating a
- * second set — which matters, because the first run will not be the last: image
- * uploads fail, someone spots a wrong caption, and the whole thing gets run
- * again.
+ * Initial import only. It refuses to replace an existing dataset because
+ * deterministic IDs prevent duplicates, but do not preserve client edits.
+ * A deliberate recovery import requires --replace-existing and a backup.
  *
  * Images are uploaded once and cached by content hash in .migrate-cache.json,
  * so re-runs do not re-upload 155 photographs.
@@ -103,6 +101,10 @@ const figure = (assetId, { alt, caption, credit, rights, kind }) => ({
 
 /* --- run ---------------------------------------------------------------- */
 async function main() {
+  const existing = await client.fetch('count(*[_type in ["project", "person", "publication", "settings", "category", "location"]])');
+  if (existing && !process.argv.includes("--replace-existing")) {
+    throw new Error(`Refusing to replace ${existing} existing documents. This is an initial import, not a content updater. Back up the dataset before a deliberate --replace-existing recovery.`);
+  }
   const tx = client.transaction();
 
   console.log("\nCategories");

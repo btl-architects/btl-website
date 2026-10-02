@@ -1,0 +1,23 @@
+---
+import Figure from "./Figure.astro";
+import ArticleText from "./ArticleText.astro";
+import ArticleList from "./ArticleList.astro";
+import {articleGroups, type ArticleBlock} from "../lib/press";
+interface Props {blocks?: ArticleBlock[]}
+const {blocks = []} = Astro.props;
+const groups = articleGroups(blocks);
+---
+<div class="press-article__body">
+  {groups.map(group => {
+    if (group.list) {
+      return <ArticleList group={group} />;
+    }
+    const block = group.block;
+    return block._type === "figure" ? <figure>
+      <Figure image={block} fit="contain" sizes="(min-width: 60rem) 52rem, 92vw" />
+      {(block.caption || block.credit) && <figcaption>{[block.caption, block.credit].filter(Boolean).join(" · ")}</figcaption>}
+    </figure> : block._type === "pullQuote" ? <aside class="press-article__quote" aria-label="Pull quote">
+      <p>{block.text}</p>{block.attribution && <p class="press-article__attribution">{block.attribution}</p>}
+    </aside> : <ArticleText block={block} />;
+  })}
+</div>

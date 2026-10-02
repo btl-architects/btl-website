@@ -16,7 +16,7 @@
  * site.js picks which of the two encodings to load from the viewport's shape.
  */
 import { getHeroClips } from "../lib/content";
-import { requireImage } from "../lib/media";
+import ResponsiveFigure from "./ResponsiveFigure.astro";
 
 const clips = await getHeroClips();
 ---
@@ -24,26 +24,20 @@ const clips = await getHeroClips();
 {clips.length > 0 && (
   <div class="stage" data-stage-frames>
     {clips.map((clip, i) => {
-      const poster = clip.poster ? requireImage(clip.poster) : null;
-      /* The portrait cut is framed differently from the landscape one, so a
-         phone showing the landscape still and then playing the portrait film
-         jumps the moment playback starts. Both posters travel with the frame
-         and site.js picks the one that matches the encode it is about to
-         load. */
-      const posterP = clip.posterPortrait ? requireImage(clip.posterPortrait) : null;
       return (
         <figure class="stage__f" data-on={i === 0 ? "true" : "false"} data-label={clip.label}>
-          <video
+          {/* The browser selects the correctly framed still before scripts run.
+              A failed or suppressed video leaves the responsive image intact. */}
+          {clip.poster && <ResponsiveFigure image={clip.poster} portrait={clip.posterPortrait} priority={i === 0} />}
+          <template data-stage-video><video
+            aria-hidden="true"
             muted
             loop
             playsinline
-            preload={i === 0 ? "auto" : "none"}
-            poster={poster?.src}
-            data-poster={poster?.src}
-            data-poster-portrait={posterP?.src ?? poster?.src}
+            preload="none"
             data-src={clip.video}
             data-src-portrait={clip.videoPortrait}
-          ></video>
+          ></video></template>
         </figure>
       );
     })}

@@ -1,6 +1,6 @@
 ---
 import Figure from "./Figure.astro";
-import ArticleText from "./ArticleText.astro";
+import ArticleBody from "./ArticleBody.astro";
 import type {Publication, Project} from "../lib/content";
 import {articleUrl} from "../lib/press";
 interface Props {item: Publication; project?: Project}
@@ -9,14 +9,22 @@ const image = item.image ?? (item.useProjectImage ? project?.hook : null);
 const original = articleUrl(item.url);
 const embed = item.openingMode === "embed" && original?.startsWith("https://");
 const managed = item.openingMode === "reader";
+const openingImage = managed ? item.articleHero ?? project?.hook ?? image : image;
+const credits = managed ? item.articleCredits : undefined;
 const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, item.date?.slice(0, 4)].filter(Boolean).join(" · ");
+const readerLabel = item.readerKind === "summary" ? "Article summary" : item.readerKind === "notes" ? "BTL project notes" : null;
+const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.isFinite(Date.parse(item.date))
+  ? new Intl.DateTimeFormat("en-GB", {day: "numeric", month: "long", year: "numeric", timeZone: "UTC"}).format(new Date(item.date)) : null;
 ---
 <article class:list={["press-article", embed && "press-article--embed"]} data-article-content>
   <header class="press-article__head">
     <p class="press-article__publication">{item.publication}</p>
     <h1>{item.title}</h1>
     <p class="press-article__meta">{meta}</p>
+    {item.sourceAuthor && <p class="press-article__source-credit">Original article by {item.sourceAuthor}{publicationDate && <> · <time datetime={item.date}>{publicationDate}</time></>}</p>}
+    {managed && readerLabel && <p class="press-article__kind">{readerLabel}</p>}
     {item.byline && managed && <p class="press-article__byline">{item.byline}</p>}
+    {item.intro && managed && <p class="press-article__intro">{item.intro}</p>}
   </header>
   {embed ? (
     <>
@@ -28,13 +36,15 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, item.
     </>
   ) : (
     <>
-      {image && <figure class="press-article__image"><Figure image={image} fit="contain" sizes="(min-width: 60rem) 52rem, 92vw" priority />{image.caption && <figcaption>{image.caption}</figcaption>}</figure>}
-      <div class="press-article__body">
-        {(managed ? item.readerContent ?? [] : []).map(block => block._type === "figure" ?
-          <figure><Figure image={block} fit="contain" sizes="(min-width: 60rem) 52rem, 92vw" />
-            {(block.caption || block.credit) && <figcaption>{[block.caption, block.credit].filter(Boolean).join(" · ")}</figcaption>}
-          </figure> : <ArticleText block={block} />)}
-      </div>
+      {openingImage && <figure class="press-article__image"><Figure image={openingImage} fit="contain" sizes="(min-width: 60rem) 52rem, 92vw" priority />
+        {(openingImage.caption || openingImage.credit) && <figcaption>{[openingImage.caption, openingImage.credit].filter(Boolean).join(" · ")}</figcaption>}
+      </figure>}
+      <ArticleBody blocks={managed ? item.readerContent : []} />
+      {credits && <dl class="press-article__credits">
+        {credits.architect && <div><dt>Architecture</dt><dd>{credits.architect}</dd></div>}
+        {credits.photographer && <div><dt>Photography</dt><dd>{credits.photographer}</dd></div>}
+        {credits.collaborators?.length > 0 && <div><dt>With</dt><dd>{credits.collaborators.join(" · ")}</dd></div>}
+      </dl>}
     </>
   )}
   {original && <p class="press-article__source"><a href={original} target="_blank" rel="noopener noreferrer">Read the original on {item.publication} <span aria-hidden="true">↗</span></a></p>}

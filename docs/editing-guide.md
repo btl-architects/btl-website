@@ -294,3 +294,32 @@ The site is built and works. These are the gaps only you can close:
   home pages
 - **A People headline** — the People page currently borrows the home page
   statement. One or two lines about the two of you would be better
+
+
+## A complete BTL reader article
+
+Choose **BTL reader** on the Press entry. The introduction sits beneath the
+headline. **Article opening photograph** is independent of the complete card
+PNG; if empty, it uses the related project's cover. Add the body in reading
+order with paragraphs, headings, lists, photographs and pull quotes.
+Photographs retain their complete frame, with captions and image credits beneath
+it. **Article credits** closes the article.
+
+Feature/project/year is centered beneath the photograph inside the complete
+card artwork. Place the Sanity image hotspot at the photograph’s centre to align
+it on Home and Press. The complete PNG, including the logo and transparent
+margins, remains visible. Trim unnecessary space below the logo in the source
+artwork if needed; the website never cuts off the logo.
+
+The AD and ELLE headlines, dates and writers were verified against their
+publisher pages on 2 October 2026. Their readers now contain clearly labelled
+article summaries and existing project photographs, not full publisher text.
+**Reader content** distinguishes project notes, summaries and articles supplied
+for republication. **Original article writer** credits the publisher’s writer;
+**Article byline** credits the author of the content shown here. Use article
+mode when the studio has supplied text it can republish. Attribute a pull quote
+to a person only when the wording is verified.
+
+Embed uses the same panel but keeps the publisher's appearance. A publisher can
+block framing now or later; the visible original link remains available and
+closing restores BTL. BTL reader stays readable independently of framing policy.

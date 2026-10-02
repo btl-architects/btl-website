@@ -13,7 +13,9 @@
 # Netlify's: how to run the build.
 #
 # The site currently deploys to Cloudflare Pages — see docs/deploying.md. This
-# file is kept, and kept working, so moving back is a matter of pointing DNS.
+# file provides published-content previews only. Protected draft previews use
+# Cloudflare's middleware; switching production hosts needs an authentication
+# equivalent before enabling draft content on the replacement host.
 
 [build]
   base    = "web"
@@ -28,16 +30,12 @@
   # stale value committed months earlier.
 
 # --- preview -----------------------------------------------------------------
-# A branch deploy builds the same code against Sanity's draft perspective, so
-# the practice can look at unpublished work on a real URL before it goes live.
-#
-# SANITY_PREVIEW_TOKEN is a read-only Viewer token and lives ONLY in this
-# context's environment in the Netlify UI — never in the repository, and never
-# in the production context. Every preview page carries a banner and a noindex,
-# because the expensive mistake is not realising which one you are looking at.
+# Netlify does not run the Cloudflare preview-authentication middleware. Keep
+# these builds on published content; no read token or enquiry key is included.
+# Draft previews must remain authenticated on Cloudflare Pages.
 
 [context.branch-deploy.environment]
-  SANITY_PREVIEW = "true"
+  SANITY_PREVIEW = "false"
 
 [context.deploy-preview.environment]
-  SANITY_PREVIEW = "true"
+  SANITY_PREVIEW = "false"

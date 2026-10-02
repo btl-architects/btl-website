@@ -114,3 +114,32 @@ test("publisher frames are deferred, sandboxed and retain a visible source link"
   assert.match(html, /If the article does not appear/);
   assert.match(html, /<noscript>/);
 });
+
+test("source writers are distinguished from the author of a clearly labelled summary", async () => {
+  const html = await container.renderToString(PressArticle, {props: {item: {...item, title: "A verified headline", openingMode: "reader", readerKind: "summary", sourceAuthor: "Publication writer", byline: "Summary by BTL", readerContent: [text("A summary.")]}}});
+  assert.match(html, /Original article by Publication writer/);
+  assert.match(html, /Article summary/);
+  assert.match(html, /Summary by BTL/);
+  assert.match(html, /1 October 2026/);
+  const embedded = await container.renderToString(PressArticle, {props: {item: {...item, title: "A verified headline", openingMode: "embed", readerKind: "summary", sourceAuthor: "Publication writer"}}});
+  assert.match(embedded, /Original article by Publication writer/);
+  assert.doesNotMatch(embedded, /Article summary/);
+});
+
+test("a complete reader separates card artwork from photography and renders nested editorial content", async () => {
+  const html = await container.renderToString(PressArticle, {props: {project, item: {...item,
+    title: "A complete feature", openingMode: "reader", image: image("card-artwork"),
+    intro: "A proper introduction.", byline: "BTL project notes", articleHero: image("article-opening"),
+    articleCredits: {architect: "BTL", photographer: "Photographer", collaborators: ["Studio collaborator"]},
+    readerContent: [text("Opening paragraph"), {...text("Design notes"), style:"h2"},
+      {...text("Parent"), listItem:"bullet", level:1}, {...text("Child"), listItem:"number", level:2},
+      {...text("Sibling"), listItem:"bullet", level:1},
+      {_type:"pullQuote", text:"An editorial excerpt", attribution:"BTL notes"},
+      {...image("supporting-photo"), _type:"figure", caption:"A caption", credit:"A credit"}],
+  }}});
+  assert.match(html, /article-opening\.jpg/); assert.doesNotMatch(html, /card-artwork\.jpg/);
+  for (const content of ["A proper introduction.", "BTL project notes", "An editorial excerpt", "A caption", "A credit", "Photographer", "Studio collaborator"]) assert.ok(html.includes(content));
+  assert.match(html, /<ul>\s*<li>[^]*?Parent[^]*?<ol>\s*<li>[^]*?Child[^]*?<\/li>\s*<\/ol>\s*<\/li>\s*<li>[^]*?Sibling/);
+  const fallback = await container.renderToString(PressArticle, {props: {project, item: {...item, title:"Fallback", openingMode:"reader", image:image("card-artwork"), readerContent:[text("A paragraph")]}}});
+  assert.match(fallback, /project-cover\.jpg/); assert.doesNotMatch(fallback, /card-artwork\.jpg/);
+});

@@ -1,0 +1,11 @@
+---
+import Figure from "./Figure.astro";
+import {requireImage, type SiteImage} from "../lib/media";
+interface Props {image: SiteImage; portrait?: SiteImage | null; priority?: boolean}
+const {image, portrait, priority = false} = Astro.props;
+const narrow = portrait ? requireImage(portrait) : null;
+---
+<picture>
+  {narrow && <source media="(max-width: 47.99rem)" srcset={narrow.srcset} sizes="100vw" width={narrow.width} height={narrow.height} />}
+  <Figure image={image} sizes="100vw" priority={priority} />
+</picture>

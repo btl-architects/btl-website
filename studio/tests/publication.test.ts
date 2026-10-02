@@ -23,6 +23,7 @@ test("embedding requires HTTPS; existing linkless awards remain valid", () => {
   assert.equal(typeof validate(undefined, {openingMode: "embed"}), "string");
   assert.equal(typeof validate("http://example.com", {openingMode: "embed"}), "string");
   assert.equal(validate("https://example.com", {openingMode: "embed"}), true);
+  assert.equal(typeof validate("https://user:secret@example.com/", {openingMode: "reader"}), "string");
   assert.equal(validate(undefined, {openingMode: "reader"}), true);
   assert.equal(validate(undefined, {}), true);
   assert.equal(validate(undefined, {kind: "award", openingMode: "external"}), true);

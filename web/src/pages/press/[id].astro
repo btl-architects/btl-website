@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import PressArticle from "../../components/PressArticle.astro";
 import Onward from "../../components/Onward.astro";
 import {getPublications, getProjects, type Publication} from "../../lib/content";
-import {articlePagePath} from "../../lib/press";
+import {articlePagePath, articleUrl} from "../../lib/press";
 export async function getStaticPaths() {
   return (await getPublications()).filter(item => articlePagePath(item)).map(item => ({
     params: {id: item.id!.replace(/^drafts\./, "")}, props: {item},
@@ -11,9 +11,11 @@ export async function getStaticPaths() {
 }
 const {item} = Astro.props as {item: Publication};
 const project = (await getProjects()).find(p => p.slug === item.relatedProject);
-const share = item.image ?? (item.useProjectImage ? project?.hook : null);
+const managed = item.openingMode === "reader";
+const share = managed ? item.articleHero ?? project?.hook ?? item.image : item.image ?? (item.useProjectImage ? project?.hook : null);
 ---
-<Base title={`${item.title} — ${item.publication} — btl architects`} description={`${item.publication} · ${item.title}`} current="press" share={share} noindex={item.openingMode !== "reader"}>
+<Base title={`${item.title} — ${item.publication} — btl architects`} description={item.intro || `${item.publication} · ${item.title}`} current="press" share={share} noindex={!managed}
+  article={managed ? {date: item.readerPublishedAt ?? "", author: "btl architects", source: articleUrl(item.url) ?? undefined} : undefined}>
   <main id="main" data-ground="dark" class="container page-end">
     <PressArticle item={item} project={project} />
     <Onward href="/press/" kicker="Press">Back to all coverage</Onward>

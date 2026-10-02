@@ -12,6 +12,18 @@ test('published and archived routes survive while only published projects are in
 test('preview cannot fall back silently or run on main',()=>{
   assert.throws(()=>buildMode({SANITY_PROJECT_ID:'test',SANITY_PREVIEW:'true'}),/TOKEN/);
   assert.throws(()=>buildMode({SANITY_PROJECT_ID:'test',SANITY_PREVIEW:'true',SANITY_PREVIEW_TOKEN:'test',CF_PAGES_BRANCH:'main'}),/production/);
+  assert.throws(()=>buildMode({SANITY_PROJECT_ID:'test',SANITY_PREVIEW:'true',SANITY_PREVIEW_TOKEN:'test',NETLIFY:'true',CONTEXT:'deploy-preview'}),/authentication/);
+});
+test('published branch previews are not indexable and still read only published content',()=>{
+  for (const env of [{CF_PAGES_BRANCH:'feature'}, {CONTEXT:'deploy-preview',NETLIFY:'true'}]) {
+    const mode=buildMode({SANITY_PROJECT_ID:'test',...env});
+    assert.equal(mode.preview,false); assert.equal(mode.noindex,true); assert.equal(mode.client.perspective,'published');
+  }
+  assert.equal(buildMode({SANITY_PROJECT_ID:'test',CF_PAGES_BRANCH:'main'}).noindex,false);
+});
+test('published previews are public but emit a noindex header without needing a password',async()=>{
+  const response=await protectPreview({request:new Request('https://preview.example/'),env:{ASSETS:{fetch:async()=>Response.json({preview:false,noindex:true})}},next});
+  assert.equal(response.status,200); assert.equal(response.headers.get('X-Robots-Tag'),'noindex, nofollow');
 });
 test('redirect chains include static and CMS rules',()=>{
   assert.deepEqual(resolveRedirects([{from:'/old',to:'/middle'},{from:'/middle',to:'/new'}],new Set(['/new/'])),[{from:'/old/',to:'/new/',permanent:true},{from:'/middle/',to:'/new/',permanent:true}]);
@@ -53,4 +65,6 @@ test('only a production build carries the enquiry key',()=>{
   assert.equal(enquiryKey({...key,CF_PAGES:'1',CF_PAGES_BRANCH:'main',SANITY_PREVIEW:'true'}),'', 'draft previews get no key');
   assert.equal(enquiryKey({CF_PAGES:'1',CF_PAGES_BRANCH:'main'}),'', 'no key configured means none');
   assert.equal(enquiryKey({...key}),'real-key', 'a local or CI build uses a key only if one is given');
+  assert.equal(enquiryKey({...key,CONTEXT:'production'}),'real-key');
+  for (const CONTEXT of ['deploy-preview','branch-deploy','dev']) assert.equal(enquiryKey({...key,CONTEXT}),'');
 });

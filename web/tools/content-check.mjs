@@ -24,6 +24,7 @@
  * one nobody trusts.
  */
 import { client, mode } from "./env.mjs";
+import {articleErrors} from "../server/article-validation.js";
 
 // Mirrors studio/schemas/objects.ts. Changing a list there means changing it
 // here, and the mismatch this file exists to catch is the reminder.
@@ -33,12 +34,14 @@ const ALT_MIN = 8;
 const ALT_MAX = 160;
 
 const errors = [];
+let figures = 0;
 const where = (doc, path) => `${doc} · ${path}`;
 
 /* One figure, wherever it appears. Every image on the site is one of these,
  * which is what makes a single function enough. */
 function checkFigure(fig, doc, path) {
   if (!fig) return;
+  figures++;
   if (!fig.hasAsset) errors.push(`${where(doc, path)} has no image file`);
 
   const alt = (fig.alt ?? "").trim();
@@ -72,11 +75,16 @@ const data = await client.fetch(`{
   "publications": *[_type == "publication"]{
     _id, kind, publication, openingMode, url,
     "image": image{ alt, rights, "hasAsset": defined(asset.asset) },
-    "readerContent": readerContent[]{_type, children[]{text}, alt, rights, "hasAsset": defined(asset.asset)}
+    intro, "articleHero": articleHero{alt, rights, "hasAsset": defined(asset.asset)},
+    "readerContent": readerContent[]{_type, style, listItem, level, text, children[]{text, marks}, markDefs[]{_type, href}, alt, rights, "hasAsset": defined(asset.asset)}
   },
   "settings": *[_type == "settings"][0]{
     "founders": foundersImage{ alt, rights, "hasAsset": defined(asset.asset) },
-    "teamImage": teamImage{ alt, rights, "hasAsset": defined(asset.asset) }
+    "teamImage": teamImage{ alt, rights, "hasAsset": defined(asset.asset) },
+    "studioImage": studioImage{alt, rights, "hasAsset": defined(asset.asset)},
+    "studioImages": studioImages[]{alt, rights, "hasAsset": defined(asset.asset)},
+    nav[]{label, href}, social[]{label, url},
+    heroClips[]{label, "video": video.asset->url, "poster": poster.asset->url}
   }
 }`, { states: mode.preview ? ["draft", "published", "archived"] : ["published", "archived"] });
 
@@ -97,12 +105,17 @@ for (const p of data.projects ?? []) {
 for (const p of data.people ?? []) checkFigure(p.portrait, p.name || p._id, "portrait");
 for (const p of data.publications ?? []) {
   checkFigure(p.image, p.publication || p._id, "Press image");
-  const blocks = p.readerContent ?? [];
+  checkFigure(p.articleHero, p.publication || p._id, "article opening photograph");
+  const blocks = Array.isArray(p.readerContent) ? p.readerContent : [];
   blocks.forEach((b, i) => {if (b._type === "figure") checkFigure(b, p.publication || p._id, `article image ${i + 1}`);});
   if (p.openingMode && !["reader", "embed", "external"].includes(p.openingMode))
     errors.push(`${p.publication || p._id} has an unknown article opening mode`);
-  if (p.openingMode === "reader" && !blocks.some(b => b._type === "figure" ? b.hasAsset : b.children?.some(s => s.text?.trim())))
+  if (p.openingMode === "reader" && !blocks.some(b => b._type === "figure" ? b.hasAsset : Array.isArray(b.children) && b.children.some(s => typeof s.text === 'string' && s.text.trim())))
     errors.push(`${p.publication || p._id} needs text or magazine pages for its BTL reader`);
+  if (p.openingMode === "reader") {
+    errors.push(...articleErrors(p.readerContent ?? []).map(e => `${p.publication || p._id} · ${e}`));
+    if (p.intro && (typeof p.intro !== 'string' || p.intro.length > 450)) errors.push(`${p.publication || p._id} introduction exceeds 450 characters or is malformed`);
+  }
   if (p.openingMode === "embed" || p.openingMode === "external" && p.kind !== "award") {
     try {
       const url = new URL(p.url);
@@ -112,6 +125,20 @@ for (const p of data.publications ?? []) {
 }
 checkFigure(data.settings?.founders, "Settings", "founders photograph");
 checkFigure(data.settings?.teamImage, "Settings", "team photograph");
+checkFigure(data.settings?.studioImage, "Settings", "studio photograph");
+(data.settings?.studioImages ?? []).forEach((fig, i) => checkFigure(fig, "Settings", `studio photograph ${i + 1}`));
+for (const nav of data.settings?.nav ?? []) {
+  if (!nav.label?.trim() || !/^[a-z0-9]+(?:[-/][a-z0-9]+)*$/.test(nav.href ?? '')) errors.push('Settings · navigation needs a label and a valid page key');
+}
+for (const social of data.settings?.social ?? []) {
+  try {
+    const url = new URL(social.url);
+    if (!social.label?.trim() || !['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error();
+  } catch {errors.push('Settings · social link needs a label and a public web address');}
+}
+for (const clip of data.settings?.heroClips ?? []) {
+  if (!clip.video || !clip.poster) errors.push(`Settings · opening film ${clip.label || '(untitled)'} needs its film and still frame`);
+}
 
 if (errors.length) {
   console.error(`\n[content] refusing to build — ${errors.length} problem${errors.length > 1 ? "s" : ""}:\n`);
@@ -120,8 +147,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-const n =
-  (data.projects ?? []).reduce((a, p) => a + (p.images?.length ?? 0), 0) +
-  (data.people ?? []).filter((p) => p.portrait).length +
-  (data.publications ?? []).reduce((n, p) => n + Number(Boolean(p.image)) + (p.readerContent ?? []).filter(b => b._type === "figure").length, 0) + Number(Boolean(data.settings?.teamImage));
-console.log(`[content] ${n} figures valid`);
+console.log(`[content] ${figures} figures valid`);
