@@ -12,6 +12,16 @@ test('BTL reader keeps the page, traps focus, restores scroll and dismisses with
   await expect(reader).toBeVisible();
   await expect(reader.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   await expect(reader.getByRole('button', {name: 'Close article'})).toBeFocused();
+  // A heading-size rule once enlarged the Close label when the mobile label
+  // was wrapped in a span. Check actual typography, not just button geometry.
+  const controlSizes = await reader.evaluate(el => {
+    const fontSize = (selector: string) => parseFloat(getComputedStyle(el.querySelector(selector)!).fontSize);
+    return {close: fontSize('.press-reader__close-text'), original: fontSize('.press-reader__original-text'), button: fontSize('.press-reader__close')};
+  });
+  expect(controlSizes.close).toBe(controlSizes.button);
+  expect(controlSizes.close).toBe(controlSizes.original);
+  expect(controlSizes.close).toBeLessThanOrEqual(18);
+  await expect(reader.locator('.press-reader__close-icon')).toHaveCSS('width', '16px');
   await expect(page).toHaveURL(/\/__reader-demo\/$/);
   await expect(reader.locator('iframe')).toHaveCount(0);
   await expect(reader.locator('.press-article__intro')).toContainText('introduction');

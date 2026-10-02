@@ -134,10 +134,13 @@ content and rendition count; serving traffic is independent of CMS availability.
 3. **LinkedIn/YouTube:** generic platform links remain by the user's explicit
    instruction, pending real profiles. Studio warns about homepage links.
    Generic URLs are excluded from Organization `sameAs`; Instagram is real.
-4. **Editorial facts:** source publication dates/headlines and incomplete project
-   descriptions still need client verification, as previously deferred. No
-   architectural gallery was rewritten. The seeded readers are BTL notes;
-   full publisher text is not republished or represented as a BTL-written original.
+4. **Editorial content:** the two publisher headlines, dates and writers are now
+   verified. AD: Vaishnavi Nayel Talawadekar, 5 August 2026. ELLE DECOR: Disha
+   Kalyankar, 28 September 2026. The previous ELLE headline/date were incorrect.
+   Reader content is explicitly labelled as an article summary; invented pull
+   quotes were removed. Full publisher wording awaits text supplied for licensed
+   republication. Incomplete architectural project descriptions remain deferred
+   by the client; no project gallery was rewritten.
 5. **Publisher embeds:** browsers enforce publisher framing restrictions; no
    website can guarantee every third-party article embeds. All modes keep the
    shared panel, close behavior and source fallback. Use BTL reader for dependable
@@ -157,14 +160,27 @@ content and rendition count; serving traffic is independent of CMS availability.
 
 PR [#18](https://github.com/btl-architects/btl-website/pull/18) contains this pass.
 The compatible editor is live at https://btldesigns.sanity.studio/.
-Pending final CI and website production verification. Both current Press
-entries now have original labelled BTL notes, three credited photographs each,
-section headings, quotations and project credits in Sanity. Revision-guarded
-patches were backed up locally and preserve unrelated drafts. The quotations
-use standard Portable Text blocks so the previous public renderer can read them
-while the new UI deploys. Only the current artwork caption hotspots and supplied
-Instagram URL were additionally changed; LinkedIn/YouTube remain. Studio
-deployment publishes no drafts.
+Pending final website production verification. Both current Press entries now
+have verified source headlines, dates and writer credits, clearly labelled
+short summaries, three credited project photographs each and project credits
+in Sanity. Revision-guarded patches were backed up locally and preserve unrelated
+drafts. Sanity separates the original writer from the author of reader content.
+The current artwork caption hotspots and supplied Instagram URL were also
+updated; LinkedIn/YouTube remain. Studio deployment publishes no drafts.
+
+The oversized desktop Close label was caused by a generic descendant span rule
+originally intended for its icon. The icon is now an explicitly sized SVG; the
+label inherits the toolbar’s normal control typography. Other close controls
+were inspected, and the browser test now compares actual desktop label sizes
+and icon dimensions as well as mobile targets and focus restoration.
+
+Publisher sources:
+- https://www.architecturaldigest.in/story/a-publisher-and-wildlife-conservationists-wayanad-home-lies-amid-the-wilderness/
+- https://elledecor.in/btl-architects-kerala-home/
+
+AD returns both `frame-ancestors none` and `X-Frame-Options: DENY`. ELLE returned
+no framing headers in the observed response; this does not guarantee future
+embedding. Original links remain available in every reader mode.
 
 The actual AD and ELLE readers were visually inspected at 390px, and the Press
 artwork/caption alignment at 1280px. Screenshot evidence is stored in the ignored
@@ -177,3 +193,10 @@ Lighthouse so cold Wrangler initialization does not compete with Chrome. Each
 measurement still uses a fresh browser cache and default simulated throttling;
 score, LCP and CLS thresholds are unchanged. Raw CI runs before this harness
 change are retained as context, not a strictly equivalent speed comparison.
+
+The final Linux run on `3e438446` passed all functional checks, including 136
+browser checks and Studio checks, but missed lab performance targets: Home
+89 / LCP 1954ms / CLS 0, project 98 / LCP 2294ms / CLS 0, Contact 100 / LCP
+1534ms / CLS 0. Earlier local runs passed all targets (Home 100 / 1586ms).
+This CI performance discrepancy remains open; budgets have not been relaxed
+and the release is not described as passing every production-readiness gate.

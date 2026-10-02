@@ -74,6 +74,8 @@ export interface Publication {
   relatedProject: string | null;
   openingMode?: OpeningMode;
   byline?: string;
+  sourceAuthor?: string;
+  readerKind?: "notes" | "summary" | "article";
   intro?: string;
   articleHero?: SiteImage | null;
   articleCredits?: Project["credits"];
@@ -309,7 +311,7 @@ export async function getProfiles(): Promise<Person[]> {
 
 export const getPublications = once(async (): Promise<Publication[]> => {
   const rows = await sanity.fetch<PublicationRow[]>(`*[_type == "publication"] | order(date desc) {
-    "id": _id, "openingMode": coalesce(openingMode, "external"), byline, intro, readerPublishedAt,
+    "id": _id, "openingMode": coalesce(openingMode, "external"), byline, sourceAuthor, readerKind, intro, readerPublishedAt,
     "articleHero": articleHero ${FIGURE},
     "articleCredits": articleCredits{architect, photographer, "collaborators": coalesce(collaborators, [])},
     "readerContent": readerContent[]{

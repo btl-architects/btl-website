@@ -115,6 +115,17 @@ test("publisher frames are deferred, sandboxed and retain a visible source link"
   assert.match(html, /<noscript>/);
 });
 
+test("source writers are distinguished from the author of a clearly labelled summary", async () => {
+  const html = await container.renderToString(PressArticle, {props: {item: {...item, title: "A verified headline", openingMode: "reader", readerKind: "summary", sourceAuthor: "Publication writer", byline: "Summary by BTL", readerContent: [text("A summary.")]}}});
+  assert.match(html, /Original article by Publication writer/);
+  assert.match(html, /Article summary/);
+  assert.match(html, /Summary by BTL/);
+  assert.match(html, /1 October 2026/);
+  const embedded = await container.renderToString(PressArticle, {props: {item: {...item, title: "A verified headline", openingMode: "embed", readerKind: "summary", sourceAuthor: "Publication writer"}}});
+  assert.match(embedded, /Original article by Publication writer/);
+  assert.doesNotMatch(embedded, /Article summary/);
+});
+
 test("a complete reader separates card artwork from photography and renders nested editorial content", async () => {
   const html = await container.renderToString(PressArticle, {props: {project, item: {...item,
     title: "A complete feature", openingMode: "reader", image: image("card-artwork"),

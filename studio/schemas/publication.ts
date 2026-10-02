@@ -69,9 +69,23 @@ export default defineType({
       description: "Design, photography and collaborators for this article. Only add verified credits.",
     }),
     defineField({
+      name: "sourceAuthor", title: "Original article writer", type: "string",
+      description: "Verified writer credited by the original publication. Displayed separately from the author of BTL's reader content, in all three opening modes.",
+    }),
+    defineField({
+      name: "readerKind", title: "Reader content", type: "string",
+      hidden: ({document}) => document?.openingMode !== "reader",
+      options: {list: [
+        {title: "BTL project notes", value: "notes"},
+        {title: "Summary of the original article", value: "summary"},
+        {title: "Article supplied for republication", value: "article"},
+      ], layout: "radio"},
+      description: "Notes and summaries are labelled in the reader. Use the article option for text supplied for republication. The original writer's credit stays separate.",
+    }),
+    defineField({
       name: "byline", title: "Article byline", type: "string",
       hidden: ({document}) => document?.openingMode !== "reader",
-      description: "Optional author or publication credit, shown below the headline.",
+      description: "Author of the content shown in this reader. For a summary, credit its author here and the publication's writer in Original article writer.",
     }),
     defineField({
       name: "readerPublishedAt", title: "BTL reader publication date", type: "date",
