@@ -13,7 +13,7 @@
     "serve:test": "node tools/serve-test.mjs"
   },
   "dependencies": {
-    "@sanity/client": "8.6.2",
+    "@sanity/client": "8.8.0",
     "@sanity/image-url": "^1.2.0",
     "astro": "7.3.3"
   },
