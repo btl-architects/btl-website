@@ -25,6 +25,12 @@ deferred initial focus no longer overrides a quick Tab or Escape. Patched the
 editor’s transitive Undici and DOMPurify dependencies and the local website
 test server’s Undici dependency; no framework major upgrade was required.
 
+The first GitHub browser run reached Firefox successfully and exposed an extra
+Tab stop on an open project’s scroll container. The container now has
+`tabindex="-1"`; its photographs remain keyboard controls. The existing Tab
+check also verifies moving to the next photograph and back. The focused Chrome
+and Safari checks passed after this follow-up; the new GitHub run verifies Firefox.
+
 ## How ordering protects other edits
 
 Only `order` is changed. Published records and their existing drafts receive the
@@ -60,6 +66,8 @@ reload/close also warns about pending changes.
   find profile folder” before any page loads. Reinstall check and an alternate
   temporary directory did not resolve it. Firefox remains a release check;
   the repository’s Firefox test configuration has not been removed or weakened.
+  The first GitHub run did launch Firefox: 96 checks passed, with two intentional
+  clipboard skips and one gallery Tab failure. Its follow-up is described above.
 - Local editor UI verification used isolated fixture records. Dragging,
   keyboard moves, Publish order, reopening/reloading and Discard changes worked.
   No Sanity writes were made by these checks.

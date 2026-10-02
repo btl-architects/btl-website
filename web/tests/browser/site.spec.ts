@@ -143,7 +143,10 @@ test('Tab after opening a project moves into its photographs',async({page})=>{
   const entry=page.locator('[data-project]').first();
   await entry.press('Enter');await expect(entry).toHaveAttribute('aria-expanded','true');
   await page.keyboard.press('Tab');
-  await expect(page.locator('.pcard[data-open="true"] .rail__f').first()).toBeFocused();
+  const photographs=page.locator('.pcard[data-open="true"] .rail__f');
+  await expect(photographs.first()).toBeFocused();
+  await page.keyboard.press('Tab');await expect(photographs.nth(1)).toBeFocused();
+  await page.keyboard.press('Shift+Tab');await expect(photographs.first()).toBeFocused();
 });
 test('menu includes Close in its focus cycle and restores focus',async({page})=>{
   await page.setViewportSize({width:375,height:812});await page.goto('/contact/');

@@ -50,7 +50,9 @@ const peek = project.images.slice(0, 6);
     <span class="pcard__name">{project.title}</span>
     <span class="pcard__place">{project.location}</span>
   </a>
-  <div class="pcard__strip" data-strip>
+  {/* Firefox otherwise adds the scroll container itself to the tab order.
+      The photographs and their controls already provide keyboard access. */}
+  <div class="pcard__strip" data-strip tabindex="-1">
     {peek.map((image, k) => (
       <figure class="rail__f pcard__peek" role="button" tabindex="-1" aria-label={`View photograph ${k + 1}: ${image.alt}`}>
         <Figure image={image} sizes={PEEK_SIZES} priority={priority && k === 0} />
