@@ -74,13 +74,14 @@ export default defineType({
     }),
     defineField({
       name: "readerKind", title: "Reader content", type: "string",
+      initialValue: "summary",
       hidden: ({document}) => document?.openingMode !== "reader",
       options: {list: [
         {title: "BTL project notes", value: "notes"},
         {title: "Summary of the original article", value: "summary"},
         {title: "Article supplied for republication", value: "article"},
       ], layout: "radio"},
-      description: "Notes and summaries are labelled in the reader. Use the article option for text supplied for republication. The original writer's credit stays separate.",
+      description: "Keep summaries brief and in your own words. Notes and summaries are labelled in the reader. Use the article option only when the studio has permission to republish the text. The original writer's credit stays separate.",
     }),
     defineField({
       name: "byline", title: "Article byline", type: "string",

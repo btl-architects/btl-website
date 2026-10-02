@@ -238,3 +238,20 @@ Validation for the supplied-text update: all 14 narrative paragraphs and four
 original headings match the supplied text in the generated pages; original
 author/date/source metadata is correct. All 22 web unit tests, the Studio type
 check, the production build and 16 focused Chromium/WebKit reader checks passed.
+
+## Final choice: brief summaries
+
+Following the republication-rights discussion, the client chose summaries. Both
+full-text readers were replaced in Sanity with short, original summaries and
+plain captions. Reader kind is summary; each entry displays the summary label
+and BTL summary byline separately from the original writer/date credit. Three
+existing project photographs support each summary, with photography credits.
+The complete originals remain linked. No publisher quotations or full body
+paragraphs are retained in these current readers. Press artwork and caption
+alignment are unchanged.
+
+The replacement backs up previous records and uses revision guards; unrelated
+fields and drafts are preserved. New Studio entries default to summary content,
+and the editor explains that full article text requires republication permission.
+This change does not establish a licence for existing photographs or logos;
+those remain subject to their separate agreements.
