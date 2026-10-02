@@ -312,8 +312,9 @@ margins, remains visible. Trim unnecessary space below the logo in the source
 artwork if needed; the website never cuts off the logo.
 
 The AD and ELLE headlines, dates and writers were verified against their
-publisher pages on 2 October 2026. Their readers now contain clearly labelled
-article summaries and existing project photographs, not full publisher text.
+publisher pages on 2 October 2026. The client subsequently supplied the full article text. Both readers now
+contain that text, including original headings and quotations, with photographs
+from the existing project archive.
 **Reader content** distinguishes project notes, summaries and articles supplied
 for republication. **Original article writer** credits the publisher’s writer;
 **Article byline** credits the author of the content shown here. Use article

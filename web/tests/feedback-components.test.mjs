@@ -126,6 +126,17 @@ test("source writers are distinguished from the author of a clearly labelled sum
   assert.doesNotMatch(embedded, /Article summary/);
 });
 
+test("supplied articles credit the source writer and publication without a summary label", async () => {
+  const supplied = {...item, title: "Original headline", openingMode: "reader", readerKind: "article", sourceAuthor: "Original writer", byline: "", readerPublishedAt: "2026-10-02", readerContent: [text("The supplied article body.")]};
+  const html = await container.renderToString(PressArticle, {props: {item: supplied}});
+  assert.match(html, /Original article by Original writer/);
+  assert.match(html, /The supplied article body\./);
+  assert.doesNotMatch(html, /Article summary|Summary by|press-article__byline|BTL project notes/);
+  assert.deepEqual(press.articleMetadata(supplied), {headline: "Original headline", date: "2026-10-01", author: "Original writer", authorType: "Person", publisher: "Magazine", source: "https://example.com/article"});
+  assert.equal(press.articleMetadata({...supplied, readerKind: "summary"}).author, "btl architects");
+  assert.equal(press.articleMetadata({...supplied, readerKind: "summary"}).date, "2026-10-02");
+});
+
 test("a complete reader separates card artwork from photography and renders nested editorial content", async () => {
   const html = await container.renderToString(PressArticle, {props: {project, item: {...item,
     title: "A complete feature", openingMode: "reader", image: image("card-artwork"),

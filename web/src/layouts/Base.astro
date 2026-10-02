@@ -33,7 +33,7 @@ interface Props {
    *  no page can be shared as a bare text card by omission. */
   share?: SiteImage | null;
   articleReader?: boolean;
-  article?: {date: string; author: string; source?: string};
+  article?: {date: string; author: string; authorType?: "Person" | "Organization"; headline?: string; publisher?: string; source?: string};
 }
 
 const { title, description, current = "", ground = "dark", noindex = false, share, articleReader = false, article } = Astro.props;
@@ -135,11 +135,11 @@ const org = {
     />
     <script type="application/ld+json" set:html={JSON.stringify(org).replace(/</g, "\\u003c")} is:inline />
     {article && <script type="application/ld+json" set:html={JSON.stringify({
-      "@context": "https://schema.org", "@type": "Article", headline: title,
+      "@context": "https://schema.org", "@type": "Article", headline: article.headline ?? title,
       description, mainEntityOfPage: canonical,
       ...(article.date ? {datePublished: article.date} : {}),
-      author: {"@type": "Organization", name: article.author},
-      publisher: {"@type": "Organization", name: settings.name},
+      author: {"@type": article.authorType ?? "Organization", name: article.author},
+      publisher: {"@type": "Organization", name: article.publisher ?? settings.name},
       ...(shareImage ? {image: [shareImage]} : {}),
       ...(article.source ? {citation: article.source} : {}),
     }).replace(/</g, "\\u003c")} is:inline />}
