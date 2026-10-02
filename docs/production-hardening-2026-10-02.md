@@ -18,6 +18,7 @@ Instagram is updated to the supplied profile; LinkedIn and YouTube stay present.
 | Medium | `web/astro.config.mjs` | Canonicals and sitemap pointed to a hostname without a working website address. | Use the working Pages hostname; an HTTPS-origin-only `SITE_URL` switches every metadata URL together after custom-domain setup. |
 | Medium | `web/public/scripts/site.js` | The main CI trace attributed about 72ms to a reveal sweep repeatedly writing styles and reading geometry. | Measure all pending elements before applying classes. Preserve the statement’s separate scroll-triggered fade. |
 | Medium | `web/tools/inline-home-styles.mjs` | Home waits on a separate stylesheet before first paint; the repeated CI Home LCP was 2116ms against a 2000ms budget. | Embed Astro’s generated stylesheet in Home’s HTML, preserving one authored cascade. Other routes retain the shared cacheable file. No deferred-style flash or JavaScript dependency. |
+| Medium | Opening film player setup | Every clip constructed a media element during initial HTML parsing, including unplayed clips. Home CI still scored 81 with LCP 1948ms and CLS 0 after the render-delay fixes. | Keep players in inert templates and create them only when a clip plays or its delayed preload is needed. Verify actual playback, automatic pausing and still-only modes. |
 | Medium | `MediaStage.astro`, `ResponsiveFigure.astro`, styles | Initial phone stills used landscape framing until JavaScript ran, then fetched/switched to portrait; without scripts the phone still stayed landscape. | Browser-selected responsive picture through the existing Figure/CDN pipeline. The matching still remains until video playback; failed playback leaves a still. No film controls were added. |
 | Medium | `studio/schemas/articleContent.ts`, publication schema, reader components | Existing features were headline-plus-cover previews. | Intro, separate hero, body headings/paragraphs, nested ordered/unordered lists, figures, captions, pull quotes, credits and a BTL publication date, using one static reader renderer. All three opening modes retain one panel and native page fallback. |
 | Medium | `studio/scripts/seed-press-readers.ts` | AD and ELLE had no authored reader body. | Prepare original, labelled BTL project notes with existing photos, captions and verified project credits. Applied original BTL notes with standard Portable Text quotes compatible with the previous renderer, after backing up touched documents and guarding every revision. Unrelated drafts were preserved. |
@@ -103,7 +104,7 @@ trace evidence. These are lab measurements; no real-user INP is claimed.
 
 | Route | Local before score / LCP / CLS / TBT | Final local after score / LCP / CLS / TBT |
 | --- | --- | --- |
-| Home | 100 / 1750ms / 0 / 0ms | 100 / 1743ms / 0 / 0ms |
+| Home | 100 / 1750ms / 0 / 0ms | 100 / 1586ms / 0 / 0ms |
 | Nelly House | 100 / 1515ms / 0 / 0ms | 100 / 1514ms / 0 / 0ms |
 | Contact | 100 / 1517ms / 0 / 0ms | 100 / 1515ms / 0 / 0ms |
 
@@ -115,8 +116,8 @@ be compared as a before/after improvement. Final CI measurements will be compare
 with the old CI environment separately. The revised local trace reports no
 forced-reflow attribution for the reveal sweep.
 
-Build byte budgets remain unchanged. Current output is about 9.3KB CSS, 12.5KB
-JavaScript, 41.5KB fonts and 28.6KB for the largest HTML page (all gzip); two eager
+Build byte budgets remain unchanged. Current output is about 9.3KB CSS, 12.6KB
+JavaScript, 41.5KB fonts and 28.8KB for the largest HTML page (all gzip); two eager
 images on Home. The image warmer is bounded to eight concurrent requests and
 reports CDN failures without blocking valid output. Build duration grows with
 content and rendition count; serving traffic is independent of CMS availability.
@@ -156,10 +157,20 @@ content and rendition count; serving traffic is independent of CMS availability.
 
 PR [#18](https://github.com/btl-architects/btl-website/pull/18) contains this pass.
 The compatible editor is live at https://btldesigns.sanity.studio/.
-Pending final CI and website production verification. The code must deploy before the
-new pull-quote content is published; the previous reader cannot render that block.
-Studio deployment does not publish drafts. Content patches affect only article
-fields and the supplied Instagram URL and retain all unrelated data.
+Pending final CI and website production verification. Both current Press
+entries now have original labelled BTL notes, three credited photographs each,
+section headings, quotations and project credits in Sanity. Revision-guarded
+patches were backed up locally and preserve unrelated drafts. The quotations
+use standard Portable Text blocks so the previous public renderer can read them
+while the new UI deploys. Only the current artwork caption hotspots and supplied
+Instagram URL were additionally changed; LinkedIn/YouTube remain. Studio
+deployment publishes no drafts.
+
+The actual AD and ELLE readers were visually inspected at 390px, and the Press
+artwork/caption alignment at 1280px. Screenshot evidence is stored in the ignored
+`docs/client-feedback-evidence-2026-10-02/` directory. The persistent local preview
+is running the enriched content and updated mobile UI. Local Chromium/WebKit
+testing passed 91 checks, with one platform-specific skip.
 
 The performance harness checks local asset-serving readiness before launching
 Lighthouse so cold Wrangler initialization does not compete with Chrome. Each

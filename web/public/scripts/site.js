@@ -216,28 +216,36 @@
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
     function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
-    sFrames.forEach(function (frame) {
-      var v = frame.querySelector("video");
+    // Inert templates avoid constructing a media player for every clip during
+    // HTML parsing. Only the current clip (and its later preload) needs one.
+    function player(i) {
+      var frame = sFrames[i], v = frame.querySelector("video");
+      if (v) return v;
+      frame.appendChild(frame.querySelector("[data-stage-video]").content.cloneNode(true));
+      v = frame.querySelector("video");
+      v.muted = true;
       v.addEventListener("playing", function () { v.setAttribute("data-playing", "true"); });
       v.addEventListener("emptied", function () { v.removeAttribute("data-playing"); });
-    });
+      return v;
+    }
     function load(i) {
       if (stillsOnly()) return;
-      var v = sFrames[i].querySelector("video"), want = source(v);
+      var v = player(i), want = source(v);
       if (want && v.getAttribute("src") !== want) { v.src = want; v.load(); }
     }
     function pause() {
       clearInterval(timer); clearTimeout(preloadNext); timer = preloadNext = null;
-      sFrames.forEach(function (f) { f.querySelector("video").pause(); });
+      sFrames.forEach(function (f) { var v = f.querySelector("video"); if (v) v.pause(); });
     }
     function show(i) {
       at = (i + sFrames.length) % sFrames.length;
       sFrames.forEach(function (f, k) {
         f.setAttribute("data-on", k === at ? "true" : "false");
-        if (k !== at) f.querySelector("video").pause();
+        var v = f.querySelector("video");
+        if (k !== at && v) v.pause();
       });
       load(at);
-      sFrames[at].querySelector("video").play().catch(function () {});
+      player(at).play().catch(function () {});
       clearTimeout(preloadNext);
       preloadNext = setTimeout(function () { load((at + 1) % sFrames.length); }, 3000);
     }
@@ -248,7 +256,7 @@
         sFrames.forEach(function (f, k) {
           f.setAttribute("data-on", k === 0 ? "true" : "false");
           var v = f.querySelector("video");
-          if (v.hasAttribute("src")) { v.removeAttribute("src"); v.load(); }
+          if (v && v.hasAttribute("src")) { v.removeAttribute("src"); v.load(); }
         });
         return;
       }

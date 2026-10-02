@@ -29,7 +29,7 @@ const clips = await getHeroClips();
           {/* The browser selects the correctly framed still before scripts run.
               A failed or suppressed video leaves the responsive image intact. */}
           {clip.poster && <ResponsiveFigure image={clip.poster} portrait={clip.posterPortrait} priority={i === 0} />}
-          <video
+          <template data-stage-video><video
             aria-hidden="true"
             muted
             loop
@@ -37,7 +37,7 @@ const clips = await getHeroClips();
             preload="none"
             data-src={clip.video}
             data-src-portrait={clip.videoPortrait}
-          ></video>
+          ></video></template>
         </figure>
       );
     })}

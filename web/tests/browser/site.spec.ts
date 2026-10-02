@@ -169,6 +169,7 @@ test('menu includes Close in its focus cycle and restores focus',async({page})=>
 test('film stops outside the viewport and offers no pause control',async({page})=>{
   await page.goto('/');
   await expect(page.locator('[data-stage-pause]')).toHaveCount(0);
+  await expect.poll(()=>page.locator('.stage__f video[data-playing="true"]').count()).toBeGreaterThan(0);
   await page.locator('#contact').scrollIntoViewIfNeeded();
   await expect.poll(()=>page.locator('video').evaluateAll(v=>v.every(e=>(e as HTMLVideoElement).paused))).toBeTruthy();
 });
@@ -187,7 +188,7 @@ test('the opening still uses the matching phone framing before JavaScript runs',
     const candidates=(await frame.locator('source').getAttribute('srcset'))!.split(', ').map(s=>s.split(' ')[0]);
     await expect.poll(()=>frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
     expect(candidates).toContain(await frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc));
-    expect(await frame.locator('video').getAttribute('src')).toBeNull();
+    await expect(frame.locator('video')).toHaveCount(0);
   } finally {await context.close();}
 });
 
