@@ -62,40 +62,84 @@
     dialog.addEventListener("pointerdown", function (ev) {outsideDown = outside(ev);});
     dialog.addEventListener("click", function (ev) {if (outsideDown && outside(ev)) dismiss(); outsideDown = false;});
 
-    // On a phone the reader is a card (components.css); a finger pulls it down
-    // by its top edge — the handle and the bar — to put it away. A short pull
-    // springs back; far enough, or a flick, closes it. Taps on the bar's
-    // buttons are untouched: nothing moves until the finger has.
+    // On a phone the reader is a card with two resting heights, the way a
+    // phone's own maps and music cards work (components.css). It opens part
+    // way — a look at the article: headline, picture, the start of the text —
+    // and there nothing scrolls, so a thumb swiping down anywhere on it puts it
+    // away. Swiping up, or tapping it, raises it to read in full; there the
+    // article scrolls, and pulling down from the bar, or from an article back
+    // at its top, lowers it again, or puts it away if pulled far or flicked.
+    // A tap outside the card closes it from either height.
     var pull = null;
-    dialog.addEventListener("pointerdown", function (ev) {
-      if (ev.pointerType === "mouse" || outsideDown) return;
-      var top = dialog.getBoundingClientRect().top, bar = dialog.querySelector(".press-reader__bar");
-      if (ev.clientY > bar.getBoundingClientRect().bottom || ev.clientY < top) return;
-      pull = {id: ev.pointerId, y: ev.clientY, dy: 0, t: performance.now(), v: 0, moving: false};
-    });
-    dialog.addEventListener("pointermove", function (ev) {
-      if (!pull || ev.pointerId !== pull.id) return;
-      var dy = Math.max(0, ev.clientY - pull.y), now = performance.now();
-      if (!pull.moving && dy < 8) return;
-      if (!pull.moving) { pull.moving = true; dialog.setPointerCapture(ev.pointerId); dialog.style.transition = "none"; }
+    dialog.addEventListener("touchstart", function (ev) {
+      if (!sheet() || ev.touches.length !== 1 || outside(ev.touches[0])) { pull = null; return; }
+      var t = ev.touches[0];
+      pull = {y: t.clientY, x: t.clientX, dy: 0, v: 0, t: performance.now(), moving: false,
+              inBar: !content.contains(ev.target), tap: true};
+    }, {passive: true});
+    dialog.addEventListener("touchmove", function (ev) {
+      if (!pull) return;
+      var t = ev.touches[0], now = performance.now(), dy = t.clientY - pull.y;
+      if (Math.hypot(t.clientX - pull.x, dy) > 8) pull.tap = false;
+      if (!pull.moving) {
+        if (Math.abs(dy) < 6 || Math.abs(t.clientX - pull.x) > Math.abs(dy)) return;
+        var full = dialog.getAttribute("data-detent") === "full";
+        // Raised, the article scrolls: only a downward pull from the bar or
+        // from the article's top moves the card.
+        if (full && !(dy > 0 && (pull.inBar || content.scrollTop <= 0))) { pull.y = t.clientY; return; }
+        pull.moving = true; pull.y = t.clientY; dy = 0;
+        dialog.setAttribute("data-pulling", "");
+      }
+      ev.preventDefault();
+      var base = rest(), y = base + dy;
+      if (y < 0) y = y / 3;                       // resistance past fully raised
       pull.v = (dy - pull.dy) / Math.max(1, now - pull.t); pull.dy = dy; pull.t = now;
-      dialog.style.transform = "translateY(" + dy + "px)";
-    });
+      dialog.style.transform = "translateY(" + y + "px)";
+      dialog.style.setProperty("--pull", String(Math.max(0, Math.min(1, (y - peekOffset()) / (dialog.clientHeight * 0.5)))));
+    }, {passive: false});
     function letGo(ev) {
-      if (!pull || ev.pointerId !== pull.id) return;
       var p = pull; pull = null;
-      if (!p.moving) return;
-      dialog.style.transition = "transform 240ms cubic-bezier(.2,.7,.2,1)";
-      if (ev.type === "pointerup" && (p.dy > dialog.clientHeight * 0.22 || p.v > 0.6)) {
-        dialog.style.transform = "translateY(100%)";
-        setTimeout(function () { dismiss(); dialog.style.transform = ""; dialog.style.transition = ""; }, 240);
+      if (!p) return;
+      if (!p.moving) {
+        // A tap on the lowered card raises it — unless it was on a link or a
+        // control, which keep their own meaning.
+        if (p.tap && ev.type === "touchend" && dialog.getAttribute("data-detent") === "peek" &&
+            !(ev.target.closest && ev.target.closest("a, button"))) { ev.preventDefault(); settle("full"); }
+        return;
+      }
+      dialog.removeAttribute("data-pulling");
+      var flick = performance.now() - p.t < 90 ? p.v : 0, vh = window.innerHeight;
+      var full = dialog.getAttribute("data-detent") === "full";
+      if (ev.type !== "touchend") { settle(full ? "full" : "peek"); return; }
+      if (full) {
+        if (p.dy > vh * 0.45 || flick > 1.2) dismiss();
+        else if (p.dy > vh * 0.1 || flick > 0.4) settle("peek");
+        else settle("full");
       } else {
-        dialog.style.transform = "";
-        setTimeout(function () { dialog.style.transition = ""; }, 240);
+        if (p.dy < -vh * 0.08 || flick < -0.4) settle("full");
+        else if (p.dy > vh * 0.1 || flick > 0.4) dismiss();
+        else settle("peek");
       }
     }
-    dialog.addEventListener("pointerup", letGo);
-    dialog.addEventListener("pointercancel", letGo);
+    dialog.addEventListener("touchend", letGo);
+    dialog.addEventListener("touchcancel", letGo);
+    // A keyboard reaching the article needs it raised to scroll it.
+    content.addEventListener("focus", function () { if (sheet()) settle("full"); });
+  }
+
+  // The two resting heights of the phone card, as offsets from fully raised.
+  // Touch only. The lowered card is a look that a finger raises or swipes
+  // away; with a mouse there is no swipe, and it sat half-way, cut off and
+  // unscrollable. A mouse, even in a narrow window, gets the card raised.
+  function sheet() {
+    return window.matchMedia("(max-width: 47.99rem) and (hover: none) and (pointer: coarse)").matches;
+  }
+  function peekOffset() { return Math.max(0, dialog.clientHeight - window.innerHeight * 0.62); }
+  function rest() { return dialog.getAttribute("data-detent") === "full" ? 0 : peekOffset(); }
+  function settle(detent) {
+    dialog.setAttribute("data-detent", detent);
+    dialog.style.transform = "translateY(" + rest() + "px)";
+    dialog.style.removeProperty("--pull");
   }
 
   function close() {
@@ -111,12 +155,30 @@
     restoreHistoryScroll();
   }
 
+  // On a phone the card slides away before it closes; elsewhere, and for a
+  // reader who has asked for less motion, it simply closes.
+  var leaving = false;
   function dismiss() {
-    close();
-    if (history.state && history.state.btlPressReader) {
-      historyPending = true;
-      history.back();
+    if (leaving || !dialog || !dialog.open) return;
+    var slide = window.matchMedia("(max-width: 47.99rem)").matches &&
+                !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function done() {
+      leaving = false;
+      dialog.removeAttribute("data-leaving");
+      dialog.removeAttribute("data-detent");
+      dialog.style.transform = ""; dialog.style.removeProperty("--pull");
+      close();
+      if (history.state && history.state.btlPressReader) {
+        historyPending = true;
+        history.back();
+      }
     }
+    if (!slide) { done(); return; }
+    leaving = true;
+    dialog.removeAttribute("data-pulling");
+    dialog.setAttribute("data-leaving", "");
+    dialog.style.transform = "translateY(calc(100% + 2rem))";
+    setTimeout(done, 260);
   }
 
   window.addEventListener("popstate", function () {
@@ -126,6 +188,42 @@
   });
   window.addEventListener("pagehide", close);
   window.addEventListener("pageshow", restoreHistoryScroll);
+
+  // Articles are fetched before they are asked for: as their covers come
+  // near the screen, and the moment a finger lands on one. Opening one then
+  // shows it at once instead of a line saying it is on its way.
+  var articles = {};
+  function load(href) {
+    if (!articles[href]) {
+      articles[href] = fetch(href).then(function (response) {
+        if (!response.ok) throw new Error("article unavailable");
+        if (new URL(response.url).origin !== location.origin) throw new Error("external redirect");
+        return response.text();
+      }).then(function (html) {
+        var article = new DOMParser().parseFromString(html, "text/html").querySelector("[data-article-content]");
+        if (!article) throw new Error("article missing");
+        var image = article.querySelector(".press-article__image img");
+        if (image && image.currentSrc !== undefined) { var pre = new Image(); pre.srcset = image.getAttribute("srcset") || ""; pre.sizes = image.getAttribute("sizes") || ""; pre.src = image.getAttribute("src"); }
+        return article;
+      });
+      articles[href].catch(function () { delete articles[href]; });
+    }
+    return articles[href];
+  }
+  function ahead(link) {
+    if (!link) return;
+    var url = new URL(link.href, location.href);
+    if (url.origin === location.origin) load(url.href);
+  }
+  if ("IntersectionObserver" in window) {
+    var near = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { near.unobserve(e.target); ahead(e.target); } });
+    }, {rootMargin: "400px 0px"});
+    document.querySelectorAll("a[data-article]").forEach(function (a) { near.observe(a); });
+  }
+  document.addEventListener("pointerdown", function (ev) {
+    ahead(ev.target.closest && ev.target.closest("a[data-article]"));
+  }, {passive: true});
 
   document.addEventListener("click", function (ev) {
     var link = ev.target.closest && ev.target.closest("a[data-article]");
@@ -161,6 +259,15 @@
     document.body.style.right = "0";
     document.body.style.width = "100%";
     dialog.showModal();
+    if (sheet()) {
+      // Rises from below the screen to the lowered height.
+      dialog.setAttribute("data-detent", "peek");
+      dialog.setAttribute("data-pulling", "");
+      dialog.style.transform = "translateY(100%)";
+      void dialog.offsetHeight;
+      dialog.removeAttribute("data-pulling");
+      settle("peek");
+    }
     // Focus goes to Close either way; its ring is drawn only for a keyboard
     // (a click with no pointer behind it has detail 0). After a tap it framed
     // the X in a bright box the reader had not asked for.
@@ -170,15 +277,11 @@
     history.pushState(Object.assign({}, history.state, {btlPressReader: true}), "", location.href);
     controller = new AbortController();
     var request = controller;
-    fetch(destination.href, {signal: request.signal}).then(function (response) {
-      if (!response.ok) throw new Error("article unavailable");
-      if (new URL(response.url).origin !== location.origin) throw new Error("external redirect");
-      return response.text();
-    }).then(function (html) {
+    load(destination.href).then(function (cached) {
       if (!dialog.open || request.signal.aborted) return;
-      var article = new DOMParser().parseFromString(html, "text/html").querySelector("[data-article-content]");
-      if (!article) throw new Error("article missing");
       // The fetched markup is our own statically rendered, escaped CMS content.
+      // A copy, so the cached original can open again.
+      var article = cached.cloneNode(true);
       content.replaceChildren(article);
       content.scrollTop = 0;
       content.setAttribute("aria-busy", "false");

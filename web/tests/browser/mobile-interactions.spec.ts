@@ -268,28 +268,60 @@ test.describe('phone interactions',()=>{
     await input.detach();
   });
 
-  test('Press opens as a card the page stays visible above, and closes by tap or pull',async({page,browserName})=>{
+  test('Press opens as a card to look into, put away with a thumb or a tap outside',async({page,browserName})=>{
     await page.goto('/press/');
     const card=page.locator('a[data-article]').first();
     await card.scrollIntoViewIfNeeded();
     await card.tap();
     const reader=page.getByRole('dialog',{name:'Press reader'});
     await expect(reader).toBeVisible();
-    await page.waitForTimeout(600);
+    // Already fetched as the cover came near, so the article is simply there.
+    await expect(reader.locator('.press-article')).toBeVisible({timeout:1500});
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await page.waitForTimeout(500);
     const box=(await reader.boundingBox())!;
-    expect(box.y).toBeGreaterThan(40);
-    expect(Math.round(box.y+box.height)).toBeGreaterThanOrEqual(843);
+    expect(box.y).toBeGreaterThan(844*0.3);            // a look: the page stays in view above
+    expect(box.x).toBeGreaterThanOrEqual(8);
     await page.touchscreen.tap(195,box.y/2);
     await expect(reader).toBeHidden();
+    await expect(page).toHaveURL(/\/press\/$/);
     if(browserName!=='chromium') return;
-    await card.tap();
-    await expect(reader).toBeVisible();
-    await page.waitForTimeout(600);
-    const top=(await reader.boundingBox())!.y;
     const input=await page.context().newCDPSession(page);
-    await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:120,y:top+20}]});
-    for(let i=1;i<=8;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:120,y:top+20+300*i/8}]});
-    await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    async function swipe(y:number,dy:number) {
+      await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:180,y}]});
+      for(let i=1;i<=10;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:180,y:y+dy*i/10}]});
+      await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }
+    async function open() { await card.tap(); await expect(reader).toHaveAttribute('data-detent','peek'); await page.waitForTimeout(450); }
+    // Lowered, a thumb swipe down anywhere on the card puts it away.
+    await open();
+    await swipe(700,160);
+    await expect(reader).toBeHidden();
+    // A swipe up raises it to read; so does a tap on it.
+    await open();
+    await swipe(700,-200);
+    await expect(reader).toHaveAttribute('data-detent','full');
+    await page.touchscreen.tap(195,30);
+    await expect(reader).toBeHidden();
+    await open();
+    await page.touchscreen.tap(195,720);
+    await expect(reader).toHaveAttribute('data-detent','full');
+    await page.waitForTimeout(450);
+    // Raised, a swipe down part-way through the article scrolls it back...
+    const text=reader.locator('.press-reader__content');
+    await text.evaluate(el=>{el.scrollTop=400;});
+    await swipe(500,150);
+    await expect(reader).toHaveAttribute('data-detent','full');
+    expect(await text.evaluate(el=>el.scrollTop)).toBeLessThan(400);
+    // ...and at the top the same swipe lowers it, and a long pull puts it away.
+    await text.evaluate(el=>{el.scrollTop=0;});
+    await swipe(400,150);
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await page.waitForTimeout(450);
+    await swipe(700,-200);
+    await expect(reader).toHaveAttribute('data-detent','full');
+    await page.waitForTimeout(450);
+    await swipe(200,500);
     await expect(reader).toBeHidden();
     await input.detach();
   });
@@ -339,6 +371,17 @@ test.describe('phone interactions',()=>{
       }
     }
   });
+});
+
+test('with a mouse, even in a narrow window, the Press card opens raised and scrolls',async({page})=>{
+  await page.setViewportSize({width:375,height:812});
+  await page.goto('/press/');
+  await page.locator('a[data-article]').first().click();
+  const reader=page.getByRole('dialog',{name:'Press reader'});
+  await expect(reader.locator('.press-article')).toBeVisible();
+  await expect(reader).not.toHaveAttribute('data-detent','peek');
+  await expect(reader.locator('.press-reader__content')).toHaveCSS('overflow-y','auto');
+  expect((await reader.boundingBox())!.y).toBeLessThan(120);
 });
 
 test('mouse layouts keep the original hover treatment at desktop and narrow widths',async({page})=>{

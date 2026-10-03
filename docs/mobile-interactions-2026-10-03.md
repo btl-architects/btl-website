@@ -41,7 +41,7 @@ Arrows and Close remain, so nothing depends on a gesture alone. The viewer loads
 
 ## Press on a phone
 
-A feature opens as a card rising from the bottom, with the Press page still visible above it. A tap above the card, or pulling it down by its top edge, puts it away.
+A feature opens as a card to look into, never a page to be inside. On a touch phone it rises part way, showing the headline, picture and start of the summary; nothing scrolls there, so a thumb swiping down anywhere on it puts it away. Swiping up, or tapping it, raises it to read in full; then the article scrolls, and pulling down from the bar or from the article's top lowers it again, or puts it away if pulled far or flicked. A tap outside the card closes it from either height. Reading the original publication is the one way off the site. With a mouse, even in a narrow window, the card opens raised and scrolls. Articles are fetched as their covers come near the screen, so they open without a loading line.
 
 ## Leaving a page
 
