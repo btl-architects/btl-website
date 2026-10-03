@@ -1,5 +1,6 @@
 import type {Publication} from "./content";
 import type {SiteImage} from "./media";
+import {isSafeSlug} from '../../../shared/slug';
 
 export type OpeningMode = "external" | "reader" | "embed";
 export interface TextBlock {
@@ -71,9 +72,7 @@ export function articlePath(item: Publication): string | null {
   if (!item.id) return null;
   if (item.openingMode === "reader" && hasArticleContent(item.readerContent) ||
       item.openingMode === "embed" && articleUrl(item.url)?.startsWith("https://")) {
-    // The document ID is stable across title edits, and drafts share the route
-    // of their published version. No editorial slug or duplicate URL to maintain.
-    return `/press/${encodeURIComponent(item.id.replace(/^drafts\./, ""))}/`;
+    return `/press/${encodeURIComponent(articleSlug(item))}/`;
   }
   return null;
 }
@@ -81,5 +80,11 @@ export function articlePath(item: Publication): string | null {
 /** Keep one destination for the reader, embedded article and feature preview. */
 export function articlePagePath(item: Publication): string | null {
   return item.id && (hasArticleContent(item.readerContent) || articleUrl(item.url)) ?
-    `/press/${encodeURIComponent(item.id.replace(/^drafts\./, ""))}/` : null;
+    `/press/${encodeURIComponent(articleSlug(item))}/` : null;
+}
+
+export function articleSlug(item: Publication): string {
+  if (item.slug && !isSafeSlug(item.slug)) throw new Error(`Invalid Press address: ${item.id}`);
+  // Legacy entries remain usable until their address field is populated.
+  return item.slug || item.id!.replace(/^drafts\./,'');
 }

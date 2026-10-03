@@ -37,9 +37,9 @@ export default defineConfig({
   })],
 
   document: {
-    actions: (actions, context) => context.schemaType !== 'project' ? actions : actions.map(action =>
+    actions: (actions, context) => !['project','publication'].includes(context.schemaType) ? actions : actions.map(action =>
       action.action === 'publish' ? preserveProjectAddress(action) :
-      ['delete', 'unpublish'].includes(action.action || '') ? protectPublishedProject(action) : action),
+      context.schemaType === 'project' && ['delete', 'unpublish'].includes(action.action || '') ? protectPublishedProject(action) : action),
   },
   schema: { types: schemaTypes },
 });

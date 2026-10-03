@@ -6,10 +6,22 @@
 
 @font-face {
   font-family: "Satoshi";
-  src: url("/assets/fonts/Satoshi-Variable.woff2") format("woff2");
+  src: url("/assets/fonts/Satoshi-Extended.woff2") format("woff2");
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0080-10FFFF;
+}
+
+/* Same variable font and metrics, with the site's common Latin glyphs first.
+   Other scripts retain the complete source font above. */
+@font-face {
+  font-family: "Satoshi";
+  src: url("/assets/fonts/Satoshi-Latin.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-007F, U+00A0, U+00A9, U+00B7, U+00D7, U+2010-2015, U+2018-201F, U+2022, U+2026, U+2032-2033, U+20B9, U+2190-2193, U+2197, U+2199;
 }
 
 /* Metric-adjusted fallback so a failed webfont does not shift the layout */
@@ -134,6 +146,7 @@
   --s-5: 1.5rem;   --s-6: 2rem;     --s-7: 3rem;     --s-8: 4rem;   --s-9: 6rem;
 
   --space-section:    clamp(4rem, 2rem + 7vw,  8rem);
+  --space-content-gap: var(--s-6);
 
   /* The ordinary rhythm between sections, as opposed to --space-section, which
      is the big pause. Fluid for the same reason the type is: --s-8 is a flat

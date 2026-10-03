@@ -53,6 +53,9 @@ test('Press captions follow the photograph anchor inside complete artwork at eve
     await caption.evaluate(el => el.textContent = 'Feature · A house with a deliberately longer project name in Wayanad · 2026');
     for (const width of [320,375,768,1440]) {
       await page.setViewportSize({width,height:900});
+      // WebKit applies responsive layout on the next frame after a viewport
+      // change. Measure the settled layout, rather than mixing two sizes.
+      await page.evaluate(async () => { await document.fonts.ready; await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))); });
       const card = page.locator('.pc').first();
       const image = (await card.locator('.pc__img').boundingBox())!;
       const text = (await card.locator('.pc__m').boundingBox())!;

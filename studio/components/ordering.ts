@@ -6,6 +6,7 @@ export interface OrderDocument {
   name?: string;
   order?: number;
   tier?: string;
+  showInTeam?: boolean;
   active?: boolean;
   lifecycle?: string;
 }
@@ -32,7 +33,7 @@ export function orderEntries(documents: OrderDocument[]): OrderEntry[] {
     // Arrange the published sections. A draft changing someone's tier must
     // not silently change where their published record is ordered.
     const source = entry.published ?? entry.draft!;
-    const group = source._type === "project" ? "projects" : source.tier ?? "other";
+    const group = source._type === "project" ? "projects" : source.tier==='principal' && source.showInTeam!==false ? 'team' : source.tier ?? "other";
     const label = entry.draft ?? source;
     return { ...entry, id, group, title: label.name || label.title || "Untitled entry",
       position: Number.isFinite(source.order) ? source.order! : 0 };

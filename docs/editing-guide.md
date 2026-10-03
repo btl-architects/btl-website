@@ -52,11 +52,14 @@ It's live on the next publish.
 
 **People → the pencil icon → Person**
 
-Name, portrait, role, and **Where they appear**. Principals may leave the role
-blank; Team and Alumni need a role:
+Name, portrait, **Designation**, and **Where they appear**. Keep one record per
+person. Anyone shown on People needs a designation:
 
-- **Principal** — retained profile record; the separate principals list has been removed
-- **Team** — portrait cards below the team photograph, including founders with team records
+- **Principal** — supplies Home and, when **Show in the People roster** is on,
+  their portrait card in the team. **Show designation on Home** is off by default;
+  it affects Home only. **Position beside the Home photograph** follows the
+  photograph's left-to-right order, independently of roster ordering.
+- **Team** — portrait cards below the team photograph
 - **Alumni** — portrait cards in "Previously at btl", using the same treatment
 
 After replacing a portrait, publish the person and wait for the website rebuild
@@ -80,8 +83,14 @@ Add the publication's name, the headline, the date, and the link. Upload the
 client's complete PNG under **Complete Press artwork**, with the photograph and
 publication name already composed into it. A square canvas fits the card closely;
 other proportions stay fully visible, without cropping or hover zoom. Transparent
-areas show the website's dark background. The artwork retains its original colours.
+areas show the website's dark background. Empty transparent outer padding is
+removed automatically on rebuild; photographs, lettering and opaque borders
+remain intact. The artwork retains its original colours.
 Each entry can have its own image even when several entries feature the same project.
+
+Generate its **Web address** before publishing. This supplies the reader URL in
+all opening modes. If a published address changes later, its previous address
+is automatically kept as a redirect. Old internal-ID addresses also redirect.
 
 The website adds no separate publication logo: the feature, project and year
 caption remains beneath the artwork. To replace it, change **Complete Press
@@ -139,7 +148,7 @@ Team and Alumni rows hold three portraits; narrow screens hold two.
 
 Open **Arrange people** or **Arrange projects** in the sidebar. Drag the ↕
 handles, use **Move up / Move down**, or focus a handle and press the arrow keys.
-People move within Principals, Team or Alumni. Hidden records stay in the list
+Principals shown in the roster move with Team; Alumni remain separate. Hidden records stay in the list
 so they keep their position if shown again.
 
 Choose **Publish order** to save positions. It changes only order values, leaving

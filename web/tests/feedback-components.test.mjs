@@ -80,6 +80,13 @@ test("each Press opening mode has a working native destination", async () => {
   assert.equal(press.articlePath({...reader, id: "drafts.stable-id"}), "/press/stable-id/");
   assert.equal(press.articlePath({...reader, readerContent: [text(" ")]}), null);
   assert.equal(press.articlePagePath({...reader, openingMode: "external"}), "/press/stable-id/");
+  for(const openingMode of ['reader','embed','external']) {
+    const named={...reader,slug:'elle-decor-nelly-house',openingMode};
+    assert.equal(press.articlePagePath(named),'/press/elle-decor-nelly-house/');
+    const namedHtml=await container.renderToString(Credit,{props:{item:named,project}});
+    assert.match(namedHtml,/href="\/press\/elle-decor-nelly-house\/"/);
+  }
+  assert.throws(()=>press.articlePagePath({...reader,slug:'../escape'}),/Invalid Press address/);
 });
 
 test("Sanity crop dimensions match the returned frame, while complete artwork ignores crop", async () => {

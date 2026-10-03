@@ -28,6 +28,14 @@ function walk(dir,base='') {
   }
 }
 walk(dist);
+const publications=await client.fetch('*[_type=="publication" && defined(slug.current)]{_id,"slug":slug.current,previousSlugs}');
+for (const item of publications) {
+  const to=`/press/${item.slug}/`;
+  if (!pages.has(to)) continue;
+  for (const old of new Set([item._id.replace(/^drafts\./,''),...(item.previousSlugs || [])])) {
+    if (old !== item.slug) rows.push({from:`/press/${encodeURIComponent(old)}/`,to,permanent:true});
+  }
+}
 const resolved = resolveRedirects(rows,pages);
 writeFileSync(join(dist,'_redirects'),resolved.map(r=>`${r.from}  ${r.to}  ${r.permanent ? 301 : 302}`).join('\n')+'\n');
 console.log(`[redirects] ${resolved.length} merged rules validated`);

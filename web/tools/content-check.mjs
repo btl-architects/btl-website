@@ -1,4 +1,5 @@
 import {clipVideoSources} from "../../shared/video.ts";
+import {isSafeSlug} from '../../shared/slug.ts';
 /* Check the content against the rules the Studio enforces — at build time.
  *
  * The Studio validates as an editor types. That covers everything typed into
@@ -74,7 +75,7 @@ const data = await client.fetch(`{
     _id, name, "portrait": portrait{ alt, rights, "hasAsset": defined(asset.asset) }
   },
   "publications": *[_type == "publication"]{
-    _id, kind, publication, openingMode, url,
+    _id, kind, publication, openingMode, url, "slug":slug.current,
     "image": image{ alt, rights, "hasAsset": defined(asset.asset) },
     intro, "articleHero": articleHero{alt, rights, "hasAsset": defined(asset.asset)},
     "readerContent": readerContent[]{_type, style, listItem, level, text, children[]{text, marks}, markDefs[]{_type, href}, alt, rights, "hasAsset": defined(asset.asset)}
@@ -105,7 +106,10 @@ for (const p of data.projects ?? []) {
 }
 
 for (const p of data.people ?? []) checkFigure(p.portrait, p.name || p._id, "portrait");
+const pressSlugs=new Set();
 for (const p of data.publications ?? []) {
+  if(!isSafeSlug(p.slug) || pressSlugs.has(p.slug)) errors.push(`${p.publication || p._id} needs a unique valid Press slug`);
+  pressSlugs.add(p.slug);
   checkFigure(p.image, p.publication || p._id, "Press image");
   checkFigure(p.articleHero, p.publication || p._id, "article opening photograph");
   const blocks = Array.isArray(p.readerContent) ? p.readerContent : [];

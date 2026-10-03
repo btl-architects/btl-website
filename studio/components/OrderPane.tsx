@@ -7,7 +7,7 @@ const groupLabels: Record<string, string> = {
   projects: "Projects", principal: "Principals", team: "Team", alumni: "Alumni", other: "Other people",
 };
 const query = `*[_type == $type && !(_id in path("versions.**"))]{
-  _id, _rev, _type, title, name, order, tier, active, lifecycle
+  _id, _rev, _type, title, name, order, tier, showInTeam, active, lifecycle
 }`;
 
 export function OrderPane({options}: {options?: Record<string, unknown>}) {
