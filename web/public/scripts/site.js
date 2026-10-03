@@ -400,6 +400,27 @@
     rail.scrollBy({ left: direction * rtl * rail.clientWidth * .7, behavior: reduced ? "auto" : "smooth" });
   }
 
+  /* A conventional mouse wheel has no horizontal axis. Let it move a gallery
+     under the pointer, returning to page scrolling at either end. Trackpad
+     horizontal gestures, Shift+wheel and browser zoom keep their native use.
+     Delegation also covers photographs fetched into an expanded project. */
+  document.addEventListener("wheel", function (e) {
+    if (e.ctrlKey || e.shiftKey || e.defaultPrevented || !e.cancelable ||
+        Math.abs(e.deltaX) > 0 || !e.deltaY) return;
+    var rail = e.target.closest && e.target.closest("[data-rail], .pcard__strip");
+    if (!rail || rail.closest('.pcard:not([data-open="true"])')) return;
+    var range = rail.scrollWidth - rail.clientWidth;
+    if (range <= 1) return;
+    var rtl = getComputedStyle(rail).direction === "rtl" ? -1 : 1;
+    var position = rtl * rail.scrollLeft;
+    var unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rail.clientWidth : 1;
+    var delta = e.deltaY * unit;
+    if ((delta < 0 && position <= 1) || (delta > 0 && position >= range - 1)) return;
+    e.preventDefault();
+    rail._pin = false; rail._touched = true;
+    rail.scrollBy({ left: delta * rtl, behavior: "instant" });
+  }, { passive: false });
+
   document.addEventListener("click", function (e) {
     var button = e.target.closest("[data-gallery-step]");
     if (!button) return;

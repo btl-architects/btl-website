@@ -1,6 +1,32 @@
 import {test, expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('complete Press artwork responds to hover and keyboard focus without clipping', async ({page}) => {
+  for (const route of ['/', '/press/']) {
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.goto(route, {waitUntil:'domcontentloaded'});
+    const card = page.locator('a.pc--custom').first();
+    const image = card.locator('.pc__img');
+    const caption = card.locator('.pc__m');
+    await card.scrollIntoViewIfNeeded();
+    const restingColor = await caption.evaluate(el => getComputedStyle(el).color);
+    await card.hover();
+    await expect(card).toHaveCSS('cursor','pointer');
+    await expect(image).toHaveCSS('transform','matrix(1, 0, 0, 1, 0, -3)');
+    await expect(caption).toHaveCSS('transform','matrix(1, 0, 0, 1, 0, -3)');
+    await expect(caption).not.toHaveCSS('color',restingColor);
+    await expect(image.locator('img')).toHaveCSS('transform','none');
+    await expect(image.locator('img')).toHaveCSS('object-fit','contain');
+    await page.mouse.move(0,0);
+    await page.keyboard.press('Tab');
+    await card.focus();
+    await expect(image).toHaveCSS('transform','matrix(1, 0, 0, 1, 0, -3)');
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await expect(image).toHaveCSS('transform','none');
+    await expect(caption).toHaveCSS('transform','none');
+  }
+});
+
 test('BTL reader keeps the page, traps focus, restores scroll and dismisses with Back', async ({page}) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
   await page.goto('/__reader-demo/');
