@@ -207,9 +207,11 @@ introductions, Studio passages, biographies, project descriptions and Press
 introductions. Press article bodies also support paragraphs, lists and headings
 through their existing rich-text editor.
 
-On desktop, browse Studio and project photographs with the mouse wheel, arrows,
-or by holding a photograph and dragging left or right. A click opens the image;
-a drag moves the gallery. Phones retain swipe scrolling.
+On desktop, browse Studio and project photographs with the arrows, a horizontal
+trackpad gesture, or by holding a photograph and dragging left or right. Normal
+up-and-down wheel scrolling moves the page, including when the pointer is over
+a photograph. A click opens the image; a drag moves the gallery. Phones retain
+swipe scrolling.
 
 Clear any of the **Page wording** fields and it goes back to the written
 default. You can't leave a blank space by emptying a box.
