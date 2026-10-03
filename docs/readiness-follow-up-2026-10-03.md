@@ -74,3 +74,16 @@ http-cache-semantics 4.2.0 (GHSA-ch52-4w7c-c8xp), and Studio CLI's dependency on
 braces 3.0.3 (GHSA-vfj7-8cjw-p6xm). Tests and performance now run before those
 checks so the audit failures cannot hide unrelated regressions. No suppression,
 audit exception, downgrade or security patch is claimed by this follow-up.
+
+## Follow-up CI and footer verification
+
+The full GitHub browser run for #25 passed 205 checks across Chrome, Safari
+and Firefox (one platform-specific check skipped). Its deployed mobile run
+still missed the Home target: median LCP 2321 ms, versus 1796 ms on Nelly
+House and 982 ms on Contact. This is a remaining launch-performance gap; the
+faster laptop measurements above do not override it.
+
+Short pages now reserve a complete dynamic viewport before the footer. Footer
+height and padding remain shared across routes; it follows content in normal
+flow and stays outside the initial screen on short pages. Responsive checks
+cover Press, 404, Contact, People and Nelly House, plus reader scroll restoration.
