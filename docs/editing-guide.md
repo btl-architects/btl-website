@@ -189,6 +189,11 @@ is a wait rather than an opening.
 - **Contact** — address, email, phone, where enquiries are delivered, GSTIN
 - **Navigation** — the menu items and the social links
 
+The current page order is Home → Projects → Press → People → Studio → Contact.
+Home follows the same People → Studio sequence. The closing links lead from
+Press to People, People to Studio, and Studio to Contact; edit their wording
+under **Page wording**.
+
 Clear any of the **Page wording** fields and it goes back to the written
 default. You can't leave a blank space by emptying a box.
 
