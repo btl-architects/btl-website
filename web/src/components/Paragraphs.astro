@@ -1,0 +1,8 @@
+---
+import {paragraphs} from "../lib/text";
+interface Props {text: string; class?: string}
+const {text, class: cls} = Astro.props;
+---
+{paragraphs(text).map(paragraph => (
+  <p class:list={["editorial-text", "editorial-text--paragraph", cls]}>{paragraph}</p>
+))}

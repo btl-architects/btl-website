@@ -11,6 +11,7 @@ import Figure from "../../components/Figure.astro";
 import { spreadSizes } from "../../lib/media";
 import { getProfiles } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
+import Paragraphs from "../../components/Paragraphs.astro";
 
 export const getStaticPaths = (async () => {
   const profiles = await getProfiles();
@@ -41,7 +42,7 @@ const fullName = `${person.prefix} ${person.name}`.trim();
             class="eyebrow"
             style="display:block; color:var(--text-tertiary); margin-top:var(--s-4)"
           >{person.role}</p>}
-          <p class="spread__note">{person.bio}</p>
+          <Paragraphs text={person.bio} class="spread__note" />
         </div>
       </div>
 

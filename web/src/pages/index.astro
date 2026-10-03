@@ -7,10 +7,8 @@
  * re-learned on /projects.
  *
  * Rhythm alternates release (full-bleed, image-led) and compression (the page
- * stops and speaks) — P5. The order is statement → projects → studio → press →
- * people → contact: the work first, then the practice, then the outside world's
- * verdict, then the faces behind the credibility that verdict just established,
- * and finally the page resolves once into contact.
+ * stops and speaks) — P5. The order is statement → projects → press → people →
+ * studio → contact, matching the navigation's People-before-Studio sequence.
  */
 import Base from "../layouts/Base.astro";
 import Statement from "../components/Statement.astro";
@@ -130,9 +128,9 @@ const c = settings.contact;
               </div>
             </div>
           )}
-          {home.peopleLead && (
+          {home.peoplePreview && (
             <div class="spread__body rv" data-delay="1">
-              <Statement text={home.peopleLead} />
+              <Statement text={home.peoplePreview} />
             </div>
           )}
         </div>
@@ -154,9 +152,11 @@ const c = settings.contact;
               <Figure image={home.studio.image} sizes={spreadSizes(home.studio.image)} />
             </div>
           )}
-          <div class="spread__body rv" data-delay="1">
-            <Statement text={home.studio.lead} note={home.studio.body[0]} />
-          </div>
+          {(home.studioPreview.lead || home.studioPreview.note) && (
+            <div class="spread__body rv" data-delay="1">
+              <Statement text={home.studioPreview.lead} note={home.studioPreview.note} />
+            </div>
+          )}
         </div>
         {/* Says what is there. It promised "How the practice works" after the
             practice took the written method off the Studio page in favour of

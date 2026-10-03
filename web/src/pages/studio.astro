@@ -18,6 +18,7 @@ import { spreadSizes } from "../lib/media";
 import { getHome, getSettings } from "../lib/content";
 import Onward from "../components/Onward.astro";
 import Statement from "../components/Statement.astro";
+import Paragraphs from "../components/Paragraphs.astro";
 
 const st = (await getHome()).studio;
 const settings = await getSettings();
@@ -44,7 +45,7 @@ const [lead, ...rest] = st.body;
       {rest.length > 0 && (
         <div class="passages">
           {rest.map((para: string, i: number) => (
-            <p class="passage t-body rv" data-delay={i % 3}>{para}</p>
+            <div class="passage t-body rv" data-delay={i % 3}><Paragraphs text={para} /></div>
           ))}
         </div>
       )}

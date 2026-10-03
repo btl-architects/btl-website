@@ -16,6 +16,9 @@
  * hand it `text` and `note` and it trusts you, for the pages whose lead and
  * body are separate fields in the CMS.
  */
+import Paragraphs from "./Paragraphs.astro";
+import {paragraphs} from "../lib/text";
+
 interface Props {
   /** The statement. Split at its first sentence unless `note` is given. */
   text: string;
@@ -54,7 +57,12 @@ function split(raw: string): { lead: string; rest: string } {
   return { lead: t, rest: "" };
 }
 
-const parts = note ? { lead: (text ?? "").trim(), rest: note.trim() } : split(text);
+const authored = paragraphs(text);
+// Explicit paragraph boundaries outrank automatic sentence splitting. The
+// first authored paragraph stays together, and the rest use the quieter type.
+const parts = authored.length > 1 || authored[0]?.includes("\n") || note
+  ? {lead: authored[0] ?? "", rest: [...authored.slice(1), ...paragraphs(note)].join("\n\n")}
+  : split(authored[0] ?? "");
 
 /* Short enough to be a statement, or long enough to be a paragraph? The scale
  * follows the writing rather than the writing being made to fit a scale. Now
@@ -65,9 +73,9 @@ const size =
   parts.lead.trim().split(/\s+/).length <= 16 ? "spread__say--display" : "spread__say--lead";
 ---
 
-{parts.lead && (
+{(parts.lead || parts.rest) && (
   <div class:list={["statement", cls]} data-statement-reveal={scrollReveal ? "" : undefined}>
-    <p class:list={["spread__say", size]}>{parts.lead}</p>
-    {parts.rest && <p class="spread__note">{parts.rest}</p>}
+    {parts.lead && <p class:list={["spread__say", "editorial-text", size]}>{parts.lead}</p>}
+    {parts.rest && <Paragraphs text={parts.rest} class="spread__note" />}
   </div>
 )}

@@ -25,7 +25,7 @@ happen. There is no "save" button — it saves as you type.
 **Projects → the pencil icon → Project**
 
 1. **Title** — the name. The web address is generated from it automatically.
-2. **About the project** — one short paragraph, in your voice. What the site
+2. **About the project** — a short introduction, in your voice. What the site
    asked for, and what the building does about it.
 3. **Category, location, year** — location is picked from the **Locations**
    list rather than typed. If the place isn't there yet, add it once and it's
@@ -182,8 +182,10 @@ is a wait rather than an opening.
 
 **Site settings** holds everything that isn't a project or a person:
 
-- **The practice** — the home page statement, the Studio headline and
-  paragraphs, the People headline, the studio, founders and team photographs
+- **Home page text** — the People introduction beside the founders photograph,
+  the Studio introduction and its supporting text, shown only on Home
+- **The practice** — the home page statement, the Studio page introduction and
+  paragraphs, the People page introduction, the studio, founders and team photographs
 - **Page wording** — the footer line, the Press headline, the closing lines on
   People and Studio, the 404 message
 - **Contact** — address, email, phone, where enquiries are delivered, GSTIN
@@ -193,6 +195,21 @@ The current page order is Home → Projects → Press → People → Studio → 
 Home follows the same People → Studio sequence. The closing links lead from
 Press to People, People to Studio, and Studio to Contact; edit their wording
 under **Page wording**.
+
+Home's People and Studio writing is independent of the full pages. Edit the
+fields under **Home page text** for Home, and the fields labelled **People page**
+or **Studio page** under **The practice** for the full pages. Clearing a Home
+introduction does not borrow text from another page.
+
+Leave a blank line between paragraphs in text fields. Press Enter once for a
+line break within a paragraph. The website preserves this formatting in
+introductions, Studio passages, biographies, project descriptions and Press
+introductions. Press article bodies also support paragraphs, lists and headings
+through their existing rich-text editor.
+
+On desktop, browse Studio and project photographs with the mouse wheel, arrows,
+or by holding a photograph and dragging left or right. A click opens the image;
+a drag moves the gallery. Phones retain swipe scrolling.
 
 Clear any of the **Page wording** fields and it goes back to the written
 default. You can't leave a blank space by emptying a box.
@@ -304,8 +321,8 @@ The site is built and works. These are the gaps only you can close:
   the photographer
 - **Your LinkedIn and YouTube addresses** — they currently point at those sites'
   home pages
-- **A People headline** — the People page currently borrows the home page
-  statement. One or two lines about the two of you would be better
+- **Distinct introductions for Home and the People page** — Home introduces
+  the founders; the full People page introduces the team
 
 
 ## A complete BTL reader article

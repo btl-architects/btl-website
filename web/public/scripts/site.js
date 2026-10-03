@@ -400,6 +400,62 @@
     rail.scrollBy({ left: direction * rtl * rail.clientWidth * .7, behavior: reduced ? "auto" : "smooth" });
   }
 
+  function photographStrip(target) {
+    var rail = target.closest && target.closest("[data-rail], .pcard__strip");
+    return rail && !rail.closest('.pcard:not([data-open="true"])') ? rail : null;
+  }
+
+  /* One mouse drag for Studio, direct project pages and fetched project
+     galleries. Wait for movement before capture so an ordinary click still
+     opens the photograph. Touch keeps the browser's native swipe. */
+  var galleryDrag = null, draggedGallery = null;
+  document.addEventListener("pointerdown", function (e) {
+    draggedGallery = null;
+    var rail = photographStrip(e.target);
+    if (!rail) return;
+    rail._pin = false; rail._touched = true;
+    if (e.pointerType === "touch" || e.button !== 0 || e.target.closest(".rail__note, figcaption") ||
+        rail.scrollWidth <= rail.clientWidth + 1) return;
+    galleryDrag = {rail: rail, pointer: e.pointerId, x: e.clientX, left: rail.scrollLeft, moved: false};
+  });
+  document.addEventListener("pointermove", function (e) {
+    var drag = galleryDrag;
+    if (!drag || e.pointerId !== drag.pointer) return;
+    if (!e.buttons) { endGalleryDrag(e); return; }
+    var dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) < 8) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      drag.rail.setAttribute("data-dragging", "");
+      try { drag.rail.setPointerCapture(e.pointerId); } catch (error) {}
+    }
+    e.preventDefault();
+    drag.rail.scrollLeft = drag.left - dx;
+  });
+  function endGalleryDrag(e) {
+    var drag = galleryDrag;
+    if (!drag || e.pointerId !== drag.pointer) return;
+    galleryDrag = null;
+    drag.rail.removeAttribute("data-dragging");
+    if (drag.moved && e.type === "pointerup") draggedGallery = drag.rail;
+    try { drag.rail.releasePointerCapture(e.pointerId); } catch (error) {}
+  }
+  document.addEventListener("pointerup", endGalleryDrag);
+  document.addEventListener("pointercancel", endGalleryDrag);
+  window.addEventListener("blur", function () {
+    if (galleryDrag) endGalleryDrag({pointerId: galleryDrag.pointer, type: "pointercancel"});
+  });
+  document.addEventListener("dragstart", function (e) {
+    if (photographStrip(e.target)) e.preventDefault(); // No native image ghost.
+  });
+  document.addEventListener("click", function (e) {
+    var rail = draggedGallery;
+    draggedGallery = null;
+    if (!rail || !e.detail || !rail.contains(e.target)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation(); // A drag never opens a viewer or closes a card.
+  }, true);
+
   /* A conventional mouse wheel has no horizontal axis. Let it move a gallery
      under the pointer, returning to page scrolling at either end. Trackpad
      horizontal gestures, Shift+wheel and browser zoom keep their native use.
@@ -407,8 +463,8 @@
   document.addEventListener("wheel", function (e) {
     if (e.ctrlKey || e.shiftKey || e.defaultPrevented || !e.cancelable ||
         Math.abs(e.deltaX) > 0 || !e.deltaY) return;
-    var rail = e.target.closest && e.target.closest("[data-rail], .pcard__strip");
-    if (!rail || rail.closest('.pcard:not([data-open="true"])')) return;
+    var rail = photographStrip(e.target);
+    if (!rail) return;
     var range = rail.scrollWidth - rail.clientWidth;
     if (range <= 1) return;
     var rtl = getComputedStyle(rail).direction === "rtl" ? -1 : 1;
@@ -1033,45 +1089,11 @@
       }
     });
 
-    /* Drag to pan an open strip. On a desktop the only other way across it is
-       shift+wheel, which nobody discovers; on touch the browser already does
-       this natively, so pointer events from a finger are left alone. The 8px
-       threshold in the click handler is what stops a drag ending in an open or
-       a close. */
+    /* Native horizontal wheel gestures also outrank the automatic reveal.
+       Mouse dragging is handled by the shared gallery interaction above. */
     [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
-      var down = null;
-      st.addEventListener("pointerdown", function (ev) {
-        st._pin = false; st._touched = true;   /* the reader outranks the reveal */
-        if (ev.pointerType === "touch" || ev.button) return;
-        if (st.closest(".pcard").getAttribute("data-open") !== "true") return;
-        down = { x: ev.clientX, left: st.scrollLeft };
-      });
-      st.addEventListener("pointermove", function (ev) {
-        if (!down) return;
-        var dx = ev.clientX - down.x;
-        if (!st.hasAttribute("data-dragging") && Math.abs(dx) < 4) return;
-        if (!st.hasAttribute("data-dragging")) {
-          st.setAttribute("data-dragging", "");
-          /* Capture is an optimisation, not a requirement: it throws whenever
-             the pointer is no longer active, and an unguarded throw here aborts
-             the rest of the handler and kills the drag outright. */
-          try { st.setPointerCapture(ev.pointerId); } catch (e) {}
-        }
-        ev.preventDefault();
-        st.scrollLeft = down.left - dx;
-      });
-      function end(ev) {
-        if (!down) return;
-        down = null;
-        if (st.hasAttribute("data-dragging")) {
-          st.removeAttribute("data-dragging");
-          try { st.releasePointerCapture(ev.pointerId); } catch (e) {}
-        }
-      }
       st.addEventListener("wheel", function () { st._pin = false; st._touched = true; }, { passive: true });
       st.addEventListener("touchstart", function () { st._pin = false; st._touched = true; }, { passive: true });
-      st.addEventListener("pointerup", end);
-      st.addEventListener("pointercancel", end);
     });
 
     window.addEventListener("popstate", function (ev) {
