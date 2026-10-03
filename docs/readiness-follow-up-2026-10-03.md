@@ -40,7 +40,11 @@ Before embedding the common font, the preceding deployed preview medians were
 2251 / 2529 / 1421 ms respectively. The original live Nelly House measurement
 before this follow-up was 2845 ms. Network timing varies; these measurements are
 lab evidence, not a guarantee for every visitor. Localhost scores are not used
-as the launch pass.
+as the launch pass. After publication, the main Pages site also passed three
+cold mobile runs per page: median LCP 1138 ms on Home, 1005 ms on Nelly House
+and 950 ms on Contact, all scoring 100. Live browser inspection confirmed
+names without designations on Home and one portrait/designation card per
+founder on People.
 
 CI waits for the exact source commit's Cloudflare deployment, then measures
 three cold mobile runs against its immutable URL. It gates median LCP under
@@ -51,6 +55,9 @@ Web unit tests, Studio unit tests/type checking, build/content/transport/image
 checks passed. Chrome and Safari checks cover Press alignment, reader controls,
 redirects, consolidated founder cards and video playback. Safari measurements
 wait for the browser's responsive layout frame after changing viewport size.
+The video fixture also serves real byte-range responses: Linux WebKit requests
+a range when seeking, and the previous fixture's full-file response could leave
+the single-film loop test stuck. The real CDN already supports this behavior.
 
 ## Remaining external items
 
