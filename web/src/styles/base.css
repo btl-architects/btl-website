@@ -84,7 +84,14 @@ a { color: inherit; text-decoration: none; }
  * beneath a transparent header. The draft-preview banner adds its own height
  * here rather than replacing the offset, which is what its old rule did.
  * The build fails any template that sets padding-top on <main> itself. */
-main { padding-top: calc(var(--preview-offset, 0px) + var(--header-h) + var(--page-gap)); }
+/* Short pages still own a complete screen. The footer follows the page in
+   normal flow, with the same dimensions on every route. Dynamic viewport
+   height also follows the mobile browser's expanding/collapsing chrome. */
+main {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: calc(var(--preview-offset, 0px) + var(--header-h) + var(--page-gap));
+}
 main[data-under-header] { padding-top: var(--preview-offset, 0px); }
 
 /* The content edge — defined once, for everything that sits on it.
