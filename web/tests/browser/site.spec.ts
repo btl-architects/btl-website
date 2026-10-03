@@ -10,6 +10,9 @@ for(const {route} of pages()) {
     await expect(page.locator('h1')).toHaveCount(1);
     for(const width of [320,375,768,1440]) {
       await page.setViewportSize({width,height:900});
+      // WebKit acknowledges resize before viewport units reach layout. Measure
+      // the rendered responsive frame, as the other resize checks already do.
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
@@ -43,6 +46,20 @@ async function underResolved(page:import('@playwright/test').Page) {
 }
 test.describe('photographs are fetched at the size they are drawn',()=>{
   test.use({deviceScaleFactor:2});
+  for(const width of [390,1440]) test(`the opening photograph downloads once at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:844});
+    await page.emulateMedia({reducedMotion:'reduce'});
+    const requested:string[]=[];
+    page.on('request',request=>requested.push(request.url()));
+    await page.goto('/projects/nelly-house/');
+    const first=page.locator('[data-rail] .rail__f img').first();
+    await expect.poll(()=>first.evaluate(el=>(el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth>0)).toBe(true);
+    const selected=await first.evaluate(el=>(el as HTMLImageElement).currentSrc);
+    const asset=new URL(selected).pathname;
+    // A responsive preload must use the selected candidate, rather than also
+    // downloading a larger fallback that the photograph never displays.
+    expect(requested.filter(url=>new URL(url).pathname===asset)).toEqual([selected]);
+  });
   for(const width of [375,1024,1440]) test(`at ${width}px`,async({page})=>{
     await page.setViewportSize({width,height:900});
     const found:string[]=[];
@@ -197,10 +214,10 @@ test('reduced motion never requests video or advances frames',async({page})=>{
   await page.waitForTimeout(6500);
   await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');expect(media).toEqual([]);
 });
-test('the opening still uses the matching phone framing before JavaScript runs',async({browser})=>{
+test('the opening still uses the matching phone framing before JavaScript runs',async({browser,baseURL})=>{
   const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:375,height:812}});
   try {
-    const page=await context.newPage(); await page.goto('http://127.0.0.1:8788/');
+    const page=await context.newPage(); await page.goto(new URL('/',baseURL).href);
     const frame=page.locator('.stage__f').first();
     const candidates=(await frame.locator('source').getAttribute('srcset'))!.split(', ').map(s=>s.split(' ')[0]);
     await expect.poll(()=>frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
@@ -221,10 +238,10 @@ test('the homepage statement reveals on scroll and remains readable after return
   await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
 });
 
-test('the homepage statement remains readable without scripts',async({browser})=>{
+test('the homepage statement remains readable without scripts',async({browser,baseURL})=>{
   const context=await browser.newContext({javaScriptEnabled:false});
   try {
-    const page=await context.newPage();await page.goto('http://127.0.0.1:8788/');
+    const page=await context.newPage();await page.goto(new URL('/',baseURL).href);
     await page.locator('#statement').scrollIntoViewIfNeeded();
     await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
   } finally {await context.close();}

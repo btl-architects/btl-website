@@ -15,7 +15,7 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { getSettings, getHome } from "../lib/content";
 import { isPreview, isNoindex } from "../lib/sanity";
-import { socialImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
+import { socialImage, resolveImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
 import {pageSearchListing, searchMetadata, businessStructuredData, jsonLd, type SearchListing} from "../lib/seo";
 
 interface Props {
@@ -35,6 +35,8 @@ interface Props {
   /** The photograph a shared link should show. Falls back to the founders, so
    *  no page can be shared as a bare text card by omission. */
   share?: SiteImage | null;
+  /** The exact first photograph and sizes used by its Figure. */
+  preloadImage?: {image: SiteImage; sizes: string};
   articleReader?: boolean;
   article?: {date: string; author: string; authorType?: "Person" | "Organization"; headline?: string; publisher?: string; source?: string};
 }
@@ -46,6 +48,7 @@ const {title, description} = searchMetadata({
   description: fallbackDescription,
 }, seo ?? pageSearchListing(Astro.url.pathname, settings.pageSeo));
 const canonical = new URL(Astro.url.pathname === "/404/" ? "/404.html" : Astro.url.pathname, Astro.site).href;
+const opening = Astro.props.preloadImage && resolveImage(Astro.props.preloadImage.image);
 
 /* A shared link is the practice's front door more often than the home page is.
  * The fallback matters more than the parameter: a route that forgets to pass a
@@ -72,6 +75,10 @@ const website = Astro.url.pathname === "/" ? {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="preconnect" href="https://cdn.sanity.io" />
+    {opening && <link rel="preload" as="image" href={opening.srcset ? undefined : opening.src}
+      imagesrcset={opening.srcset || undefined} imagesizes={Astro.props.preloadImage?.sizes}
+      fetchpriority="high" />}
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#050505" />

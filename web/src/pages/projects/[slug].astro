@@ -12,6 +12,7 @@ import ProjectNote from "../../components/ProjectNote.astro";
 import RailNav from "../../components/RailNav.astro";
 import { getProjects, getProjectRoutes } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
+import {railSizes} from "../../lib/media";
 
 export const getStaticPaths = (async () => {
   const projects = await getProjects();
@@ -39,6 +40,7 @@ const { project, prev, next } = Astro.props;
     || `${project.title}, ${project.location} — btl architects.`}
   current="projects"
   share={project.hook}
+  preloadImage={project.images[0] ? {image:project.images[0],sizes:railSizes(project.images[0])} : undefined}
 >
   <main id="main" data-ground="dark" class="pj">
     <article>

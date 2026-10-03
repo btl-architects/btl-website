@@ -414,11 +414,25 @@
   function loadAhead(st) {
     var edge = st.getBoundingClientRect().left + st.clientWidth * 2.5;
     [].forEach.call(st.querySelectorAll('img[loading="lazy"]'), function (im) {
-      if (im.getBoundingClientRect().left < edge) im.loading = "eager";
+      if (im.getBoundingClientRect().left < edge) {
+        im.fetchPriority = "low";
+        im.loading = "eager";
+      }
     });
   }
+  var openingPicture = document.querySelector('img[fetchpriority="high"]');
+  function initialAhead(st) {
+    if (!openingPicture || openingPicture.complete) { loadAhead(st); return; }
+    function ready() {
+      openingPicture.removeEventListener("load", ready);
+      openingPicture.removeEventListener("error", ready);
+      loadAhead(st);
+    }
+    openingPicture.addEventListener("load", ready);
+    openingPicture.addEventListener("error", ready);
+  }
   var aheadWatch = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
-    es.forEach(function (e) { if (e.isIntersecting) loadAhead(e.target); });
+    es.forEach(function (e) { if (e.isIntersecting) { aheadWatch.unobserve(e.target); initialAhead(e.target); } });
   }, { rootMargin: "400px 0px" }) : null;
   [].forEach.call(document.querySelectorAll("[data-strip], [data-rail]"), function (st) {
     var tick = false;
@@ -1213,12 +1227,27 @@
       l.rel = "prefetch"; l.href = a.pathname;
       document.head.appendChild(l);
     }
-    if ("IntersectionObserver" in window) {
+    function watchOnward() {
+      if (!("IntersectionObserver" in window)) return;
       var near = new IntersectionObserver(function (es) {
         es.forEach(function (e) { if (e.isIntersecting) { near.unobserve(e.target); fetchAhead(e.target); } });
       }, { rootMargin: "300px 0px" });
       [].forEach.call(document.querySelectorAll("a.onward, .pager a"), function (a) { near.observe(a); });
     }
+    // Speculative pages must not compete with the opening photograph. A press
+    // still prefetches immediately; automatic warming follows its load.
+    var opening = document.querySelector('img[fetchpriority="high"]');
+    function warmOnward() {
+      if (opening) {
+        opening.removeEventListener("load", warmOnward);
+        opening.removeEventListener("error", warmOnward);
+      }
+      (window.requestIdleCallback || function (fn) { setTimeout(fn, 200); })(watchOnward);
+    }
+    if (opening && !opening.complete) {
+      opening.addEventListener("load", warmOnward);
+      opening.addEventListener("error", warmOnward);
+    } else warmOnward();
     document.addEventListener("pointerdown", function (e) {
       fetchAhead(e.target.closest && e.target.closest("a[href]"));
     }, { passive: true });
@@ -1611,9 +1640,15 @@
              and with the viewer gone it lands on the page underneath — on a
              photograph, which opened the viewer straight back up, or on a
              link. The tap was spent closing; its click is swallowed. */
-          var spent = function (ev) { ev.preventDefault(); ev.stopPropagation(); };
+          function clearSpent() {
+            window.removeEventListener("click", spent, true);
+            window.removeEventListener("pointerdown", clearSpent, true);
+          }
+          var spent = function (ev) { clearSpent(); ev.preventDefault(); ev.stopPropagation(); };
           window.addEventListener("click", spent, true);   /* window: ahead of every document listener */
-          setTimeout(function () { window.removeEventListener("click", spent, true); }, 500);
+          // A new press is a new choice, even within the old click's timeout.
+          window.addEventListener("pointerdown", clearSpent, true);
+          setTimeout(clearSpent, 500);
           return;
         }
         if (lastTap && now - lastTap.t < 300 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40) {
@@ -1834,6 +1869,7 @@
      * state it had when the reader clicked — which is the state the decision
      * actually depends on. */
     function activatePicture(e) {
+      if (isOpen()) return;
       var figure = e.target.closest && e.target.closest('.rail__f[role="button"]');
       var picture = figure && figure.querySelector("img");
       if (!picture) return;
@@ -1871,6 +1907,28 @@
       open(list, i < 0 ? 0 : i, figure);
     }
     document.addEventListener("click", activatePicture, true);
+    /* Mobile browsers can withhold the compatibility click after a swipe.
+       Activate a completed finger tap directly, and let clicks keep handling
+       mouse/keyboard input. Movement, cancellation and a second finger cancel
+       the tap; native gallery scrolling and pinching stay with the browser. */
+    var picturePress = null;
+    document.addEventListener("pointerdown", function (e) {
+      if (e.pointerType !== "touch") return;
+      var figure = e.target.closest && e.target.closest('.rail__f[role="button"]');
+      picturePress = e.isPrimary && figure && !isOpen()
+        ? { id: e.pointerId, figure: figure, x: e.clientX, y: e.clientY } : null;
+    }, true);
+    document.addEventListener("pointermove", function (e) {
+      if (picturePress && e.pointerId === picturePress.id &&
+          Math.hypot(e.clientX - picturePress.x, e.clientY - picturePress.y) > 8) picturePress = null;
+    }, true);
+    document.addEventListener("pointercancel", function () { picturePress = null; }, true);
+    document.addEventListener("pointerup", function (e) {
+      var press = picturePress;
+      picturePress = null;
+      if (press && e.pointerId === press.id && press.figure.contains(e.target) &&
+          Math.hypot(e.clientX - press.x, e.clientY - press.y) <= 8) activatePicture(e);
+    }, true);
     document.addEventListener("keydown", function (e) {
       if ((e.key === "Enter" || e.key === " ") && e.target.matches('.rail__f[role="button"]')) activatePicture(e);
     });

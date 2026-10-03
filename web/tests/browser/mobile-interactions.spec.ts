@@ -207,6 +207,24 @@ test.describe('phone interactions',()=>{
     await input.detach();
   });
 
+  test('a completed photograph tap works when its compatibility click is withheld',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium.');
+    await page.goto('/studio/');
+    // Reproduce the missing compatibility-click path without a timing delay.
+    await page.evaluate(()=>window.addEventListener('click',e=>{
+      if((e.target as Element).closest('.rail__f[role="button"]')) {
+        e.preventDefault(); e.stopImmediatePropagation();
+      }
+    },true));
+    await page.locator('[data-rail] .rail__f').first().tap();
+    const viewer=page.getByRole('dialog',{name:'Photograph viewer'});
+    await expect(viewer).toBeVisible();
+    await viewer.getByRole('button',{name:'Close'}).click();
+    await expect(viewer).toBeHidden();
+    await page.locator('[data-rail] .rail__f').first().tap();
+    await expect(viewer).toBeVisible();
+  });
+
   test('the viewer answers fingers the way a phone photo app does',async({page,browserName})=>{
     test.skip(browserName!=='chromium','Native touch injection is available through Chromium.');
     const input=await page.context().newCDPSession(page);
@@ -257,6 +275,12 @@ test.describe('phone interactions',()=>{
     await expect(viewer).toBeHidden();
     // ...and that tap's click is spent: it must not reopen a photograph beneath.
     await page.waitForTimeout(600);
+    await expect(viewer).toBeHidden();
+    // A fresh press is never swallowed by the closing tap's click guard.
+    await page.locator('[data-rail] .rail__f').first().tap();
+    await expect(viewer).toBeVisible();
+    const reopened=(await viewer.locator('.lb__img').boundingBox())!;
+    if(reopened.x>24) await tap(reopened.x/2,420); else await tap(195,Math.min(reopened.y+reopened.height+24,830));
     await expect(viewer).toBeHidden();
     // The viewer asks for a file sized to the screen, not the largest one.
     await page.locator('[data-rail] .rail__f').first().tap();
@@ -410,13 +434,36 @@ test('with a mouse, even in a narrow window, the Press card opens raised and scr
   expect((await reader.boundingBox())!.y).toBeLessThan(120);
 });
 
-test('mouse layouts keep the original hover treatment at desktop and narrow widths',async({page})=>{
+test('mouse layouts show the contact copy mark on hover and focus at desktop and narrow widths',async({page,browserName})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
   for(const width of [390,1440]) {
     await page.setViewportSize({width,height:900});
     await page.goto('/');
     await expect(page.locator('.pcard__action').first()).toBeHidden();
-    await expect(page.locator('.copy-mark').first()).toBeHidden();
+    for(const route of ['/', '/contact/']) {
+      if(route!=='/') await page.goto(route);
+      for(const kind of ['mailto:', 'tel:']) {
+        const link=page.locator(`.contact-links a[href^="${kind}"]`);
+        const mark=link.locator('..').locator('.copy-mark');
+        await page.mouse.move(0,0);
+        await page.locator('.header__logo').focus();
+        await expect(mark).toHaveCSS('opacity','0');
+        await link.hover();
+        await expect(mark).toHaveCSS('opacity','1');
+        expect(await link.evaluate(el=>getComputedStyle(el,'::after').display)).toBe('none');
+        await page.mouse.move(0,0);
+        await link.focus();
+        await expect(mark).toHaveCSS('opacity','1');
+        // WebKit follows macOS's default that Tab skips buttons; test the
+        // focus treatment directly there, and normal tab order in Chromium.
+        if(browserName==='webkit') await mark.focus();
+        else await link.press('Tab');
+        await expect(mark).toBeFocused();
+        await expect(mark).toHaveCSS('opacity','1');
+        await mark.press('Tab');
+      }
+    }
+    await page.goto('/');
     expect(await page.locator('.onward__t').first().evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
     await page.goto('/projects/nelly-house/');
     await expect(page.locator('.project-note--touch')).toBeHidden();

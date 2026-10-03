@@ -20,7 +20,7 @@ async function films(page: import('@playwright/test').Page) {
 
 // Build the requested number of clips independently of current client content.
 async function sequence(page: import('@playwright/test').Page, total: number, failedIndex?: number) {
-  await page.route('http://127.0.0.1:8788/', async route => {
+  await page.route(new URL('/',test.info().project.use.baseURL).href, async route => {
     const response = await route.fetch();
     let count = 0;
     const body = (await response.text()).replace(/<figure class="stage__f"[\s\S]*?<\/figure>/g, frame => {
