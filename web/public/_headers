@@ -15,7 +15,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io https://stream.mux.com; font-src 'self'; connect-src 'self' https://aur12nrf.api.sanity.io https://api.web3forms.com; frame-src https:; form-action 'self' https://api.web3forms.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io https://stream.mux.com; font-src 'self' data:; connect-src 'self' https://aur12nrf.api.sanity.io https://api.web3forms.com; frame-src https:; form-action 'self' https://api.web3forms.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # Editors can choose HTTPS publisher pages for the Press overlay. Those frames
 # load only when a visitor opens an article, are sandboxed, and cannot navigate
@@ -32,8 +32,9 @@
 # keeping <style> elements locked to 'self', but it is not supported everywhere
 # and browsers lacking it fall back to style-src and break. The risk accepted is
 # CSS injection, which needs an injection point; this site renders no user input
-# into any page, and there are zero inline <style> blocks and zero inline
-# scripts to aim at.
+# into any page. The build embeds the generated stylesheet and the common
+# font subset; font-src data: permits that fixed font asset. Executable inline
+# scripts remain blocked.
 #
 # script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's only script
 # is /scripts/site.js from this origin, and that is the restriction that matters.
