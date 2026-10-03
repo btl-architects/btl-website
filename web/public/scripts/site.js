@@ -162,13 +162,7 @@
       v.muted = true;
       v.loop = sFrames.length === 1;
       v.addEventListener("ended", function () { if (at === i && canPlay()) show(at + 1); });
-      v.addEventListener("error", function () {
-        // Keep the authored still usable if a file is unavailable or invalid.
-        // With several clips, continue after a short still rather than stall.
-        if (at !== i || !canPlay() || sFrames.length < 2) return;
-        clearTimeout(errorTimer);
-        errorTimer = setTimeout(function () { if (at === i && canPlay()) show(at + 1); }, 6200);
-      });
+      v.addEventListener("error", function () { failed(i); });
       v.addEventListener("playing", function () { v.setAttribute("data-playing", "true"); });
       v.addEventListener("emptied", function () { v.removeAttribute("data-playing"); });
       return v;
@@ -182,6 +176,13 @@
       clearTimeout(errorTimer); clearTimeout(preloadNext); errorTimer = preloadNext = null;
       sFrames.forEach(function (f) { var v = f.querySelector("video"); if (v) v.pause(); });
     }
+    function failed(i) {
+      // A preloaded file can fail before becoming active. Apply the same still
+      // fallback when revisiting it, rather than waiting for another error.
+      if (at !== i || !canPlay() || sFrames.length < 2) return;
+      clearTimeout(errorTimer);
+      errorTimer = setTimeout(function () { if (at === i && canPlay()) show(at + 1); }, 6200);
+    }
     function show(i) {
       at = (i + sFrames.length) % sFrames.length;
       sFrames.forEach(function (f, k) {
@@ -192,6 +193,7 @@
       clearTimeout(errorTimer); errorTimer = null;
       load(at);
       var current = player(at);
+      if (current.error) { failed(at); return; }
       if (current.ended) current.currentTime = 0;
       current.play().catch(function () {});
       clearTimeout(preloadNext);

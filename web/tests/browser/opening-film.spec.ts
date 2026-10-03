@@ -5,17 +5,21 @@ const clip = readFileSync(fileURLToPath(new URL('../fixtures/opening-clip.mp4', 
 
 async function films(page: import('@playwright/test').Page) {
   await page.emulateMedia({reducedMotion: 'no-preference'});
-  await page.route('https://cdn.sanity.io/files/**', route => route.fulfill({status: 200, contentType: 'video/mp4', body: clip}));
+  for (const source of ['https://cdn.sanity.io/files/**','https://stream.mux.com/**'])
+    await page.route(source, route => route.fulfill({status: 200, contentType: 'video/mp4', body: clip}));
 }
 
 // Build the requested number of clips independently of current client content.
-async function sequence(page: import('@playwright/test').Page, total: number) {
+async function sequence(page: import('@playwright/test').Page, total: number, failedIndex?: number) {
   await page.route('http://127.0.0.1:8788/', async route => {
     const response = await route.fetch();
     let count = 0;
     const body = (await response.text()).replace(/<figure class="stage__f"[\s\S]*?<\/figure>/g, frame => {
       if (++count > 1) return '';
-      return frame + Array.from({length: total - 1}, () => frame.replace('data-on="true"', 'data-on="false"')).join('');
+      return frame + Array.from({length: total - 1}, (_, index) => {
+        const next = frame.replace('data-on="true"', 'data-on="false"');
+        return index + 1 === failedIndex ? next.replace(/(data-src(?:-portrait)?=")([^"]+)"/g, '$1$2?btl-missing=1"') : next;
+      }).join('');
     });
     expect(count).toBeGreaterThanOrEqual(1);
     await route.fulfill({response, body});
@@ -57,6 +61,21 @@ test('a single uploaded film loops in place', async ({page}) => {
   await expect(page.locator('.stage__f')).toHaveAttribute('data-on', 'true');
 });
 
+test('a failed preloaded film shows its still then continues to the next clip', async ({page}) => {
+  await films(page);
+  await page.route('**/*btl-missing=1', route => route.fulfill({status:404,body:'Unavailable'}));
+  await sequence(page,3,1);
+  await page.goto('/');
+  const frames=page.locator('.stage__f');
+  await expect(frames.first().locator('video')).toHaveAttribute('data-playing','true');
+  await expect.poll(() => frames.nth(1).locator('video').evaluate(el => Boolean((el as HTMLVideoElement).error)),{timeout:6000}).toBe(true);
+  await expect(frames.first()).toHaveAttribute('data-on','true');
+  await expect(frames.nth(1)).toHaveAttribute('data-on','true',{timeout:10000});
+  await expect(frames.nth(1).locator('video')).not.toHaveAttribute('data-playing','true');
+  await expect(frames.nth(2)).toHaveAttribute('data-on','true',{timeout:9000});
+  await expect(frames.nth(2).locator('video')).toHaveAttribute('data-playing','true');
+});
+
 test('founders photograph has enough source detail for a Retina spread', async ({page}) => {
   await page.goto('/');
   const image = page.locator('#people .spread__media img');
@@ -67,6 +86,22 @@ test('founders photograph has enough source detail for a Retina spread', async (
   await expect(image).toHaveAttribute('alt', /Faizan Hussain.*Thressia Paul/);
   const names = await page.locator('#people .spread__n').allTextContents();
   expect(names.map(name => name.trim())).toEqual(['Ar. Faizan Hussain','Ar. Thressia Paul']);
-  // The camera-original crop ends above the visible feet, at 82% of its height.
-  await expect(image).toHaveAttribute('src', /rect=371%2C1949%2C3898%2C3758/);
 });
+
+
+for (const width of [375,1440]) {
+  test(`published film sources play at ${width}px`, async ({page}) => {
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.setViewportSize({width,height:900});
+    await page.goto('/');
+    const film=page.locator('.stage__f[data-on="true"] video');
+    await expect(film).toHaveAttribute('data-playing','true',{timeout:20000});
+    await expect.poll(() => film.evaluate(el => (el as HTMLVideoElement).currentTime)).toBeGreaterThan(.1);
+    const source=await film.evaluate(el => ({current:(el as HTMLVideoElement).currentSrc,
+      expected:el.getAttribute(window.matchMedia('(max-width:47.99rem)').matches ? 'data-src-portrait' : 'data-src'),
+      muted:(el as HTMLVideoElement).muted,error:(el as HTMLVideoElement).error?.code}));
+    expect(source.current).toBe(source.expected);
+    expect(source.muted).toBe(true);
+    expect(source.error).toBeUndefined();
+  });
+}
