@@ -254,6 +254,8 @@
     if (!dialog) build();
     opener = link;
     label.textContent = link.getAttribute("data-publication") || "Press";
+    dialog.setAttribute("aria-label", link.getAttribute("data-reader-label") || "Press reader");
+    dialog.setAttribute("data-kind", link.hasAttribute("data-reader-label") ? "profile" : "press");
     var source = link.getAttribute("data-original");
     original.hidden = !source;
     if (source) original.href = source; else original.removeAttribute("href");
@@ -301,6 +303,9 @@
       // The fetched markup is our own statically rendered, escaped CMS content.
       // A copy, so the cached original can open again.
       var article = cached.cloneNode(true);
+      // Content brought from another page arrives without the scroll
+      // entrance that page would have run, so it is shown as entered.
+      article.querySelectorAll(".rv, .rvc").forEach(function (el) { el.classList.add("in"); el.setAttribute("data-reveal-instant", ""); });
       content.replaceChildren(article);
       content.scrollTop = 0;
       content.setAttribute("aria-busy", "false");

@@ -1982,13 +1982,26 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-reader {
   padding: 0; margin: auto;
   width: min(var(--reader-width), calc(100% - 2 * var(--page-margin)));
-  height: calc(100dvh - 2 * var(--s-7));
-  max-width: none; max-height: none;
+  /* As tall as what it holds, up to most of the window: a short profile was
+     a full-height box with its bio at the top and nothing under it. */
+  /* fit-content, because auto stretches a dialog pinned to all four edges;
+     and the browser's own max sizes are cleared for ours. */
+  max-width: none;
+  height: fit-content; max-height: calc(100dvh - 2 * var(--s-7));
   color: var(--text-primary); background: var(--surface);
   border: 1px solid var(--border-subtle);
   overflow: hidden;
 }
 .press-reader[open] { display: flex; flex-direction: column; }
+/* A person is a portrait and a few paragraphs; a narrower card holds them
+   together instead of across the width of an article. */
+.press-reader[data-kind="profile"] { max-width: 56rem; }
+.press-reader[data-kind="profile"] .spread { margin: 0; }
+/* The opening picture is for seeing the work, not for filling the window
+   before a word has been read. */
+@media (min-width: 48rem) {
+  .press-reader .press-article__image img { display: block; width: auto; max-width: 100%; max-height: 62vh; margin-inline: auto; }
+}
 .press-reader::backdrop { background: var(--overlay-press); }
 .press-reader__bar {
   display: flex; align-items: center; flex: none; gap: var(--s-4);
@@ -2065,7 +2078,7 @@ body[data-preview] .header { top: var(--preview-h); }
    one way out of the site. */
 @media (max-width: 47.99rem) {
   .press-reader {
-    width: calc(100% - 2 * var(--s-3)); height: 92dvh; margin: auto auto 0;
+    width: calc(100% - 2 * var(--s-3)); height: 92dvh; max-height: none; margin: auto auto 0;
     border: 1px solid var(--border-strong); border-bottom: 0;
     transition: transform 320ms var(--ease);
   }
@@ -2393,8 +2406,9 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
 
 /* Touch has no hover preview, so the green line cannot appear on approach.
    On a phone it rests only under the onward link that ends a section or page
-   ("See every project", "Send an enquiry") and under linked people's names —
-   the places where a line of words is the only way on. Everything else already
+   ("See every project", "Send an enquiry") — the place where a line of words
+   is the only way on. A linked person's portrait says it can be tapped, so
+   their name carries no line. Everything else already
    says it can be tapped, or is read rather than travelled: an arrow, a
    photograph, a previous/next title under its own label, a link inside a
    sentence (set in the heavier weight), the footer, an email address or phone
@@ -2433,9 +2447,6 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
   .copy-mark::before { content: ""; position: absolute; inset: -.625rem; }
   .copy-mark svg { width: .8rem; height: .8rem; }
   .copy-mark:active { color: var(--text-primary); }
-  a.trow__link .trow__n {
-    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .35em;
-  }
   .onward { min-height: 2.75rem; padding-bottom: var(--s-3); }
   .footer__links a, a.tl[href^="mailto:"], a.tl[href^="tel:"] {
     display: inline-flex; align-items: center; min-height: 2.75rem;
@@ -2466,7 +2477,5 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
    at once and the line with it. */
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) and (prefers-reduced-motion: no-preference) {
   :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
-  :where(.js) .rv:not(.in) a.trow__link .trow__n { text-decoration-color: transparent; }
   .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
-  .rv a.trow__link .trow__n { transition: text-decoration-color var(--dur-slow) var(--ease) 240ms; }
 }

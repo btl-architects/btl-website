@@ -38,7 +38,7 @@ test.describe('phone interactions',()=>{
     }
   });
 
-  test('the resting green line marks only onward links and linked people',async({page})=>{
+  test('the resting green line marks only onward links',async({page})=>{
     const line=(el:Element,pseudo='::after')=>{
       const s=getComputedStyle(el,pseudo);
       return s.content!=='none'&&s.clipPath==='inset(0px)'&&s.transform==='none'||getComputedStyle(el).textDecorationLine.includes('underline');
@@ -58,12 +58,9 @@ test.describe('phone interactions',()=>{
     expect(await page.locator('form a.tl').evaluate(el=>{const s=getComputedStyle(el,'::after');return s.maskImage||s.webkitMaskImage;})).toMatch(/svg/);
     await expect(page.locator('.copy-mark')).toHaveCount(2);
     for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
+    // A linked person's portrait is the cue; the name stays plain.
     await page.goto('/people/');
-    const linked=page.locator('a.trow__link .trow__n').first();
-    if(await linked.count()) {
-      await linked.scrollIntoViewIfNeeded();
-      expect(await linked.evaluate(line)).toBe(true);
-    }
+    await quiet(['a.trow__link .trow__n']);
   });
 
   test('the copy mark copies the studio details without dialling',async({page,context,browserName})=>{
@@ -328,18 +325,45 @@ test.describe('phone interactions',()=>{
     await input.detach();
   });
 
+  test('a linked person opens as a card on the same page, like Press',async({page})=>{
+    await page.goto('/people/');
+    const person=page.locator('a.trow__link[data-article]').first();
+    test.skip(!(await person.count()),'No published biographies.');
+    await person.scrollIntoViewIfNeeded();
+    const top=await page.evaluate(()=>scrollY);
+    await person.tap();
+    const card=page.getByRole('dialog',{name:'Profile'});
+    await expect(card).toBeVisible();
+    await expect(page).toHaveURL(/\/people\/$/);
+    await expect(card.locator('.spread__say')).toBeVisible();
+    await expect(card.locator('.rv').first()).toHaveCSS('opacity','1');
+    const box=(await card.boundingBox())!;
+    await page.touchscreen.tap(195,Math.max(box.y/2,20));
+    await expect(card).toBeHidden();
+    expect(await page.evaluate(()=>scrollY)).toBeCloseTo(top,0);
+  });
+
   test('a tapped link answers at once and the next page is fetched ahead',async({page})=>{
+    // Hold the next page back (its prefetch too), so this one stays to be checked.
+    await page.route('**/projects/',route=>setTimeout(()=>route.continue().catch(()=>{}),5000));
     await page.goto('/');
     const onward=page.locator('a.onward[href="/projects/"]').first();
     await onward.scrollIntoViewIfNeeded();
     await expect(page.locator('link[rel="prefetch"][href="/projects/"]')).toHaveCount(1);
-    // The page is usually already here, so read the link's state inside the
-    // tap itself, after the site has answered, and keep this page for the check.
-    await page.evaluate(()=>window.addEventListener('click',e=>{
-      const a=(e.target as Element).closest('a');(window as any).__going=a?.hasAttribute('data-going');e.preventDefault();
-    },{once:true}));
+    // Reported from inside the page: a locator would wait for the pending navigation.
+    await page.evaluate(()=>{const a=document.querySelector('a.onward[href="/projects/"]')!;
+      new MutationObserver(()=>{if(a.hasAttribute('data-going'))console.log('going');}).observe(a,{attributes:true});});
+    const going=page.waitForEvent('console',{predicate:m=>m.text()==='going',timeout:1500});
     await onward.tap();
-    expect(await page.evaluate(()=>(window as any).__going)).toBe(true);
+    await going;
+    await page.unrouteAll({behavior:'ignoreErrors'});
+    // A Press cover opens its card instead of leaving, and must not stay dimmed.
+    await page.goto('/press/');
+    const cover=page.locator('a[data-article]').first();
+    await cover.tap();
+    await expect(page.getByRole('dialog',{name:'Press reader'})).toBeVisible();
+    await page.waitForTimeout(100);
+    await expect(cover).not.toHaveAttribute('data-going','');
   });
 
   test('individual project text sits below photographs without a clipped reading panel',async({page})=>{

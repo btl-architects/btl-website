@@ -15,6 +15,7 @@
  */
 
 import { sanity, isPreview } from "./sanity";
+import { PROFILES } from "../../server/features.js";
 import { visibleProjects, routedProjects } from "../../server/build-mode.js";
 import type { SiteImage } from "./media";
 import type {ArticleBlock, OpeningMode} from "./press";
@@ -311,7 +312,10 @@ export const getPeople = once(async (): Promise<Person[]> => {
  * load, and it puts a link on the People page that punishes anyone who follows
  * it. So the route exists for people the practice has actually written about,
  * and appears the day a bio is added (R16: the interface is earned). */
+/* People with their own page — none while the profiles switch is off
+   (server/features.js). Pages, sitemap entries and links all follow this. */
 export async function getProfiles(): Promise<Person[]> {
+  if (!PROFILES) return [];
   return (await getPeople()).filter((p) => p.slug && p.bio);
 }
 

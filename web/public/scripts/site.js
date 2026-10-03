@@ -1222,12 +1222,14 @@
     document.addEventListener("pointerdown", function (e) {
       fetchAhead(e.target.closest && e.target.closest("a[href]"));
     }, { passive: true });
-    /* Bubbling, so anything that takes the click over (the press reader, a
-       project card) has already said so with preventDefault. */
+    /* Marked only once the click has finished travelling, so anything that
+       takes it over — the Press card, a project card — has said so with
+       preventDefault by then, wherever its listener sits. Marked any earlier,
+       a Press cover that opened its card stayed dimmed behind it. */
     document.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest("a[href]");
-      if (!same(a) || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
-      a.setAttribute("data-going", "");
+      if (!same(a) || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+      setTimeout(function () { if (!e.defaultPrevented) a.setAttribute("data-going", ""); }, 0);
     });
     window.addEventListener("pageshow", function () {
       [].forEach.call(document.querySelectorAll("[data-going]"), function (a) { a.removeAttribute("data-going"); });
