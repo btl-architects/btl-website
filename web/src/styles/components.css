@@ -1669,6 +1669,7 @@ html:has(.menu[data-open="true"]) .header {
   color: inherit;
   min-width: 0;
 }
+.pc[href] { cursor: pointer; }
 
 /* 4:3 rather than the photograph's own shape, so a row of credits sits on one
    baseline. A grid of images at their natural ratios is a ragged hem. */
@@ -1702,13 +1703,24 @@ html:has(.menu[data-open="true"]) .header {
   margin-right: max(0%, calc(-1 * var(--caption-offset, 0%)));
 }
 
-/* The photograph answers the pointer, the way the project cards do. */
-@media (hover: hover) {
+/* Composite artwork cannot be zoomed without clipping its magazine lettering.
+   Lift the artwork and caption together so every Press card answers input. */
+.pc__img, .pc__m {
+  transition: transform var(--dur-hover) var(--ease), color var(--dur-hover) var(--ease);
+}
+.pc[href]:focus-visible .pc__img, .pc[href]:focus-visible .pc__m { transform: translateY(-3px); }
+.pc[href]:focus-visible .pc__m { color: var(--text-primary); }
+@media (hover: hover) and (pointer: fine) {
   .pc__img img { transition: transform var(--dur-hover) var(--ease); }
-  .pc:not(.pc--custom):hover .pc__img img { transform: scale(1.03); }
+  .pc[href]:not(.pc--custom):hover .pc__img img { transform: scale(1.03); }
+  .pc[href]:hover .pc__img, .pc[href]:hover .pc__m { transform: translateY(-3px); }
+  .pc[href]:hover .pc__m { color: var(--text-primary); }
 }
 @media (prefers-reduced-motion: reduce) {
   .pc__img img, .pc:hover .pc__img img { transition: none; transform: none; }
+  .pc__img, .pc__m { transition: none; }
+  .pc[href]:is(:hover, :focus-visible) .pc__img,
+  .pc[href]:is(:hover, :focus-visible) .pc__m { transform: none; }
 }
 
 /* A statement is centred. An index is not.
