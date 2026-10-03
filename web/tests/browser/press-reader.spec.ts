@@ -184,10 +184,10 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   await article.close();
 });
 
-test('BTL-managed article links remain readable without JavaScript', async ({browser}) => {
+test('BTL-managed article links remain readable without JavaScript', async ({browser,baseURL}) => {
   const context = await browser.newContext({javaScriptEnabled: false});
   const page = await context.newPage();
-  await page.goto('http://127.0.0.1:8788/__reader-demo/');
+  await page.goto(new URL('/__reader-demo/',baseURL).href);
   await page.locator('a[data-article]').first().click();
   await expect(page).toHaveURL(/\/press\/reader-fixture\/$/);
   await expect(page.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();

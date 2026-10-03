@@ -19,11 +19,16 @@ claim that every operational setting or accessibility criterion is verified.
   779 px at 768 px on project indexes. The check still requires document width
   at or below the viewport; it has no added tolerance or retry. Other existing
   responsive checks already wait for that frame.
-- Sanity CDN connection setup begins in the document head. Automatic rail
+- Sanity CDN connection setup begins in the document head. Project pages also
+  preload the exact responsive first-image candidate before the embedded font
+  and stylesheet. A request-count regression check guards against downloading
+  an unused fallback. Automatic rail
   warming and onward-page prefetch wait for the opening high-priority image.
   Neighbor images warmed by JavaScript have low fetch priority; scrolling and
   deliberate link presses remain immediate. Image widths, quality 82, crops,
   font and layout are unchanged.
+- Browser fixtures and script-free checks use the configured local test URL,
+  allowing an isolated run without reaching a different checkout on port 8788.
 - CI continues to measure deployed performance and run dependency audits after
   unrelated browser failures. Failures still fail the job. Previously a viewer
   or width failure skipped both checks, hiding other evidence.
@@ -109,3 +114,20 @@ supported upgrades. No account/settings mutation or audit waiver is implied.
 Domain connection, unsupplied photographer names, official LinkedIn/YouTube
 URLs, and real enquiry inbox delivery are deferred by the owner. No placeholder
 names, fabricated verification, test email or unrelated CMS content was added.
+
+## First fixes preview
+
+Immutable preview `https://d92608d3.btl-website-3wo.pages.dev` (`dfbad3d`):
+three cold mobile runs per page gave median LCP 1365 ms (Home), 2603 ms
+(Nelly House), and 934 ms (Contact), median performance 100 / 97 / 100.
+Nelly's runs were 2603 / 2642 / 2584 ms. This was an improvement, but still
+failed the unchanged 2000 ms target. A subsequent revision adds the first-image
+preload; its deployed measurement and final Linux result must be recorded before
+claiming the performance and browser gaps resolved.
+
+Local validation so far: 37 web unit tests; 10 Studio unit tests, type checking
+and build; web build, 24-page checks and byte budgets; 58 focused Chrome/Safari
+checks (2 intentional skips); 2 native-touch regressions; all 12 corrected
+fixture/script-free checks; 4 responsive-preload request-count checks. The first
+full isolated browser run passed 180 checks and exposed 12 hard-coded-port
+fixture failures, which then all passed after correction.

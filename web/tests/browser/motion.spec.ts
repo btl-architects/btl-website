@@ -68,7 +68,7 @@ test('project entrances preserve expansion and gallery controls', async ({page})
   await expect.poll(async () => Math.round((await card.boundingBox())!.height)).toBe(Math.round(height));
 });
 
-test('Press and team content stays visible without animation support', async ({browser}) => {
+test('Press and team content stays visible without animation support', async ({browser,baseURL}) => {
   for (const javaScriptEnabled of [false, true]) {
     const context = await browser.newContext({javaScriptEnabled});
     if (javaScriptEnabled) await context.addInitScript(() => {
@@ -77,7 +77,7 @@ test('Press and team content stays visible without animation support', async ({b
     });
     const page = await context.newPage();
     for (const route of ['/press/', '/people/']) {
-      await page.goto(`http://127.0.0.1:8788${route}`);
+      await page.goto(new URL(route,baseURL).href);
       const cards = page.locator(route === '/press/' ? '.pc' : '.trow');
       for (const card of await cards.all()) {
         await expect(card).toHaveCSS('opacity', '1');
