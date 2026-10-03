@@ -1,0 +1,23 @@
+---
+/* Project text, shared by the desktop rail and the phone's reading block. */
+import Paragraphs from "./Paragraphs.astro";
+import type {Project} from "../lib/content";
+interface Props {project: Project; class?: string}
+const {project, class: extra} = Astro.props;
+// Title and location are dropped from the meta: the index row above the rail
+// already carries both, and repeating them was the loudest thing in the panel.
+// Architect is dropped too — it is btl on every project, so it says nothing.
+
+const meta: [string, string | number][] = [];
+if (project.year) meta.push(["Year", project.year]);
+if (project.credits.photographer) meta.push(["Photograph", project.credits.photographer]);
+---
+  <div class:list={["rail__note", extra]}>
+    <h2 class="rail__title">{project.title}</h2>
+    {project.description && <Paragraphs text={project.description} class="rail__text" />}
+    <dl class="rail__meta">
+      {meta.map(([k, v]) => (
+        <div class="rail__m"><dt>{k}</dt><dd>{v}</dd></div>
+      ))}
+    </dl>
+  </div>

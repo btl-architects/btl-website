@@ -666,26 +666,45 @@ html:has(.menu[data-open="true"]) .header {
      so half the cards scrolling the other way is just disorienting. The
      caption keeps alternating — that costs nothing and still varies the page. */
 
-  /* the trailing edge fades, so a clipped photograph reads as continuing
-     rather than as one that simply ends */
-  .pcard[data-open="true"] .pcard__strip {
-    -webkit-mask-image: linear-gradient(to right, #000 88%, rgba(0,0,0,.15));
-    mask-image: linear-gradient(to right, #000 88%, rgba(0,0,0,.15));
-  }
-  .pcard__t { padding: var(--s-7) var(--s-4) var(--s-4); }
-  .pcard__strip { gap: var(--s-2); }
-
-  /* The card grows by its STRIP, and the note stacks underneath in normal
-     flow, so the card takes whatever height the words need. */
+  /* A phone gets a film strip.
+   *
+   * At poster height the first photograph alone filled the phone, so a card
+   * was one picture, and opening it only made that picture a little taller —
+   * the desktop's strip of frames and its growth were both lost. Here the
+   * strip is short enough for two or three frames to sit side by side, runs
+   * edge to edge, and can be swiped before
+   * it is opened: a touch screen does not need permission to browse. A tap
+   * opens the card in place around the frame that was tapped (site.js), and
+   * every frame grows by half again — the desktop's gesture, at a size a
+   * phone can take without lurching. The name rides on the first frame, as on desktop. */
   .pcard, .pcard[data-open="true"] { height: auto; }
   .pcard__strip {
-    height: clamp(13rem, 34vh, 20rem);
+    height: clamp(10rem, 22vh, 12rem);
     transition: height var(--dur-slow) var(--ease);
+    overflow-x: auto; overflow-y: hidden;
   }
-  .pcard[data-open="true"] .pcard__strip { height: clamp(17rem, 48vh, 26rem); }
-  .pcard > .rail__note {
-    display: block; padding: var(--s-5) 0 var(--s-2);
+  /* Open, a landscape frame runs just past the phone's width: big enough to
+     be the project now, not so big that the card lurches to fill the screen. */
+  .pcard[data-open="true"] .pcard__strip { height: clamp(15rem, 33vh, 17.5rem); }
+  /* The strip runs edge to edge — photographs from the screen's first pixel to
+     its last, no dark margin at the start — while the name on it keeps to the
+     page column. On the projects page the card sits inside the column, so the
+     strip reaches back out of it; on Home the cards are already released. */
+  .pcard__strip { margin-inline: calc(-1 * var(--page-margin)); }
+  .home-sec--release .pcard__strip { margin-inline: 0; }
+  .pcard__t {
+    padding: var(--s-6) var(--s-4) var(--s-3) 0;
+    pointer-events: none;   /* a swipe that starts on the name still moves the strip */
   }
+  .home-sec--release .pcard__t { padding-left: var(--page-margin); }
+  .pcard__name { font-size: 1.0625rem; }
+  /* The name belongs to the first frame; once the strip moves on it steps
+     aside rather than sliding over other photographs. */
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; }
+
+  /* An open card's words stack underneath in normal flow, so the card takes
+     whatever height they need. */
+  .pcard > .rail__note { display: block; padding: var(--s-5) 0 var(--s-2); }
   .pcard > .rail__note .rail__text { max-width: none; }
 }
 
@@ -1875,17 +1894,18 @@ body[data-preview] .header { top: var(--preview-h); }
   transform-origin: center;
 }
 
-/* Below this it goes back to being part of the film.
+/* Narrower on a phone, so it can stay fixed there too.
  *
- * Fixed, the rail sits in the page's right margin. That margin is 63px at 1920
+ * History, because the thresholds below were argued over. Fixed, the rail
+ * sits in the page's right margin. That margin is 63px at 1920
  * and 21px on a phone, and the rail is about 40px wide — so on a narrow screen
  * a permanent rail is not in the margin, it is on top of the text. The
  * alternative is reserving width for it, which would give the page a second
  * content edge on one side only, and unpicking exactly that is most of what this
  * site's layout work has been.
  *
- * So it is constant where there is a margin to be constant in, and part of the
- * opening where there is not.
+ * So for a while it was constant where there was a margin to be constant in,
+ * and part of the opening where there was not.
  *
  * 48rem, and the first version of this said 80rem, which was wrong and had the
  * practice reporting the rail scrolling away with the film. That number came
@@ -1897,12 +1917,22 @@ body[data-preview] .header { top: var(--preview-h); }
  * widest screen instead of the tightest: a threshold guessed rather than
  * measured lands in the wrong place, and only measurement says where.
  *
- * Below 48rem the overlap is real — 15px of a 390px screen, permanently, over
- * the right edge of the content column. There the rail stays with the opening,
- * and the same three links are in the footer of every page anyway, so nothing
- * is unreachable. */
+ * Below 48rem it used to stay with the opening instead, because the rail's
+ * padding made it 36px thick against a 21px margin. The practice wanted it
+ * constant on phones too, and the overlap was padding, not words: set
+ * vertically at caption size the words are 16px thick, which fits in the
+ * phone's 20–21px margin. So on a phone the rail loses its thickness padding,
+ * each link is a 24px column (the minimum target, centred on its words), and
+ * it stays fixed like the desktop — over full-bleed photographs, as it already
+ * is over the film, and clear of the type, which stops at the margin. The
+ * footer no longer repeats the three links on Home. */
 @media (max-width: 47.99rem) {
-  .landing .srail { position: absolute; z-index: 3; }
+  .landing .srail { padding-block: 0; gap: var(--s-5); }
+  .landing .srail__i {
+    display: inline-flex; align-items: flex-end; justify-content: center;
+    block-size: 1.5rem; padding-inline: 0.5em;
+  }
+  .landing .srail__i::after { inset-inline-end: 0; }
 }
 
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
@@ -2108,7 +2138,6 @@ body[data-preview] .header { top: var(--preview-h); }
 .lb {
   position: fixed; inset: 0; z-index: var(--z-viewer);
   display: grid; place-items: center;
-  background: var(--overlay);
   opacity: 0;
   visibility: hidden;
   /* visibility is stepped, not eased, and the delay carries the direction:
@@ -2127,6 +2156,14 @@ body[data-preview] .header { top: var(--preview-h); }
   visibility: visible;
   transition: opacity var(--dur-base) var(--ease),
               visibility 0s linear 0s;
+}
+
+/* The dark is its own layer so a finger pulling the photograph down can thin
+   it without fading the photograph with it (site.js, --lb-shade). */
+.lb::before {
+  content: ""; position: absolute; inset: 0;
+  background: var(--overlay);
+  opacity: var(--lb-shade, 1);
 }
 
 /* The surface that receives the gestures. touch-action none because the
@@ -2174,7 +2211,7 @@ body[data-preview] .header { top: var(--preview-h); }
    selectors, so it never won, and the settle ran for people who had asked
    for no motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .lb__img[data-settling="true"]   { transition: transform var(--dur-base) var(--ease); }
+  .lb__img[data-settling="true"]   { transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease); }
   .lb__img[data-settling="follow"] { transition: transform var(--dur-fast) var(--ease); }
 }
 
@@ -2287,7 +2324,7 @@ body[data-preview] .header { top: var(--preview-h); }
 .privacy { max-width:48rem; }
 .privacy h2 { margin-top:var(--s-7); }
 .privacy p { margin-top:var(--s-4); color:var(--text-secondary); }
-.lb:focus-within .lb__step, .lb:focus-within .lb__bar { opacity:1; }
+.lb:has(:focus-visible) .lb__step, .lb:has(:focus-visible) .lb__bar { opacity:1; }
 [data-enquiry-status]:empty { display:none; }
 
 .pcard[data-open="true"] .pcard__nav:not([hidden]) { display:flex; }
@@ -2313,4 +2350,81 @@ body[data-preview] .header { top: var(--preview-h); }
 .tip[data-show] { opacity: 1; transform: translate(-50%, calc(-100% - var(--s-2))); }
 @media (prefers-reduced-motion: no-preference) {
   .tip { transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease); }
+}
+
+
+/* Touch has no hover preview, so the green line cannot appear on approach.
+   On a phone it rests only under the onward link that ends a section or page
+   ("See every project", "Send an enquiry") and under linked people's names —
+   the places where a line of words is the only way on. Everything else already
+   says it can be tapped, or is read rather than travelled: an arrow, a
+   photograph, a previous/next title under its own label, a link inside a
+   sentence (set in the heavier weight), the footer, an email address or phone
+   number, the menu. Lining all of those turned every screen green. The line
+   draws in as its section arrives, the same entrance the text makes.
+   Standalone controls still get finger room; inline prose links keep their
+   text flow. Pointer layouts and their hover behaviour are unchanged. */
+.copy-mark, .project-note--touch { display: none; }
+.contact-links__i { display: block; }
+@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
+  .onward__t::after { clip-path: inset(0); }
+  /* A link inside a sentence, or standing alone in one, carries a small
+     raised ↗ after the words instead of a line: the mark readers already know
+     from the web as "this is a link", lifted so it reads as a mark on the
+     words, not as a word. It is the one link mark in running text, wherever
+     the link goes. */
+  a.tl:not(.footer a, [href^="mailto:"], [href^="tel:"])::after {
+    content: "↗"; content: "↗" / "";
+    position: static; display: inline-block; height: auto;
+    margin-left: .1em; font-size: .7em; font-weight: 400; line-height: 1; vertical-align: .5em;
+    color: currentColor; background: none; clip-path: none;
+  }
+  /* The copy mark (ContactLinks). Small and raised like the arrow, in the
+     quiet tone; it hangs past the words, taking no width, so a centred block
+     stays centred. The finger room is an invisible 44px square around it. */
+  .copy-mark {
+    position: relative; display: inline-grid; place-items: center;
+    width: 1.5rem; height: 1.5rem; margin: 0 -1.5rem 0 0; padding: 0;
+    vertical-align: .2em; color: var(--text-tertiary);
+    background: none; border: 0; cursor: pointer;
+  }
+  .copy-mark::before { content: ""; position: absolute; inset: -.625rem; }
+  .copy-mark svg { width: .8rem; height: .8rem; }
+  .copy-mark:active { color: var(--text-primary); }
+  a.trow__link .trow__n {
+    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .35em;
+  }
+  .onward { min-height: 2.75rem; padding-bottom: var(--s-3); }
+  .footer__links a, a.tl[href^="mailto:"], a.tl[href^="tel:"] {
+    display: inline-flex; align-items: center; min-height: 2.75rem;
+  }
+  .footer__links a::after, a.tl[href^="mailto:"]::after, a.tl[href^="tel:"]::after { bottom: calc(50% - .85em); }
+  .header__logo { display: flex; align-items: center; min-height: 2.75rem; }
+  .nav__link { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .chips { gap: var(--s-3) var(--s-5); }
+  .chips .chip { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .lb__x { min-height: 2.75rem; min-width: 2.75rem; }
+  /* A finger has no hover to wake the arrows, and no idle to hide them: a tap
+     shows or hides all the chrome together (site.js). */
+  .lb[data-chrome="on"]:not([data-zoomed="true"]) .lb__step { opacity: 1; }
+  .lb__bar, .lb__cap { transition: opacity var(--dur-base) var(--ease); }
+  .lb[data-chrome="off"] :is(.lb__bar, .lb__cap, .lb__step) { opacity: 0; pointer-events: none; }
+  .f input { min-height: 2.75rem; }
+  .pj [data-rail] > .rail__note { display: none; }
+  .project-note--touch { display: block; margin-top: var(--s-5); }
+  .project-note--touch .rail__note { display: block; }
+  .project-note--touch .rail__title { display: none; } /* The page heading already names it. */
+  .project-note--touch .rail__text { max-width: none; }
+  .pc[href]:active .pc__img { opacity: .85; }
+  a.tl:active, a.ul:active, .onward:active { color: var(--text-primary); }
+}
+/* Below-fold sections enter with .rv; their line waits for the words, then
+   draws left to right. Content already on screen at load is revealed before
+   .js is set, so its line is simply there. Reduced motion reveals everything
+   at once and the line with it. */
+@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) and (prefers-reduced-motion: no-preference) {
+  :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
+  :where(.js) .rv:not(.in) a.trow__link .trow__n { text-decoration-color: transparent; }
+  .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
+  .rv a.trow__link .trow__n { transition: text-decoration-color var(--dur-slow) var(--ease) 240ms; }
 }

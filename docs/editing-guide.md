@@ -414,3 +414,15 @@ It does not request premium processing or additional advanced MP4 resolutions.
 Account limits and charges are governed by [Mux's current plan](https://www.mux.com/pricing);
 review them when selecting or upgrading a plan. Mux is a separate service from
 Sanity's image optimisation.
+
+### Phone interaction cues
+
+Phone layouts show what can be tapped with one small set of cues: a green line
+under the onward link that ends a section, a small raised ↗ after
+links inside sentences, and a copy mark beside the studio's email and phone number.
+The full table is in `docs/mobile-interactions-2026-10-03.md`. These are
+shared interface cues, so new Sanity entries receive them automatically. Mouse
+layouts keep their hover treatment. Individual project pages place the same
+project description below the photographs on phones, so longer text stays readable.
+On phones, project cards are swipeable film strips that open in place when
+tapped; new projects get this automatically.

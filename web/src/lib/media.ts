@@ -215,7 +215,7 @@ export function railSizes(image: SiteImage): string {
 /** Closed project strips have a different height from the opened gallery. */
 export function peekSizes(image: SiteImage): string {
   const ratio = resolveImage(image)?.ratio || 1.5;
-  return `(max-width: 51.99rem) calc(clamp(13rem, 34vh, 20rem) * ${ratio}), ` +
+  return `(max-width: 51.99rem) calc(clamp(10rem, 22vh, 12rem) * ${ratio}), ` +
          `calc(clamp(11rem, 27vh, 21rem) * ${ratio})`;
 }
 

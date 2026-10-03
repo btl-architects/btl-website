@@ -17,6 +17,7 @@ import ProjectCard from "../components/ProjectCard.astro";
 import Figure from "../components/Figure.astro";
 import { spreadSizes } from "../lib/media";
 import Onward from "../components/Onward.astro";
+import ContactLinks from "../components/ContactLinks.astro";
 import Credit from "../components/Credit.astro";
 import {articlePagePath} from "../lib/press";
 import { getHome, getProjects, getPublications, getPeople, getSettings } from "../lib/content";
@@ -178,10 +179,7 @@ const c = settings.contact;
               style="font-style:normal; line-height:1.7; color:var(--text-secondary)">{c.address.map((line) => <>{line}<br /></>)}</address>
           </div>
           <div class="rv" data-delay="1">
-            <p>
-              <a class="tl" href={`mailto:${c.email}`}>{c.email}</a><br />
-              <a class="tl" href={`tel:${c.phoneHref}`}>{c.phone}</a>
-            </p>
+            <ContactLinks contact={c} />
           </div>
         </div>
         <Onward href="/contact/" quiet muted>Send an enquiry</Onward>

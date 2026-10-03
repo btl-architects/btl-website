@@ -383,7 +383,19 @@
        * card is resizable and the nav reflows with it. */
       var track = bar.parentNode.clientWidth;
       bar.style.transform = "translateX(" + (p * (1 - frac) * track) + "px)";
-      pos.textContent = String(Math.min(total, Math.round(p * (total - 1)) + 1)).padStart(2, "0") +
+      /* The counter names the frame at the strip's start, not a share of the
+         scroll: photographs differ in width, so the share read 04 with the
+         third one in front of you. The last frame can never reach the start,
+         so the end of the range counts as the last. */
+      var frames = st.querySelectorAll(".rail__f");
+      var start = st.getBoundingClientRect().left + (parseFloat(getComputedStyle(st).scrollPaddingLeft) || 0);
+      var at = 0, near = Infinity;
+      for (var k = 0; k < frames.length; k++) {
+        var d = Math.abs(frames[k].getBoundingClientRect().left - start);
+        if (d < near) { near = d; at = k; }
+      }
+      if (range > 0 && p > 0.995) at = frames.length - 1;
+      pos.textContent = String(Math.min(total, at + 1)).padStart(2, "0") +
                         " / " + String(total).padStart(2, "0");
     };
     st.removeEventListener("scroll", st._report || function () {});
@@ -546,6 +558,17 @@
       var range = document.createRange(); range.selectNodeContents(a);
       var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
       say(a, /Mac|iP(hone|ad)/.test(navigator.platform) ? "Press ⌘C to copy" : "Press Ctrl+C to copy", 2600);
+    });
+  });
+
+  /* The copy mark beside the studio's address and number (ContactLinks):
+     the phone's way to take them away, since a tap on the words writes or
+     dials. Same copy path and the same tooltip as the desktop click. */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-copy]");
+    if (!b) return;
+    copy(b.getAttribute("data-copy")).then(function () { say(b, "Copied", 1400); }, function () {
+      say(b, "Press and hold the words to copy", 2600);
     });
   });
 
@@ -984,6 +1007,26 @@
            reveal is still running, and never once the reader has taken hold. */
         st._touched = false;
 
+        /* A phone opened from a frame part-way along the strip keeps that frame
+           where the reader left it while every frame grows, then leaves the
+           strip to them. The first frame needs nothing: the rest is 0. */
+        var chosen = card._chosen; card._chosen = null;
+        if (narrow && chosen && chosen.previousElementSibling) {
+          st._touched = true;
+          var pad = parseFloat(getComputedStyle(st).scrollPaddingLeft) || 0;
+          var place = function () {
+            st.scrollLeft = chosen.getBoundingClientRect().left - st.getBoundingClientRect().left + st.scrollLeft - pad;
+          };
+          var followUntil = performance.now() + (reduced ? 0 : DUR.slow + 80);
+          st._follow = true;
+          (function follow(now) {
+            if (!st._follow || openCard !== card) return;
+            place();
+            if (now < followUntil) requestAnimationFrame(follow); else st._follow = false;
+          })(performance.now());
+          window.setTimeout(function () { if (st._follow && openCard === card) { place(); st._follow = false; } }, DUR.slow + 120);
+        }
+
         /* Hold the resting position while the photographs finish arriving.
 
            Each lazy image that lands widens the strip, and the browser
@@ -1024,6 +1067,32 @@
        clickable and is not is the least intuitive thing an index can do. The
        caption stays a real <a> underneath for keyboard, middle-click and
        no-JavaScript, but the pointer target is the entire card. */
+    /* Below 52rem a closed card's strip can be swiped (components.css). */
+    var narrowIndex = window.matchMedia("(max-width: 51.99rem)");
+    /* A strip that scrolls must be reachable from the keyboard, where the
+       arrow keys then move it. Closed cards only scroll at phone widths, so
+       that is the only place the strip itself joins the tab order (wider, it
+       stays out, or Firefox lists every scroll container as a stop). */
+    function strips() {
+      [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
+        var name = st.closest(".pcard").querySelector(".pcard__name");
+        st.tabIndex = narrowIndex.matches ? 0 : -1;
+        if (narrowIndex.matches) { st.setAttribute("role", "region"); st.setAttribute("aria-label", (name ? name.textContent : "Project") + " photographs"); }
+        else { st.removeAttribute("role"); st.removeAttribute("aria-label"); }
+      });
+    }
+    strips();
+    narrowIndex.addEventListener("change", strips);
+    [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
+      var card = st.closest(".pcard"), tick = false;
+      st.addEventListener("scroll", function () {
+        if (tick) return; tick = true;
+        requestAnimationFrame(function () {
+          tick = false;
+          card.toggleAttribute("data-strip-moved", narrowIndex.matches && st.scrollLeft > 24);
+        });
+      }, { passive: true });
+    });
     [].slice.call(pindex.querySelectorAll(".pcard")).forEach(function (card) {
       var slug = card.getAttribute("data-card");
       var downAt = null;
@@ -1050,6 +1119,9 @@
           return;                      /* clicking a photograph inside is not a close */
         }
         ev.preventDefault();
+        /* On a phone the closed strip can already be swiped, so the frame that
+           was tapped is the one the reader chose; the card opens around it. */
+        card._chosen = narrowIndex.matches && ev.target.closest ? ev.target.closest(".rail__f") : null;
         expand(slug, true).catch(function () { location.href = hrefBySlug[slug]; });
       });
     });
@@ -1075,7 +1147,7 @@
        Mouse dragging is handled by the shared gallery interaction above. */
     [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
       st.addEventListener("wheel", function () { st._pin = false; st._touched = true; }, { passive: true });
-      st.addEventListener("touchstart", function () { st._pin = false; st._touched = true; }, { passive: true });
+      st.addEventListener("touchstart", function () { st._pin = false; st._follow = false; st._touched = true; }, { passive: true });
     });
 
     window.addEventListener("popstate", function (ev) {
@@ -1324,6 +1396,8 @@
       document.body.style.right = "0";
 
       show(i);
+      lb.setAttribute("data-chrome", "on");
+      lb.style.setProperty("--lb-shade", "1");
       lb.setAttribute("data-open", "true");
       /* Focus once the panel is genuinely visible.
          The overlay starts at visibility:hidden and transitions, and you cannot
@@ -1378,30 +1452,113 @@
       var panFrom = null;
       var pressAt = null, gestured = false;   /* read by the click handler */
 
+      /* A finger is not a mouse. A mouse clicks to zoom and clicks the dark to
+         leave; on a phone those two taps were the commonest accident — a tap
+         meant to see the photograph better zoomed it, and a thumb resting near
+         the edge closed the viewer. Fingers get the vocabulary every phone's own
+         photo app has taught them instead:
+
+           drag sideways  the photograph follows; let go past a fifth of the
+                          screen, or flick, and the next one slides in
+           drag down      the photograph follows and the dark thins; let go far
+                          enough and the viewer closes
+           double-tap     zoom to that spot, or back out
+           pinch          zoom about the fingers; drag to look around, and a
+                          flick keeps gliding for a moment
+           tap            show or hide the count, Close, arrows and caption
+
+         The arrows and Close stay, so nothing depends on a gesture alone. */
+      var touch = null;        /* the one-finger gesture in progress */
+      var still = window.matchMedia("(prefers-reduced-motion: reduce)");
+      var lastTap = null, tapTimer = null, glide = 0;
+
+      function shade(k) { lb.style.setProperty("--lb-shade", String(k)); }
+
+      function chrome(show) {
+        lb.setAttribute("data-chrome", show ? "on" : "off");
+      }
+
+      /* Slide the current photograph off one side and bring its neighbour in
+         from the other, the way a strip of film moves under the hand. */
+      function turn(d) {
+        var w = stage.clientWidth;
+        tx = -d * w; ty = 0; apply(true);
+        setTimeout(function () {
+          show(at + d);
+          img.setAttribute("data-settling", "false");
+          tx = d * w * 0.35; img.style.opacity = "0"; apply(false);
+          void img.offsetWidth;
+          img.style.opacity = "";
+          tx = 0; apply(true);
+        }, still.matches ? 0 : 200);
+      }
+
+      function dismiss() {
+        ty = stage.clientHeight * 0.6; shade(0); apply(true);
+        setTimeout(function () { close(); shade(1); reset(false); }, still.matches ? 0 : 160);
+      }
+
+      function stopGlide() { if (glide) cancelAnimationFrame(glide); glide = 0; }
+      function coast(vx, vy) {
+        stopGlide();
+        if (still.matches) return;
+        var last = performance.now();
+        (function frame(now) {
+          var dt = Math.min(32, now - last); last = now;
+          vx *= Math.pow(0.94, dt / 16); vy *= Math.pow(0.94, dt / 16);
+          tx += vx * dt; ty += vy * dt;
+          var bx = tx, by = ty; clamp();
+          if (bx !== tx) vx = 0; if (by !== ty) vy = 0;
+          apply(false);
+          glide = Math.abs(vx) + Math.abs(vy) > 0.02 ? requestAnimationFrame(frame) : 0;
+        })(last);
+      }
+
+      function onTap(x, y) {
+        var now = performance.now();
+        if (lastTap && now - lastTap.t < 300 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40) {
+          clearTimeout(tapTimer); lastTap = null;
+          if (scale > 1.01) reset(true);
+          else zoomAt(detailScale(), x, y, true);
+          return;
+        }
+        lastTap = { t: now, x: x, y: y };
+        clearTimeout(tapTimer);
+        tapTimer = setTimeout(function () {
+          lastTap = null;
+          chrome(lb.getAttribute("data-chrome") === "off");
+        }, 300);
+      }
+
       stage.addEventListener("pointerdown", function (e) {
         stage.setPointerCapture(e.pointerId);
         steering = e.pointerType === "mouse";
         pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         if (pointers.size === 1) { pressAt = { x: e.clientX, y: e.clientY }; gestured = false; }
+        if (!steering) {
+          stopGlide();
+          if (pointers.size === 1) {
+            touch = { x: e.clientX, y: e.clientY, t: performance.now(), tx: tx, ty: ty, mode: null, vx: 0, vy: 0, lx: e.clientX, ly: e.clientY, lt: performance.now() };
+          } else {
+            touch = null;
+          }
+        }
         if (pointers.size === 2) {
           gestured = true;
           var p = [...pointers.values()];
           startDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
           startScale = scale;
           panFrom = null;
-        } else if (scale > 1.01 && e.pointerType === "mouse") {
-          panFrom = null;                   /* the mouse steers by moving; no drag */
-        } else if (scale > 1.01) {
-          panFrom = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };
-          stage.setAttribute("data-dragging", "true");
-        } else {
-          panFrom = { x: e.clientX, y: e.clientY, tx: tx, ty: ty, swipe: true };
+          if (tx || ty) { if (scale <= 1.01) { tx = 0; ty = 0; shade(1); apply(true); } }
+        } else if (steering) {
+          panFrom = scale > 1.01 ? null              /* the mouse steers by moving; no drag */
+                  : { x: e.clientX, y: e.clientY, tx: tx, ty: ty, swipe: true };
         }
       });
 
       stage.addEventListener("pointermove", function (e) {
-        wake();
         steering = e.pointerType === "mouse";
+        if (steering) wake();
         if (steering && scale > 1.01) { follow(e.clientX, e.clientY); apply("follow"); return; }
         if (!pointers.has(e.pointerId)) return;
         pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1413,10 +1570,30 @@
           zoomAt(startScale * (d / startDist), mid.x, mid.y);
           return;
         }
-        if (!panFrom) return;
-        var dx = e.clientX - panFrom.x, dy = e.clientY - panFrom.y;
-        if (panFrom.swipe) return;          // handled on release
-        tx = panFrom.tx + dx; ty = panFrom.ty + dy;
+
+        if (touch) {
+          var dx = e.clientX - touch.x, dy = e.clientY - touch.y, now = performance.now();
+          var dt = Math.max(1, now - touch.lt);
+          touch.vx = (e.clientX - touch.lx) / dt; touch.vy = (e.clientY - touch.ly) / dt;
+          touch.lx = e.clientX; touch.ly = e.clientY; touch.lt = now;
+          if (!touch.mode && Math.hypot(dx, dy) > 10) {
+            gestured = true;
+            touch.mode = scale > 1.01 ? "pan"
+                       : Math.abs(dx) > Math.abs(dy) ? (items.length > 1 ? "turn" : "none")
+                       : dy > 0 ? "dismiss" : "none";
+            img.setAttribute("data-settling", "false");
+          }
+          if (touch.mode === "pan") { tx = touch.tx + dx; ty = touch.ty + dy; clamp(); apply(false); }
+          else if (touch.mode === "turn") { tx = dx; ty = 0; apply(false); }
+          else if (touch.mode === "dismiss") {
+            ty = Math.max(0, dy); tx = dx * 0.4; apply(false);
+            shade(Math.max(0.15, 1 - ty / (stage.clientHeight * 0.55)));
+          }
+          return;
+        }
+
+        if (!panFrom || panFrom.swipe) return;   /* a mouse swipe is handled on release */
+        tx = panFrom.tx + (e.clientX - panFrom.x); ty = panFrom.ty + (e.clientY - panFrom.y);
         clamp(); apply(false);
       });
 
@@ -1426,11 +1603,29 @@
         stage.removeAttribute("data-dragging");
         if (pointers.size < 2) startDist = 0;
 
+        if (touch && was && e.pointerType !== "mouse") {
+          var g = touch; touch = null;
+          var dx = was.x - g.x, dy = was.y - g.y, w = stage.clientWidth;
+          var recent = performance.now() - g.lt < 80;   /* a flick is a movement still under way */
+          if (!g.mode && e.type === "pointerup" && Math.hypot(dx, dy) < 10) onTap(was.x, was.y);
+          else if (g.mode === "turn") {
+            var fling = recent && Math.abs(g.vx) > 0.45;
+            if ((Math.abs(dx) > w * 0.2 || fling) && e.type === "pointerup") turn(dx < 0 ? 1 : -1);
+            else { tx = 0; apply(true); }
+          } else if (g.mode === "dismiss") {
+            if (e.type === "pointerup" && (dy > stage.clientHeight * 0.18 || (recent && g.vy > 0.5))) dismiss();
+            else { tx = 0; ty = 0; shade(1); apply(true); }
+          } else if (g.mode === "pan" && recent) coast(g.vx, g.vy);
+          if (pointers.size === 0 && scale < 1.02 && g.mode !== "turn" && g.mode !== "dismiss" && (tx || ty)) reset(true);
+          return;
+        }
+        if (pointers.size === 0 && scale < 1.02 && (tx || ty) && !panFrom) reset(true);
+
         if (panFrom && panFrom.swipe && was) {
-          var dx = was.x - panFrom.x, dy = was.y - panFrom.y;
+          var mx = was.x - panFrom.x, my = was.y - panFrom.y;
           /* A swipe only counts if it is mostly sideways and went somewhere —
-             otherwise a slightly untidy tap becomes an accidental page turn. */
-          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+             otherwise a slightly untidy click becomes an accidental page turn. */
+          if (Math.abs(mx) > 60 && Math.abs(mx) > Math.abs(my) * 1.5) step(mx < 0 ? 1 : -1);
         }
         panFrom = null;
         if (scale < 1.02 && (tx || ty)) reset(true);
@@ -1440,7 +1635,7 @@
 
       /* A click on the photograph toggles between fit and a close look; a click
          on the dark around it closes, which is what every viewer has taught
-         people to expect.
+         people to expect. Mouse only — fingers are handled above, on release.
 
          "On the photograph" is decided by where the click landed, not by its
          target. pointerdown captures the pointer to the stage, and a captured
@@ -1454,13 +1649,13 @@
       stage.addEventListener("click", function (e) {
         var from = pressAt, wasGesture = gestured;
         pressAt = null; gestured = false;
+        if (!steering) return;
         if (wasGesture || (from && Math.hypot(e.clientX - from.x, e.clientY - from.y) > 8)) return;
         var r = img.getBoundingClientRect();
         var onPhoto = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
         if (onPhoto) {
           if (scale > 1.01) reset(true);
-          else if (steering) { scale = detailScale(); follow(e.clientX, e.clientY); apply(true); sharpen(); }
-          else zoomAt(detailScale(), e.clientX, e.clientY, true);
+          else { scale = detailScale(); follow(e.clientX, e.clientY); apply(true); sharpen(); }
         } else {
           close();
         }
