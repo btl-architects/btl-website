@@ -55,7 +55,7 @@ test.describe('phone interactions',()=>{
     await page.goto('/contact/');
     await quiet(['form a','a.tl']);
     // A link in a sentence carries a raised arrow; contact details a copy mark.
-    expect(await page.locator('form a.tl').evaluate(el=>getComputedStyle(el,'::after').content)).toMatch(/↗/);
+    expect(await page.locator('form a.tl').evaluate(el=>{const s=getComputedStyle(el,'::after');return s.maskImage||s.webkitMaskImage;})).toMatch(/svg/);
     await expect(page.locator('.copy-mark')).toHaveCount(2);
     for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
     await page.goto('/people/');
@@ -238,10 +238,6 @@ test.describe('phone interactions',()=>{
     await expect(viewer).toHaveAttribute('data-zoomed','false');
     await tap(195,420); await page.waitForTimeout(450);
     await expect(viewer).toHaveAttribute('data-chrome','on');
-    // A tap on the dark above the photograph does not close the viewer either.
-    await tap(195,140); await page.waitForTimeout(450);
-    await expect(viewer).toBeVisible();
-    await tap(195,140); await page.waitForTimeout(450);
     // Double-tap zooms to the spot, and again comes back out.
     await tap(195,420); await page.waitForTimeout(60); await tap(195,420);
     await expect(viewer).toHaveAttribute('data-zoomed','true');
@@ -255,7 +251,61 @@ test.describe('phone interactions',()=>{
     await expect(viewer).toBeVisible();
     await drag(195,380,0,300);
     await expect(viewer).toBeHidden();
+    // A tap on the dark around the photograph is the way back.
+    await page.locator('[data-rail] .rail__f').first().tap();
+    await expect(viewer).toBeVisible();
+    const photo=(await viewer.locator('.lb__img').boundingBox())!;
+    // Whichever side of the photograph has dark: the sides of a portrait, below a landscape.
+    if(photo.x>24) await tap(photo.x/2,420); else await tap(195,Math.min(photo.y+photo.height+24,830));
+    await expect(viewer).toBeHidden();
+    // ...and that tap's click is spent: it must not reopen a photograph beneath.
+    await page.waitForTimeout(600);
+    await expect(viewer).toBeHidden();
+    // The viewer asks for a file sized to the screen, not the largest one.
+    await page.locator('[data-rail] .rail__f').first().tap();
+    const w=Number(/[?&]w=(\d+)/.exec((await viewer.locator('.lb__img').getAttribute('src'))!)![1]);
+    expect(w).toBeLessThanOrEqual(2000);
     await input.detach();
+  });
+
+  test('Press opens as a card the page stays visible above, and closes by tap or pull',async({page,browserName})=>{
+    await page.goto('/press/');
+    const card=page.locator('a[data-article]').first();
+    await card.scrollIntoViewIfNeeded();
+    await card.tap();
+    const reader=page.getByRole('dialog',{name:'Press reader'});
+    await expect(reader).toBeVisible();
+    await page.waitForTimeout(600);
+    const box=(await reader.boundingBox())!;
+    expect(box.y).toBeGreaterThan(40);
+    expect(Math.round(box.y+box.height)).toBeGreaterThanOrEqual(843);
+    await page.touchscreen.tap(195,box.y/2);
+    await expect(reader).toBeHidden();
+    if(browserName!=='chromium') return;
+    await card.tap();
+    await expect(reader).toBeVisible();
+    await page.waitForTimeout(600);
+    const top=(await reader.boundingBox())!.y;
+    const input=await page.context().newCDPSession(page);
+    await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:120,y:top+20}]});
+    for(let i=1;i<=8;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:120,y:top+20+300*i/8}]});
+    await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await expect(reader).toBeHidden();
+    await input.detach();
+  });
+
+  test('a tapped link answers at once and the next page is fetched ahead',async({page})=>{
+    await page.goto('/');
+    const onward=page.locator('a.onward[href="/projects/"]').first();
+    await onward.scrollIntoViewIfNeeded();
+    await expect(page.locator('link[rel="prefetch"][href="/projects/"]')).toHaveCount(1);
+    // The page is usually already here, so read the link's state inside the
+    // tap itself, after the site has answered, and keep this page for the check.
+    await page.evaluate(()=>window.addEventListener('click',e=>{
+      const a=(e.target as Element).closest('a');(window as any).__going=a?.hasAttribute('data-going');e.preventDefault();
+    },{once:true}));
+    await onward.tap();
+    expect(await page.evaluate(()=>(window as any).__going)).toBe(true);
   });
 
   test('individual project text sits below photographs without a clipped reading panel',async({page})=>{

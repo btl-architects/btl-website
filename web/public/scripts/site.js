@@ -405,6 +405,30 @@
     return report;
   }
 
+  /* Photographs ahead of a sideways scroll load before they are reached.
+     They are lazy, and a lazy image is only asked for when it is nearly on
+     screen — which on a phone, where one swipe crosses a whole frame, was too
+     late: the next frame arrived blank and filled in a moment later. Each
+     strip, once it is near the viewport, loads what lies within two and a
+     half widths of where it is, and keeps doing so as it moves. */
+  function loadAhead(st) {
+    var edge = st.getBoundingClientRect().left + st.clientWidth * 2.5;
+    [].forEach.call(st.querySelectorAll('img[loading="lazy"]'), function (im) {
+      if (im.getBoundingClientRect().left < edge) im.loading = "eager";
+    });
+  }
+  var aheadWatch = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) loadAhead(e.target); });
+  }, { rootMargin: "400px 0px" }) : null;
+  [].forEach.call(document.querySelectorAll("[data-strip], [data-rail]"), function (st) {
+    var tick = false;
+    st.addEventListener("scroll", function () {
+      if (tick) return; tick = true;
+      requestAnimationFrame(function () { tick = false; loadAhead(st); });
+    }, { passive: true });
+    if (aheadWatch) aheadWatch.observe(st);
+  });
+
   function stepRail(rail, direction) {
     if (!rail) return;
     rail._pin = false; rail._touched = true;
@@ -1057,6 +1081,7 @@
            horizontal scroller has got to. */
         var nav = card.querySelector("[data-nav]");
         if (nav) { nav.hidden = false; railProgress(st, nav); }
+        loadAhead(st);
 
         document.title = (rail.getAttribute("data-title") || "Project") + " — btl architects";
         if (push) history.pushState({ slug: slug }, "", hrefBySlug[slug]);
@@ -1167,6 +1192,48 @@
      and no JavaScript — and matches how every other link on the site behaves. */
 })();
 
+  /* --- 4b. leaving for another page ----------------------------------------
+     A tap on a link to another page used to show nothing until that page had
+     arrived — a second on a phone network — so it read as a tap that missed.
+     Two things now. The link answers at once: an onward link's green line
+     runs out to the right, any other dims (components.css, [data-going]). And
+     the page it points at is fetched ahead: onward and previous/next links as
+     they come near the screen, any link on this site the moment a finger
+     lands on it, so the tap usually finds the page already here. */
+  (function () {
+    var asked = {};
+    function same(a) {
+      return a && a.href && a.origin === location.origin && !a.hasAttribute("download") &&
+             (!a.target || a.target === "_self") && a.pathname !== location.pathname;
+    }
+    function fetchAhead(a) {
+      if (!same(a) || asked[a.pathname]) return;
+      asked[a.pathname] = true;
+      var l = document.createElement("link");
+      l.rel = "prefetch"; l.href = a.pathname;
+      document.head.appendChild(l);
+    }
+    if ("IntersectionObserver" in window) {
+      var near = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { near.unobserve(e.target); fetchAhead(e.target); } });
+      }, { rootMargin: "300px 0px" });
+      [].forEach.call(document.querySelectorAll("a.onward, .pager a"), function (a) { near.observe(a); });
+    }
+    document.addEventListener("pointerdown", function (e) {
+      fetchAhead(e.target.closest && e.target.closest("a[href]"));
+    }, { passive: true });
+    /* Bubbling, so anything that takes the click over (the press reader, a
+       project card) has already said so with preventDefault. */
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[href]");
+      if (!same(a) || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+      a.setAttribute("data-going", "");
+    });
+    window.addEventListener("pageshow", function () {
+      [].forEach.call(document.querySelectorAll("[data-going]"), function (a) { a.removeAttribute("data-going"); });
+    });
+  })();
+
   /* --- 5. the viewer --------------------------------------------------------
      A photograph on its own, at whatever size the reader wants.
 
@@ -1190,19 +1257,24 @@
     var scale = 1, tx = 0, ty = 0, natural = { w: 0, h: 0 };
     var idleTimer = null;
 
-    /* The largest candidate in the srcset: the rail is showing a size chosen to
-       fit a strip, and the whole point of opening this is to see more than
-       that. */
+    /* The candidate that fills this screen, not the largest one. The rail is
+       showing a size chosen for a strip, and the viewer must show more than
+       that — but it used to take the largest file in the srcset, 2800 or 4000
+       pixels, for every photograph, so on a phone each swipe waited on a
+       download several times bigger than the screen could show. The fitted
+       size is enough until the reader zooms, and sharpen() fetches more
+       detail then. */
     function bestSrc(el) {
       var ss = el.getAttribute("srcset");
       if (!ss) return el.currentSrc || el.src;
-      var best = null, bestW = -1;
-      ss.split(",").forEach(function (part) {
+      var ratio = (+el.getAttribute("width") || el.naturalWidth || 3) / (+el.getAttribute("height") || el.naturalHeight || 2);
+      var need = Math.min(window.innerWidth * 0.92, window.innerHeight * 0.88 * ratio) * (window.devicePixelRatio || 1);
+      var all = ss.split(",").map(function (part) {
         var bits = part.trim().split(/\s+/);
-        var w = parseInt(bits[1], 10);
-        if (bits[0] && w > bestW) { bestW = w; best = bits[0]; }
-      });
-      return best || el.currentSrc || el.src;
+        return { src: bits[0], w: parseInt(bits[1], 10) || 0 };
+      }).filter(function (c) { return c.src; }).sort(function (x, y) { return x.w - y.w; });
+      var fit = all.filter(function (c) { return c.w >= need; })[0] || all[all.length - 1];
+      return fit ? fit.src : el.currentSrc || el.src;
     }
 
     function build() {
@@ -1368,10 +1440,12 @@
         natural.w = img.clientWidth; natural.h = img.clientHeight;
       };
       if (img.complete) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
-      // the neighbours, so stepping is instant
+      // the neighbours, two each way, so a run of swipes never waits
       if (many) {
-        [items[(at + 1) % items.length], items[(at - 1 + items.length) % items.length]]
-          .forEach(function (n) { var p = new Image(); p.src = n.src; });
+        [1, -1, 2, -2].forEach(function (k) {
+          var n = items[(at + k + items.length * 2) % items.length];
+          if (n && !n._pre) { n._pre = new Image(); n._pre.src = n.src; }
+        });
       }
     }
 
@@ -1465,7 +1539,8 @@
            double-tap     zoom to that spot, or back out
            pinch          zoom about the fingers; drag to look around, and a
                           flick keeps gliding for a moment
-           tap            show or hide the count, Close, arrows and caption
+           tap            on the photograph, show or hide the count, Close,
+                          arrows and caption; on the dark around it, close
 
          The arrows and Close stay, so nothing depends on a gesture alone. */
       var touch = null;        /* the one-finger gesture in progress */
@@ -1480,17 +1555,27 @@
 
       /* Slide the current photograph off one side and bring its neighbour in
          from the other, the way a strip of film moves under the hand. */
+      /* The incoming photograph is decoded before it slides in, so it never
+         arrives as an empty frame that fills in afterwards. */
       function turn(d) {
-        var w = stage.clientWidth;
+        var w = stage.clientWidth, t0 = performance.now(), done = false;
+        var next = items[(at + d + items.length) % items.length];
         tx = -d * w; ty = 0; apply(true);
-        setTimeout(function () {
-          show(at + d);
-          img.setAttribute("data-settling", "false");
-          tx = d * w * 0.35; img.style.opacity = "0"; apply(false);
-          void img.offsetWidth;
-          img.style.opacity = "";
-          tx = 0; apply(true);
-        }, still.matches ? 0 : 200);
+        var pre = next._pre || (next._pre = new Image());
+        if (!pre.src) pre.src = next.src;
+        function swap() {
+          if (done || !isOpen()) return; done = true;
+          setTimeout(function () {
+            show(at + d);
+            img.setAttribute("data-settling", "false");
+            tx = d * w * 0.35; img.style.opacity = "0"; apply(false);
+            void img.offsetWidth;
+            img.style.opacity = "";
+            tx = 0; apply(true);
+          }, Math.max(0, (still.matches ? 0 : 200) - (performance.now() - t0)));
+        }
+        (pre.decode ? pre.decode() : Promise.resolve()).then(swap, swap);
+        setTimeout(swap, 1500);   /* a slow network still gets there */
       }
 
       function dismiss() {
@@ -1516,6 +1601,19 @@
 
       function onTap(x, y) {
         var now = performance.now();
+        /* The dark around the photograph is the way back, as on every phone. */
+        var r = img.getBoundingClientRect();
+        if (x < r.left || x > r.right || y < r.top || y > r.bottom) {
+          clearTimeout(tapTimer); lastTap = null; close();
+          /* The browser still sends this tap's click once the finger lifts,
+             and with the viewer gone it lands on the page underneath — on a
+             photograph, which opened the viewer straight back up, or on a
+             link. The tap was spent closing; its click is swallowed. */
+          var spent = function (ev) { ev.preventDefault(); ev.stopPropagation(); };
+          window.addEventListener("click", spent, true);   /* window: ahead of every document listener */
+          setTimeout(function () { window.removeEventListener("click", spent, true); }, 500);
+          return;
+        }
         if (lastTap && now - lastTap.t < 300 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40) {
           clearTimeout(tapTimer); lastTap = null;
           if (scale > 1.01) reset(true);
