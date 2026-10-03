@@ -2,13 +2,20 @@
 import Figure from "./Figure.astro";
 import { coverSizes } from "../lib/media";
 import type { Person } from "../lib/content";
+import { PROFILES } from "../../server/features.js";
 interface Props { person: Person }
 const { person: p } = Astro.props;
-const linked = Boolean(p.slug && p.bio);
+/* Linked only while profiles are switched on (server/features.js). */
+const linked = PROFILES && Boolean(p.slug && p.bio);
 const Tag = linked ? "a" : "span";
 ---
 <li class="trow rv">
-  <Tag class="trow__link" href={linked ? `/people/${p.slug}/` : undefined}>
+  {/* A linked person opens as a card over this page, the way a Press feature
+      does (press-reader.js); the href is still their page, for no-JavaScript,
+      new tabs and search. */}
+  <Tag class="trow__link" href={linked ? `/people/${p.slug}/` : undefined}
+    data-article={linked ? "" : undefined} data-publication={linked ? `${p.prefix} ${p.name}`.trim() : undefined}
+    data-reader-label={linked ? "Profile" : undefined} aria-haspopup={linked ? "dialog" : undefined}>
     {p.portrait && <span class="trow__p">
       <Figure image={p.portrait} sizes={coverSizes(p.portrait, "16rem", "50vw")} />
     </span>}

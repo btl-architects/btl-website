@@ -30,7 +30,9 @@ const fullName = `${person.prefix} ${person.name}`.trim();
 >
   <main id="main" data-ground="dark">
     <div class="container page-end">
-      <div class="spread spread--flip">
+      {/* data-article-content: this block is what opens in the card when the
+          person is chosen from a list (press-reader.js). */}
+      <div class="spread spread--flip" data-article-content>
         {person.portrait && (
           <div class="spread__media rv">
             <Figure image={person.portrait} sizes={spreadSizes(person.portrait)} priority />

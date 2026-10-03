@@ -3,6 +3,7 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {client,mode} from './env.mjs';
 import {resolveRedirects} from '../server/redirects.js';
+import {PROFILES} from '../server/features.js';
 const dist = fileURLToPath(new URL('../dist/',import.meta.url));
 const rows = readFileSync(new URL('../public/_redirects',import.meta.url),'utf8').split('\n').filter(line => line.trim() && !line.trim().startsWith('#')).map(line => {
   const parts = line.trim().split(/\s+/);
@@ -35,6 +36,13 @@ for (const item of publications) {
   for (const old of new Set([item._id.replace(/^drafts\./,''),...(item.previousSlugs || [])])) {
     if (old !== item.slug) rows.push({from:`/press/${encodeURIComponent(old)}/`,to,permanent:true});
   }
+}
+/* Profiles switched off (server/features.js): a person page published while
+   they were on goes to the People page instead of a 404. Temporary, because
+   switching them back on brings the page back. */
+if (!PROFILES) {
+  const people = await client.fetch('*[_type == "person" && defined(slug.current)]{"slug":slug.current}');
+  for (const person of people) rows.push({from:`/people/${person.slug}/`,to:'/people/',permanent:false});
 }
 const resolved = resolveRedirects(rows,pages);
 writeFileSync(join(dist,'_redirects'),resolved.map(r=>`${r.from}  ${r.to}  ${r.permanent ? 301 : 302}`).join('\n')+'\n');

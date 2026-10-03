@@ -4,7 +4,7 @@ import Base from "../../layouts/Base.astro";
 import Figure from "../../components/Figure.astro";
 import { spreadSizes } from "../../lib/media";
 import PersonCard from "../../components/PersonCard.astro";
-import { getPeople, getHome, getSettings } from "../../lib/content";
+import { getPeople, getHome, getSettings, getProfiles } from "../../lib/content";
 import Onward from "../../components/Onward.astro";
 import Statement from "../../components/Statement.astro";
 
@@ -23,6 +23,7 @@ const teamImage = home.teamImage;
   description="The people behind btl architects."
   current="people"
   share={teamImage}
+  articleReader={(await getProfiles()).length > 0}
 >
   <main id="main" data-ground="dark">
     <div class="container page-end">

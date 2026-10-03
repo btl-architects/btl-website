@@ -3,6 +3,7 @@ import {after, before, test} from "node:test";
 import {createServer} from "vite";
 import {getViteConfig} from "astro/config";
 import {experimental_AstroContainer} from "astro/container";
+import {PROFILES} from "../server/features.js";
 
 let server, container, Credit, PersonCard, PressArticle, Statement, Paragraphs, press, media;
 before(async () => {
@@ -100,7 +101,11 @@ test("the shared People card includes Alumni portraits and omits a blank role", 
   assert.match(html, /Former colleague/);
   assert.doesNotMatch(html, /trow__r|<a\b/);
   const profile = await container.renderToString(PersonCard, {props: {person: {...person, role: "Architect", slug: "former-colleague", bio: "Biography"}}});
-  assert.match(profile, /href="\/people\/former-colleague\/"/);
+  // A bio links the card, as a card over the page, only while profiles are on.
+  if (PROFILES) {
+    assert.match(profile, /href="\/people\/former-colleague\/"/);
+    assert.match(profile, /data-article/);
+  } else assert.doesNotMatch(profile, /<a\b|href=/);
   assert.match(profile, /Architect/);
 });
 

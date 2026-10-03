@@ -426,3 +426,12 @@ layouts keep their hover treatment. Individual project pages place the same
 project description below the photographs on phones, so longer text stays readable.
 On phones, project cards are swipeable film strips that open in place when
 tapped; new projects get this automatically.
+
+### Person profiles (switched off)
+
+A person with a bio in Sanity can have a profile that opens as a card over the
+People page, the same way Press features do. The practice has not asked for it,
+so it is switched off in `web/server/features.js` (`PROFILES = false`): names
+on People are not links, and no person pages are published. Bios you enter are
+kept. Switching it on is a one-line change and a rebuild.
+

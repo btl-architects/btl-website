@@ -15,7 +15,7 @@ One small vocabulary, used the same way everywhere. A phone has no hover, so eac
 | Previous/next project | None; the PREVIOUS / NEXT label already says it | Project pages |
 | Footer, social, menu, project categories | None; their place on the page says it | Footer row, social rail, menu |
 
-Linked people (when a biography is published) keep the green line under their name, which also draws in.
+Person profiles are switched off (`web/server/features.js`); when on, a person opens as the same card as Press, and their portrait, not an underline, is the cue.
 
 ## Project cards on a phone
 
