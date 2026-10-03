@@ -21,7 +21,6 @@ test.describe('phone interactions',()=>{
         const box=await control.boundingBox();
         if(box)expect(box.height).toBeGreaterThanOrEqual(44);
       }
-      if(route==='/'||route==='/press/')await expect(page.locator('a.pc .pc__action').first()).toBeVisible();
       if(route==='/'||route==='/projects/')await expect(page.locator('.pcard__action').first()).toBeVisible();
     }
     await page.goto('/');
@@ -29,20 +28,53 @@ test.describe('phone interactions',()=>{
     await expect(page.locator('.footer__mobile-social a')).toHaveCount(3);
   });
 
-  test('the resting green line marks only destinations the words alone announce',async({page})=>{
+  test('the resting green line marks only onward links and linked people',async({page})=>{
     const line=(el:Element,pseudo='::after')=>{
       const s=getComputedStyle(el,pseudo);
       return s.content!=='none'&&s.clipPath==='inset(0px)'&&s.transform==='none'||getComputedStyle(el).textDecorationLine.includes('underline');
     };
+    const quiet=async(selectors:string[])=>{
+      for(const selector of selectors) for(const el of await page.locator(selector).all()) expect(await el.evaluate(line),selector).toBe(false);
+    };
     await page.goto('/');
     // Arrows, contact details, footer and social links already read as tappable.
-    for(const selector of ['.pc__action','.pcard__action','.pc__action span','.pcard__action span','.footer a','a[href^="mailto:"]','a[href^="tel:"]','.landing .srail__i'])
-      for(const el of await page.locator(selector).all()) expect(await el.evaluate(line),selector).toBe(false);
+    await quiet(['.pcard__action','.pcard__action span','.footer a','a[href^="mailto:"]','a[href^="tel:"]','.landing .srail__i']);
     expect(await page.locator('.onward__t').first().evaluate(line)).toBe(true);
     await page.goto('/projects/nelly-house/');
-    expect(await page.locator('.pager__n').first().evaluate(line)).toBe(true);
+    await quiet(['.pager__n','.pager a']);
     await page.goto('/contact/');
-    expect(await page.locator('a.tl[href="/privacy/"]').first().evaluate(line)).toBe(true);
+    await quiet(['form a','a.tl']);
+    // A link in a sentence carries a raised arrow; contact details a copy mark.
+    expect(await page.locator('form a.tl').evaluate(el=>getComputedStyle(el,'::after').content)).toMatch(/↗/);
+    await expect(page.locator('.copy-mark')).toHaveCount(2);
+    for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
+    await page.goto('/people/');
+    const linked=page.locator('a.trow__link .trow__n').first();
+    if(await linked.count()) {
+      await linked.scrollIntoViewIfNeeded();
+      expect(await linked.evaluate(line)).toBe(true);
+    }
+  });
+
+  test('the copy mark copies the studio details without dialling',async({page,context,browserName})=>{
+    test.skip(browserName!=='chromium','Clipboard permission is granted through Chromium.');
+    await context.grantPermissions(['clipboard-read','clipboard-write']);
+    await page.goto('/contact/');
+    await page.getByRole('button',{name:'Copy phone number'}).tap();
+    await expect(page.locator('.tip')).toHaveText('Copied');
+    expect(await page.evaluate(()=>navigator.clipboard.readText())).toMatch(/^\+91/);
+    await expect(page).toHaveURL(/\/contact\/$/);
+    const box=(await page.getByRole('button',{name:'Copy phone number'}).boundingBox())!;
+    expect(box.width).toBeLessThan(44); // the visible mark; its touch area is the ::before square
+  });
+
+  test('an open card on Home keeps its words on the page column',async({page})=>{
+    await page.goto('/');
+    const edge=(await page.locator('.home-sec__k').first().boundingBox())!.x;
+    await page.locator('[data-project]').first().tap();
+    const note=page.locator('.pcard[data-open="true"] > .rail__note');
+    await expect(note.locator('.rail__title')).toBeVisible();
+    expect((await note.locator('.rail__title').boundingBox())!.x).toBeCloseTo(edge,0);
   });
 
   test('Press opens with one tap and closes without losing the page',async({page})=>{
@@ -74,7 +106,6 @@ test.describe('phone interactions',()=>{
       await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
     }
     const photo=page.locator(route==='/studio/'?'[data-rail] .rail__f':'.pcard[data-open="true"] .rail__f').first();
-    await expect(photo.locator('.photo-cue')).toBeVisible();
     await photo.tap();
     const viewer=page.getByRole('dialog',{name:'Photograph viewer'});
     await expect(viewer).toBeVisible();
@@ -172,13 +203,12 @@ test('mouse layouts keep the original hover treatment at desktop and narrow widt
   for(const width of [390,1440]) {
     await page.setViewportSize({width,height:900});
     await page.goto('/');
-    await expect(page.locator('.pc__action').first()).toBeHidden();
     await expect(page.locator('.pcard__action').first()).toBeHidden();
     await expect(page.locator('.footer__mobile-social')).toBeHidden();
+    await expect(page.locator('.copy-mark').first()).toBeHidden();
     expect(await page.locator('.onward__t').first().evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
     await page.goto('/projects/nelly-house/');
     await expect(page.locator('.project-note--touch')).toBeHidden();
     await expect(page.locator('[data-rail] > .rail__note')).toBeVisible();
-    await expect(page.locator('.photo-cue').first()).toBeHidden();
   }
 });

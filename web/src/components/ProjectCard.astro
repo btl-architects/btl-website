@@ -17,7 +17,6 @@
  * markup and behaviour — renaming one silently breaks the expansion.
  */
 import Figure from "./Figure.astro";
-import PhotoCue from "./PhotoCue.astro";
 import {peekSizes} from "../lib/media";
 import RailNav from "./RailNav.astro";
 import type { Project } from "../lib/content";
@@ -50,7 +49,6 @@ const peek = project.images.slice(0, 6);
     {peek.map((image, k) => (
       <figure class="rail__f pcard__peek" role="button" tabindex="-1" aria-label={`View photograph ${k + 1}: ${image.alt}`}>
         <Figure image={image} sizes={peekSizes(image)} priority={priority && k === 0} />
-        <PhotoCue />
       </figure>
     ))}
   </div>

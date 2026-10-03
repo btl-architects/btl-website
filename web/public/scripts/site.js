@@ -549,6 +549,17 @@
     });
   });
 
+  /* The copy mark beside the studio's address and number (ContactLinks):
+     the phone's way to take them away, since a tap on the words writes or
+     dials. Same copy path and the same tooltip as the desktop click. */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-copy]");
+    if (!b) return;
+    copy(b.getAttribute("data-copy")).then(function () { say(b, "Copied", 1400); }, function () {
+      say(b, "Press and hold the words to copy", 2600);
+    });
+  });
+
   var pindex = document.querySelector("[data-pindex]");
   if (pindex) {
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));

@@ -55,7 +55,4 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
     {image && <Figure image={image} sizes="(min-width: 48rem) 26rem, 45vw" fit={custom ? "contain" : "cover"} />}
   </span>
   <span class="pc__m" style={captionOffset ? `--caption-offset:${captionOffset.toFixed(4)}%;` : undefined}>{meta}</span>
-  {live && <span class="touch-cue pc__action" style={captionOffset ? `--caption-offset:${captionOffset.toFixed(4)}%;` : undefined} aria-hidden="true">
-    <span>{reader ? "Read feature" : "Open feature"}</span><span>{reader ? "→" : "↗"}</span>
-  </span>}
 </Tag>

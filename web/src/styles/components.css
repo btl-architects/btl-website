@@ -2317,17 +2317,46 @@ body[data-preview] .header { top: var(--preview-h); }
 
 
 /* Touch has no hover preview, so the green line cannot appear on approach.
-   On a phone it stays at rest only where the words alone are the way on:
-   onward links, previous/next project, linked people and links inside a
-   sentence. Everything else already says it can be tapped — an arrow, a
-   photograph, the footer's place on the page, the format of an email address
-   or phone number, the menu itself — and lining those as well turned every
-   screen green. Standalone controls still get finger room; inline prose links
-   keep their text flow. Pointer layouts and their hover behaviour are unchanged. */
-.touch-cue, .photo-cue, .footer__mobile-social, .project-note--touch { display: none; }
+   On a phone it rests only under the onward link that ends a section or page
+   ("See every project", "Send an enquiry") and under linked people's names —
+   the places where a line of words is the only way on. Everything else already
+   says it can be tapped, or is read rather than travelled: an arrow, a
+   photograph, a previous/next title under its own label, a link inside a
+   sentence (set in the heavier weight), the footer, an email address or phone
+   number, the menu. Lining all of those turned every screen green. The line
+   draws in as its section arrives, the same entrance the text makes.
+   Standalone controls still get finger room; inline prose links keep their
+   text flow. Pointer layouts and their hover behaviour are unchanged. */
+.touch-cue, .copy-mark, .footer__mobile-social, .project-note--touch { display: none; }
+.contact-links__i { display: block; }
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
-  .onward__t::after, a.ul::after,
-  a.tl:not(.footer a, [href^="mailto:"], [href^="tel:"])::after { clip-path: inset(0); }
+  .onward__t::after { clip-path: inset(0); }
+  /* A link inside a sentence, or standing alone in one, carries a small
+     raised ↗ after the words instead of a line: the mark readers already know
+     from the web as "this is a link", lifted so it reads as a mark on the
+     words, not as a word. It is the one link mark in running text, wherever
+     the link goes. */
+  a.tl:not(.footer a, [href^="mailto:"], [href^="tel:"])::after {
+    content: "↗"; content: "↗" / "";
+    position: static; display: inline-block; height: auto;
+    margin-left: .1em; font-size: .7em; font-weight: 400; line-height: 1; vertical-align: .5em;
+    color: currentColor; background: none; clip-path: none;
+  }
+  /* The copy mark (ContactLinks). Small and raised like the arrow, in the
+     quiet tone; it hangs past the words, taking no width, so a centred block
+     stays centred. The finger room is an invisible 44px square around it. */
+  .copy-mark {
+    position: relative; display: inline-grid; place-items: center;
+    width: 1.5rem; height: 1.5rem; margin: 0 -1.5rem 0 0; padding: 0;
+    vertical-align: .2em; color: var(--text-tertiary);
+    background: none; border: 0; cursor: pointer;
+  }
+  .copy-mark::before { content: ""; position: absolute; inset: -.625rem; }
+  .copy-mark svg { width: .8rem; height: .8rem; }
+  .copy-mark:active { color: var(--text-primary); }
+  a.trow__link .trow__n {
+    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .35em;
+  }
   .onward { min-height: 2.75rem; padding-bottom: var(--s-3); }
   .footer__links a, a.tl[href^="mailto:"], a.tl[href^="tel:"] {
     display: inline-flex; align-items: center; min-height: 2.75rem;
@@ -2338,30 +2367,19 @@ body[data-preview] .header { top: var(--preview-h); }
   .nav__link { display: inline-flex; align-items: center; min-height: 2.75rem; }
   .chips { gap: var(--s-3) var(--s-5); }
   .chips .chip { display: inline-flex; align-items: center; min-height: 2.75rem; }
-  .pager__n, a.trow__link .trow__n {
-    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .35em;
-  }
   .touch-cue {
     display: flex; align-items: center; gap: var(--s-2);
     font-size: var(--type-meta); font-weight: 400; letter-spacing: var(--track-meta);
     text-transform: uppercase;
   }
   .pcard__action { grid-row: 3; margin-top: var(--s-3); color: var(--on-media); text-shadow: var(--shadow-on-image); }
-  .pc__action {
-    justify-content: center; margin-top: var(--s-3); color: var(--text-secondary);
-    margin-left: max(0%, var(--caption-offset, 0%));
-    margin-right: max(0%, calc(-1 * var(--caption-offset, 0%)));
-  }
-  .rail__f[role="button"] { position: relative; }
-  [data-rail] .photo-cue, .pcard[data-open="true"] .photo-cue {
-    display: grid; place-items: center; position: absolute;
-    top: var(--s-3); left: var(--s-3); padding: var(--s-2);
-    color: var(--on-media-secondary); background: var(--overlay-press); pointer-events: none;
-  }
-  .photo-cue svg { width: 1rem; height: 1rem; }
   .lb__x { min-height: 2.75rem; min-width: 2.75rem; }
   .lb:not([data-zoomed="true"]) .lb__step { opacity: 1; }
-  .landing .srail__i { min-block-size: 2.75rem; display: inline-flex; align-items: center; }
+  /* The rail's words stay against the edge, where the mouse layout sets them;
+     a 44px box centred them 12px inwards. The finger room is an invisible
+     extension on the screen-left side instead (block-start, after the 180°
+     turn), which moves nothing and adds no overflow at the right edge. */
+  .landing .srail__i::before { content: ""; position: absolute; inset-inline: 0; inset-block: -1.5rem 0; }
   .f input { min-height: 2.75rem; }
   .pj [data-rail] > .rail__note { display: none; }
   .project-note--touch { display: block; margin-top: var(--s-5); }
@@ -2370,4 +2388,14 @@ body[data-preview] .header { top: var(--preview-h); }
   .project-note--touch .rail__text { max-width: none; }
   .pc[href]:active .pc__img, .pcard:not([data-open="true"]):active .pcard__peek { opacity: .85; }
   a.tl:active, a.ul:active, .onward:active, .touch-cue:active { color: var(--text-primary); }
+}
+/* Below-fold sections enter with .rv; their line waits for the words, then
+   draws left to right. Content already on screen at load is revealed before
+   .js is set, so its line is simply there. Reduced motion reveals everything
+   at once and the line with it. */
+@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) and (prefers-reduced-motion: no-preference) {
+  :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
+  :where(.js) .rv:not(.in) a.trow__link .trow__n { text-decoration-color: transparent; }
+  .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
+  .rv a.trow__link .trow__n { transition: text-decoration-color var(--dur-slow) var(--ease) 240ms; }
 }

@@ -1,0 +1,28 @@
+---
+/* The studio's email address and phone number, with a copy mark beside each.
+ *
+ * With a mouse, clicking either copies it (site.js), so the mark stays hidden.
+ * On a phone a tap writes or dials, which is right, but there is then no way
+ * to take the address or number away to use elsewhere. The mark is that way,
+ * and it also says these words can be tapped. One component, so Home and
+ * Contact cannot drift apart. */
+import type { Settings } from "../lib/content";
+interface Props { contact: Settings["contact"] }
+const { contact: c } = Astro.props;
+const items = [
+  { href: `mailto:${c.email}`, text: c.email, label: "Copy email address" },
+  { href: `tel:${c.phoneHref}`, text: c.phone, label: "Copy phone number" },
+];
+---
+<p class="contact-links">
+  {items.map((item) => (
+    <span class="contact-links__i">
+      <a class="tl" href={item.href}>{item.text}</a>
+      <button class="copy-mark" type="button" data-copy={item.text} aria-label={item.label}>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true">
+          <rect x="5.5" y="5.5" width="8" height="8" rx="1" /><path d="M10.5 3.5v-1a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h1" />
+        </svg>
+      </button>
+    </span>
+  ))}
+</p>

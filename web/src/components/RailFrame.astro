@@ -12,7 +12,6 @@
  * other frame should, since that name may appear once per document.
  */
 import Figure from "./Figure.astro";
-import PhotoCue from "./PhotoCue.astro";
 import { railSizes, type SiteImage } from "../lib/media";
 
 interface Props { image: SiteImage; index: number; priority?: boolean; style?: string }
@@ -21,6 +20,5 @@ const { image, index, priority = false, style } = Astro.props;
 
 <figure class="rail__f" role="button" tabindex="0" aria-label={`View photograph ${index + 1}: ${image.alt}`} style={style}>
   <Figure image={image} sizes={railSizes(image)} priority={priority} />
-  <PhotoCue />
   {image.caption && <figcaption>{image.caption}</figcaption>}
 </figure>

@@ -120,8 +120,12 @@ main[data-under-header] { padding-top: var(--preview-offset, 0px); }
 /* Only inside the released rail. On the projects index .pindex is already a
    content column, so a column nested in it indents twice — 127px against the
    page's 63. On the home page that rail is full-bleed, and then the nav is the
-   only thing that can put itself on the column. */
-.home-sec--release .pcard__nav {
+   only thing that can put itself on the column. The phone stacks the project's
+   words under the strip as a direct child of the card (on wider screens they
+   sit inside the strip, so this never matches there); without a place here
+   they ran from the screen's edge on Home. */
+.home-sec--release .pcard__nav,
+.home-sec--release .pcard > .rail__note {
   width: 100%;
   max-width: var(--max-width);
   margin-inline: auto;
