@@ -54,7 +54,7 @@ test.describe('photographs are fetched at the size they are drawn',()=>{
        will not settle that redirect inside this test's budget. Same page,
        asked for by the address the site actually publishes. */
     for(const {route} of pages()){await page.goto(route.replace(/\.html$/,''),{waitUntil:'domcontentloaded'});found.push(...(await underResolved(page)).map(s=>`${route} ${s}`));}
-    await page.goto('/projects/',{waitUntil:'domcontentloaded'});await page.locator('[data-project]').first().click();
+    await page.goto('/projects/',{waitUntil:'domcontentloaded'});await page.locator(width<832?'.pcard__peek':'[data-project]').first().click();
     await expect(page.locator('.pcard[data-open="true"] .rail__f:not(.pcard__peek)').first()).toBeAttached();
     found.push(...(await underResolved(page)).map(s=>`open project ${s}`));
     expect(found).toEqual([]);

@@ -21,7 +21,6 @@ test.describe('phone interactions',()=>{
         const box=await control.boundingBox();
         if(box)expect(box.height).toBeGreaterThanOrEqual(44);
       }
-      if(route==='/'||route==='/projects/')await expect(page.locator('.pcard__action').first()).toBeVisible();
     }
     await page.goto('/');
     // The social rail stays with the reader on Home, inside the right margin.
@@ -49,7 +48,7 @@ test.describe('phone interactions',()=>{
     };
     await page.goto('/');
     // Arrows, contact details, footer and social links already read as tappable.
-    await quiet(['.pcard__action','.pcard__action span','.footer a','a[href^="mailto:"]','a[href^="tel:"]','.landing .srail__i']);
+    await quiet(['.footer a','a[href^="mailto:"]','a[href^="tel:"]','.landing .srail__i']);
     expect(await page.locator('.onward__t').first().evaluate(line)).toBe(true);
     await page.goto('/projects/nelly-house/');
     await quiet(['.pager__n','.pager a']);
@@ -82,7 +81,7 @@ test.describe('phone interactions',()=>{
   test('an open card on Home keeps its words on the page column',async({page})=>{
     await page.goto('/');
     const edge=(await page.locator('.home-sec__k').first().boundingBox())!.x;
-    await page.locator('[data-project]').first().tap();
+    await page.locator('.pcard__peek').first().tap();
     const note=page.locator('.pcard[data-open="true"] > .rail__note');
     await expect(note.locator('.rail__title')).toBeVisible();
     expect((await note.locator('.rail__title').boundingBox())!.x).toBeCloseTo(edge,0);
@@ -111,7 +110,7 @@ test.describe('phone interactions',()=>{
     await page.goto(route);
     if(route==='/projects/') {
       const card=page.locator('[data-project]').first();
-      await card.tap();
+      await page.locator('.pcard__peek').first().tap();
       await expect(card).toHaveAttribute('aria-expanded','true');
       await expect(page.locator('.pcard[data-open="true"] .rail__f').last()).toBeAttached();
       await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
@@ -126,9 +125,10 @@ test.describe('phone interactions',()=>{
       expect(box.x).toBeGreaterThanOrEqual(0);expect(box.y).toBeGreaterThanOrEqual(0);
       expect(box.x+box.width).toBeLessThanOrEqual(390);expect(box.y+box.height).toBeLessThanOrEqual(844);
     }
-    // A touch viewer cannot depend on mouse movement to reveal navigation.
+    // A touch viewer cannot depend on mouse movement or an idle timer for its arrows.
     await viewer.evaluate(el=>{el.setAttribute('data-idle','true');(document.activeElement as HTMLElement)?.blur();});
     await expect(viewer.locator('[data-next]')).toHaveCSS('opacity','1');
+    await expect(viewer).toHaveAttribute('data-chrome','on');
     const count=await viewer.locator('[data-count]').textContent();
     await viewer.getByRole('button',{name:'Next photograph'}).tap();
     await expect(viewer.locator('[data-count]')).not.toHaveText(count!);
@@ -152,7 +152,7 @@ test.describe('phone interactions',()=>{
       async function gallery() {
         await page.goto(route);
         if(route==='/projects/') {
-          await page.locator('[data-project]').first().tap();
+          await page.locator('.pcard__peek').first().tap();
           await expect(page.locator('.pcard[data-open="true"] .rail__f').last()).toBeAttached();
         }
         const rail=page.locator(route==='/studio/'?'[data-rail]':'.pcard[data-open="true"] [data-strip]').first();
@@ -173,6 +173,88 @@ test.describe('phone interactions',()=>{
       expect(await rail.evaluate(el=>el.scrollLeft)).toBeCloseTo(left,0);
       await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
     }
+    await input.detach();
+  });
+
+  test('a closed strip swipes, and a tap opens the card around the chosen frame',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium.');
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    const input=await page.context().newCDPSession(page);
+    await page.goto('/projects/');
+    const card=page.locator('.pcard').first(), strip=card.locator('[data-strip]');
+    const box=(await strip.boundingBox())!;
+    const y=box.y+box.height/2;
+    await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:330,y}]});
+    for(let i=1;i<=8;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:330-260*i/8,y}]});
+    await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(120);
+    await expect(card).not.toHaveAttribute('data-open','true');
+    await expect(card).toHaveAttribute('data-strip-moved','');
+    // Let the fling come to rest, or the tap lands on whichever frame is passing.
+    let last=-1;
+    await expect.poll(async()=>{const now=await strip.evaluate(el=>el.scrollLeft);const still=now===last;last=now;return still;},{intervals:[150]}).toBe(true);
+    // The frame nearest the column is the one tapped; the card opens around it.
+    const chosen=await strip.evaluate(el=>{
+      const start=el.getBoundingClientRect().left+parseFloat(getComputedStyle(el).scrollPaddingLeft);
+      const frames=[...el.querySelectorAll('.pcard__peek')];
+      return frames.findIndex(f=>f.getBoundingClientRect().right>start+40);
+    });
+    const frame=strip.locator('.pcard__peek').nth(chosen);
+    const fb=(await frame.boundingBox())!;
+    await page.touchscreen.tap(Math.max(fb.x,30)+20,fb.y+fb.height/2);
+    await expect(card).toHaveAttribute('data-open','true');
+    await page.waitForTimeout(900);
+    const pad=await strip.evaluate(el=>el.getBoundingClientRect().left+parseFloat(getComputedStyle(el).scrollPaddingLeft));
+    expect(Math.abs((await frame.boundingBox())!.x-pad)).toBeLessThan(4);
+    await expect(card.locator('[data-pos]')).toHaveText(new RegExp('^0'+(chosen+1)+' / '));
+    await input.detach();
+  });
+
+  test('the viewer answers fingers the way a phone photo app does',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium.');
+    const input=await page.context().newCDPSession(page);
+    const touch=(type:'touchStart'|'touchMove'|'touchEnd',points:{x:number,y:number}[])=>input.send('Input.dispatchTouchEvent',{type,touchPoints:points});
+    async function drag(x:number,y:number,dx:number,dy:number,steps=8) {
+      await touch('touchStart',[{x,y}]);
+      for(let i=1;i<=steps;i++)await touch('touchMove',[{x:x+dx*i/steps,y:y+dy*i/steps}]);
+      await touch('touchEnd',[]);
+    }
+    async function tap(x:number,y:number) { await touch('touchStart',[{x,y}]); await touch('touchEnd',[]); }
+    await page.goto('/studio/');
+    await page.locator('[data-rail] .rail__f').first().tap();
+    const viewer=page.getByRole('dialog',{name:'Photograph viewer'}), count=viewer.locator('[data-count]');
+    await expect(viewer).toBeVisible();
+    await expect(count).toHaveText(/^1 \//);
+    // A short, slow drag springs back; a long one turns to the next photograph.
+    await drag(200,420,-40,0);
+    await expect(count).toHaveText(/^1 \//);
+    await drag(320,420,-220,0);
+    await expect(count).toHaveText(/^2 \//);
+    await drag(80,420,220,0);
+    await expect(count).toHaveText(/^1 \//);
+    // One tap hides and shows the chrome; it neither zooms nor closes.
+    await tap(195,420); await page.waitForTimeout(450);
+    await expect(viewer).toHaveAttribute('data-chrome','off');
+    await expect(viewer).toHaveAttribute('data-zoomed','false');
+    await tap(195,420); await page.waitForTimeout(450);
+    await expect(viewer).toHaveAttribute('data-chrome','on');
+    // A tap on the dark above the photograph does not close the viewer either.
+    await tap(195,140); await page.waitForTimeout(450);
+    await expect(viewer).toBeVisible();
+    await tap(195,140); await page.waitForTimeout(450);
+    // Double-tap zooms to the spot, and again comes back out.
+    await tap(195,420); await page.waitForTimeout(60); await tap(195,420);
+    await expect(viewer).toHaveAttribute('data-zoomed','true');
+    // Zoomed, a drag pans the photograph rather than turning the page.
+    await drag(195,420,-120,0);
+    await expect(count).toHaveText(/^1 \//);
+    await tap(195,420); await page.waitForTimeout(60); await tap(195,420);
+    await expect(viewer).toHaveAttribute('data-zoomed','false');
+    // Pulling down a little springs back; pulling down far closes.
+    await drag(195,400,0,60);
+    await expect(viewer).toBeVisible();
+    await drag(195,380,0,300);
+    await expect(viewer).toBeHidden();
     await input.detach();
   });
 

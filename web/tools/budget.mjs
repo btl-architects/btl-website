@@ -177,6 +177,8 @@ const FULL_BLEED = new Set([
   ".preview-flag", // pinned to the window, not to the page
   ".lb__bar",      // lightbox chrome sits over the viewport
   ".lb__cap",
+  ".pcard__strip", // a phone's project strip reaches out of the column to run edge to edge
+  ".home-sec--release .pcard__t", // on Home's released cards the name insets to the column
   ".press-reader",           // modal panel is placed against the viewport
   ".press-reader__bar",      // modal chrome has its own internal gutter
   ".press-reader__content",  // independently scrolling modal content

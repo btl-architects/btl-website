@@ -666,26 +666,45 @@ html:has(.menu[data-open="true"]) .header {
      so half the cards scrolling the other way is just disorienting. The
      caption keeps alternating — that costs nothing and still varies the page. */
 
-  /* the trailing edge fades, so a clipped photograph reads as continuing
-     rather than as one that simply ends */
-  .pcard[data-open="true"] .pcard__strip {
-    -webkit-mask-image: linear-gradient(to right, #000 88%, rgba(0,0,0,.15));
-    mask-image: linear-gradient(to right, #000 88%, rgba(0,0,0,.15));
-  }
-  .pcard__t { padding: var(--s-7) var(--s-4) var(--s-4); }
-  .pcard__strip { gap: var(--s-2); }
-
-  /* The card grows by its STRIP, and the note stacks underneath in normal
-     flow, so the card takes whatever height the words need. */
+  /* A phone gets a film strip.
+   *
+   * At poster height the first photograph alone filled the phone, so a card
+   * was one picture, and opening it only made that picture a little taller —
+   * the desktop's strip of frames and its growth were both lost. Here the
+   * strip is short enough for two or three frames to sit side by side, runs
+   * edge to edge, and can be swiped before
+   * it is opened: a touch screen does not need permission to browse. A tap
+   * opens the card in place around the frame that was tapped (site.js), and
+   * every frame grows by half again — the desktop's gesture, at a size a
+   * phone can take without lurching. The name rides on the first frame, as on desktop. */
   .pcard, .pcard[data-open="true"] { height: auto; }
   .pcard__strip {
-    height: clamp(13rem, 34vh, 20rem);
+    height: clamp(10rem, 22vh, 12rem);
     transition: height var(--dur-slow) var(--ease);
+    overflow-x: auto; overflow-y: hidden;
   }
-  .pcard[data-open="true"] .pcard__strip { height: clamp(17rem, 48vh, 26rem); }
-  .pcard > .rail__note {
-    display: block; padding: var(--s-5) 0 var(--s-2);
+  /* Open, a landscape frame runs just past the phone's width: big enough to
+     be the project now, not so big that the card lurches to fill the screen. */
+  .pcard[data-open="true"] .pcard__strip { height: clamp(15rem, 33vh, 17.5rem); }
+  /* The strip runs edge to edge — photographs from the screen's first pixel to
+     its last, no dark margin at the start — while the name on it keeps to the
+     page column. On the projects page the card sits inside the column, so the
+     strip reaches back out of it; on Home the cards are already released. */
+  .pcard__strip { margin-inline: calc(-1 * var(--page-margin)); }
+  .home-sec--release .pcard__strip { margin-inline: 0; }
+  .pcard__t {
+    padding: var(--s-6) var(--s-4) var(--s-3) 0;
+    pointer-events: none;   /* a swipe that starts on the name still moves the strip */
   }
+  .home-sec--release .pcard__t { padding-left: var(--page-margin); }
+  .pcard__name { font-size: 1.0625rem; }
+  /* The name belongs to the first frame; once the strip moves on it steps
+     aside rather than sliding over other photographs. */
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; }
+
+  /* An open card's words stack underneath in normal flow, so the card takes
+     whatever height they need. */
+  .pcard > .rail__note { display: block; padding: var(--s-5) 0 var(--s-2); }
   .pcard > .rail__note .rail__text { max-width: none; }
 }
 
@@ -2119,7 +2138,6 @@ body[data-preview] .header { top: var(--preview-h); }
 .lb {
   position: fixed; inset: 0; z-index: var(--z-viewer);
   display: grid; place-items: center;
-  background: var(--overlay);
   opacity: 0;
   visibility: hidden;
   /* visibility is stepped, not eased, and the delay carries the direction:
@@ -2138,6 +2156,14 @@ body[data-preview] .header { top: var(--preview-h); }
   visibility: visible;
   transition: opacity var(--dur-base) var(--ease),
               visibility 0s linear 0s;
+}
+
+/* The dark is its own layer so a finger pulling the photograph down can thin
+   it without fading the photograph with it (site.js, --lb-shade). */
+.lb::before {
+  content: ""; position: absolute; inset: 0;
+  background: var(--overlay);
+  opacity: var(--lb-shade, 1);
 }
 
 /* The surface that receives the gestures. touch-action none because the
@@ -2185,7 +2211,7 @@ body[data-preview] .header { top: var(--preview-h); }
    selectors, so it never won, and the settle ran for people who had asked
    for no motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .lb__img[data-settling="true"]   { transition: transform var(--dur-base) var(--ease); }
+  .lb__img[data-settling="true"]   { transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease); }
   .lb__img[data-settling="follow"] { transition: transform var(--dur-fast) var(--ease); }
 }
 
@@ -2298,7 +2324,7 @@ body[data-preview] .header { top: var(--preview-h); }
 .privacy { max-width:48rem; }
 .privacy h2 { margin-top:var(--s-7); }
 .privacy p { margin-top:var(--s-4); color:var(--text-secondary); }
-.lb:focus-within .lb__step, .lb:focus-within .lb__bar { opacity:1; }
+.lb:has(:focus-visible) .lb__step, .lb:has(:focus-visible) .lb__bar { opacity:1; }
 [data-enquiry-status]:empty { display:none; }
 
 .pcard[data-open="true"] .pcard__nav:not([hidden]) { display:flex; }
@@ -2338,7 +2364,7 @@ body[data-preview] .header { top: var(--preview-h); }
    draws in as its section arrives, the same entrance the text makes.
    Standalone controls still get finger room; inline prose links keep their
    text flow. Pointer layouts and their hover behaviour are unchanged. */
-.touch-cue, .copy-mark, .project-note--touch { display: none; }
+.copy-mark, .project-note--touch { display: none; }
 .contact-links__i { display: block; }
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
   .onward__t::after { clip-path: inset(0); }
@@ -2377,22 +2403,20 @@ body[data-preview] .header { top: var(--preview-h); }
   .nav__link { display: inline-flex; align-items: center; min-height: 2.75rem; }
   .chips { gap: var(--s-3) var(--s-5); }
   .chips .chip { display: inline-flex; align-items: center; min-height: 2.75rem; }
-  .touch-cue {
-    display: flex; align-items: center; gap: var(--s-2);
-    font-size: var(--type-meta); font-weight: 400; letter-spacing: var(--track-meta);
-    text-transform: uppercase;
-  }
-  .pcard__action { grid-row: 3; margin-top: var(--s-3); color: var(--on-media); text-shadow: var(--shadow-on-image); }
   .lb__x { min-height: 2.75rem; min-width: 2.75rem; }
-  .lb:not([data-zoomed="true"]) .lb__step { opacity: 1; }
+  /* A finger has no hover to wake the arrows, and no idle to hide them: a tap
+     shows or hides all the chrome together (site.js). */
+  .lb[data-chrome="on"]:not([data-zoomed="true"]) .lb__step { opacity: 1; }
+  .lb__bar, .lb__cap { transition: opacity var(--dur-base) var(--ease); }
+  .lb[data-chrome="off"] :is(.lb__bar, .lb__cap, .lb__step) { opacity: 0; pointer-events: none; }
   .f input { min-height: 2.75rem; }
   .pj [data-rail] > .rail__note { display: none; }
   .project-note--touch { display: block; margin-top: var(--s-5); }
   .project-note--touch .rail__note { display: block; }
   .project-note--touch .rail__title { display: none; } /* The page heading already names it. */
   .project-note--touch .rail__text { max-width: none; }
-  .pc[href]:active .pc__img, .pcard:not([data-open="true"]):active .pcard__peek { opacity: .85; }
-  a.tl:active, a.ul:active, .onward:active, .touch-cue:active { color: var(--text-primary); }
+  .pc[href]:active .pc__img { opacity: .85; }
+  a.tl:active, a.ul:active, .onward:active { color: var(--text-primary); }
 }
 /* Below-fold sections enter with .rv; their line waits for the words, then
    draws left to right. Content already on screen at load is revealed before
