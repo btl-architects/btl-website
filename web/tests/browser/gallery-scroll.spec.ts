@@ -38,8 +38,9 @@ for (const route of ['/studio/', '/projects/nelly-house/', '/projects/']) {
     await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeVisible();
   });
 
-  test(`mouse wheel moves photographs and releases the page at the edges on ${route}`, async ({page}) => {
-    await page.emulateMedia({reducedMotion: 'reduce'});
+  test(`vertical wheel scrolls the page without moving photographs on ${route}`, async ({page}) => {
+    await page.setViewportSize({width:1280, height:600});
+    await page.emulateMedia({reducedMotion:'reduce'});
     await page.goto(route);
     if (route === '/projects/') {
       await page.locator('[data-project]').first().press('Enter');
@@ -47,31 +48,39 @@ for (const route of ['/studio/', '/projects/nelly-house/', '/projects/']) {
     }
     const rail = page.locator(route === '/projects/' ? '.pcard[data-open="true"] [data-strip]' : '[data-rail]').first();
     await rail.scrollIntoViewIfNeeded();
-    await rail.evaluate(el => { el.scrollLeft = 0; });
-    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBe(0);
-    const box = (await rail.boundingBox())!;
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    const top = await page.evaluate(() => window.scrollY);
-    await page.mouse.wheel(0, 240);
-    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBeGreaterThan(100);
-    expect(await page.evaluate(() => window.scrollY)).toBe(top);
-    const forward = await rail.evaluate(el => el.scrollLeft);
-    await page.mouse.wheel(0, -120);
-    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBeLessThan(forward);
-
-    // At both ends, vertical wheel input belongs to the page again.
-    for (const end of ['start', 'end']) {
-      const released = await rail.evaluate((el, end) => {
-        el.scrollLeft = end === 'start' ? 0 : el.scrollWidth;
-        const event = new WheelEvent('wheel', {bubbles: true, cancelable: true, deltaY: end === 'start' ? -120 : 120});
-        el.dispatchEvent(event);
-        return !event.defaultPrevented;
-      }, end);
-      expect(released).toBe(true);
+    if (route === '/projects/') {
+      // Browse once to release the opening position correction, just as a
+      // visitor would, before checking wheel input at different positions.
+      await page.locator('.pcard[data-open="true"] [data-gallery-step="1"]').click();
     }
-    await rail.evaluate(el => { el.scrollLeft = el.scrollWidth / 2; });
+    // The old conversion captured vertical input in the middle of the strip.
+    // Page scrolling must also work at either gallery edge.
+    for (const position of ['middle','start','end']) {
+      await rail.scrollIntoViewIfNeeded();
+      await rail.evaluate((el, position) => {
+        const range = el.scrollWidth - el.clientWidth;
+        el.scrollTo({left:position === 'middle' ? range / 2 : position === 'start' ? 0 : range, behavior:'instant'});
+      }, position);
+      const left = await rail.evaluate(el => el.scrollLeft);
+      const box = (await rail.boundingBox())!;
+      const y = Math.min(Math.max(box.y + box.height / 2, 140), 560);
+      await page.mouse.move(box.x + box.width / 2,y);
+      const top = await page.evaluate(() => window.scrollY);
+      // Project photographs begin in the first screen; Studio is farther down.
+      // Start in a direction with room, then reverse to check both directions.
+      const delta = top >= 100 ? -100 : 100;
+      await page.mouse.wheel(0,delta);
+      await expect.poll(async () => ((await page.evaluate(() => window.scrollY)) - top) * Math.sign(delta)).toBeGreaterThan(40);
+      expect(await rail.evaluate(el => el.scrollLeft)).toBeCloseTo(left,0);
+      const movedBox = (await rail.boundingBox())!;
+      await page.mouse.move(movedBox.x + movedBox.width / 2, Math.min(Math.max(movedBox.y + movedBox.height / 2,140),560));
+      const moved = await page.evaluate(() => window.scrollY);
+      await page.mouse.wheel(0,-delta);
+      await expect.poll(async () => ((await page.evaluate(() => window.scrollY)) - moved) * -Math.sign(delta)).toBeGreaterThan(40);
+      expect(await rail.evaluate(el => el.scrollLeft)).toBeCloseTo(left,0);
+    }
     const browserZoom = await rail.evaluate(el => {
-      const event = new WheelEvent('wheel', {bubbles: true, cancelable: true, deltaY: 120, ctrlKey: true});
+      const event = new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:120,ctrlKey:true});
       el.dispatchEvent(event);
       return !event.defaultPrevented;
     });
