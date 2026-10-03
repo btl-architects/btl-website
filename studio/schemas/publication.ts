@@ -12,6 +12,8 @@ export default defineType({
   title: "Press & awards",
   type: "document",
   fields: [
+    defineField({name: 'seo', title: 'Search listing', type: 'seo',
+      description: 'Optional metadata for this feature’s page. Does not change the headline, article or how it opens. Feature previews and embeds remain excluded from search.'}),
     defineField({
       name: "kind",
       type: "string",

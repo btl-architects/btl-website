@@ -15,7 +15,7 @@ const managed = item.openingMode === "reader";
 const share = managed ? item.articleHero ?? project?.hook ?? item.image : item.image ?? (item.useProjectImage ? project?.hook : null);
 ---
 <Base title={`${item.title} — ${item.publication} — btl architects`} description={item.intro || `${item.publication} · ${item.title}`} current="press" share={share} noindex={!managed}
-  article={managed ? articleMetadata(item) : undefined}>
+  seo={item.seo} article={managed ? articleMetadata(item) : undefined}>
   <main id="main" data-ground="dark" class="container page-end">
     <PressArticle item={item} project={project} />
     <Onward href="/press/" kicker="Press">Back to all coverage</Onward>

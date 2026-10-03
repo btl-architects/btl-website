@@ -12,6 +12,8 @@ export default defineType({
   title: "Person",
   type: "document",
   fields: [
+    defineField({name: 'seo', title: 'Search listing', type: 'seo',
+      description: 'Optional metadata for this person’s profile. Does not change their name, designation or biography, or create a profile on its own.'}),
     defineField({ name: "prefix", type: "string", description: "“Ar.”, if they use one." }),
     defineField({ name: "name", type: "string", validation: (r) => r.required() }),
     defineField({
