@@ -992,6 +992,9 @@ html:has(.menu[data-open="true"]) .header {
   display: grid; gap: var(--s-6);
   justify-content: center; text-align: center;
 }
+/* Copy targets keep their own width; centre each detail within Home's
+   centred contact column rather than leaving it on the column's left edge. */
+.home-contact .contact-links__i { margin-inline: auto; }
 @media (min-width: 44rem) {
   .home-contact { grid-template-columns: auto auto; gap: var(--s-9); align-items: start; }
 }
@@ -1861,6 +1864,9 @@ body[data-preview] .header { top: var(--preview-h); }
   z-index: var(--z-rail);
   right: 0;
   top: 50%;
+  /* The small viewport stays steady while a phone's browser bars collapse.
+     A percentage follows the changing fixed viewport and moves the rail. */
+  top: 50svh;
   display: flex;
   /* `row`, not `column`. In vertical writing the inline axis IS the vertical
      one, so a flex row runs down the screen and a flex column runs across it —
@@ -1890,7 +1896,7 @@ body[data-preview] .header { top: var(--preview-h); }
   /* Rotated so the words read bottom-to-top, the way a label is set on a spine.
      The rotation also reverses the running order, so the list is reversed back
      in the markup order below. */
-  transform: translateY(-50%) rotate(180deg);
+  transform: translate3d(0, -50%, 0) rotate(180deg);
   transform-origin: center;
 }
 

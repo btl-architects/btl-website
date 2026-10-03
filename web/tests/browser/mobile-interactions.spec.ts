@@ -7,6 +7,31 @@ test.describe('phone interactions',()=>{
   test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
   test.beforeEach(async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});});
 
+  test('Home contact text is centred and social links stay steady while scrolling on a phone',async({page})=>{
+    await page.goto('/');
+    await page.evaluate(()=>document.fonts.ready);
+    for(const width of [320,390,430]) {
+      await page.setViewportSize({width,height:844});
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+      for(const link of await page.locator('.home-contact .contact-links a').all()) {
+        const box=(await link.boundingBox())!;
+        expect(Math.abs(box.x+box.width/2-width/2)).toBeLessThan(1);
+      }
+      const rail=page.locator('.landing .srail');
+      const resting=(await rail.boundingBox())!;
+      for(const y of [500,1600,800,0]) {
+        await page.evaluate(async offset=>{
+          scrollTo(0,offset);
+          await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+        },y);
+        const moved=(await rail.boundingBox())!;
+        expect(Math.abs(moved.y-resting.y)).toBeLessThan(1);
+        expect(Math.abs(moved.x-resting.x)).toBeLessThan(1);
+        await expect(rail).toBeInViewport();
+      }
+    }
+  });
+
   test('a short enquiry on a phone submits once and shows progress',async({page})=>{
     const messages:string[]=[];
     let finish:()=>void=()=>{};
