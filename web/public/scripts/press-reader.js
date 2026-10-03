@@ -82,17 +82,29 @@
       var t = ev.touches[0], now = performance.now(), dy = t.clientY - pull.y;
       if (Math.hypot(t.clientX - pull.x, dy) > 8) pull.tap = false;
       if (!pull.moving) {
-        if (Math.abs(dy) < 6 || Math.abs(t.clientX - pull.x) > Math.abs(dy)) return;
+        // Decided on the finger's FIRST movement, however small. iOS commits a
+        // touch to native scrolling on its first touchmove and ignores
+        // preventDefault after that — waiting a few pixels to be sure meant a
+        // pull from the article never reached the card, and only the bar
+        // (which does not scroll) could take it down.
+        var dx = t.clientX - pull.x;
+        if (!dy && !dx) return;
         var full = dialog.getAttribute("data-detent") === "full";
         // Raised, the article scrolls: only a downward pull from the bar or
-        // from the article's top moves the card.
-        if (full && !(dy > 0 && (pull.inBar || content.scrollTop <= 0))) { pull.y = t.clientY; return; }
-        pull.moving = true; pull.y = t.clientY; dy = 0;
+        // from an article at its top moves the card. Anything else is the
+        // article's to scroll, for the whole of this touch.
+        if (Math.abs(dx) > Math.abs(dy) || (full && !(pull.inBar || (dy > 0 && content.scrollTop <= 0)))) { pull = null; return; }
+        pull.moving = true;
+        pull.fromTop = full && !pull.inBar;
         dialog.setAttribute("data-pulling", "");
       }
       ev.preventDefault();
       var base = rest(), y = base + dy;
-      if (y < 0) y = y / 3;                       // resistance past fully raised
+      if (y < 0 && pull.fromTop) {
+        // Claimed at the article's top, then the finger turned upward: the
+        // touch is ours now, so it scrolls the article by hand.
+        content.scrollTop = -dy; y = 0;
+      } else if (y < 0) y = y / 3;                // resistance past fully raised
       pull.v = (dy - pull.dy) / Math.max(1, now - pull.t); pull.dy = dy; pull.t = now;
       dialog.style.transform = "translateY(" + y + "px)";
       dialog.style.setProperty("--pull", String(Math.max(0, Math.min(1, (y - peekOffset()) / (dialog.clientHeight * 0.5)))));
@@ -108,12 +120,19 @@
         return;
       }
       dialog.removeAttribute("data-pulling");
+      // A touch claimed on its first movement that barely moved was a tap.
+      if (p.tap && Math.abs(p.dy) < 8) {
+        settle(dialog.getAttribute("data-detent") || "peek");
+        if (ev.type === "touchend" && dialog.getAttribute("data-detent") === "peek" &&
+            !(ev.target.closest && ev.target.closest("a, button"))) { ev.preventDefault(); settle("full"); }
+        return;
+      }
       var flick = performance.now() - p.t < 90 ? p.v : 0, vh = window.innerHeight;
       var full = dialog.getAttribute("data-detent") === "full";
       if (ev.type !== "touchend") { settle(full ? "full" : "peek"); return; }
       if (full) {
-        if (p.dy > vh * 0.45 || flick > 1.2) dismiss();
-        else if (p.dy > vh * 0.1 || flick > 0.4) settle("peek");
+        if (p.dy > vh * 0.3 || flick > 0.9) dismiss();
+        else if (p.dy > vh * 0.08 || flick > 0.4) settle("peek");
         else settle("full");
       } else {
         if (p.dy < -vh * 0.08 || flick < -0.4) settle("full");

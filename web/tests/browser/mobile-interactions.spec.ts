@@ -287,9 +287,11 @@ test.describe('phone interactions',()=>{
     await expect(page).toHaveURL(/\/press\/$/);
     if(browserName!=='chromium') return;
     const input=await page.context().newCDPSession(page);
+    // At a finger's pace (about half a pixel a millisecond): injected moves
+    // are otherwise near-instant, and every pull reads as a flick.
     async function swipe(y:number,dy:number) {
       await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:180,y}]});
-      for(let i=1;i<=10;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:180,y:y+dy*i/10}]});
+      for(let i=1;i<=20;i++){await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:180,y:y+dy*i/20}]});await page.waitForTimeout(16);}
       await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     }
     async function open() { await card.tap(); await expect(reader).toHaveAttribute('data-detent','peek'); await page.waitForTimeout(450); }
