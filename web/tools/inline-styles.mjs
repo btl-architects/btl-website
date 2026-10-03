@@ -36,7 +36,11 @@ const embedded = styled.replace(/<link\b[^>]*>/g, tag =>
 ).replaceAll('/assets/fonts/Satoshi-Latin.woff2', `data:font/woff2;base64,${latinFont}`);
 // Long indexes keep the cached font request rather than spending their HTML
 // budget on an embedded copy. Leave 5 KB of headroom under the 60 KB page cap.
-const inlineFont = gzipSync(embedded).length <= 55 * 1024;
+// A photograph is the project's first paint. Keep its document small so the
+// font can arrive as a separately cached request alongside the photograph.
+// Pages whose first paint is text retain the embedded font.
+const photoFirst = /<link\b[^>]*\brel="preload"[^>]*\bas="image"/.test(styled);
+const inlineFont = !photoFirst && gzipSync(embedded).length <= 55 * 1024;
 const html = inlineFont ? embedded : styled;
 if (inlineFont) embeddedFonts++;
 writeFileSync(page, html);
