@@ -6,7 +6,16 @@ const clip = readFileSync(fileURLToPath(new URL('../fixtures/opening-clip.mp4', 
 async function films(page: import('@playwright/test').Page) {
   await page.emulateMedia({reducedMotion: 'no-preference'});
   for (const source of ['https://cdn.sanity.io/files/**','https://stream.mux.com/**'])
-    await page.route(source, route => route.fulfill({status: 200, contentType: 'video/mp4', body: clip}));
+    await page.route(source, route => {
+      // WebKit seeks with byte-range requests. Model the real video CDN;
+      // returning the entire file with 200 can leave its decoder stuck.
+      const range = route.request().headers().range?.match(/^bytes=(\d+)-(\d*)$/);
+      const headers = {'Accept-Ranges':'bytes'};
+      if (!range) return route.fulfill({status:200,contentType:'video/mp4',headers,body:clip});
+      const start=Number(range[1]),end=Math.min(Number(range[2] || clip.length-1),clip.length-1);
+      if(start> end) return route.fulfill({status:416,headers:{...headers,'Content-Range':`bytes */${clip.length}`},body:''});
+      return route.fulfill({status:206,contentType:'video/mp4',headers:{...headers,'Content-Range':`bytes ${start}-${end}/${clip.length}`},body:clip.subarray(start,end+1)});
+    });
 }
 
 // Build the requested number of clips independently of current client content.
