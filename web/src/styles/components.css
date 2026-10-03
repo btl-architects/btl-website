@@ -2237,9 +2237,9 @@ body[data-preview] .header { top: var(--preview-h); }
   .lb, .lb__img, .lb__step { transition: none; }
 }
 
-/* The photographs are clickable, so they should say so. */
-.rail__f img { cursor: zoom-in; }
-.pcard__peek img { cursor: inherit; }
+/* Gallery photographs open the viewer. Only its stage offers zooming. */
+.rail__f[role="button"] { cursor: pointer; }
+.rail__f img { cursor: inherit; }
 
 /* Every control on this site is reset the same way, in one place.
  *

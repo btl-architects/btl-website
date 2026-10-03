@@ -65,6 +65,7 @@ test('gallery keyboard access, nested Escape, and browser history',async({page})
   const entry=page.locator('[data-project]').first();
   await entry.press('Enter');await expect(entry).toHaveAttribute('aria-expanded','true');
   const figure=page.locator('.pcard[data-open="true"] .rail__f').first();
+  await expect(figure.locator('img')).toHaveCSS('cursor','pointer');
   await figure.press('Enter');await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeVisible();
   const total=await page.locator('.pcard[data-open="true"] .rail__f').count();
   await page.keyboard.press('ArrowRight');await expect(page.locator('.lb__count')).toHaveText(`2 / ${total}`);
@@ -91,14 +92,20 @@ test('a project opened by mouse and closed can be reopened from the keyboard in 
 });
 /* The viewer captures the pointer, so every click arrived addressed to the
    stage and a click on the photograph — under a magnifier cursor — closed it. */
-test('clicking the photograph in the viewer zooms; clicking around it closes',async({page})=>{
-  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/projects/nelly-house/');
-  await page.locator('.rail__f').first().click();
+for (const route of ['/studio/', '/projects/nelly-house/']) {
+test(`gallery uses a pointer; the opened viewer zooms and closes on ${route}`,async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(route);
+  const thumbnail=page.locator('.rail__f').first();
+  await expect(thumbnail).toHaveCSS('cursor','pointer');
+  await expect(thumbnail.locator('img')).toHaveCSS('cursor','pointer');
+  await thumbnail.click();
   const viewer=page.getByRole('dialog',{name:'Photograph viewer'});await expect(viewer).toBeVisible();
   const stage=page.locator('.lb__stage');const photo=page.locator('.lb__img');
+  await expect(stage).toHaveCSS('cursor','zoom-in');
   await expect(photo).toHaveJSProperty('complete',true);
   const box=(await photo.boundingBox())!;
   await photo.click();await expect(stage).toHaveAttribute('data-zoomed','true');await expect(viewer).toBeVisible();
+  await expect(stage).toHaveCSS('cursor','zoom-out');
   /* Zoom must supply enough pixels for the displayed detail. A larger base
      rendition can already meet that need without another network request. */
   const detailPixels = await photo.evaluate(el => {
@@ -118,9 +125,11 @@ test('clicking the photograph in the viewer zooms; clicking around it closes',as
   await expect.poll(async()=>{const b=(await photo.boundingBox())!;return Math.round(b.x+b.width)}).toBeLessThanOrEqual(view.width+1);
   await expect(viewer).toBeVisible();
   await page.mouse.click(box.x+box.width/2,box.y+box.height/2);await expect(stage).toHaveAttribute('data-zoomed','false');await expect(viewer).toBeVisible();
+  await expect(stage).toHaveCSS('cursor','zoom-in');
   await page.mouse.click(box.x+box.width/2,Math.max(2,box.y-20));
   await expect(viewer).toBeHidden();
 });
+}
 /* A project's own page steps its photographs with the same row an open card
    has (RailNav): the arrow moves the strip, and the counter follows it. */
 test('a project page steps its photographs with the shared control row',async({page})=>{

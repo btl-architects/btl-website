@@ -1,0 +1,61 @@
+import {test, expect} from '@playwright/test';
+
+for (const route of ['/studio/', '/projects/nelly-house/', '/projects/']) {
+  test(`mouse wheel moves photographs and releases the page at the edges on ${route}`, async ({page}) => {
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await page.goto(route);
+    if (route === '/projects/') {
+      await page.locator('[data-project]').first().press('Enter');
+      await expect(page.locator('.pcard[data-open="true"] .rail__f').last()).toBeAttached();
+    }
+    const rail = page.locator(route === '/projects/' ? '.pcard[data-open="true"] [data-strip]' : '[data-rail]').first();
+    await rail.scrollIntoViewIfNeeded();
+    await rail.evaluate(el => { el.scrollLeft = 0; });
+    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBe(0);
+    const box = (await rail.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const top = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 240);
+    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBeGreaterThan(100);
+    expect(await page.evaluate(() => window.scrollY)).toBe(top);
+    const forward = await rail.evaluate(el => el.scrollLeft);
+    await page.mouse.wheel(0, -120);
+    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBeLessThan(forward);
+
+    // At both ends, vertical wheel input belongs to the page again.
+    for (const end of ['start', 'end']) {
+      const released = await rail.evaluate((el, end) => {
+        el.scrollLeft = end === 'start' ? 0 : el.scrollWidth;
+        const event = new WheelEvent('wheel', {bubbles: true, cancelable: true, deltaY: end === 'start' ? -120 : 120});
+        el.dispatchEvent(event);
+        return !event.defaultPrevented;
+      }, end);
+      expect(released).toBe(true);
+    }
+    await rail.evaluate(el => { el.scrollLeft = el.scrollWidth / 2; });
+    const browserZoom = await rail.evaluate(el => {
+      const event = new WheelEvent('wheel', {bubbles: true, cancelable: true, deltaY: 120, ctrlKey: true});
+      el.dispatchEvent(event);
+      return !event.defaultPrevented;
+    });
+    expect(browserZoom).toBe(true);
+  });
+
+  // A fresh gesture avoids WebKit's axis lock joining horizontal input to the
+  // preceding vertical wheel gesture. Native horizontal scrolling stays native.
+  test(`horizontal wheel input stays native on ${route}`, async ({page}) => {
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await page.goto(route);
+    if (route === '/projects/') {
+      await page.locator('[data-project]').first().press('Enter');
+      await expect(page.locator('.pcard[data-open="true"] .rail__f').last()).toBeAttached();
+    }
+    const rail = page.locator(route === '/projects/' ? '.pcard[data-open="true"] [data-strip]' : '[data-rail]').first();
+    await rail.scrollIntoViewIfNeeded();
+    const before = await rail.evaluate(el => el.scrollLeft);
+    const box = (await rail.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(160, 0);
+    await expect.poll(() => rail.evaluate(el => el.scrollLeft)).toBeGreaterThan(before);
+  });
+}
