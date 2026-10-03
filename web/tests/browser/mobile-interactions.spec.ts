@@ -7,6 +7,53 @@ test.describe('phone interactions',()=>{
   test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
   test.beforeEach(async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});});
 
+  test('a short enquiry on a phone submits once and shows progress',async({page})=>{
+    const messages:string[]=[];
+    let finish:()=>void=()=>{};
+    const responseReady=new Promise<void>(resolve=>{finish=resolve;});
+    await page.route('https://api.web3forms.com/**',async route=>{
+      messages.push(route.request().postDataJSON().message);
+      await responseReady;
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true})});
+    });
+    await page.goto('/contact/');
+    await page.locator('[name="access_key"]').evaluate(e=>(e as HTMLInputElement).value='test-only-key');
+    await page.getByLabel('Name',{exact:true}).fill('Local test');
+    await page.getByLabel('Email',{exact:true}).fill('test@example.com');
+    // Type as a visitor would: programmatic fill alone can bypass minlength.
+    await page.getByLabel('Message',{exact:true}).pressSequentially('Hello');
+    await page.getByRole('button',{name:'Send enquiry'}).tap();
+    await expect(page.getByRole('status')).toHaveText('Sending your enquiry…');
+    await expect(page.getByRole('button',{name:'Sending…'})).toBeDisabled();
+    await expect.poll(()=>messages).toEqual(['Hello']);
+    finish();
+    await expect(page).toHaveURL(/\/contact\/thanks\/$/);
+    expect(messages).toHaveLength(1);
+  });
+
+  test('a phone shows missing and invalid enquiry fields without sending',async({page})=>{
+    const outbound:string[]=[];
+    await page.route('https://api.web3forms.com/**',route=>{outbound.push(route.request().url());return route.abort();});
+    await page.goto('/contact/');
+    const send=page.getByRole('button',{name:'Send enquiry'});
+    const status=page.getByRole('status');
+    await send.tap();
+    await expect(status).toContainText('Please enter your name.');
+    await expect(page.getByLabel('Name',{exact:true})).toBeFocused();
+    await page.getByLabel('Name',{exact:true}).fill('Local test');
+    await page.getByLabel('Email',{exact:true}).fill('invalid');
+    await send.tap();
+    await expect(status).toContainText('Please enter a valid email address.');
+    await expect(page.getByLabel('Email',{exact:true})).toHaveAttribute('aria-invalid','true');
+    await page.getByLabel('Email',{exact:true}).fill('test@example.com');
+    await expect(page.getByLabel('Email',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+    await page.getByLabel('Message',{exact:true}).fill('   ');
+    await send.tap();
+    await expect(status).toContainText('Please enter your message.');
+    await expect(page.getByLabel('Message',{exact:true})).toBeFocused();
+    expect(outbound).toEqual([]);
+  });
+
   test('links keep a quiet cue, targets have room, and all main routes fit a phone',async({page})=>{
     for(const route of routes) {
       await page.goto(route,{waitUntil:'domcontentloaded'});
@@ -436,6 +483,7 @@ test('with a mouse, even in a narrow window, the Press card opens raised and scr
 
 test('mouse layouts show the contact copy mark on hover and focus at desktop and narrow widths',async({page,browserName})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
+  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async()=>{}},configurable:true}));
   for(const width of [390,1440]) {
     await page.setViewportSize({width,height:900});
     await page.goto('/');
@@ -445,15 +493,25 @@ test('mouse layouts show the contact copy mark on hover and focus at desktop and
       for(const kind of ['mailto:', 'tel:']) {
         const link=page.locator(`.contact-links a[href^="${kind}"]`);
         const mark=link.locator('..').locator('.copy-mark');
+        const otherMark=page.locator(`.contact-links a[href^="${kind==='mailto:'?'tel:':'mailto:'}"]`).locator('..').locator('.copy-mark');
         await page.mouse.move(0,0);
         await page.locator('.header__logo').focus();
         await expect(mark).toHaveCSS('opacity','0');
         await link.hover();
         await expect(mark).toHaveCSS('opacity','1');
+        await expect(otherMark).toHaveCSS('opacity','0');
         expect(await link.evaluate(el=>getComputedStyle(el,'::after').display)).toBe('none');
+        await mark.hover();
+        await expect(mark).toHaveCSS('opacity','1');
+        await mark.click();
         await page.mouse.move(0,0);
+        await expect(mark).toHaveCSS('opacity','0');
+        await expect(otherMark).toHaveCSS('opacity','0');
+        await page.keyboard.press('Tab');
         await link.focus();
         await expect(mark).toHaveCSS('opacity','1');
+        await otherMark.locator('..').locator('a').hover();
+        await expect(otherMark).toHaveCSS('opacity','0');
         // WebKit follows macOS's default that Tab skips buttons; test the
         // focus treatment directly there, and normal tab order in Chromium.
         if(browserName==='webkit') await mark.focus();

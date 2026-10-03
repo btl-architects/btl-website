@@ -2417,7 +2417,7 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
    Standalone controls still get finger room; inline prose links keep their
    text flow. Pointer layouts and their hover behaviour are unchanged. */
 .copy-mark, .project-note--touch { display: none; }
-.contact-links__i { display: block; }
+.contact-links__i { display: block; width: fit-content; max-width: 100%; }
 /* One copy symbol for contact details on both pointer and touch layouts.
    It takes no width so the existing alignment stays the same. */
 .copy-mark {
@@ -2432,7 +2432,14 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
 @media (hover: hover) and (pointer: fine) {
   .contact-links__i > .tl::after { display: none; }
   .contact-links__i > .copy-mark { display: inline-grid; opacity: 0; pointer-events: none; }
-  .contact-links__i:is(:hover, :focus-within) > .copy-mark { opacity: 1; pointer-events: auto; }
+  .copy-mark::before { inset: 0; }
+  .contact-links__i:hover > .copy-mark,
+  .contact-links__i:has(:focus-visible) > .copy-mark { opacity: 1; pointer-events: auto; }
+  /* Keyboard focus wins over a parked mouse; a mouse click's lingering focus
+     must not keep the other detail's mark lit after the pointer leaves. */
+  .contact-links:has(:focus-visible) .contact-links__i:not(:has(:focus-visible)) > .copy-mark {
+    opacity: 0; pointer-events: none;
+  }
 }
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
   .onward__t::after { clip-path: inset(0); }
