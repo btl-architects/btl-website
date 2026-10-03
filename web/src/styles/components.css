@@ -538,8 +538,12 @@ html:has(.menu[data-open="true"]) .header {
   .pcard:hover:not([data-open="true"]) .pcard__peek img { transform: scale(1.015); }
 }
 
-/* An open strip can be dragged. Without this the only way across it on a
-   desktop is shift+wheel, which nobody discovers. */
+/* Dragging feedback is shared by standalone and expanded galleries. */
+.rail[data-dragging], .rail[data-dragging] .rail__f,
+.pcard__strip[data-dragging] .rail__f {
+  cursor: grabbing; user-select: none; scroll-behavior: auto;
+}
+.rail[data-dragging] img { pointer-events: none; }
 .pcard[data-open="true"] .pcard__strip { cursor: grab; }
 .pcard[data-open="true"] .pcard__strip[data-dragging] {
   cursor: grabbing; scroll-behavior: auto;
@@ -1219,6 +1223,11 @@ html:has(.menu[data-open="true"]) .header {
   max-width: var(--measure);
   color: var(--text-secondary);
 }
+
+/* Plain-text Sanity fields keep their authored paragraphs and line breaks.
+   Existing typography still owns the gap between a headline and its body. */
+.editorial-text, figcaption { white-space: pre-line; overflow-wrap: anywhere; }
+.editorial-text--paragraph + .editorial-text--paragraph { margin-top: var(--s-4); }
 
 /* --- passages -------------------------------------------------------------
    The working method, stepping inward across the grid so the eye is led down

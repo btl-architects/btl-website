@@ -1,6 +1,7 @@
 ---
 import Figure from "./Figure.astro";
 import ArticleBody from "./ArticleBody.astro";
+import Paragraphs from "./Paragraphs.astro";
 import type {Publication, Project} from "../lib/content";
 import {articleUrl} from "../lib/press";
 interface Props {item: Publication; project?: Project}
@@ -24,7 +25,7 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
     {item.sourceAuthor && <p class="press-article__source-credit">Original article by {item.sourceAuthor}{publicationDate && <> · <time datetime={item.date}>{publicationDate}</time></>}</p>}
     {managed && readerLabel && <p class="press-article__kind">{readerLabel}</p>}
     {item.byline && managed && <p class="press-article__byline">{item.byline}</p>}
-    {item.intro && managed && <p class="press-article__intro">{item.intro}</p>}
+    {item.intro && managed && <Paragraphs text={item.intro} class="press-article__intro" />}
   </header>
   {embed ? (
     <>

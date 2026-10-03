@@ -67,7 +67,7 @@ export default defineType({
     defineField({
       name: "intro", title: "Article introduction", type: "text", rows: 3,
       hidden: ({document}) => document?.openingMode !== "reader",
-      description: "A short standfirst below the headline. Use your own project notes unless you have the publication's article text to republish.",
+      description: "A short standfirst below the headline. Leave a blank line between paragraphs; use Enter for a line break. Use your own project notes unless you have the publication's article text to republish.",
       validation: r => r.max(450),
     }),
     defineField({

@@ -61,7 +61,7 @@ export default defineType({
       rows: 4,
       group: "content",
       description:
-        "One short paragraph, in the practice's voice. What the site asked for and what the building does about it.",
+        "A short introduction in the practice's voice: what the site asked for and what the building does about it. Leave a blank line between paragraphs; use Enter for a line break.",
       validation: (r) => r.max(600),
     }),
     defineField({

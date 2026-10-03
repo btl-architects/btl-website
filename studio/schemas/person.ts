@@ -37,7 +37,7 @@ export default defineType({
       name: "bio",
       type: "text",
       rows: 4,
-      description: "Optional. Creates an individual profile page when a slug is also present.",
+      description: "Optional. Creates an individual profile page when a slug is also present. Leave a blank line between paragraphs; use Enter for a line break.",
       validation: (r) => r.max(500),
     }),
     defineField({ name: "portrait", type: "figure" }),

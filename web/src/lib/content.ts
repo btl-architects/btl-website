@@ -384,9 +384,10 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
 export const getHome = once(async () => {
   const s = await sanity.fetch<{
     statement?: string; studioLead?: string; peopleLead?: string; studioBody?: string[];
+    homePeopleLead?: string; homeStudioLead?: string; homeStudioNote?: string;
     studioImages?: CmsImage[]; studioImage?: CmsImage; foundersImage?: CmsImage; teamImage?: CmsImage;
   } | null>(`*[_type == "settings"][0]{
-    statement, studioLead, peopleLead, studioBody,
+    statement, studioLead, peopleLead, studioBody, homePeopleLead, homeStudioLead, homeStudioNote,
     "studioImages": studioImages[] ${FIGURE},
     "studioImage": studioImage ${FIGURE},
     "foundersImage": foundersImage ${FIGURE},
@@ -394,6 +395,9 @@ export const getHome = once(async () => {
   }`);
   return {
     statement: s?.statement ?? "",
+    // Home and full-page introductions are independent, including when empty.
+    peoplePreview: s?.homePeopleLead ?? "",
+    studioPreview: {lead: s?.homeStudioLead ?? "", note: s?.homeStudioNote ?? ""},
     /* No fallback. This used to borrow the home statement when peopleLead was
      * unwritten, on the reasoning that words about who btl is beat no words at
      * all. In practice nobody ever wrote peopleLead, so the same paragraph ran

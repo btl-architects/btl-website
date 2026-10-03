@@ -4,7 +4,7 @@ import {createServer} from "vite";
 import {getViteConfig} from "astro/config";
 import {experimental_AstroContainer} from "astro/container";
 
-let server, container, Credit, PersonCard, PressArticle, press, media;
+let server, container, Credit, PersonCard, PressArticle, Statement, Paragraphs, press, media;
 before(async () => {
   const config = await getViteConfig({server: {middlewareMode: true}, logLevel: "error"})({command: "serve", mode: "test"});
   server = await createServer(config);
@@ -15,6 +15,8 @@ before(async () => {
   Credit = (await server.ssrLoadModule("/src/components/Credit.astro")).default;
   PersonCard = (await server.ssrLoadModule("/src/components/PersonCard.astro")).default;
   PressArticle = (await server.ssrLoadModule("/src/components/PressArticle.astro")).default;
+  Statement = (await server.ssrLoadModule("/src/components/Statement.astro")).default;
+  Paragraphs = (await server.ssrLoadModule("/src/components/Paragraphs.astro")).default;
   press = await server.ssrLoadModule("/src/lib/press.ts");
   media = await server.ssrLoadModule("/src/lib/media.ts");
 });
@@ -23,6 +25,43 @@ after(async () => {await server?.close();});
 const image = (name) => ({static: {src: `/fixtures/${name}.jpg`, width: 600, height: 800}, alt: name});
 const item = {publication: "Magazine", short: "", kind: "press", date: "2026-10-01", url: "https://example.com/article", logo: null, image: null, useProjectImage: true};
 const project = {title: "One project", hook: image("project-cover")};
+
+test("authored paragraphs stay separate and the opening paragraph stays intact", async () => {
+  const html = await container.renderToString(Statement, {props:{text:'First paragraph. Still the first paragraph.\r\n \t\r\nSecond paragraph.\r\nAn intentional line break.\r\n\r\nThird paragraph.'}});
+  const content = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map(match=>match[1]);
+  assert.deepEqual(content,['First paragraph. Still the first paragraph.','Second paragraph.\nAn intentional line break.','Third paragraph.']);
+  assert.equal((html.match(/spread__say /g)??[]).length,1);
+  const lineBreak = await container.renderToString(Statement,{props:{text:'An opening sentence.\nA deliberate second line.'}});
+  assert.equal((lineBreak.match(/<p /g)??[]).length,1);
+  assert.match(lineBreak,/An opening sentence\.\nA deliberate second line\./);
+  const noteOnly = await container.renderToString(Statement,{props:{text:'',note:'Supporting text only.\n\nAnother paragraph.'}});
+  assert.match(noteOnly,/Supporting text only/);
+  assert.equal((noteOnly.match(/<p /g)??[]).length,2);
+});
+
+test("plain-text paragraphs preserve line breaks, omit blank entries and escape markup", async () => {
+  const html = await container.renderToString(Paragraphs,{props:{text:'Opening line.\nSecond line.\n\n\n<img src=x>\n\n'}});
+  assert.equal((html.match(/<p /g)??[]).length,2);
+  assert.match(html,/Opening line\.\nSecond line\./);
+  assert.match(html,/&lt;img src=x&gt;/);
+  assert.doesNotMatch(html,/<img/);
+  assert.doesNotMatch(await container.renderToString(Paragraphs,{props:{text:' \r\n\r\n '}}),/<p/);
+});
+
+test("Home introductions are independent from People and Studio page writing", async () => {
+  const {sanity} = await server.ssrLoadModule('/src/lib/sanity.ts');
+  const original = sanity.fetch;
+  sanity.fetch = async () => ({homePeopleLead:'Home people',peopleLead:'Full People page',homeStudioLead:'Home studio',homeStudioNote:'',studioLead:'Full Studio page',studioBody:['Full Studio paragraph']});
+  try {
+    const {getHome} = await server.ssrLoadModule('/src/lib/content.ts');
+    const home = await getHome();
+    assert.equal(home.peoplePreview,'Home people');
+    assert.equal(home.peopleLead,'Full People page');
+    assert.deepEqual(home.studioPreview,{lead:'Home studio',note:''});
+    assert.equal(home.studio.lead,'Full Studio page');
+    assert.deepEqual(home.studio.body,['Full Studio paragraph']);
+  } finally {sanity.fetch = original;}
+});
 
 test("Press entries render complete artwork without adding another publication logo", async () => {
   for (const name of ["cover-one", "cover-two"]) {

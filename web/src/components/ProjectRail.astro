@@ -12,6 +12,7 @@
  * screen for the whole project.
  */
 import RailFrame from "./RailFrame.astro";
+import Paragraphs from "./Paragraphs.astro";
 import type { Project } from "../lib/content";
 
 interface Props { project: Project; priority?: boolean }
@@ -29,7 +30,7 @@ if (project.credits.photographer) meta.push(["Photograph", project.credits.photo
 <div class="rail" tabindex="0" role="region" aria-label={`${project.title} photographs — use the arrow keys to browse`} data-rail data-slug={project.slug} data-title={project.title}>
   <div class="rail__note">
     <h2 class="rail__title">{project.title}</h2>
-    {project.description && <p class="rail__text">{project.description}</p>}
+    {project.description && <Paragraphs text={project.description} class="rail__text" />}
     <dl class="rail__meta">
       {meta.map(([k, v]) => (
         <div class="rail__m"><dt>{k}</dt><dd>{v}</dd></div>
