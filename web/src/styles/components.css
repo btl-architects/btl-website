@@ -2055,9 +2055,22 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__source { border-top: 1px solid var(--border-subtle); padding-top: var(--s-5); margin-top: var(--s-7); color: var(--text-secondary); font-size: var(--type-body-sm); }
 .press-article__help { font-size: var(--type-body-sm); color: var(--text-secondary); margin-bottom: var(--s-4); }
 .press-article__frame { display: block; width: 100%; height: 70dvh; border: 1px solid var(--border-subtle); background: var(--surface); }
+/* On a phone the reader is a card rising from the bottom, not a second page:
+   the Press page stays in view above it, a tap there closes it, and so does
+   pulling the card down by its top (press-reader.js). The short rule on top
+   is the handle phones use to say a card can be pulled. */
 @media (max-width: 47.99rem) {
-  .press-reader { width: 100%; height: 100dvh; border: 0; }
-  .press-reader__bar { gap: var(--s-2); padding: max(var(--s-2), env(safe-area-inset-top)) var(--page-margin) var(--s-2); }
+  .press-reader {
+    width: 100%; height: 86dvh; margin: auto 0 0;
+    border: 0; border-top: 1px solid var(--border-strong);
+    touch-action: pan-y;
+  }
+  .press-reader::before {
+    content: ""; flex: none; align-self: center;
+    width: 2.25rem; height: 4px; margin-top: var(--s-2); border-radius: 2px;
+    background: var(--border-strong);
+  }
+  .press-reader__bar { gap: var(--s-2); padding: var(--s-1) var(--page-margin) var(--s-2); touch-action: none; }
   .press-reader__original, .press-reader__close { width: 2.75rem; justify-content: center; padding: 0; }
   .press-reader__original-text, .press-reader__close-text { display: none; }
   .press-reader__content { padding: var(--s-5) var(--page-margin) max(var(--s-5), env(safe-area-inset-bottom)); scrollbar-gutter: auto; }
@@ -2071,6 +2084,10 @@ body[data-preview] .header { top: var(--preview-h); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .press-reader[open] { animation: press-reader-in var(--dur-base) var(--ease); }
+  @media (max-width: 47.99rem) {
+    .press-reader[open] { animation: press-sheet-in var(--dur-slow) var(--ease); }
+    @keyframes press-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+  }
   .press-reader[open]::backdrop { animation: press-reader-backdrop var(--dur-base) var(--ease); }
   @keyframes press-reader-in { from {opacity: 0; transform: translateY(var(--s-3));} to {opacity: 1; transform: none;} }
   @keyframes press-reader-backdrop { from {opacity: 0;} to {opacity: 1;} }
@@ -2353,6 +2370,16 @@ body[data-preview] .header { top: var(--preview-h); }
 }
 
 
+/* A tapped link answers before the next page arrives (site.js, 4b): an
+   onward link's line runs out to the right, any other link dims. */
+.onward[data-going] .onward__t::after { animation: line-leaves var(--dur-slow) var(--ease) forwards; }
+@keyframes line-leaves { from { clip-path: inset(0); } to { clip-path: inset(0 0 0 100%); } }
+a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) var(--ease); }
+@media (prefers-reduced-motion: reduce) {
+  .onward[data-going] .onward__t::after { animation: none; }
+  .onward[data-going] { opacity: .55; }
+}
+
 /* Touch has no hover preview, so the green line cannot appear on approach.
    On a phone it rests only under the onward link that ends a section or page
    ("See every project", "Send an enquiry") and under linked people's names —
@@ -2369,15 +2396,19 @@ body[data-preview] .header { top: var(--preview-h); }
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
   .onward__t::after { clip-path: inset(0); }
   /* A link inside a sentence, or standing alone in one, carries a small
-     raised ↗ after the words instead of a line: the mark readers already know
-     from the web as "this is a link", lifted so it reads as a mark on the
+     raised arrow after the words instead of a line: the mark readers already
+     know from the web as "this is a link", lifted so it reads as a mark on the
      words, not as a word. It is the one link mark in running text, wherever
      the link goes. */
+  /* Drawn, not typed: the font's ↗ has a long tail that read as a second
+     line trailing off the word. This one is compact, a short shaft under its
+     head, in the link's own colour. */
   a.tl:not(.footer a, [href^="mailto:"], [href^="tel:"])::after {
-    content: "↗"; content: "↗" / "";
-    position: static; display: inline-block; height: auto;
-    margin-left: .1em; font-size: .7em; font-weight: 400; line-height: 1; vertical-align: .5em;
-    color: currentColor; background: none; clip-path: none;
+    content: ""; position: static; display: inline-block;
+    width: .5em; height: .5em; margin-left: .15em; vertical-align: .55em;
+    background: currentColor; clip-path: none;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='square'%3E%3Cpath d='M3 7 7.5 2.5M3.5 2.5h4v4'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='square'%3E%3Cpath d='M3 7 7.5 2.5M3.5 2.5h4v4'/%3E%3C/svg%3E") center / contain no-repeat;
   }
   /* The copy mark (ContactLinks). Small and raised like the arrow, in the
      quiet tone; it hangs past the words, taking no width, so a centred block

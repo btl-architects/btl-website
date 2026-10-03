@@ -61,6 +61,41 @@
     }
     dialog.addEventListener("pointerdown", function (ev) {outsideDown = outside(ev);});
     dialog.addEventListener("click", function (ev) {if (outsideDown && outside(ev)) dismiss(); outsideDown = false;});
+
+    // On a phone the reader is a card (components.css); a finger pulls it down
+    // by its top edge — the handle and the bar — to put it away. A short pull
+    // springs back; far enough, or a flick, closes it. Taps on the bar's
+    // buttons are untouched: nothing moves until the finger has.
+    var pull = null;
+    dialog.addEventListener("pointerdown", function (ev) {
+      if (ev.pointerType === "mouse" || outsideDown) return;
+      var top = dialog.getBoundingClientRect().top, bar = dialog.querySelector(".press-reader__bar");
+      if (ev.clientY > bar.getBoundingClientRect().bottom || ev.clientY < top) return;
+      pull = {id: ev.pointerId, y: ev.clientY, dy: 0, t: performance.now(), v: 0, moving: false};
+    });
+    dialog.addEventListener("pointermove", function (ev) {
+      if (!pull || ev.pointerId !== pull.id) return;
+      var dy = Math.max(0, ev.clientY - pull.y), now = performance.now();
+      if (!pull.moving && dy < 8) return;
+      if (!pull.moving) { pull.moving = true; dialog.setPointerCapture(ev.pointerId); dialog.style.transition = "none"; }
+      pull.v = (dy - pull.dy) / Math.max(1, now - pull.t); pull.dy = dy; pull.t = now;
+      dialog.style.transform = "translateY(" + dy + "px)";
+    });
+    function letGo(ev) {
+      if (!pull || ev.pointerId !== pull.id) return;
+      var p = pull; pull = null;
+      if (!p.moving) return;
+      dialog.style.transition = "transform 240ms cubic-bezier(.2,.7,.2,1)";
+      if (ev.type === "pointerup" && (p.dy > dialog.clientHeight * 0.22 || p.v > 0.6)) {
+        dialog.style.transform = "translateY(100%)";
+        setTimeout(function () { dismiss(); dialog.style.transform = ""; dialog.style.transition = ""; }, 240);
+      } else {
+        dialog.style.transform = "";
+        setTimeout(function () { dialog.style.transition = ""; }, 240);
+      }
+    }
+    dialog.addEventListener("pointerup", letGo);
+    dialog.addEventListener("pointercancel", letGo);
   }
 
   function close() {
@@ -126,7 +161,10 @@
     document.body.style.right = "0";
     document.body.style.width = "100%";
     dialog.showModal();
-    closeButton.focus({preventScroll: true});
+    // Focus goes to Close either way; its ring is drawn only for a keyboard
+    // (a click with no pointer behind it has detail 0). After a tap it framed
+    // the X in a bright box the reader had not asked for.
+    closeButton.focus({preventScroll: true, focusVisible: ev.detail === 0});
     // Same URL: BTL stays in place. Back dismisses the reader; Forward never
     // replays a stale article or introduces an external navigation.
     history.pushState(Object.assign({}, history.state, {btlPressReader: true}), "", location.href);

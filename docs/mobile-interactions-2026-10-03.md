@@ -9,7 +9,7 @@ One small vocabulary, used the same way everywhere. A phone has no hover, so eac
 | What it is | Cue on a phone | Examples |
 | --- | --- | --- |
 | The onward link that ends a section or page | Green line, drawn in as the section arrives | See every project, Send an enquiry, Every project |
-| A link inside (or standing alone in) a sentence | Small raised ↗ after the words | privacy notice↗, Contact the studio↗ |
+| A link inside (or standing alone in) a sentence | Small raised arrow after the words, drawn with a short shaft | privacy notice↗, Contact the studio↗ |
 | The studio's email and phone number | Small raised copy mark; tapping the words writes or dials, the mark copies | Contact page, Home contact |
 | Photographs, project strips and Press artwork | None; the picture is the tap target | Galleries, project cards, Press features |
 | Previous/next project | None; the PREVIOUS / NEXT label already says it | Project pages |
@@ -34,9 +34,18 @@ Mouse behaviour is unchanged. Fingers get the vocabulary of a phone's own photo 
 | Double-tap | Zoom to that spot; again to come back out |
 | Pinch | Zoom about the fingers |
 | Drag while zoomed | Look around; a flick keeps gliding briefly |
-| Single tap | Show or hide the count, Close, arrows and caption (it no longer zooms or closes) |
+| Single tap on the photograph | Show or hide the count, Close, arrows and caption |
+| Tap on the dark around it | Close, as on every phone (the tap is spent, so it cannot open something underneath) |
 
-Arrows and Close remain, so nothing depends on a gesture alone.
+Arrows and Close remain, so nothing depends on a gesture alone. The viewer loads a file sized to the screen and fetches more detail only when zoomed; the next photograph is decoded before it slides in, and two either side are loaded ahead. Strips load the photographs within two and a half widths of where they are, so a swipe never meets an empty frame.
+
+## Press on a phone
+
+A feature opens as a card rising from the bottom, with the Press page still visible above it. A tap above the card, or pulling it down by its top edge, puts it away.
+
+## Leaving a page
+
+A tapped link answers at once: an onward link's green line runs out to the right, other links dim. Onward and previous/next pages are fetched as their links come near the screen, and any page on the site the moment a finger lands on its link.
 
 ## Other phone details
 
