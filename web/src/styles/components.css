@@ -2418,6 +2418,22 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
    text flow. Pointer layouts and their hover behaviour are unchanged. */
 .copy-mark, .project-note--touch { display: none; }
 .contact-links__i { display: block; }
+/* One copy symbol for contact details on both pointer and touch layouts.
+   It takes no width so the existing alignment stays the same. */
+.copy-mark {
+  position: relative; place-items: center;
+  width: 1.5rem; height: 1.5rem; margin: 0 -1.5rem 0 0; padding: 0;
+  vertical-align: .2em; color: var(--text-tertiary);
+  background: none; border: 0; cursor: pointer;
+}
+.copy-mark::before { content: ""; position: absolute; inset: -.625rem; }
+.copy-mark svg { width: .8rem; height: .8rem; }
+.copy-mark:active { color: var(--text-primary); }
+@media (hover: hover) and (pointer: fine) {
+  .contact-links__i > .tl::after { display: none; }
+  .contact-links__i > .copy-mark { display: inline-grid; opacity: 0; pointer-events: none; }
+  .contact-links__i:is(:hover, :focus-within) > .copy-mark { opacity: 1; pointer-events: auto; }
+}
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
   .onward__t::after { clip-path: inset(0); }
   /* A link inside a sentence, or standing alone in one, carries a small
@@ -2435,18 +2451,7 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='square'%3E%3Cpath d='M3 7 7.5 2.5M3.5 2.5h4v4'/%3E%3C/svg%3E") center / contain no-repeat;
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='square'%3E%3Cpath d='M3 7 7.5 2.5M3.5 2.5h4v4'/%3E%3C/svg%3E") center / contain no-repeat;
   }
-  /* The copy mark (ContactLinks). Small and raised like the arrow, in the
-     quiet tone; it hangs past the words, taking no width, so a centred block
-     stays centred. The finger room is an invisible 44px square around it. */
-  .copy-mark {
-    position: relative; display: inline-grid; place-items: center;
-    width: 1.5rem; height: 1.5rem; margin: 0 -1.5rem 0 0; padding: 0;
-    vertical-align: .2em; color: var(--text-tertiary);
-    background: none; border: 0; cursor: pointer;
-  }
-  .copy-mark::before { content: ""; position: absolute; inset: -.625rem; }
-  .copy-mark svg { width: .8rem; height: .8rem; }
-  .copy-mark:active { color: var(--text-primary); }
+  .copy-mark { display: inline-grid; }
   .onward { min-height: 2.75rem; padding-bottom: var(--s-3); }
   .footer__links a, a.tl[href^="mailto:"], a.tl[href^="tel:"] {
     display: inline-flex; align-items: center; min-height: 2.75rem;

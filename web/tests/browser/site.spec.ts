@@ -10,6 +10,9 @@ for(const {route} of pages()) {
     await expect(page.locator('h1')).toHaveCount(1);
     for(const width of [320,375,768,1440]) {
       await page.setViewportSize({width,height:900});
+      // WebKit acknowledges resize before viewport units reach layout. Measure
+      // the rendered responsive frame, as the other resize checks already do.
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
