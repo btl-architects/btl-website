@@ -37,7 +37,7 @@ async function underResolved(page:import('@playwright/test').Page) {
     const original=+(im.currentSrc.match(/-(\d+)x\d+\.\w+\?/)?.[1] ?? 0);
     const cropWidth=Number(new URL(im.currentSrc).searchParams.get('rect')?.split(',')[2]);
     const sourceWidth=cropWidth>0?Math.min(original||cropWidth,cropWidth):original;
-    const exhausted=got===Math.max(...widths) && (!sourceWidth || got>=Math.min(sourceWidth,2000));
+    const exhausted=got===Math.max(...widths) && (!sourceWidth || got>=sourceWidth);
     return got && !exhausted && got/w<1.5 ? [`${im.alt.slice(0,40)}: ${got}px file drawn at ${Math.round(w)}px (sizes="${im.sizes}")`] : [];
   }));
 }
@@ -99,8 +99,16 @@ test('clicking the photograph in the viewer zooms; clicking around it closes',as
   await expect(photo).toHaveJSProperty('complete',true);
   const box=(await photo.boundingBox())!;
   await photo.click();await expect(stage).toHaveAttribute('data-zoomed','true');await expect(viewer).toBeVisible();
-  /* Zooming fetches a sharper rendition than the 2000px one it opened on. */
-  await expect(photo).toHaveAttribute('src',/[?&]w=(3500|6000)\b/,{timeout:20000});
+  /* Zoom must supply enough pixels for the displayed detail. A larger base
+     rendition can already meet that need without another network request. */
+  const detailPixels = await photo.evaluate(el => {
+    const image = el as HTMLImageElement;
+    const zoom = new DOMMatrix(getComputedStyle(image).transform).a;
+    const original = Number(image.src.match(/-(\d+)x\d+\./)?.[1]);
+    return Math.min(image.clientWidth * zoom * devicePixelRatio, original, 6000);
+  });
+  await expect.poll(async () => Number((await photo.getAttribute('src'))!.match(/[?&]w=(\d+)/)?.[1]) / detailPixels,
+    {timeout:20000}).toBeGreaterThanOrEqual(1 / 1.15);
   /* The mouse steers without a button: at the fitted frame's left edge the
      photograph's left edge is on screen, at its right edge its right edge. */
   const view=page.viewportSize()!;

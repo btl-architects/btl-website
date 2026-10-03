@@ -137,7 +137,7 @@ export default defineType({
       type: "figure",
       group: "studio",
       description:
-        "Shown in the People section on the home page. This is separate from the team photograph on the People page.",
+        "Shown in the People section on the home page. This is separate from the team photograph on the People page. Use the original camera file for clear display on sharp screens; a WhatsApp copy may look soft.",
     }),
     defineField({
       name: "teamImage", title: "People page — team photograph", type: "figure", group: "studio",

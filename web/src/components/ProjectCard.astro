@@ -17,20 +17,12 @@
  * markup and behaviour — renaming one silently breaks the expansion.
  */
 import Figure from "./Figure.astro";
+import {peekSizes} from "../lib/media";
 import RailNav from "./RailNav.astro";
 import type { Project } from "../lib/content";
 
 interface Props { project: Project; priority?: boolean }
 const { project, priority = false } = Astro.props;
-
-/* Not a vw figure: these frames are height-driven and come out 360–460 CSS px
- * wide at every viewport, because the card's height is what is fixed. A
- * percentage of the window was therefore always guessing — and it guessed high.
- * At 40vw on a 1440px retina screen the browser was told it needed 1152 device
- * pixels and pulled the 1400px file (394 kB) to fill a 363px slot; across a page
- * of cards that is 9 MB where 4 MB would do. Stating the measured width gets the
- * 900px file with no visible difference. */
-const PEEK_SIZES = "400px";
 
 const peek = project.images.slice(0, 6);
 ---
@@ -55,7 +47,7 @@ const peek = project.images.slice(0, 6);
   <div class="pcard__strip" data-strip tabindex="-1">
     {peek.map((image, k) => (
       <figure class="rail__f pcard__peek" role="button" tabindex="-1" aria-label={`View photograph ${k + 1}: ${image.alt}`}>
-        <Figure image={image} sizes={PEEK_SIZES} priority={priority && k === 0} />
+        <Figure image={image} sizes={peekSizes(image)} priority={priority && k === 0} />
       </figure>
     ))}
   </div>

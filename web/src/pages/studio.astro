@@ -63,7 +63,7 @@ const [lead, ...rest] = st.body;
         portrait floating in the middle of the screen, lined up with nothing. It
         sits outside .container because a rail is full-bleed by design. */}
     {st.images.length > 0 && (
-      <section aria-label="The studio in photographs" style="margin-top:var(--space-section);padding-bottom:var(--s-8)">
+      <section class="rv" aria-label="The studio in photographs" style="margin-top:var(--space-section);padding-bottom:var(--s-8)">
         <div class="rail" tabindex="0" role="region" aria-label="Studio photographs — use the arrow keys to browse" data-rail>
           {st.images.map((img, i) => <RailFrame image={img} index={i} />)}
         </div>

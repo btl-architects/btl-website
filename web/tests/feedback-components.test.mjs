@@ -4,7 +4,7 @@ import {createServer} from "vite";
 import {getViteConfig} from "astro/config";
 import {experimental_AstroContainer} from "astro/container";
 
-let server, container, Credit, PersonCard, PressArticle, press;
+let server, container, Credit, PersonCard, PressArticle, press, media;
 before(async () => {
   const config = await getViteConfig({server: {middlewareMode: true}, logLevel: "error"})({command: "serve", mode: "test"});
   server = await createServer(config);
@@ -16,6 +16,7 @@ before(async () => {
   PersonCard = (await server.ssrLoadModule("/src/components/PersonCard.astro")).default;
   PressArticle = (await server.ssrLoadModule("/src/components/PressArticle.astro")).default;
   press = await server.ssrLoadModule("/src/lib/press.ts");
+  media = await server.ssrLoadModule("/src/lib/media.ts");
 });
 after(async () => {await server?.close();});
 
@@ -153,4 +154,18 @@ test("a complete reader separates card artwork from photography and renders nest
   assert.match(html, /<ul>\s*<li>[^]*?Parent[^]*?<ol>\s*<li>[^]*?Child[^]*?<\/li>\s*<\/ol>\s*<\/li>\s*<li>[^]*?Sibling/);
   const fallback = await container.renderToString(PressArticle, {props: {project, item: {...item, title:"Fallback", openingMode:"reader", image:image("card-artwork"), readerContent:[text("A paragraph")]}}});
   assert.match(fallback, /project-cover\.jpg/); assert.doesNotMatch(fallback, /card-artwork\.jpg/);
+});
+
+test('image delivery supports Retina widths without inventing source pixels', () => {
+  const high = {source: {asset: {_ref: 'image-photo-5000x4000-jpg'}}, alt: 'An original photograph'};
+  const resolved = media.resolveImage(high);
+  assert.match(resolved.srcset, /2800w/);
+  assert.match(resolved.srcset, /4000w/);
+  assert.match(resolved.src, /q=82/);
+  const cropped = media.resolveImage({...high, source: {...high.source, crop: {left: .25, right: .25}}});
+  assert.match(cropped.srcset, /2500w/);
+  assert.doesNotMatch(cropped.srcset, /2800w|4000w/);
+  const small = media.resolveImage({source: {asset: {_ref: 'image-small-720x960-jpg'}}, alt: 'Small original'});
+  assert.match(small.srcset, /720w/);
+  assert.doesNotMatch(small.srcset, /900w/);
 });

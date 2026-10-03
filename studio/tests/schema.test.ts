@@ -31,3 +31,30 @@ test("project image roles are hidden and optional for portraits and Press", () =
   assert.equal((field.hidden as Function)({document: {_type: "project"}}), false);
   assert.equal(typeof validate(undefined, {document: {_type: "project"}}), "string");
 });
+
+import {imageResolutionWarning} from '../schemas/imageResolution.ts';
+
+test('image clarity guidance measures the saved crop and remains a warning', () => {
+  assert.equal(imageResolutionWarning({asset: {_ref: 'image-photo-4000x3000-jpg'}}), true);
+  assert.equal(typeof imageResolutionWarning({asset: {_ref: 'image-photo-914x1279-jpg'}}), 'string');
+  const cropped = imageResolutionWarning({asset: {_ref: 'image-photo-4000x3000-jpg'}, crop: {left: .4, right: .4, top: .3, bottom: .3}});
+  assert.match(String(cropped), /800 × 1200.*after its saved crop/);
+  assert.equal(imageResolutionWarning({asset: {_ref: 'image-logo-100x100-svg'}}), true);
+  assert.equal(imageResolutionWarning(undefined), true);
+});
+
+import heroClip from '../schemas/heroClip.ts';
+
+test('automatic films require a completed public MP4 before publishing', async () => {
+  const fields = heroClip.fields;
+  const callbacks: Function[] = [];
+  const r: any = {custom: (callback: Function) => {callbacks.push(callback); return r;}};
+  (fields.find(field => field.name === 'videoMux')!.validation as Function)(r);
+  const context: any = {parent:{videoMode:'mux'}, getClient: () => ({fetch:async () => ({status:'ready',data:{playback_ids:[{id:'public123',policy:'public'}],static_renditions:{files:[{name:'highest.mp4',ext:'mp4',status:'ready'}]}}})})};
+  assert.equal(typeof callbacks[0](undefined,context), 'string');
+  assert.equal(callbacks[0]({asset:{_ref:'video-id'}},context),true);
+  assert.equal(await callbacks[1]({asset:{_ref:'video-id'}},context),true);
+  context.getClient = () => ({fetch:async () => ({status:'preparing'})});
+  assert.equal(typeof await callbacks[1]({asset:{_ref:'video-id'}},context),'string');
+  assert.equal(await callbacks[1]({asset:{_ref:'video-id'}},{...context,parent:{videoMode:'file'}}),true);
+});
