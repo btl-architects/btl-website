@@ -16,11 +16,17 @@ export default defineType({
     defineField({ name: "name", type: "string", validation: (r) => r.required() }),
     defineField({
       name: "role", type: "string",
-      description: "Optional for principal profile records. Team and Alumni portrait cards need a role.",
+      title:'Designation', description: "Shown beneath the name on People. Home has a separate visibility option.",
       validation: (r) => r.custom((value, context) =>
-        context.document?.tier === "principal" || (typeof value === "string" && value.trim())
-          ? true : "Add a role for a team member or alumnus."),
+        context.document?.tier === "principal" && context.document?.showInTeam === false || (typeof value === "string" && value.trim())
+          ? true : "Add a designation for anyone shown on People."),
     }),
+    defineField({name:'showRoleOnHome',title:'Show designation on Home',type:'boolean',initialValue:false,
+      description:'Turn off to show only the name on Home. The designation remains visible on People.'}),
+    defineField({name:'showInTeam',title:'Show in the People roster',type:'boolean',initialValue:true,
+      hidden:({document})=>document?.tier!=='principal',description:'The same principal record supplies both Home and their People card.'}),
+    defineField({name:'homeOrder',title:'Position beside the Home photograph',type:'number',initialValue:0,
+      hidden:({document})=>document?.tier!=='principal',description:'Lower numbers appear first; use the left-to-right order in the photograph.'}),
     defineField({
       name: "slug",
       type: "slug",
@@ -41,7 +47,7 @@ export default defineType({
       type: "string",
       options: {
         list: [
-          { title: "Principal — profile record only", value: "principal" },
+          { title: "Principal — Home and People", value: "principal" },
           { title: "Team — portrait cards", value: "team" },
           { title: "Alumni — previously at btl", value: "alumni" },
         ],

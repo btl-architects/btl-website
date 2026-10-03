@@ -41,6 +41,8 @@ export interface SiteImage {
   /** Fallback intrinsic size. */
   width?: number;
   height?: number;
+  /** Build-derived transparent outer padding, never an editor-authored crop. */
+  artworkBounds?: {left:number;right:number;top:number;bottom:number};
 }
 
 export interface ResolvedImage {
@@ -55,7 +57,7 @@ export interface ResolvedImage {
 
 /* Responsive widths include large Retina screens. Every candidate is capped
  * by the actual cropped source: additional pixels are never invented. */
-const LADDER = [480, 900, 1400, 2000, 2800, 4000];
+const LADDER = [480, 720, 900, 1080, 1400, 2000, 2800, 4000];
 
 /* The widths the photograph viewer sharpens to when someone zooms in, above
  * the fitted viewer rendition. Few and fixed for the same reason the ladder is: each is

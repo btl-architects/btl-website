@@ -3,10 +3,10 @@ import Base from "../../layouts/Base.astro";
 import PressArticle from "../../components/PressArticle.astro";
 import Onward from "../../components/Onward.astro";
 import {getPublications, getProjects, type Publication} from "../../lib/content";
-import {articlePagePath, articleMetadata} from "../../lib/press";
+import {articlePagePath, articleMetadata, articleSlug} from "../../lib/press";
 export async function getStaticPaths() {
   return (await getPublications()).filter(item => articlePagePath(item)).map(item => ({
-    params: {id: item.id!.replace(/^drafts\./, "")}, props: {item},
+    params: {id: articleSlug(item)}, props: {item},
   }));
 }
 const {item} = Astro.props as {item: Publication};

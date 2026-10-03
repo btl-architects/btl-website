@@ -15,9 +15,11 @@ const custom = Boolean(item.image);
 // only the caption follows it, while Figure retains the complete artwork.
 const source = image?.source && typeof image.source === "object" ? image.source as {hotspot?: {x?: number}} : null;
 const anchor = source?.hotspot?.x;
-const center = typeof anchor === "number" && Number.isFinite(anchor) && anchor >= 0 && anchor <= 1 ? anchor : .5;
+const originalCenter = typeof anchor === "number" && Number.isFinite(anchor) && anchor >= 0 && anchor <= 1 ? anchor : .5;
+const bounds=custom ? image?.artworkBounds : undefined;
+const center=bounds ? Math.max(0,Math.min(1,(originalCenter-bounds.left)/(1-bounds.left-bounds.right))) : originalCenter;
 const fullImage = image && image.source && typeof image.source === "object"
-  ? {...image, source: {...image.source, crop: undefined, hotspot: undefined}} : image;
+  ? {...image, source: {...image.source, crop: bounds, hotspot: undefined}} : image;
 const ratio = fullImage ? resolveImage(fullImage)?.ratio ?? 1 : 1;
 // Custom frames are square; portrait artwork occupies ratio * frame width.
 const captionOffset = custom ? (center - .5) * Math.min(1, ratio) * 200 : 0;

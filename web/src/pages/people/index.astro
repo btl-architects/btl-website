@@ -9,7 +9,7 @@ import Onward from "../../components/Onward.astro";
 import Statement from "../../components/Statement.astro";
 
 const people = await getPeople();
-const team = people.filter((p) => p.tier === "team");
+const team = people.filter((p) => p.tier === "team" || p.tier === "principal" && p.showInTeam !== false);
 const alumni = people.filter((p) => p.tier === "alumni");
 
 const home = await getHome();

@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  checks: read
 concurrency:
   group: checks-${{ github.ref }}
   cancel-in-progress: true
@@ -28,18 +29,18 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - run: npm audit --audit-level=high
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
-      - name: Measure launch performance
-        run: |
-          npm run serve:test > /tmp/btl-preview.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid"' EXIT
-          for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:8788/ >/dev/null && break; sleep 1; done
-          npm run test:performance
+      - name: Find the deployed preview for this commit
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node tools/wait-deployed-preview.mjs
+      - name: Measure deployed mobile performance
+        run: npm run test:performance
+      - run: npm audit --audit-level=high
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -64,7 +65,7 @@ jobs:
           cache: npm
           cache-dependency-path: studio/package-lock.json
       - run: npm ci
-      - run: npm audit --audit-level=high
       - run: npm test
       - run: npx tsc --noEmit
       - run: npm run build
+      - run: npm audit --audit-level=high

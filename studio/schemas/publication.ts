@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import {isSafeSlug} from '../../shared/slug.ts';
 
 /* Press and awards are ONE type with a `kind`, never two systems.
  *
@@ -41,6 +42,17 @@ export default defineType({
       description: "Optional fallback. Turn off for a text-only entry until its own image is ready. A Press image always takes priority.",
     }),
     defineField({ name: "title", title: "Headline", type: "string", validation: (r) => r.required() }),
+    defineField({name:'slug', title:'Web address', type:'slug',
+      description:'Generate a readable address for this feature. Later address changes automatically keep the previous link working.',
+      options:{source:doc => [doc.publication,doc.title].filter(Boolean).join(' '),maxLength:96,
+        isUnique:async (slug,ctx) => {
+          const id=ctx.document?._id.replace(/^drafts\./,'');
+          return !await ctx.getClient({apiVersion:'2026-09-01'}).fetch<boolean>(
+            'count(*[_type=="publication" && !(_id in [$id,"drafts."+$id]) && (slug.current==$slug || $slug in previousSlugs || _id==$slug)]) > 0',{id,slug});
+        }},validation:r=>r.required().custom(value=>isSafeSlug(value?.current) || 'Use lowercase letters, numbers and single hyphens.')
+    }),
+    defineField({name:'previousSlugs',title:'Previous addresses',type:'array',of:[{type:'string'}],readOnly:true,
+      description:'Recorded automatically when a published feature address changes.'}),
     defineField({ name: "date", type: "date", options: { dateFormat: "D MMMM YYYY" } }),
     defineField({
       name: "openingMode", title: "How the article opens", type: "string",

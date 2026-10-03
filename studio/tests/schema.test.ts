@@ -4,16 +4,16 @@ import person from "../schemas/person.ts";
 import {figure} from "../schemas/objects.ts";
 
 function customRule(field: {validation?: unknown}) {
-  let validate!: (value: unknown, context: {document: {_type?: string; tier?: string}}) => boolean | string;
+  let validate!: (value: unknown, context: {document: {_type?: string; tier?: string;showInTeam?:boolean}}) => boolean | string;
   if (typeof field.validation !== "function") throw new Error("Expected a validation rule");
   field.validation({custom: (callback: typeof validate) => {validate = callback; return {};}});
   return validate;
 }
 
-test("founder roles can be omitted, while Team and Alumni still require a role", () => {
+test("People cards require a designation; a principal hidden from the roster can omit it", () => {
   const validate = customRule(person.fields.find((field) => field.name === "role")!);
-  assert.equal(validate(undefined, {document: {tier: "principal"}}), true);
-  assert.equal(validate("  ", {document: {tier: "principal"}}), true);
+  assert.equal(validate(undefined, {document: {tier: "principal",showInTeam:false}}), true);
+  assert.equal(typeof validate("  ", {document: {tier: "principal",showInTeam:true}}), 'string');
   for (const tier of ["team", "alumni"]) {
     assert.equal(typeof validate("  ", {document: {tier}}), "string");
     assert.equal(validate("Architect", {document: {tier}}), true);

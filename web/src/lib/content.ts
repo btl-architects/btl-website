@@ -20,6 +20,8 @@ import type { SiteImage } from "./media";
 import type {ArticleBlock, OpeningMode} from "./press";
 import {articleUrl} from "./press";
 import {clipVideoSources, type ClipVideoSources} from "../../../shared/video";
+import {artworkBounds} from '../../server/artwork-bounds.js';
+import {urlFor} from './sanity';
 
 /* ---------------------------------------------------------------- types --- */
 
@@ -60,10 +62,12 @@ export interface Person {
   slug: string;
   portrait: SiteImage | null;
   tier: Tier; order: number; active: boolean;
+  showInTeam?: boolean; showRoleOnHome?: boolean; homeOrder?: number;
 }
 
 export interface Publication {
   id?: string;
+  slug?: string;
   kind: PublicationKind;
   publication: string;
   image: SiteImage | null;
@@ -294,7 +298,8 @@ export const getPeople = once(async (): Promise<Person[]> => {
     "prefix": coalesce(prefix, ""), name, "role": coalesce(role, ""), "bio": coalesce(bio, ""),
     "slug": coalesce(slug.current, ""),
     "portrait": portrait ${FIGURE},
-    tier, "order": coalesce(order, 0), active
+    tier, "order": coalesce(order, 0), active,
+    "showInTeam": coalesce(showInTeam,true), "showRoleOnHome": coalesce(showRoleOnHome,false), "homeOrder": coalesce(homeOrder,order,0)
   }`);
   return (rows ?? []).map((p) => ({ ...p, role: (p.role ?? "").trim(), portrait: p.portrait?.source?.asset ? p.portrait : null }));
 });
@@ -312,7 +317,7 @@ export async function getProfiles(): Promise<Person[]> {
 
 export const getPublications = once(async (): Promise<Publication[]> => {
   const rows = await sanity.fetch<PublicationRow[]>(`*[_type == "publication"] | order(date desc) {
-    "id": _id, "openingMode": coalesce(openingMode, "external"), byline, sourceAuthor, readerKind, intro, readerPublishedAt,
+    "id": _id, "slug":slug.current, "openingMode": coalesce(openingMode, "external"), byline, sourceAuthor, readerKind, intro, readerPublishedAt,
     "articleHero": articleHero ${FIGURE},
     "articleCredits": articleCredits{architect, photographer, "collaborators": coalesce(collaborators, [])},
     "readerContent": readerContent[]{
@@ -325,12 +330,12 @@ export const getPublications = once(async (): Promise<Publication[]> => {
     "useProjectImage": coalesce(useProjectImage, true),
     "relatedProject": relatedProject->slug.current
   }`);
-  return (rows ?? []).map(x => ({
+  return Promise.all((rows ?? []).map(async x => ({
     ...x,
-    image: x.image?.source?.asset ? x.image : null,
+    image: x.image?.source?.asset ? {...x.image,artworkBounds:await artworkBounds(urlFor(typeof x.image.source==='object' ? {...x.image.source,crop:undefined,hotspot:undefined} : x.image.source).width(400).format('png').fit('max').url())} : null,
     articleHero: x.articleHero?.source?.asset ? x.articleHero : null,
     relatedProject: x.relatedProject ?? null,
-  }));
+  })));
 });
 
 export interface HeroClip {

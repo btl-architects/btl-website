@@ -1433,7 +1433,7 @@ html:has(.menu[data-open="true"]) .header {
      so "See every project" looked like it belonged to Studio rather than to the
      work it follows. Closeness does the same job: near the thing it belongs to,
      and a long way from whatever comes after. */
-  margin-top: var(--s-6);
+  margin-top: var(--space-content-gap);
   text-decoration: none;
   color: var(--text-primary);
 }
@@ -1736,7 +1736,7 @@ html:has(.menu[data-open="true"]) .header {
 .statement > .spread__note { margin-inline: auto; }
 /* No top padding: <main> places every page below the header (base.css). */
 .index-head {
-  padding-block: 0 var(--s-8);
+  padding-block: 0 var(--space-content-gap);
 }
 /* Ordinary page titles use a compact scale. Statements and the settled
  * Thank-you title retain their established sizes. */

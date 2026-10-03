@@ -34,7 +34,7 @@ const work = featured.length ? featured : projects.slice(0, 3);
 const press = (await getPublications()).slice(0, 2);
 const projectsBySlug = new Map(projects.map((p) => [p.slug, p]));
 // The home preview shows the principals only; the full team lives on /people.
-const principals = (await getPeople()).filter((p) => p.tier === "principal");
+const principals = (await getPeople()).filter((p) => p.tier === "principal").sort((a,b)=>(a.homeOrder ?? a.order)-(b.homeOrder ?? b.order));
 const c = settings.contact;
 ---
 
@@ -150,7 +150,7 @@ const c = settings.contact;
                 {principals.map((p) => (
                   <span>
                     <span class="spread__n">{p.prefix} {p.name}</span>
-                    {p.role && <span class="spread__r">{p.role}</span>}
+                    {p.showRoleOnHome && p.role && <span class="spread__r">{p.role}</span>}
                   </span>
                 ))}
               </div>

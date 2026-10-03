@@ -43,7 +43,7 @@ const { image, sizes, class: cls, style, priority = false, eager = false, fit = 
 // Covers must include the full uploaded frame, even if a prior CMS crop exists.
 // Project photos and portraits keep their usual crop and hotspot behaviour.
 const wholeImage = fit === "contain" && image.source && typeof image.source === "object"
-  ? {...image, source: {...image.source, crop: undefined, hotspot: undefined}}
+  ? {...image, source: {...image.source, crop: image.artworkBounds, hotspot: undefined}}
   : image;
 const r = requireImage(wholeImage);
 
