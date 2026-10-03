@@ -69,8 +69,13 @@ malformed assets cannot become website sources. CSP allows only Mux's delivery
 host for media; credentials are kept in the official editor-only secrets record,
 never queried by the web build. The public film player needs no additional
 JavaScript or analytics SDK. Landscape and portrait cuts share the existing
-playback system. The editor is deployed; account connection and an actual Mux
-upload remain the activation step until credentials are configured.
+playback system. The editor is deployed and the BTL Mux production account is connected. The
+existing landscape and portrait clips were processed into ready public MP4s
+through that account; both retain their 9.033-second duration. A revision-guarded
+update changed only the opening sequence, backed up its previous file fields and
+retained prepared sources for reverting. The hosted Studio's exact origin was
+added with credentials and its authenticated CORS preflight returns 204 with the
+correct allowed origin. No wildcard or broader origin was added.
 
 ## Fresh dependency audit
 
