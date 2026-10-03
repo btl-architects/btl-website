@@ -2314,3 +2314,65 @@ body[data-preview] .header { top: var(--preview-h); }
 @media (prefers-reduced-motion: no-preference) {
   .tip { transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease); }
 }
+
+
+/* Touch has no hover preview. Keep the established line at rest and provide
+   small action cues, without changing pointer layouts or their hover behavior.
+   Inline prose links keep their text flow; standalone controls get finger room. */
+.touch-cue, .photo-cue, .footer__mobile-social, .project-note--touch { display: none; }
+@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
+  a.ul::after, a.tl::after, .onward__t::after { clip-path: inset(0); }
+  .onward { min-height: 2.75rem; padding-bottom: var(--s-3); }
+  .footer__links a, a.tl[href^="mailto:"], a.tl[href^="tel:"] {
+    display: inline-flex; align-items: center; min-height: 2.75rem;
+  }
+  .footer__links a::after, a.tl[href^="mailto:"]::after, a.tl[href^="tel:"]::after { bottom: calc(50% - .85em); }
+  .footer__mobile-social { display: contents; }
+  .header__logo { display: flex; align-items: center; min-height: 2.75rem; }
+  .nav__link { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .menu__link[aria-current="page"] {
+    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .3em;
+  }
+  .chips { gap: var(--s-3) var(--s-5); }
+  .chips .chip {
+    display: inline-flex; align-items: center; min-height: 2.75rem;
+    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .4em;
+  }
+  .chips .chip[aria-current="page"] { text-decoration-thickness: 2px; }
+  .pager__n, a.trow__link .trow__n {
+    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .35em;
+  }
+  .touch-cue {
+    display: flex; align-items: center; gap: var(--s-2);
+    font-size: var(--type-meta); font-weight: 400; letter-spacing: var(--track-meta);
+    text-transform: uppercase;
+  }
+  .touch-cue__label {
+    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .4em;
+  }
+  .pcard__action { grid-row: 3; margin-top: var(--s-3); color: var(--on-media); text-shadow: var(--shadow-on-image); }
+  .pc__action {
+    justify-content: center; margin-top: var(--s-3); color: var(--text-secondary);
+    margin-left: max(0%, var(--caption-offset, 0%));
+    margin-right: max(0%, calc(-1 * var(--caption-offset, 0%)));
+  }
+  .rail__f[role="button"] { position: relative; }
+  [data-rail] .photo-cue, .pcard[data-open="true"] .photo-cue {
+    display: grid; place-items: center; position: absolute;
+    top: var(--s-3); left: var(--s-3); padding: var(--s-2);
+    color: var(--on-media-secondary); background: var(--overlay-press); pointer-events: none;
+  }
+  .photo-cue svg { width: 1rem; height: 1rem; }
+  .lb__x { min-height: 2.75rem; min-width: 2.75rem; }
+  .lb:not([data-zoomed="true"]) .lb__step { opacity: 1; }
+  .landing .srail__i { min-block-size: 2.75rem; display: inline-flex; align-items: center; }
+  .landing .srail__i::after { transform: scaleY(1); background: var(--mark); }
+  .f input { min-height: 2.75rem; }
+  .pj [data-rail] > .rail__note { display: none; }
+  .project-note--touch { display: block; margin-top: var(--s-5); }
+  .project-note--touch .rail__note { display: block; }
+  .project-note--touch .rail__title { display: none; } /* The page heading already names it. */
+  .project-note--touch .rail__text { max-width: none; }
+  .pc[href]:active .pc__img, .pcard:not([data-open="true"]):active .pcard__peek { opacity: .85; }
+  a.tl:active, a.ul:active, .onward:active, .touch-cue:active { color: var(--text-primary); }
+}

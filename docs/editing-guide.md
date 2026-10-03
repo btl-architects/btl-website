@@ -414,3 +414,11 @@ It does not request premium processing or additional advanced MP4 resolutions.
 Account limits and charges are governed by [Mux's current plan](https://www.mux.com/pricing);
 review them when selecting or upgrading a plan. Mux is a separate service from
 Sanity's image optimisation.
+
+### Phone interaction cues
+
+Phone layouts keep the green link rule visible and add small action labels to
+project and Press cards. Gallery photographs show a full-view symbol. These are
+shared interface cues, so new Sanity entries receive them automatically. Mouse
+layouts keep their hover treatment. Individual project pages place the same
+project description below the photographs on phones, so longer text stays readable.
