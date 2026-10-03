@@ -18,6 +18,7 @@ import { sanity, isPreview } from "./sanity";
 import { PROFILES } from "../../server/features.js";
 import { visibleProjects, routedProjects } from "../../server/build-mode.js";
 import type { SiteImage } from "./media";
+import type {SearchListing, PageSearchListings} from './seo';
 import type {ArticleBlock, OpeningMode} from "./press";
 import {articleUrl} from "./press";
 import {clipVideoSources, type ClipVideoSources} from "../../../shared/video";
@@ -64,9 +65,11 @@ export interface Person {
   portrait: SiteImage | null;
   tier: Tier; order: number; active: boolean;
   showInTeam?: boolean; showRoleOnHome?: boolean; homeOrder?: number;
+  seo?: SearchListing;
 }
 
 export interface Publication {
+  seo?: SearchListing;
   id?: string;
   slug?: string;
   kind: PublicationKind;
@@ -103,6 +106,7 @@ export interface Copy {
 
 export interface Settings {
   name: string; domain: string; tagline: string;
+  pageSeo?: PageSearchListings;
   copy: Copy;
   nav: { label: string; href: string }[];
   social: { label: string; short: string; url: string }[];
@@ -176,6 +180,10 @@ const once = <T>(fn: () => Promise<T>): (() => Promise<T>) => {
 export const getSettings = once(async (): Promise<Settings> => {
   const s = await sanity.fetch<SettingsRow | null>(`*[_type == "settings"][0]{
     name, domain, tagline, nav[]{label, href}, social[]{label, url},
+    pageSeo{
+      home{title,description}, projects{title,description}, press{title,description},
+      people{title,description}, studio{title,description}, contact{title,description}
+    },
     footerCta, locationLabel, projectsLead, pressLead, peopleOnward, studioOnward, notFoundLead,
     address, email, formTo, phone, phoneHref, gstin
   }`);
@@ -186,6 +194,7 @@ export const getSettings = once(async (): Promise<Settings> => {
     name: s?.name ?? "btl architects",
     domain: s?.domain ?? "btldesigns.in",
     tagline: s?.tagline ?? "",
+    pageSeo: s?.pageSeo,
     copy: {
       footerCta: s?.footerCta || "Let's build something that lasts.",
       projectsLead: s?.projectsLead ||
@@ -296,7 +305,7 @@ export async function getLocations(): Promise<{ slug: string; label: string }[]>
 
 export const getPeople = once(async (): Promise<Person[]> => {
   const rows = await sanity.fetch<PersonRow[]>(`*[_type == "person" && active == true] | order(coalesce(order, 0) asc, _id asc) {
-    "prefix": coalesce(prefix, ""), name, "role": coalesce(role, ""), "bio": coalesce(bio, ""),
+    "prefix": coalesce(prefix, ""), name, "role": coalesce(role, ""), "bio": coalesce(bio, ""), seo{title,description},
     "slug": coalesce(slug.current, ""),
     "portrait": portrait ${FIGURE},
     tier, "order": coalesce(order, 0), active,
@@ -321,7 +330,7 @@ export async function getProfiles(): Promise<Person[]> {
 
 export const getPublications = once(async (): Promise<Publication[]> => {
   const rows = await sanity.fetch<PublicationRow[]>(`*[_type == "publication"] | order(date desc) {
-    "id": _id, "slug":slug.current, "openingMode": coalesce(openingMode, "external"), byline, sourceAuthor, readerKind, intro, readerPublishedAt,
+    "id": _id, "slug":slug.current, "openingMode": coalesce(openingMode, "external"), byline, sourceAuthor, readerKind, intro, readerPublishedAt, seo{title,description},
     "articleHero": articleHero ${FIGURE},
     "articleCredits": articleCredits{architect, photographer, "collaborators": coalesce(collaborators, [])},
     "readerContent": readerContent[]{

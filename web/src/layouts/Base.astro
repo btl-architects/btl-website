@@ -16,10 +16,13 @@ import Footer from "../components/Footer.astro";
 import { getSettings, getHome } from "../lib/content";
 import { isPreview, isNoindex } from "../lib/sanity";
 import { socialImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
+import {pageSearchListing, searchMetadata, businessStructuredData, jsonLd, type SearchListing} from "../lib/seo";
 
 interface Props {
   title: string;
   description: string;
+  /** Optional metadata only; never used for visible writing or headings. */
+  seo?: SearchListing;
   /** Which nav item is the current page, by its settings href key. */
   current?: string;
   /** Body-level ground, so the header knows what it is sitting on. */
@@ -36,8 +39,12 @@ interface Props {
   article?: {date: string; author: string; authorType?: "Person" | "Organization"; headline?: string; publisher?: string; source?: string};
 }
 
-const { title, description, current = "", ground = "dark", noindex = false, share, articleReader = false, article } = Astro.props;
+const { title: fallbackTitle, description: fallbackDescription, seo, current = "", ground = "dark", noindex = false, share, articleReader = false, article } = Astro.props;
 const settings = await getSettings();
+const {title, description} = searchMetadata({
+  title: Astro.url.pathname === "/" ? `${settings.name} — Architecture & Interiors, Kozhikode` : fallbackTitle,
+  description: fallbackDescription,
+}, seo ?? pageSearchListing(Astro.url.pathname, settings.pageSeo));
 const canonical = new URL(Astro.url.pathname === "/404/" ? "/404.html" : Astro.url.pathname, Astro.site).href;
 
 /* A shared link is the practice's front door more often than the home page is.
@@ -49,40 +56,15 @@ const home = await getHome();
 const shareImage = socialImage(share ?? home.founders ?? home.studio.image);
 const shareAlt = (share ?? home.founders ?? home.studio.image)?.alt ?? settings.name;
 
-/* Who and where, for the search engines. A practice that comes up as a proper
- * business panel for "architects in Kozhikode" is worth more to btl than any
- * amount of the design above it, and none of this is visible on the page. */
-const org = {
-  "@context": "https://schema.org",
-  "@type": "ArchitecturalService",
-  name: settings.name,
-  url: Astro.site?.href ?? canonical,
-  ...(shareImage ? { image: shareImage } : {}),
-  ...(settings.tagline ? { description: settings.tagline } : {}),
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: settings.contact.address.slice(0, -1).join(", "),
-    addressLocality: "Kozhikode",
-    addressRegion: "Kerala",
-    addressCountry: "IN",
-  },
-  ...(settings.contact.phone ? { telephone: settings.contact.phone } : {}),
-  ...(settings.contact.email ? { email: settings.contact.email } : {}),
-  /* sameAs is a claim that these accounts ARE this practice, so a placeholder
-   * must never reach it. The social links currently point at the bare domains
-   * — linkedin.com/ with no profile after it — which would tell Google the
-   * practice owns LinkedIn. A URL only counts once it has a path. */
-  ...(() => {
-    const profiles = settings.social
-      .map((s) => s.url)
-      .filter((u): u is string => {
-        if (!u) return false;
-        try { return new URL(u).pathname.replace(/\/+$/, "").length > 0; }
-        catch { return false; }
-      });
-    return profiles.length ? { sameAs: profiles } : {};
-  })(),
-};
+/* The business is the same entity on every page. Its image comes from the
+ * practice rather than whichever project happens to be shared. */
+const origin = Astro.site?.href ?? new URL('/', canonical).href;
+const org = businessStructuredData(settings, origin, socialImage(home.founders ?? home.studio.image));
+const website = Astro.url.pathname === "/" ? {
+  "@context": "https://schema.org", "@type": "WebSite",
+  "@id": new URL('#website', origin).href, name: settings.name, url: origin,
+  publisher: {"@id": org['@id']},
+} : null;
 ---
 
 <!doctype html>
@@ -133,8 +115,9 @@ const org = {
       type="font/woff2"
       crossorigin
     />
-    <script type="application/ld+json" set:html={JSON.stringify(org).replace(/</g, "\\u003c")} is:inline />
-    {article && <script type="application/ld+json" set:html={JSON.stringify({
+    <script type="application/ld+json" set:html={jsonLd(org)} is:inline />
+    {website && <script type="application/ld+json" set:html={jsonLd(website)} is:inline />}
+    {article && <script type="application/ld+json" set:html={jsonLd({
       "@context": "https://schema.org", "@type": "Article", headline: article.headline ?? title,
       description, mainEntityOfPage: canonical,
       ...(article.date ? {datePublished: article.date} : {}),
@@ -142,7 +125,7 @@ const org = {
       publisher: {"@type": "Organization", name: article.publisher ?? settings.name},
       ...(shareImage ? {image: [shareImage]} : {}),
       ...(article.source ? {citation: article.source} : {}),
-    }).replace(/</g, "\\u003c")} is:inline />}
+    })} is:inline />}
   </head>
   <body id="top" data-ground={ground} data-preview={isPreview ? "true" : undefined} data-zoom-widths={ZOOM_LADDER.join(",")}>
     <a class="skip" href="#main">Skip to content</a>

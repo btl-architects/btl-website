@@ -16,8 +16,21 @@ export default defineType({
     { name: "copy", title: "Page wording" },
     { name: "contact", title: "Contact" },
     { name: "nav", title: "Navigation" },
+    { name: "seo", title: "Search listings" },
   ],
   fields: [
+    defineField({
+      name: 'pageSeo', title: 'Search listings', type: 'object', group: 'seo',
+      description: 'Optional search and sharing metadata. These fields do not change page headings or the studio’s writing. Leave a field empty to keep its current fallback.',
+      fields: [
+        defineField({name: 'home', title: 'Home', type: 'seo'}),
+        defineField({name: 'projects', title: 'Projects index', type: 'seo'}),
+        defineField({name: 'press', title: 'Press index', type: 'seo'}),
+        defineField({name: 'people', title: 'People index', type: 'seo'}),
+        defineField({name: 'studio', title: 'Studio', type: 'seo'}),
+        defineField({name: 'contact', title: 'Contact', type: 'seo'}),
+      ],
+    }),
     defineField({ name: "name", type: "string", group: "studio", initialValue: "btl architects" }),
     defineField({ name: "domain", type: "string", group: "studio" }),
     defineField({ name: "tagline", type: "string", group: "studio", validation: (r) => r.max(120) }),
