@@ -405,30 +405,8 @@ html:has(.menu[data-open="true"]) .header {
   padding-block: 0 var(--s-8);
 }
 
-/* Cards arrive by being uncovered, like everything else (R10) — not by
-   sliding, which is what the older .rv primitive does. Each waits until it is
-   actually approaching the viewport, so the page below is never pre-animated. */
-@media (prefers-reduced-motion: no-preference) {
-  /* The reveal's transition is a token, not a literal, because it has to be
-     repeated on every component that is ALSO a .rvc — see .pcard below. */
-  :where(.js) .rvc { clip-path: inset(0 0 100% 0); transition: var(--tr-reveal); }
-  :where(.js) .rvc.in { clip-path: inset(0 0 0 0); }
-}
-
-/* Every .pcard is also a .rvc, and both used to set the `transition` SHORTHAND.
- * A shorthand replaces the whole property rather than adding to it, and these
- * two rules sit at the same specificity — :where(.js) was chosen deliberately to
- * keep it that way — so the one written later in the file won outright. .pcard
- * is later. The result: clip-path was never in the card's transition list at
- * all, and the reveal it was supposed to animate simply snapped.
- *
- * That is what "the projects all appear at once with no animation" was. Not the
- * images loading, not the observer: an animation that had been silently deleted
- * by a neighbouring rule, on the one component where it mattered most.
- *
- * So the reveal is a token and every transition list on this element carries it.
- * If you add another `transition:` for .pcard, it must include var(--tr-reveal)
- * — tools/budget.mjs fails the build if it does not. */
+/* Cards share the site's fade-and-rise entrance. Keep the transition token
+ * alongside height so opening/closing cannot overwrite the entrance. */
 .pcard {
   position: relative;
   height: clamp(11rem, 27vh, 21rem);
@@ -438,7 +416,7 @@ html:has(.menu[data-open="true"]) .header {
 .pcard[data-open="true"] { cursor: default; }
 /* Opening is the gesture you asked for and gets the full duration; closing is
    the card getting out of the way and should not make you wait for it. */
-.pcard:not([data-open="true"]) { transition-duration: var(--dur-hover), var(--dur-hover); }
+.pcard:not([data-open="true"]) { transition-duration: var(--dur-hover), var(--dur-reveal), var(--dur-reveal); }
 .pcard[data-open="true"] { height: clamp(19rem, 56vh, 32rem); }
 
 .pcard__strip {
@@ -537,7 +515,7 @@ html:has(.menu[data-open="true"]) .header {
      index is a set of finished buildings, and moving the mouse across it should
      not repeatedly hide most of them. Hover may acknowledge; it should not
      subtract. The card's own lift on hover, below, still answers the pointer. */
-  .pcard { transition: height var(--dur-slow) var(--ease), opacity var(--dur-hover) var(--ease), var(--tr-reveal); }
+  .pcard { transition: height var(--dur-slow) var(--ease), var(--tr-reveal); }
 
   /* The caption lifts very slightly on hover — but the TYPE lifts, never the
      element carrying the scrim. Moving the scrim itself pulled its bottom edge
@@ -1749,8 +1727,8 @@ html:has(.menu[data-open="true"]) .header {
 .statement { text-align: center; }
 @media (prefers-reduced-motion: no-preference) {
   :where(.js) .statement--scroll {
-    transform: translateY(var(--s-5));
-    transition: opacity var(--dur-statement) var(--ease), transform var(--dur-statement) var(--ease);
+    transform: translateY(var(--reveal-distance));
+    transition: opacity var(--dur-statement) var(--ease-reveal), transform var(--dur-statement) var(--ease-reveal);
   }
   :where(.js) .statement--scroll.in { transform: none; }
 }

@@ -1,3 +1,4 @@
+import {clipVideoSources} from "../../shared/video.ts";
 /* Check the content against the rules the Studio enforces — at build time.
  *
  * The Studio validates as an editor types. That covers everything typed into
@@ -84,7 +85,8 @@ const data = await client.fetch(`{
     "studioImage": studioImage{alt, rights, "hasAsset": defined(asset.asset)},
     "studioImages": studioImages[]{alt, rights, "hasAsset": defined(asset.asset)},
     nav[]{label, href}, social[]{label, url},
-    heroClips[]{label, "video": video.asset->url, "poster": poster.asset->url}
+    heroClips[]{label, videoMode, "video": video.asset->url, "poster": poster.asset->url,
+      "videoMux": videoMux.asset->{status, data{playback_ids[]{id,policy},static_renditions{files[]{status,name,ext}}}}}
   }
 }`, { states: mode.preview ? ["draft", "published", "archived"] : ["published", "archived"] });
 
@@ -137,7 +139,7 @@ for (const social of data.settings?.social ?? []) {
   } catch {errors.push('Settings · social link needs a label and a public web address');}
 }
 for (const clip of data.settings?.heroClips ?? []) {
-  if (!clip.video || !clip.poster) errors.push(`Settings · opening film ${clip.label || '(untitled)'} needs its film and still frame`);
+  if (!clipVideoSources(clip).video || !clip.poster) errors.push(`Settings · opening film ${clip.label || '(untitled)'} needs its film and still frame`);
 }
 
 if (errors.length) {

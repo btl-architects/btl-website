@@ -19,6 +19,7 @@ import { visibleProjects, routedProjects } from "../../server/build-mode.js";
 import type { SiteImage } from "./media";
 import type {ArticleBlock, OpeningMode} from "./press";
 import {articleUrl} from "./press";
+import {clipVideoSources, type ClipVideoSources} from "../../../shared/video";
 
 /* ---------------------------------------------------------------- types --- */
 
@@ -114,7 +115,7 @@ type ProjectRow = Omit<Project, "hook" | "images"> & {images: (SiteImage & {kind
 type CmsImage = SiteImage & {source: {asset: {_ref: string} | null}};
 type PublicationRow = Omit<Publication, "image" | "articleHero"> & {image?: CmsImage; articleHero?: CmsImage};
 type PersonRow = Omit<Person, "portrait"> & {portrait?: CmsImage};
-type HeroClipRow = Omit<HeroClip, "poster" | "posterPortrait"> & {poster?: CmsImage; posterPortrait?: CmsImage};
+type HeroClipRow = Omit<HeroClip, "poster" | "posterPortrait"> & ClipVideoSources & {poster?: CmsImage; posterPortrait?: CmsImage};
 
 /* ------------------------------------------------------------- fragments --- */
 
@@ -348,8 +349,11 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
   const rows = await sanity.fetch<HeroClipRow[]>(`*[_type == "settings"][0].heroClips[]{
     "key": _key,
     "label": coalesce(label, ""),
+    videoMode,
     "video": video.asset->url,
     "videoPortrait": videoPortrait.asset->url,
+    "videoMux": videoMux.asset->{status, data{playback_ids[]{id,policy}, static_renditions{files[]{status,name,ext}}}},
+    "videoPortraitMux": videoPortraitMux.asset->{status, data{playback_ids[]{id,policy}, static_renditions{files[]{status,name,ext}}}},
     "poster": { "source": { "asset": poster.asset }, "alt": "",
                 "lqip": poster.asset->metadata.lqip,
                 "dimensions": poster.asset->metadata.dimensions{width, height} },
@@ -358,6 +362,7 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
                 "dimensions": posterPortrait.asset->metadata.dimensions{width, height} }
   }`);
   return (rows ?? [])
+    .map(c => ({...c, ...clipVideoSources(c)}))
     .filter(c => c.video)
     .map((c): HeroClip => ({
       key: c.key,

@@ -30,13 +30,13 @@ const lead = leadProp ?? copy.projectsLead;
       gave a visitor nothing to land on — the work started before the page had
       said what it was. A masthead costs one screen of scrolling and buys the
       reader a moment to arrive. */}
-  <header class="index-head">
+  <header class="index-head rv">
     <h1 class="index-head__t">{title}</h1>
     {lead && <p class="index-head__s">{lead}</p>}
   </header>
 
   {chips.length > 0 && (
-    <nav class="chips" aria-label="Project categories">
+    <nav class="chips rv" aria-label="Project categories">
       <a class="chip" href="/projects/" aria-current={active === "" ? "page" : undefined}>All</a>
       {chips.map((c) => (
         <a

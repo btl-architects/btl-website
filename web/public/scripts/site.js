@@ -29,163 +29,99 @@
     DUR.slow = durationToken("--dur-slow", 700);
   });
 
-  /* --- 1. scroll reveals -------------------------------------------------- */
-  /* A clip-path left on an element forces it into its own composited layer,
-     and a layer whose height is fractional (card heights come from vh)
-     rasterises its bottom edge at partial coverage — a smeared, lighter band
-     across the full width of the card, gaps included. Once a reveal has
-     finished, the clip has done its job and must be taken off entirely. */
-  document.addEventListener("transitionend", function (ev) {
-    if (ev.propertyName === "clip-path" && ev.target.classList.contains("rvc")) {
-      ev.target.style.clipPath = "none";
+  /* --- 1. shared scroll entrances -----------------------------------------
+   * One entrance per element, with a short stagger. Initial visible content
+   * stays steady: the opening image and page title must not wait on animation.
+   * Below-fold groups enter inside the reading area, not at the first pixel.
+   * Both the observer and the scroll backstop use the same trigger. */
+  var reveals = [].slice.call(document.querySelectorAll(".rv, .rvc, .ruled"));
+  var pending = reveals.slice();
+  var revealObserver;
+  var revealTick = false;
+  var STAGGER_MS = 75;
+  var MAX_STAGGER_MS = 225;
+
+  function reveal(el, stagger, instant) {
+    if (instant) {
+      el.setAttribute("data-reveal-instant", "");
+      el.style.transitionDelay = "";
     }
+    if (el.classList.contains("in")) return;
+    if (!instant) el.style.transitionDelay = Math.min(stagger || 0, MAX_STAGGER_MS) + "ms";
+    el.classList.add("in");
+    if (revealObserver) revealObserver.unobserve(el);
+  }
+  document.addEventListener("transitionend", function (ev) {
+    if (reveals.indexOf(ev.target) !== -1) ev.target.style.transitionDelay = "";
   });
 
-  /* Claim the reveals. Until this line runs, the stylesheet leaves everything
-     visible — so a parse error, a blocked script or an old browser costs the
-     animation and nothing else. */
+  function stopReveals() {
+    if (revealObserver) revealObserver.disconnect();
+    window.removeEventListener("scroll", queueReveals);
+    window.removeEventListener("resize", queueReveals);
+  }
+  function revealAll() {
+    reveals.forEach(function (el) { reveal(el, 0, true); });
+    pending = [];
+    stopReveals();
+  }
+  function sweepReveals() {
+    revealTick = false;
+    var ready = [];
+    var vh = window.innerHeight;
+    // Batch geometry reads before writes, and cap the threshold by viewport
+    // height: a tall card can enter without needing 25% of itself on screen.
+    pending = pending.filter(function (el) {
+      if (el.classList.contains("in")) return false;
+      var box = el.getBoundingClientRect();
+      var edge = el.hasAttribute("data-statement-reveal") ? .68 : .82;
+      if (box.top < vh * edge) {
+        ready.push({el: el, passed: box.bottom <= 0});
+        return false;
+      }
+      return true;
+    });
+    ready.forEach(function (entry, i) { reveal(entry.el, i * STAGGER_MS, entry.passed); });
+    if (!pending.length) stopReveals();
+  }
+  function queueReveals() {
+    if (revealTick || !pending.length) return;
+    revealTick = true;
+    requestAnimationFrame(sweepReveals);
+  }
+
+  // Measure before claiming the hidden state, so initial content does not
+  // fade out and back in. Also covers a reload at a restored scroll position.
+  var initial = reveals.filter(function (el) {
+    var box = el.getBoundingClientRect();
+    return !el.hasAttribute("data-statement-reveal") && box.top < window.innerHeight && box.bottom > 0;
+  });
+  initial.forEach(function (el) { reveal(el, 0, true); });
   document.documentElement.classList.add("js");
 
-  var statement = document.querySelector("[data-statement-reveal]");
-  var reveals = document.querySelectorAll(".rv:not([data-statement-reveal]), .rvc, .ruled");
-
-  /* One way in, used by every path that reveals something.
-   *
-   * There used to be three, and two of them cheated: they set clipPath = "none"
-   * inline at the moment of revealing, which overrides the `inset(0 0 0 0)` the
-   * .in class transitions towards and cancels the animation outright. So a card
-   * the observer caught slid open, and a card the 1200ms backstop caught simply
-   * appeared. On the projects page the backstop is what usually wins — which is
-   * why the whole list arrived at once, a second in, with no animation: not a
-   * loading delay, a reveal that skipped itself.
-   *
-   * Clearing the clip is a CLEANUP step and belongs after the transition ends,
-   * where the transitionend handler above already does it. The only caller
-   * allowed to skip straight to the end state is revealAll(), which exists for
-   * the cases where there is no animation to run.
-   *
-   * `stagger` spaces siblings revealed in the same pass. Without it a screenful
-   * of cards animates as one block, which reads as a page popping rather than a
-   * list arriving. It is cleared on transitionend so a delay meant for one
-   * entrance never lingers on a later state change. */
-  var STAGGER_MS = 90;
-  function reveal(el, stagger) {
-    if (el.classList.contains("in")) return;
-    if (stagger) el.style.transitionDelay = stagger + "ms";
-    el.classList.add("in");
-  }
-
-  document.addEventListener("transitionend", function (ev) {
-    if (ev.target.style && ev.target.style.transitionDelay) ev.target.style.transitionDelay = "";
-  });
-
-  /* The end state, reached without animating: reduced motion, a hidden tab, or
-     a browser with no IntersectionObserver. Here the inline clip IS correct. */
-  function revealAll() {
-    if (statement) statement.classList.add("in");
-    reveals.forEach(function (el) {
-      el.classList.add("in");
-      if (el.classList.contains("rvc")) el.style.clipPath = "none";
-    });
-  }
-  /* A reveal that starts hidden must have a way out that does not depend on the
-     observer. IntersectionObserver does not report anything while the document
-     is hidden, so a page opened in a background tab — or restored from one —
-     would sit there blank until it happened to be scrolled. */
   if (reduced || document.hidden || !("IntersectionObserver" in window)) {
     revealAll();
   } else {
-    document.addEventListener("visibilitychange", function once() {
-      if (document.hidden) { revealAll(); document.removeEventListener("visibilitychange", once); }
-    });
-    var io = new IntersectionObserver(function (entries) {
-      var n = 0;
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        reveal(e.target, n++ * STAGGER_MS);
-        io.unobserve(e.target);
-      });
-    }, { threshold: 0.25, rootMargin: "0px 0px -8% 0px" });
-    reveals.forEach(function (el) { io.observe(el); });
-
-    /* A backstop that follows the reader, not a one-shot timer.
-     *
-     * The first version of this ran once, 1200ms after load, and revealed
-     * whatever was on screen at that instant. On the home page that is never
-     * the work: Selected Work sits below a full-height opening film, so it was
-     * still below the fold when the timer fired and went on depending entirely
-     * on the observer. If the observer is slow, throttled or silent, the cards
-     * stay clipped while their photographs quietly finish loading behind them —
-     * which is exactly what "still taking a long time to load" looks like from
-     * the outside.
-     *
-     * So the check runs on scroll as well, rAF-throttled, and detaches itself
-     * the moment everything has been revealed. It costs nothing once the page
-     * has been read and it cannot leave content hidden below the fold. */
-    var pending = [].slice.call(reveals);
-    var ticking = false;
-
-    function sweep() {
-      ticking = false;
-      var vh = window.innerHeight;
-      // Read every box before changing classes. Interleaving reads and writes
-      // forced a new page layout for each revealed element on slower devices.
-      var ready = [];
-      pending = pending.filter(function (el) {
-        if (el.classList.contains("in")) return false;
-        var r = el.getBoundingClientRect();
-        if (r.top < vh && r.bottom > 0) {
-          ready.push(el);
-          return false;
-        }
-        return true;
-      });
-      ready.forEach(function (el, n) { reveal(el, n * STAGGER_MS); });
-      if (!pending.length) {
-        window.removeEventListener("scroll", onScroll);
-        window.removeEventListener("resize", onScroll);
-      }
-    }
-
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(sweep);
-    }
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    setTimeout(sweep, 1200);
+    revealObserver = new IntersectionObserver(queueReveals, {threshold: 0, rootMargin: "0px 0px -18% 0px"});
+    pending.forEach(function (el) { if (!el.classList.contains("in")) revealObserver.observe(el); });
+    window.addEventListener("scroll", queueReveals, {passive: true});
+    window.addEventListener("resize", queueReveals, {passive: true});
+    afterFirstPaint(queueReveals);
+    setTimeout(queueReveals, 1200);
   }
-
-  /* Fade the statement once its words are comfortably in frame. The general
-     sweep reveals at the first pixel, so it can finish before a slow scroll
-     reaches the writing. Keep this section out of that early sweep. */
-  if (statement && !statement.classList.contains("in")) {
-    var statementObserver = new IntersectionObserver(function (entries) {
-      if (entries[0].isIntersecting) showStatement();
-    }, {threshold: 0.5, rootMargin: "0px 0px -22% 0px"});
-    function showStatement() {
-      statement.classList.add("in");
-      statementObserver.disconnect();
-      window.removeEventListener("scroll", checkStatement);
-      window.removeEventListener("resize", checkStatement);
+  // Background tabs, preference changes and browser history never leave
+  // unreadable content. Once revealed, it stays visible on the return scroll.
+  document.addEventListener("visibilitychange", function () { if (document.hidden) revealAll(); });
+  motionPreference.addEventListener("change", function () { if (motionPreference.matches) revealAll(); });
+  window.addEventListener("pageshow", function (ev) { if (ev.persisted) revealAll(); else queueReveals(); });
+  document.addEventListener("focusin", function (ev) {
+    var el = ev.target;
+    while (el && el !== document.documentElement) {
+      // Do not snap a card already entering when a pointer gives it focus.
+      if (reveals.indexOf(el) !== -1 && !el.classList.contains("in")) reveal(el, 0, true);
+      el = el.parentElement;
     }
-    var statementTick = false;
-    function checkStatement() {
-      if (statementTick) return;
-      statementTick = true;
-      requestAnimationFrame(function () {
-        statementTick = false;
-        var box = statement.getBoundingClientRect();
-        if (box.top < window.innerHeight * 0.68 && box.bottom > 0) showStatement();
-      });
-    }
-    statementObserver.observe(statement);
-    window.addEventListener("scroll", checkStatement, {passive: true});
-    window.addEventListener("resize", checkStatement, {passive: true});
-    setTimeout(checkStatement, 1200);
-  }
+  });
 
   /* --- 1b. the opening sequence --------------------------------------------
      Ambient, not navigational (R8): no arrows, no dots, no counter, and it
@@ -208,7 +144,7 @@
        being hidden, and reduced motion or Save-Data — all of which sync() still
        honours. Keeping the flag with nothing able to set it would have left a
        branch that reads as a feature and can never be reached. */
-    var at = 0, timer = null, preloadNext = null, visible = false;
+    var at = 0, errorTimer = null, preloadNext = null, visible = false;
     /* The film starts two frames after load, i.e. after first paint: a decoder
        starting earlier held a slow device's first paint back ~2s. */
     var pageReady = false;
@@ -224,6 +160,15 @@
       frame.appendChild(frame.querySelector("[data-stage-video]").content.cloneNode(true));
       v = frame.querySelector("video");
       v.muted = true;
+      v.loop = sFrames.length === 1;
+      v.addEventListener("ended", function () { if (at === i && canPlay()) show(at + 1); });
+      v.addEventListener("error", function () {
+        // Keep the authored still usable if a file is unavailable or invalid.
+        // With several clips, continue after a short still rather than stall.
+        if (at !== i || !canPlay() || sFrames.length < 2) return;
+        clearTimeout(errorTimer);
+        errorTimer = setTimeout(function () { if (at === i && canPlay()) show(at + 1); }, 6200);
+      });
       v.addEventListener("playing", function () { v.setAttribute("data-playing", "true"); });
       v.addEventListener("emptied", function () { v.removeAttribute("data-playing"); });
       return v;
@@ -234,7 +179,7 @@
       if (want && v.getAttribute("src") !== want) { v.src = want; v.load(); }
     }
     function pause() {
-      clearInterval(timer); clearTimeout(preloadNext); timer = preloadNext = null;
+      clearTimeout(errorTimer); clearTimeout(preloadNext); errorTimer = preloadNext = null;
       sFrames.forEach(function (f) { var v = f.querySelector("video"); if (v) v.pause(); });
     }
     function show(i) {
@@ -244,11 +189,15 @@
         var v = f.querySelector("video");
         if (k !== at && v) v.pause();
       });
+      clearTimeout(errorTimer); errorTimer = null;
       load(at);
-      player(at).play().catch(function () {});
+      var current = player(at);
+      if (current.ended) current.currentTime = 0;
+      current.play().catch(function () {});
       clearTimeout(preloadNext);
       preloadNext = setTimeout(function () { load((at + 1) % sFrames.length); }, 3000);
     }
+    function canPlay() { return !stillsOnly() && visible && !document.hidden && pageReady; }
     function sync() {
       pause();
       if (stillsOnly()) {
@@ -260,9 +209,8 @@
         });
         return;
       }
-      if (!visible || document.hidden || !pageReady) return;
+      if (!canPlay()) return;
       show(at);
-      if (sFrames.length > 1) timer = setInterval(function () { show(at + 1); }, 6200);
     }
     document.addEventListener("visibilitychange", sync);
     motion.addEventListener("change", sync);
@@ -1271,13 +1219,9 @@
       return Math.min(4, Math.max(2, s));
     }
 
-    /* The viewer opens on the 2000px rendition, which is plenty to fit a
-       screen and a third of what a zoomed retina view needs — at 2.5x it was
-       visibly soft, the one moment somebody had asked to see more. On zooming,
-       fetch what the current scale actually needs (Sanity renders any width up
-       to the original's) and swap it in once it has arrived, so the picture
-       sharpens in place rather than going blank. Its drawn size is pinned
-       first, because a larger file would otherwise lay out larger. */
+    /* The viewer starts with a high-resolution responsive rendition. On zoom,
+       fetch additional detail only when the current file cannot cover it.
+       Pin the drawn size before swapping, so sharpening does not resize it. */
     function fullWidth(src) {
       var m = /-(\d+)x(\d+)\.[a-z]+(\?|$)/i.exec(src || "");
       return m ? parseInt(m[1], 10) : 0;

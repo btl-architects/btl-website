@@ -7,7 +7,7 @@ const { person: p } = Astro.props;
 const linked = Boolean(p.slug && p.bio);
 const Tag = linked ? "a" : "span";
 ---
-<li class="trow">
+<li class="trow rv">
   <Tag class="trow__link" href={linked ? `/people/${p.slug}/` : undefined}>
     {p.portrait && <span class="trow__p">
       <Figure image={p.portrait} sizes={coverSizes(p.portrait, "16rem", "50vw")} />

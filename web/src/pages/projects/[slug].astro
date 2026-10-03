@@ -47,18 +47,20 @@ const { project, prev, next } = Astro.props;
           title, so it is the heading rather than a styled span with a
           screen-reader-only duplicate hidden elsewhere. A <span> cannot legally
           wrap an <h1>, so the row is a <div>. */}
-      <header class="pj__head">
+      <header class="pj__head rv">
         <div class="pjh__id grid12">
           <h1 class="pjh__name">{project.title}</h1>
           <span class="pjh__place">{project.location}</span>
         </div>
       </header>
 
-      <ProjectRail project={project} priority />
-      <RailNav class="container" total={project.images.length} name={project.title} />
+      <div class="rv">
+        <ProjectRail project={project} priority />
+        <RailNav class="container" total={project.images.length} name={project.title} />
+      </div>
 
       <div class="container page-end">
-        {prev && next && <nav class="pager" style="margin-top:var(--s-8)" aria-label="Projects">
+        {prev && next && <nav class="pager rv" style="margin-top:var(--s-8)" aria-label="Projects">
           <a href={`/projects/${prev.slug}/`}>
             <span class="pager__k">Previous</span>
             <span class="pager__n">{prev.title}</span>

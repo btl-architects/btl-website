@@ -53,18 +53,12 @@ export interface ResolvedImage {
   lqip?: string;
 }
 
-/* The widths a photograph is offered at.
- *
- * Sanity generates each width the first time it is asked for, which costs
- * roughly half a second, and caches it afterwards. Every extra rung is
- * therefore another cold generation that some unlucky visitor pays for, and
- * six rungs across four projects is a hundred and sixty-odd first requests.
- * Four rungs cover every real viewport at sensible density and quarter the
- * number of images that have to exist. */
-const LADDER = [480, 900, 1400, 2000];
+/* Responsive widths include large Retina screens. Every candidate is capped
+ * by the actual cropped source: additional pixels are never invented. */
+const LADDER = [480, 900, 1400, 2000, 2800, 4000];
 
 /* The widths the photograph viewer sharpens to when someone zooms in, above
- * the ladder's 2000px. Few and fixed for the same reason the ladder is: each is
+ * the fitted viewer rendition. Few and fixed for the same reason the ladder is: each is
  * a cold render the first time it is asked for — 4.7s for a 6000px Nelly House
  * frame — so tools/warm-images.mjs renders them at build time, and it can only
  * do that for widths it knows in advance. The top rung is capped by the
@@ -142,11 +136,8 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
   const widths = LADDER.filter((w) => w < top);
   widths.push(top);
 
-  /* q=68 rather than the 76 this started at. Measured on a 1400px frame of the
-   * Nelly House exterior: 336 kB against 394 kB, for a difference no one has
-   * ever spotted in a photograph at this size. auto("format") hands WebP to
-   * browsers that take it, which is worth a further 5% — less than it sounds,
-   * because Sanity's JPEG encoder is already good. */
+  /* Preserve faces, textures and architectural detail. Responsive selection
+   * and modern formats control transfer size, rather than heavy compression. */
   /* Commas are escaped because srcset separates its candidates with commas.
    *
    * A cropped image gets `?rect=106,115,748,947` from Sanity, and the moment
@@ -157,11 +148,11 @@ export function resolveImage(image: SiteImage): ResolvedImage | null {
    *
    * %2C is a legal encoding of a comma in a query value and Sanity accepts it. */
   const at = (w: number) =>
-    urlFor(source).width(w).quality(68).auto("format").fit("max").url()
+    urlFor(source).width(w).quality(82).auto("format").fit("max").url()
       .replace(/,/g, "%2C");
 
   const srcset = widths.map((w) => `${at(w)} ${w}w`).join(", ");
-  const fallback = widths[Math.floor(widths.length / 2)]!;
+  const fallback = widths.find(w => w >= 1400) ?? widths[widths.length - 1]!;
 
   return {
     src: at(fallback),
@@ -211,27 +202,19 @@ export function coverSizes(image: SiteImage, wide: string, narrow: string): stri
   return `(min-width: 60rem) calc(${wide} * ${k}), calc(${narrow} * ${k})`;
 }
 
-/* A frame in a rail (RailFrame): a project's gallery or the Studio's photographs.
- *
- * The rail is height-driven — .rail sets the strip's height and every frame is
- * that height times its own ratio — so this states exactly that, with the same
- * two heights .rail uses either side of 52rem.
- *
- * It used to be a flat "700px", measured on a 1440px retina screen, where it
- * was right: the 1400px file at 1.6–1.8x density, half the bytes of the 2000px
- * one and indistinguishable. The cap keeps that on wide screens. But 700px was
- * true of nothing else: on a phone a landscape frame is ~490px wide and still
- * pulled the 1400px file, and a portrait on a desktop asked for twice its
- * width. On the launch performance check's phone, the four frames that loaded
- * before first paint came to 601 kB and held the project page's largest paint
- * past its 2-second target.
- *
- * An opened project card hands each frame's value to the matching kept
- * thumbnail (site.js). */
+/* Height-driven galleries must request the actual image width. A fixed 700px
+ * ceiling under-requested landscape frames on large, sharp screens. */
 export function railSizes(image: SiteImage): string {
   const ratio = resolveImage(image)?.ratio || 1.5;
   return `(max-width: 51.99rem) calc(clamp(14rem, 40vh, 22rem) * ${ratio}), ` +
-         `min(700px, calc(clamp(18rem, 56vh, 34rem) * ${ratio}))`;
+         `calc(clamp(18rem, 56vh, 34rem) * ${ratio})`;
+}
+
+/** Closed project strips have a different height from the opened gallery. */
+export function peekSizes(image: SiteImage): string {
+  const ratio = resolveImage(image)?.ratio || 1.5;
+  return `(max-width: 51.99rem) calc(clamp(13rem, 34vh, 20rem) * ${ratio}), ` +
+         `calc(clamp(11rem, 27vh, 21rem) * ${ratio})`;
 }
 
 /* The one image nobody on the site ever sees.
@@ -247,7 +230,7 @@ export function railSizes(image: SiteImage): string {
  * instead of the ladder's fit=max for the same reason: this is the one place a
  * photograph should be cut to a shape rather than fitted into one.
  *
- * Quality 80 rather than 68 — it is fetched once by a scraper and cached by the
+ * Quality 80 — it is fetched once by a scraper and cached by the
  * platform forever, so the usual argument about a visitor's data plan does not
  * apply, and WhatsApp re-compresses hard on top of whatever it is given.
  *

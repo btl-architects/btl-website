@@ -34,7 +34,7 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
 ---
 
 <Tag
-  class:list={["pc", custom && "pc--custom"]}
+  class:list={["pc rv", custom && "pc--custom"]}
   href={reader || original || undefined}
   rel={live ? "noopener" : undefined}
   target={original && !reader ? "_blank" : undefined}

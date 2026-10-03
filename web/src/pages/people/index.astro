@@ -44,7 +44,7 @@ const teamImage = home.teamImage;
 
       {team.length > 0 && (
         <section class="roster team">
-          <h2 class="eyebrow roster__k">The team</h2>
+          <h2 class="eyebrow roster__k rv">The team</h2>
           <ul class="team__list">
             {team.map((person) => <PersonCard person={person} />)}
           </ul>
@@ -53,7 +53,7 @@ const teamImage = home.teamImage;
 
       {alumni.length > 0 && (
         <section class="roster team">
-          <h2 class="eyebrow roster__k">Previously at btl</h2>
+          <h2 class="eyebrow roster__k rv">Previously at btl</h2>
           <ul class="team__list">
             {alumni.map((person) => <PersonCard person={person} />)}
           </ul>

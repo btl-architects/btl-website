@@ -1,4 +1,5 @@
 import { defineConfig } from "sanity";
+import {muxInput} from "sanity-plugin-mux-input";
 import { structureTool } from "sanity/structure";
 import { schemaTypes } from "./schemas";
 import { structure } from "./structure";
@@ -23,7 +24,17 @@ export default defineConfig({
   projectId: process.env.SANITY_STUDIO_PROJECT_ID ?? "",
   dataset: process.env.SANITY_STUDIO_DATASET ?? "production",
 
-  plugins: [structureTool({ structure })],
+  plugins: [structureTool({ structure }), muxInput({
+    video_quality: 'basic',
+    max_resolution_tier: '1080p',
+    static_renditions: ['highest'],
+    defaultPublic: true,
+    defaultSigned: false,
+    disableUploadConfig: true,
+    disableTextTrackConfig: true,
+    acceptedMimeTypes: ['video/*'],
+    tool: {title: 'Videos'},
+  })],
 
   document: {
     actions: (actions, context) => context.schemaType !== 'project' ? actions : actions.map(action =>

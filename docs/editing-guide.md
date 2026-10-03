@@ -286,8 +286,6 @@ The site is built and works. These are the gaps only you can close:
   "House Two"
 - **Bios for both principals**
 - **The four team members' real names and roles**
-- **The founders photograph at full resolution** — what we have is a WhatsApp
-  copy, fine at the size it's used but it can never be printed or run larger
 - **Written permission for the Nelly House photographs** from the magazine and
   the photographer
 - **Your LinkedIn and YouTube addresses** — they currently point at those sites'
@@ -326,3 +324,60 @@ to a person only when the wording is verified.
 Embed uses the same panel but keeps the publisher's appearance. A publisher can
 block framing now or later; the visible original link remains available and
 closing restores BTL. BTL reader stays readable independently of framing policy.
+
+## Image clarity on sharp screens
+
+Upload camera originals rather than screenshots or WhatsApp copies. The website
+now supplies larger responsive files up to 4000px when the source supports them,
+with higher-quality compression and requests matched to gallery and card sizes.
+It never enlarges a small upload or invents detail. Sanity warns about the usable
+resolution **after cropping**; the warning does not block a small portrait.
+
+The founders photograph was replaced with the supplied 4640 × 6960px camera
+original on 3 October 2026, cropped above the feet. Names below it follow the
+photograph: Faizan on the left, Thressia on the right. Change that order through
+**Arrange people → Principals** when replacing the photograph. To replace it
+later, use **Site settings → Studio → Founders photograph → Image**. Aim for at
+least 2000px on the long side and 1200px on the short side after cropping. The
+website automatically uses the extra detail after publishing and rebuilding.
+
+## Uploading opening films
+
+Open **Site settings → The practice → The opening sequence**. New clips default
+to **Automatic processing (Mux)**. Upload the original landscape video; Mux
+converts and compresses it into a web-ready MP4 up to 1080p. You can upload a
+separate portrait film framed for a phone, with the same duration. This processes
+video format and resolution; it does not invent a portrait crop or edit the film.
+Add matching still frames. Wait for the optimised MP4 to finish before publishing;
+the editor blocks an unfinished film. If it stays pending after processing,
+refresh the asset in **Videos**. Publishing rebuilds the website.
+
+Existing clips keep **Prepared MP4** until you explicitly switch them. In this
+mode, export H.264, web optimisation / fast start and no audio; aim under 3 MB for
+landscape and under 1 MB for a 720×1280 portrait. These file uploads are not
+converted. Switching modes keeps the old source available for reverting.
+
+Each clip plays to its end before advancing. The sequence repeats; if there is
+only one clip, it loops. Films play muted, pause offscreen or in a hidden tab,
+and reduced-motion / Save-Data visitors see the still instead. The website uses
+its own lightweight player with the optimised MP4, without Mux analytics scripts.
+
+### Connecting BTL's Mux account once
+
+1. Create a **Production** environment named **btl-website** in BTL's Mux account.
+2. In [API access tokens](https://dashboard.mux.com/settings/access-tokens),
+   create **Sanity Studio** for that environment with **Video: Read and Write**
+   and **Data: Read**. System permissions are not needed for public films.
+3. Open **Videos** in [Sanity Studio](https://btldesigns.sanity.studio/) and enter
+   the token ID and secret in its configuration screen. Keep public playback
+   enabled and signed playback disabled. Do not paste the secret into messages
+   or put it in website code. The official plugin stores it in the editor-only
+   `secrets.mux` record; public builds fetch only playback information.
+4. Upload a clip through the automatic field, wait for its MP4 to complete and
+   publish. Check it on desktop and a phone. Existing file clips stay unchanged.
+
+The integration uses Mux Basic processing and a standard highest MP4 rendition.
+It does not request premium processing or additional advanced MP4 resolutions.
+Account limits and charges are governed by [Mux's current plan](https://www.mux.com/pricing);
+review them when selecting or upgrading a plan. Mux is a separate service from
+Sanity's image optimisation.

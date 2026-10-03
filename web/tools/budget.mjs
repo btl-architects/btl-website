@@ -217,11 +217,8 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css"))) {
  * rule written later wins outright and the other animation is gone — no error,
  * no warning, it simply never runs.
  *
- * That is what happened to the project cards. Every .pcard is also a .rvc; the
- * reveal declared `transition: clip-path`, .pcard declared `transition: height`
- * a few lines further down at the same specificity, and the reveal was deleted.
- * The cards had been snapping into place instead of animating for as long as
- * the component has existed, which is what "everything appears at once" was.
+ * Project cards also animate their height. Their entrance now uses the shared
+ * fade-and-rise token, so height overrides must retain opacity and transform.
  *
  * The reveal is now a token, and any transition list on a component that is also
  * a reveal has to include it. Checked, not trusted. */

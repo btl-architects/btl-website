@@ -167,7 +167,7 @@
      A component that is also a .rvc has to restate it — the `transition`
      shorthand replaces rather than adds — and restating a literal is how the
      project cards lost their reveal without anyone noticing. */
-  --tr-reveal:        clip-path var(--dur-slow) var(--ease);
+  --tr-reveal:        opacity var(--dur-reveal) var(--ease-reveal), transform var(--dur-reveal) var(--ease-reveal);
 
   /* How wide a content card wants to be, before the grid decides how many fit.
      Repeating card grids state THIS and derive their column count from it —
@@ -264,6 +264,9 @@
   --dur-hover: 420ms;
   --dur-slow:  700ms;
   --dur-draw:  900ms;
+  --dur-reveal: 800ms;
+  --ease-reveal: cubic-bezier(0.22, 0.68, 0, 1);
+  --reveal-distance: 40px;
   --dur-statement: 1100ms; /* Client requested a more visible homepage fade. */
 
   /* ---- chrome ------------------------------------------------------------ */
@@ -323,3 +326,8 @@
 
 /* A photograph is always a dark ground, whatever the section around it. §13 */
 [data-on-media] { --mark: var(--btl-green); }
+
+/* Shorter travel on small screens keeps entrances within the reading area. */
+@media (max-width: 47.99rem) {
+  :root { --reveal-distance: 24px; --dur-reveal: 700ms; }
+}
