@@ -2316,12 +2316,18 @@ body[data-preview] .header { top: var(--preview-h); }
 }
 
 
-/* Touch has no hover preview. Keep the established line at rest and provide
-   small action cues, without changing pointer layouts or their hover behavior.
-   Inline prose links keep their text flow; standalone controls get finger room. */
+/* Touch has no hover preview, so the green line cannot appear on approach.
+   On a phone it stays at rest only where the words alone are the way on:
+   onward links, previous/next project, linked people and links inside a
+   sentence. Everything else already says it can be tapped — an arrow, a
+   photograph, the footer's place on the page, the format of an email address
+   or phone number, the menu itself — and lining those as well turned every
+   screen green. Standalone controls still get finger room; inline prose links
+   keep their text flow. Pointer layouts and their hover behaviour are unchanged. */
 .touch-cue, .photo-cue, .footer__mobile-social, .project-note--touch { display: none; }
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
-  a.ul::after, a.tl::after, .onward__t::after { clip-path: inset(0); }
+  .onward__t::after, a.ul::after,
+  a.tl:not(.footer a, [href^="mailto:"], [href^="tel:"])::after { clip-path: inset(0); }
   .onward { min-height: 2.75rem; padding-bottom: var(--s-3); }
   .footer__links a, a.tl[href^="mailto:"], a.tl[href^="tel:"] {
     display: inline-flex; align-items: center; min-height: 2.75rem;
@@ -2330,15 +2336,8 @@ body[data-preview] .header { top: var(--preview-h); }
   .footer__mobile-social { display: contents; }
   .header__logo { display: flex; align-items: center; min-height: 2.75rem; }
   .nav__link { display: inline-flex; align-items: center; min-height: 2.75rem; }
-  .menu__link[aria-current="page"] {
-    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .3em;
-  }
   .chips { gap: var(--s-3) var(--s-5); }
-  .chips .chip {
-    display: inline-flex; align-items: center; min-height: 2.75rem;
-    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .4em;
-  }
-  .chips .chip[aria-current="page"] { text-decoration-thickness: 2px; }
+  .chips .chip { display: inline-flex; align-items: center; min-height: 2.75rem; }
   .pager__n, a.trow__link .trow__n {
     text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .35em;
   }
@@ -2346,9 +2345,6 @@ body[data-preview] .header { top: var(--preview-h); }
     display: flex; align-items: center; gap: var(--s-2);
     font-size: var(--type-meta); font-weight: 400; letter-spacing: var(--track-meta);
     text-transform: uppercase;
-  }
-  .touch-cue__label {
-    text-decoration: underline; text-decoration-color: var(--mark); text-underline-offset: .4em;
   }
   .pcard__action { grid-row: 3; margin-top: var(--s-3); color: var(--on-media); text-shadow: var(--shadow-on-image); }
   .pc__action {
@@ -2366,7 +2362,6 @@ body[data-preview] .header { top: var(--preview-h); }
   .lb__x { min-height: 2.75rem; min-width: 2.75rem; }
   .lb:not([data-zoomed="true"]) .lb__step { opacity: 1; }
   .landing .srail__i { min-block-size: 2.75rem; display: inline-flex; align-items: center; }
-  .landing .srail__i::after { transform: scaleY(1); background: var(--mark); }
   .f input { min-height: 2.75rem; }
   .pj [data-rail] > .rail__note { display: none; }
   .project-note--touch { display: block; margin-top: var(--s-5); }

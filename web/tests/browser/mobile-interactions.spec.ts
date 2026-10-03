@@ -29,6 +29,22 @@ test.describe('phone interactions',()=>{
     await expect(page.locator('.footer__mobile-social a')).toHaveCount(3);
   });
 
+  test('the resting green line marks only destinations the words alone announce',async({page})=>{
+    const line=(el:Element,pseudo='::after')=>{
+      const s=getComputedStyle(el,pseudo);
+      return s.content!=='none'&&s.clipPath==='inset(0px)'&&s.transform==='none'||getComputedStyle(el).textDecorationLine.includes('underline');
+    };
+    await page.goto('/');
+    // Arrows, contact details, footer and social links already read as tappable.
+    for(const selector of ['.pc__action','.pcard__action','.pc__action span','.pcard__action span','.footer a','a[href^="mailto:"]','a[href^="tel:"]','.landing .srail__i'])
+      for(const el of await page.locator(selector).all()) expect(await el.evaluate(line),selector).toBe(false);
+    expect(await page.locator('.onward__t').first().evaluate(line)).toBe(true);
+    await page.goto('/projects/nelly-house/');
+    expect(await page.locator('.pager__n').first().evaluate(line)).toBe(true);
+    await page.goto('/contact/');
+    expect(await page.locator('a.tl[href="/privacy/"]').first().evaluate(line)).toBe(true);
+  });
+
   test('Press opens with one tap and closes without losing the page',async({page})=>{
     await page.goto('/press/');
     const card=page.locator('a[data-article]').first();

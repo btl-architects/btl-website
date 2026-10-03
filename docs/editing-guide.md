@@ -417,8 +417,9 @@ Sanity's image optimisation.
 
 ### Phone interaction cues
 
-Phone layouts keep the green link rule visible and add small action labels to
-project and Press cards. Gallery photographs show a full-view symbol. These are
+Phone layouts keep the green link line visible only on text links that lead
+further into the site (onward links, previous/next project, linked people,
+links inside a sentence), and add small arrow labels to project and Press cards. Gallery photographs show a full-view symbol. These are
 shared interface cues, so new Sanity entries receive them automatically. Mouse
 layouts keep their hover treatment. Individual project pages place the same
 project description below the photographs on phones, so longer text stays readable.
