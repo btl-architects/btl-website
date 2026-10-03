@@ -7,6 +7,34 @@
   var email = form.querySelector('[name="email"]');
   var busy = false;
 
+  // Native validation can stop submit before this handler runs, with no
+  // visible explanation on mobile. Keep native constraints as the no-JS
+  // fallback; with JS, explain them in the page before contacting the provider.
+  form.noValidate = true;
+  function validate() {
+    var fields = form.querySelectorAll('input:not([type="hidden"]), textarea');
+    var invalid = null;
+    fields.forEach(function (field) {
+      field.removeAttribute('aria-invalid');
+      field.removeAttribute('aria-describedby');
+      if (!invalid && ((!field.value.trim() && field.required) || !field.checkValidity())) invalid = field;
+    });
+    if (!invalid) return true;
+    var label = invalid.labels[0].textContent.trim();
+    var message = invalid.validity.typeMismatch ? 'Please enter a valid email address.' :
+      !invalid.value.trim() ? 'Please enter your ' + label.toLowerCase() + '.' :
+      'Please check your ' + label.toLowerCase() + '.';
+    status.textContent = message + ' Your enquiry has not been sent.';
+    invalid.setAttribute('aria-invalid', 'true');
+    invalid.setAttribute('aria-describedby', status.id);
+    invalid.focus();
+    return false;
+  }
+  form.addEventListener('input', function (event) {
+    event.target.removeAttribute('aria-invalid');
+    event.target.removeAttribute('aria-describedby');
+  });
+
   function reset() {
     busy = false; button.disabled = false; button.textContent = 'Send enquiry';
     form.removeAttribute('aria-busy');
@@ -15,7 +43,7 @@
 
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
-    if (busy || !form.reportValidity()) return;
+    if (busy || !validate()) return;
 
     // No key (preview, branch, local build): say so, contact no one.
     if (!form.elements.access_key.value) {

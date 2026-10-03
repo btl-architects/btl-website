@@ -62,10 +62,10 @@ const accessKey = enquiryKey(process.env);
           </div>
           <div class="f">
             <label for="ms">Message</label>
-            <textarea id="ms" name="message" required minlength="20" maxlength="5000"></textarea>
+            <textarea id="ms" name="message" required maxlength="5000"></textarea>
           </div>
           <button class="b b--solid" type="submit">Send enquiry</button>
-          <p data-enquiry-status role="status" aria-live="polite" tabindex="-1"></p>
+          <p id="enquiry-status" data-enquiry-status role="status" aria-live="polite" tabindex="-1"></p>
           <p class="t-caption" style="margin-top:var(--s-4)">
             We use your details to respond to your enquiry. Delivered through Web3Forms.
             Read our <a class="tl" href="/privacy/">privacy notice</a>.
