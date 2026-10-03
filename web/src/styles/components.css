@@ -2055,16 +2055,28 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__source { border-top: 1px solid var(--border-subtle); padding-top: var(--s-5); margin-top: var(--s-7); color: var(--text-secondary); font-size: var(--type-body-sm); }
 .press-article__help { font-size: var(--type-body-sm); color: var(--text-secondary); margin-bottom: var(--s-4); }
 .press-article__frame { display: block; width: 100%; height: 70dvh; border: 1px solid var(--border-subtle); background: var(--surface); }
-/* On a phone the reader is a card rising from the bottom, not a second page:
-   the Press page stays in view above it, a tap there closes it, and so does
-   pulling the card down by its top (press-reader.js). The short rule on top
-   is the handle phones use to say a card can be pulled. */
+/* On a phone the reader is a card to look into, not a page to be inside
+   (press-reader.js). It rises part way — a look at the article, nothing
+   scrolling, so a thumb swiping down anywhere puts it away — and swipes or
+   taps up to be read in full. The Press page stays visible around and above
+   it, and a tap there closes it from either height. The page behind
+   brightens as it is pulled down. The short rule on top is the handle phones
+   use to say a card can be pulled. Reading the original publication is the
+   one way out of the site. */
 @media (max-width: 47.99rem) {
   .press-reader {
-    width: 100%; height: 86dvh; margin: auto 0 0;
-    border: 0; border-top: 1px solid var(--border-strong);
-    touch-action: pan-y;
+    width: calc(100% - 2 * var(--s-3)); height: 92dvh; margin: auto auto 0;
+    border: 1px solid var(--border-strong); border-bottom: 0;
+    transition: transform 320ms var(--ease);
   }
+  .press-reader[data-pulling] { transition: none; }
+  /* Lowered, the card is a look, not a read: nothing scrolls, so any swipe on
+     it moves the card itself. */
+  .press-reader[data-detent="peek"] .press-reader__content { overflow: hidden; }
+  .press-reader__content { padding-bottom: max(var(--s-7), env(safe-area-inset-bottom)); }
+  .press-reader::backdrop { opacity: calc(1 - var(--pull, 0) * .8); transition: opacity 260ms var(--ease); }
+  .press-reader[data-pulling]::backdrop { transition: none; }
+  .press-reader[data-leaving]::backdrop { opacity: 0; }
   .press-reader::before {
     content: ""; flex: none; align-self: center;
     width: 2.25rem; height: 4px; margin-top: var(--s-2); border-radius: 2px;
@@ -2085,8 +2097,7 @@ body[data-preview] .header { top: var(--preview-h); }
 @media (prefers-reduced-motion: no-preference) {
   .press-reader[open] { animation: press-reader-in var(--dur-base) var(--ease); }
   @media (max-width: 47.99rem) {
-    .press-reader[open] { animation: press-sheet-in var(--dur-slow) var(--ease); }
-    @keyframes press-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+    .press-reader[open] { animation: none; }   /* it rises by transform (press-reader.js) */
   }
   .press-reader[open]::backdrop { animation: press-reader-backdrop var(--dur-base) var(--ease); }
   @keyframes press-reader-in { from {opacity: 0; transform: translateY(var(--s-3));} to {opacity: 1; transform: none;} }
