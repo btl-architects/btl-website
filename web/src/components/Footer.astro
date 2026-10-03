@@ -44,9 +44,6 @@ const railCarriesSocial = current === "index";
       {!railCarriesSocial && settings.social.map((s) => (
         <a class="tl" href={s.url} rel="noopener">{s.label}</a>
       ))}
-      {railCarriesSocial && <span class="footer__mobile-social">
-        {settings.social.map((s) => <a class="tl" href={s.url} rel="noopener">{s.label}</a>)}
-      </span>}
     </span>
   </div>
 </footer>

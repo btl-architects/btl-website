@@ -24,8 +24,19 @@ test.describe('phone interactions',()=>{
       if(route==='/'||route==='/projects/')await expect(page.locator('.pcard__action').first()).toBeVisible();
     }
     await page.goto('/');
-    await expect(page.locator('.footer__mobile-social')).toHaveCSS('display','contents');
-    await expect(page.locator('.footer__mobile-social a')).toHaveCount(3);
+    // The social rail stays with the reader on Home, inside the right margin.
+    const rail=page.locator('.landing .srail');
+    await expect(rail).toHaveCSS('position','fixed');
+    await page.evaluate(()=>scrollTo(0,document.body.scrollHeight/2));
+    await expect(rail).toBeInViewport();
+    const column=(await page.locator('.home-sec__k').first().boundingBox())!.x;
+    for(const item of await page.locator('.landing .srail__i').all()) {
+      const box=(await item.boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(24);
+      expect(box.x+box.width).toBeLessThanOrEqual(390);
+      const words=await item.evaluate(el=>{const r=document.createRange();r.selectNodeContents(el);return r.getBoundingClientRect();});
+      expect(words.left).toBeGreaterThanOrEqual(390-column); // clear of the type column
+    }
   });
 
   test('the resting green line marks only onward links and linked people',async({page})=>{
@@ -204,7 +215,6 @@ test('mouse layouts keep the original hover treatment at desktop and narrow widt
     await page.setViewportSize({width,height:900});
     await page.goto('/');
     await expect(page.locator('.pcard__action').first()).toBeHidden();
-    await expect(page.locator('.footer__mobile-social')).toBeHidden();
     await expect(page.locator('.copy-mark').first()).toBeHidden();
     expect(await page.locator('.onward__t').first().evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
     await page.goto('/projects/nelly-house/');

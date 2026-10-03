@@ -1875,17 +1875,18 @@ body[data-preview] .header { top: var(--preview-h); }
   transform-origin: center;
 }
 
-/* Below this it goes back to being part of the film.
+/* Narrower on a phone, so it can stay fixed there too.
  *
- * Fixed, the rail sits in the page's right margin. That margin is 63px at 1920
+ * History, because the thresholds below were argued over. Fixed, the rail
+ * sits in the page's right margin. That margin is 63px at 1920
  * and 21px on a phone, and the rail is about 40px wide — so on a narrow screen
  * a permanent rail is not in the margin, it is on top of the text. The
  * alternative is reserving width for it, which would give the page a second
  * content edge on one side only, and unpicking exactly that is most of what this
  * site's layout work has been.
  *
- * So it is constant where there is a margin to be constant in, and part of the
- * opening where there is not.
+ * So for a while it was constant where there was a margin to be constant in,
+ * and part of the opening where there was not.
  *
  * 48rem, and the first version of this said 80rem, which was wrong and had the
  * practice reporting the rail scrolling away with the film. That number came
@@ -1897,12 +1898,22 @@ body[data-preview] .header { top: var(--preview-h); }
  * widest screen instead of the tightest: a threshold guessed rather than
  * measured lands in the wrong place, and only measurement says where.
  *
- * Below 48rem the overlap is real — 15px of a 390px screen, permanently, over
- * the right edge of the content column. There the rail stays with the opening,
- * and the same three links are in the footer of every page anyway, so nothing
- * is unreachable. */
+ * Below 48rem it used to stay with the opening instead, because the rail's
+ * padding made it 36px thick against a 21px margin. The practice wanted it
+ * constant on phones too, and the overlap was padding, not words: set
+ * vertically at caption size the words are 16px thick, which fits in the
+ * phone's 20–21px margin. So on a phone the rail loses its thickness padding,
+ * each link is a 24px column (the minimum target, centred on its words), and
+ * it stays fixed like the desktop — over full-bleed photographs, as it already
+ * is over the film, and clear of the type, which stops at the margin. The
+ * footer no longer repeats the three links on Home. */
 @media (max-width: 47.99rem) {
-  .landing .srail { position: absolute; z-index: 3; }
+  .landing .srail { padding-block: 0; gap: var(--s-5); }
+  .landing .srail__i {
+    display: inline-flex; align-items: flex-end; justify-content: center;
+    block-size: 1.5rem; padding-inline: 0.5em;
+  }
+  .landing .srail__i::after { inset-inline-end: 0; }
 }
 
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
@@ -2327,7 +2338,7 @@ body[data-preview] .header { top: var(--preview-h); }
    draws in as its section arrives, the same entrance the text makes.
    Standalone controls still get finger room; inline prose links keep their
    text flow. Pointer layouts and their hover behaviour are unchanged. */
-.touch-cue, .copy-mark, .footer__mobile-social, .project-note--touch { display: none; }
+.touch-cue, .copy-mark, .project-note--touch { display: none; }
 .contact-links__i { display: block; }
 @media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
   .onward__t::after { clip-path: inset(0); }
@@ -2362,7 +2373,6 @@ body[data-preview] .header { top: var(--preview-h); }
     display: inline-flex; align-items: center; min-height: 2.75rem;
   }
   .footer__links a::after, a.tl[href^="mailto:"]::after, a.tl[href^="tel:"]::after { bottom: calc(50% - .85em); }
-  .footer__mobile-social { display: contents; }
   .header__logo { display: flex; align-items: center; min-height: 2.75rem; }
   .nav__link { display: inline-flex; align-items: center; min-height: 2.75rem; }
   .chips { gap: var(--s-3) var(--s-5); }
@@ -2375,11 +2385,6 @@ body[data-preview] .header { top: var(--preview-h); }
   .pcard__action { grid-row: 3; margin-top: var(--s-3); color: var(--on-media); text-shadow: var(--shadow-on-image); }
   .lb__x { min-height: 2.75rem; min-width: 2.75rem; }
   .lb:not([data-zoomed="true"]) .lb__step { opacity: 1; }
-  /* The rail's words stay against the edge, where the mouse layout sets them;
-     a 44px box centred them 12px inwards. The finger room is an invisible
-     extension on the screen-left side instead (block-start, after the 180°
-     turn), which moves nothing and adds no overflow at the right edge. */
-  .landing .srail__i::before { content: ""; position: absolute; inset-inline: 0; inset-block: -1.5rem 0; }
   .f input { min-height: 2.75rem; }
   .pj [data-rail] > .rail__note { display: none; }
   .project-note--touch { display: block; margin-top: var(--s-5); }
