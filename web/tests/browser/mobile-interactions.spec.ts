@@ -7,6 +7,31 @@ test.describe('phone interactions',()=>{
   test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
   test.beforeEach(async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});});
 
+  test('social links ignore mobile height changes and recenter after rotation',async({page})=>{
+    await page.goto('/');
+    await page.evaluate(()=>document.fonts.ready);
+    const rail=page.locator('.landing .srail');
+    const words=rail.locator('.srail__links');
+    const resting=(await words.boundingBox())!;
+    await expect(rail).toHaveCSS('transform','none');
+    // Browser toolbar changes can resize the visible height without changing
+    // width. Exercise that shape of change instead of testing scroll alone.
+    for(const height of [780,720,844,900,760]) {
+      await page.setViewportSize({width:390,height});
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+      const moved=(await words.boundingBox())!;
+      expect(Math.abs(moved.y-resting.y)).toBeLessThan(1);
+      expect(Math.abs(moved.x-resting.x)).toBeLessThan(1);
+      await expect(words).toBeInViewport();
+    }
+    for(const viewport of [{width:844,height:390},{width:390,height:844}]) {
+      await page.setViewportSize(viewport);
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+      await expect.poll(async()=>{const box=(await words.boundingBox())!;return Math.abs(box.y+box.height/2-viewport.height/2);}).toBeLessThan(1);
+      await expect(words).toBeInViewport();
+    }
+  });
+
   test('Home contact text is centred and social links stay steady while scrolling on a phone',async({page})=>{
     await page.goto('/');
     await page.evaluate(()=>document.fonts.ready);
@@ -504,6 +529,17 @@ test('with a mouse, even in a narrow window, the Press card opens raised and scr
   await expect(reader).not.toHaveAttribute('data-detent','peek');
   await expect(reader.locator('.press-reader__content')).toHaveCSS('overflow-y','auto');
   expect((await reader.boundingBox())!.y).toBeLessThan(120);
+});
+
+test('desktop social links recenter when the window changes height',async({page})=>{
+  await page.goto('/');
+  await page.evaluate(()=>document.fonts.ready);
+  for(const height of [900,700,1000]) {
+    await page.setViewportSize({width:1440,height});
+    const words=page.locator('.landing .srail__links');
+    await expect.poll(async()=>{const box=(await words.boundingBox())!;return Math.abs(box.y+box.height/2-height/2);}).toBeLessThan(1);
+    await expect(page.locator('.landing .srail')).not.toHaveAttribute('data-pinned','');
+  }
 });
 
 test('mouse layouts show the contact copy mark on hover and focus at desktop and narrow widths',async({page,browserName})=>{

@@ -1864,10 +1864,17 @@ body[data-preview] .header { top: var(--preview-h); }
   z-index: var(--z-rail);
   right: 0;
   top: 50%;
-  /* The small viewport stays steady while a phone's browser bars collapse.
-     A percentage follows the changing fixed viewport and moves the rail. */
-  top: 50svh;
+  /* CSS provides the no-script placement. Touch layouts capture this centre
+     in pixels so toolbar height changes cannot reposition the fixed box. */
+  top: var(--social-top, 50svh);
+  pointer-events: none;
+}
+
+/* Rotate the words inside an untransformed fixed container. Mobile browsers
+   can move transformed fixed boxes while animating their own toolbars. */
+.landing .srail__links {
   display: flex;
+  inline-size: max-content;
   /* `row`, not `column`. In vertical writing the inline axis IS the vertical
      one, so a flex row runs down the screen and a flex column runs across it —
      which is why `column` laid the three labels out side by side in a block in
@@ -1933,7 +1940,7 @@ body[data-preview] .header { top: var(--preview-h); }
  * is over the film, and clear of the type, which stops at the margin. The
  * footer no longer repeats the three links on Home. */
 @media (max-width: 47.99rem) {
-  .landing .srail { padding-block: 0; gap: var(--s-5); }
+  .landing .srail__links { padding-block: 0; gap: var(--s-5); }
   .landing .srail__i {
     display: inline-flex; align-items: flex-end; justify-content: center;
     block-size: 1.5rem; padding-inline: 0.5em;
@@ -1942,7 +1949,8 @@ body[data-preview] .header { top: var(--preview-h); }
 }
 
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
-.landing .srail { flex-direction: row-reverse; }
+.landing .srail__links { flex-direction: row-reverse; }
+.landing .srail[data-pinned] > .srail__links { transform: rotate(180deg); }
 
 .landing .srail__i {
   position: relative;
