@@ -44,5 +44,6 @@ for(const page of inventory) {
 const headers=readFileSync(join(dist,'_headers'),'utf8');
 if(!/^\s*Strict-Transport-Security:\s*max-age=\d+/m.test(headers))errors.push('_headers: Strict-Transport-Security missing from the production build');
 if(!/Content-Security-Policy:[^\n]*upgrade-insecure-requests/.test(headers))errors.push('_headers: CSP lost upgrade-insecure-requests in the production build');
+if(marker.noindex && !/\/\*\n\s+X-Robots-Tag: noindex, nofollow/.test(headers)) errors.push('_headers: previews must send noindex for all pages and assets');
 if(errors.length)throw new Error(errors.join('\n'));
 console.log(`[site] ${inventory.length} pages: headings, metadata, internal links, anchors, JSON-LD, sitemap and transport headers valid`);

@@ -187,3 +187,41 @@ for (const width of [375,1440]) {
     expect(source.error).toBeUndefined();
   });
 }
+
+for (const width of [390,1440]) {
+  test(`hidden film posters do not download on arrival at ${width}px`, async ({page}) => {
+    await films(page);
+    await page.setViewportSize({width,height:844});
+    // A clip's poster may also appear in a legitimate project thumbnail.
+    // Tag only the inert poster URLs so that those requests stay distinguishable.
+    await page.route(new URL('/',test.info().project.use.baseURL).href,async route=>{
+      const response=await route.fetch();
+      const body=(await response.text()).replace(/<template data-stage-poster>[\s\S]*?<\/template>/g,
+        template=>template.replace(/(\/assets\/media\/[^\s"'<>]+)/g,'$1&amp;btl-poster=1'));
+      await route.fulfill({response,body});
+    });
+    const images:string[]=[];
+    page.on('request',request=>{if(request.resourceType()==='image') images.push(request.url());});
+    await page.goto('/');
+    const first=page.locator('.stage__f').first();
+    await expect(first.locator('video')).toHaveAttribute('data-playing','true');
+    const hidden=page.locator('.stage__f').filter({has:page.locator('template[data-stage-poster]')});
+    expect(await hidden.count()).toBeGreaterThan(0);
+    await expect(hidden.locator('img')).toHaveCount(0);
+    const urls=await hidden.evaluateAll(frames=>frames.flatMap(frame=>{
+      const template=frame.querySelector('template[data-stage-poster]') as HTMLTemplateElement;
+      return [...template.content.querySelectorAll('[srcset]')].flatMap(el=>el.getAttribute('srcset')!.split(', ').map(part=>new URL(part.split(' ')[0],location.href).href));
+    }));
+    expect(images.filter(url=>urls.includes(url))).toEqual([]);
+    // A real error still restores the correct authored poster before advancing.
+    const second=page.locator('.stage__f').nth(1);
+    await expect(second.locator('video')).toHaveCount(1);
+    await first.locator('video').evaluate(el=>{const v=el as HTMLVideoElement;v.currentTime=v.duration-.1;});
+    await expect(second.locator('video')).toHaveAttribute('data-playing','true');
+    await second.locator('video').evaluate(el=>el.dispatchEvent(new Event('error')));
+    await expect(second).toHaveAttribute('data-on','true');
+    await expect(second.locator('img')).toHaveCount(1);
+    await expect.poll(()=>second.locator('img').evaluate(el=>(el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth>0)).toBe(true);
+    await expect(second.locator('video')).not.toHaveAttribute('data-playing','true');
+  });
+}

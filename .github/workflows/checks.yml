@@ -29,9 +29,20 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        id: image-cache
+        with:
+          path: web/node_modules/.astro/btl-media-v1
+          key: btl-media-v1-${{ github.sha }}
+          restore-keys: btl-media-v1-
       - run: npm test
       - id: build
         run: npm run build
+      - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        with:
+          path: web/node_modules/.astro/btl-media-v1
+          key: ${{ steps.image-cache.outputs.cache-primary-key }}
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
       - name: Find the deployed preview for this commit

@@ -206,7 +206,7 @@ CMS content has changed since that build.
 
 The build runs content validation, Astro type checking, static rendering,
 minification, redirects, budgets and page integrity checks. Invalid output
-fails the build; image warming is best effort:
+fails the build, including unavailable optimized image assets:
 
 - **`content-check.mjs`** — the content against the Studio's own rules: every
   photograph has alt text of a real length, a licence, and a valid role, and
@@ -215,9 +215,14 @@ fails the build; image warming is best effort:
 - **`redirects.mjs`** — no broken or circular redirects.
 - **`budget.mjs`** — page weight, CSS, JavaScript and fonts against fixed
   ceilings.
-- **`warm-images.mjs`** — every image size the site asks for is generated and
-  cached before a visitor is the one waiting for it. CDN timeouts are reported
-  without blocking an otherwise valid deployment.
+- **`cache-images.mjs`** — Sanity's optimized WebP image and zoom renditions are
+  copied into static Cloudflare assets. Asset/crop/quality hashes identify them;
+  unchanged files reuse `node_modules/.astro/btl-media-v1` when the host's Astro
+  build cache is enabled. Cold caches download each rendition once. CDN failures
+  block the new deployment rather than publishing broken photographs. Ready
+  AVIF ladders serve opening photos with complete WebP fallbacks. Enable the
+  Cloudflare Pages build cache to reuse this directory between hosted builds;
+  GitHub checks restore and save it automatically.
 
 If a build fails, the message says which check and why. Nothing partial is ever
 published: the previous version stays live.

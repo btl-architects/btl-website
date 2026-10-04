@@ -32,8 +32,11 @@ async function underResolved(page:import('@playwright/test').Page) {
   return page.evaluate(()=>[...document.querySelectorAll('img[srcset]')].flatMap(i=>{
     const im=i as HTMLImageElement,w=im.getBoundingClientRect().width;
     if(w<2||!im.currentSrc)return [];
-    const widths=im.srcset.split(/,\s+/).map(c=>+c.trim().split(/\s+/)[1]!.slice(0,-1));
-    const got=widths[im.srcset.split(/,\s+/).findIndex(c=>c.trim().split(/\s+/)[0]===im.currentSrc)] ?? 0;
+    const phoneSource=[...im.closest('picture')?.querySelectorAll('source[srcset]') ?? []].find(s=>!s.getAttribute('media') || matchMedia(s.getAttribute('media')!).matches);
+    const srcset=phoneSource?.getAttribute('srcset') || im.srcset;
+    const widths=srcset.split(/,\s+/).map(c=>+c.trim().split(/\s+/)[1]!.slice(0,-1));
+    const got=widths[srcset.split(/,\s+/).findIndex(c=>new URL(c.trim().split(/\s+/)[0],location.href).href===im.currentSrc)] ?? 0;
+    if(!got) return [`${im.alt.slice(0,40)}: selected photograph is absent from its responsive ladder`];
     /* Excused only when nothing sharper exists: the file is the largest offered
        AND reaches the source width after Sanity's crop. The
        looser "largest offered" hid a ladder that offered a 720px upload at 480. */
@@ -55,10 +58,10 @@ test.describe('photographs are fetched at the size they are drawn',()=>{
     const first=page.locator('[data-rail] .rail__f img').first();
     await expect.poll(()=>first.evaluate(el=>(el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth>0)).toBe(true);
     const selected=await first.evaluate(el=>(el as HTMLImageElement).currentSrc);
-    const asset=new URL(selected).pathname;
+    const asset=new URL(selected).pathname.split('/').pop()!.replace(/\.[a-z]+$/,'');
     // A responsive preload must use the selected candidate, rather than also
     // downloading a larger fallback that the photograph never displays.
-    expect(requested.filter(url=>new URL(url).pathname===asset)).toEqual([selected]);
+    expect(requested.filter(url=>new URL(url).pathname.split('/').pop()!.replace(/\.[a-z]+$/,'')===asset)).toEqual([selected]);
   });
   for(const width of [375,768,820,1024,1440]) test(`at ${width}px`,async({page})=>{
     await page.setViewportSize({width,height:900});
@@ -230,7 +233,7 @@ test('opening stills use authored phone framing or the responsive fallback befor
       expect(count).toBeLessThanOrEqual(1);
       const srcset=await (count ? phoneSource : image).getAttribute('srcset');
       expect(srcset).toBeTruthy();
-      const candidates=srcset!.split(', ').map(s=>s.split(' ')[0]);
+      const candidates=srcset!.split(', ').map(s=>new URL(s.split(' ')[0],page.url()).href);
       await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
       expect(candidates).toContain(await image.evaluate(el=>(el as HTMLImageElement).currentSrc));
       await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);

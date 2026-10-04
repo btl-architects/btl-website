@@ -57,3 +57,7 @@
 # HTML must not be cached: it is how a publish reaches a returning visitor.
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# Sanity asset/crop/quality hashes make these derived files immutable.
+/assets/media/*
+  Cache-Control: public, max-age=31536000, immutable

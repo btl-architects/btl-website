@@ -102,6 +102,44 @@ test.describe('runtime audit regressions',()=>{
     await expect(page).toHaveURL(/\/projects\/$/);
   });
 
+  for(const route of ['/', '/projects/']) for(const width of [390,820]) for(const motion of ['no-preference','reduce'] as const)
+    test(`touch switching projects keeps the tapped photographs in place on ${route} at ${width}px (${motion})`,async({browser})=>{
+      const context=await browser.newContext({viewport:{width,height:width===390?844:1180},hasTouch:true,isMobile:true,reducedMotion:motion});
+      const page=await context.newPage();await page.goto(route);
+      const first=page.locator('[data-card="the-conservatory"]'),second=page.locator('[data-card="teak-and-terra"]');
+      await first.locator('[data-project]').press('Enter');
+      await expect(first).toHaveAttribute('data-open','true');await page.waitForTimeout(1000);
+      await second.evaluate(el=>scrollBy(0,el.getBoundingClientRect().top-220));
+      // Let the scroll entrance finish before measuring a tap on the resting card.
+      await page.waitForTimeout(750);
+      const photo=second.locator('.pcard__peek').first(),box=(await photo.boundingBox())!;
+      const startTop=box.y;
+      await second.evaluate(el=>{
+        const values:number[]=[];
+        (window as any).__switchSamples=values;
+        const observer=new MutationObserver(()=>{
+          if(el.getAttribute('data-open')!=='true')return;
+          observer.disconnect();
+          requestAnimationFrame(function sample(){
+            values.push(el.querySelector('[data-strip]')!.getBoundingClientRect().top);
+            if(values.length<60)requestAnimationFrame(sample);
+          });
+        });
+        observer.observe(el,{attributes:true,attributeFilter:['data-open']});
+      });
+      await page.touchscreen.tap(Math.max(30,Math.min(width-30,box.x+60)),box.y+60);
+      await expect(second).toHaveAttribute('data-open','true');
+      await expect.poll(()=>page.evaluate(()=>(window as any).__switchSamples.length)).toBe(60);
+      const tops:number[]=await page.evaluate(()=>(window as any).__switchSamples);
+      for(const top of tops) expect(Math.abs(top-startTop)).toBeLessThanOrEqual(2);
+      await expect(first).not.toHaveAttribute('data-open','true');
+      const final=(await second.locator('[data-strip]').boundingBox())!;
+      expect(final.y).toBeGreaterThan(100);
+      expect(await second.locator('.rail__note').evaluate(el=>el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(final.y+final.height-2);
+      await expect(page).toHaveURL(/\/projects\/teak-and-terra\/$/);
+      await context.close();
+    });
+
   for(const width of [1024,1440]) test(`pure close at page end adds no hold and hides navigation immediately at ${width}px`,async({page})=>{
     await page.goto('/projects/');await page.setViewportSize({width,height:900});
     const card=page.locator('.pcard').last();

@@ -29,31 +29,29 @@
     DUR.slow = durationToken("--dur-slow", 700);
   });
 
-  /* Anchor the fixed shell at the top edge, not halfway down the viewport.
-     Position the words inside it. Account for a displaced visual viewport as
-     well as height-only toolbar changes; rotation establishes a new centre. */
+  /* Freeze the rail through toolbar animations. Firefox Android compensates
+     bottom-fixed boxes as its top toolbar moves the content origin. Other
+     engines keep a top anchor, compensating displaced visual viewports. */
   var socialRail = document.querySelector(".landing .srail");
   if (socialRail) {
     var touchRail = window.matchMedia("(hover: none) and (pointer: coarse)");
-    var railWidth = 0;
-    var railCentre = 0;
+    var railWidth = 0, railCentre = 0, railWordHeight = 0;
     var railViewport = window.visualViewport;
     var railWords = socialRail.querySelector(".srail__links");
-    // Android Firefox's top toolbar moves the entire content origin. Its
-    // compositor compensates bottom-fixed elements; a locked top cannot do so.
-    // Keep a constant bottom distance there instead of chasing scroll events.
     var bottomRail = /Android.*Firefox\//.test(navigator.userAgent);
     var railTick = false;
     function placeRail() {
       if (!touchRail.matches || (railViewport && railViewport.scale !== 1)) return;
       if (bottomRail) {
-        socialRail.setAttribute("data-anchor-bottom", "");
-        socialRail.style.setProperty("--social-bottom", Math.round(railCentre - railWords.offsetHeight / 2) + "px");
+        var bottom = Math.round(railCentre - railWords.offsetHeight / 2) + "px";
+        if (socialRail.style.getPropertyValue("--social-bottom") !== bottom) socialRail.style.setProperty("--social-bottom", bottom);
+        if (!socialRail.hasAttribute("data-anchor-bottom")) socialRail.setAttribute("data-anchor-bottom", "");
       } else {
         var offset = railViewport ? railViewport.offsetTop : 0;
-        socialRail.style.setProperty("--social-top", Math.round(railCentre + offset - socialRail.getBoundingClientRect().top) + "px");
+        var top = Math.round(railCentre + offset - socialRail.getBoundingClientRect().top) + "px";
+        if (socialRail.style.getPropertyValue("--social-top") !== top) socialRail.style.setProperty("--social-top", top);
       }
-      socialRail.setAttribute("data-pinned", "");
+      if (!socialRail.hasAttribute("data-pinned")) socialRail.setAttribute("data-pinned", "");
     }
     function pinRail() {
       if (!touchRail.matches) {
@@ -64,12 +62,13 @@
         railWidth = 0;
         return;
       }
-      var width = window.innerWidth;
       if (railViewport && railViewport.scale !== 1) return;
+      var width = window.innerWidth;
       if (width !== railWidth) {
         railCentre = (railViewport ? railViewport.height : window.innerHeight) / 2;
         railWidth = width;
-      }
+        railWordHeight = railWords.offsetHeight;
+      } else if (bottomRail) return;
       placeRail();
     }
     function scheduleRail() {
@@ -78,9 +77,14 @@
       requestAnimationFrame(function () { railTick = false; pinRail(); });
     }
     afterFirstPaint(pinRail);
-    if ("ResizeObserver" in window) new ResizeObserver(scheduleRail).observe(railWords);
+    if ("ResizeObserver" in window) new ResizeObserver(function () {
+      if (railWidth && railWords.offsetHeight !== railWordHeight) {
+        railWordHeight = railWords.offsetHeight;
+        placeRail();
+      }
+    }).observe(railWords);
     window.addEventListener("resize", scheduleRail, { passive: true });
-    if (railViewport) {
+    if (railViewport && !bottomRail) {
       railViewport.addEventListener("resize", scheduleRail, {passive:true});
       railViewport.addEventListener("scroll", scheduleRail, {passive:true});
     }
@@ -250,6 +254,10 @@
       errorTimer = setTimeout(function () { if (at === i && canPlay()) show(at + 1); }, 6200);
     }
     function revealFilm(i, playing) {
+      if (!playing) {
+        var poster = sFrames[i].querySelector("[data-stage-poster]");
+        if (poster) { sFrames[i].appendChild(poster.content.cloneNode(true)); poster.remove(); }
+      }
       if (playing) player(i).setAttribute("data-playing", "true");
       else { player(i).removeAttribute("data-playing"); player(i).pause(); }
       sFrames.forEach(function (f, k) {
@@ -984,26 +992,41 @@
        instant; once both the closing and the opening card animate, the height
        is in flight for the whole transition and has to be tracked. Bails out
        the moment the reader scrolls — their intent outranks ours. */
+    var cancelAnchor = null;
     function anchor(card, ms) {
-      if (reduced) return;
+      if (cancelAnchor) cancelAnchor();
       var target = card.getBoundingClientRect().top;
       var until = performance.now() + ms;
       var live = true;
-      function release() { live = false; }
+      // The browser can choose the footer outside .pindex as its anchor.
+      // Reserving space then scrolls the page before the cards even change.
+      document.documentElement.setAttribute("data-project-anchoring", "");
+      function release() {
+        live = false;
+        window.removeEventListener("wheel", release);
+        window.removeEventListener("touchstart", release);
+        window.removeEventListener("keydown", release);
+        document.documentElement.removeAttribute("data-project-anchoring");
+        if (cancelAnchor === release) cancelAnchor = null;
+      }
+      cancelAnchor = release;
       window.addEventListener("wheel", release, { once: true, passive: true });
       window.addEventListener("touchstart", release, { once: true, passive: true });
       window.addEventListener("keydown", release, { once: true });
-      (function step(now) {
+      function place() {
         if (!live) return;
         var d = card.getBoundingClientRect().top - target;
         if (Math.abs(d) > 0.5) window.scrollBy(0, d);
+      }
+      requestAnimationFrame(function step(now) {
+        if (!live) return;
+        place();
         if (now < until) requestAnimationFrame(step);
-        else {
-          window.removeEventListener("wheel", release);
-          window.removeEventListener("touchstart", release);
-          window.removeEventListener("keydown", release);
-        }
-      })(performance.now());
+        else release();
+      });
+      // Reduced motion still needs a synchronous correction for instant
+      // layout changes. Holding position does not animate the page.
+      return place;
     }
 
     /* Closing is a real gesture now, not a snap. The card shrinks and its
@@ -1120,8 +1143,9 @@
       // be compensated, and releasing it creates a final scroll clamp. The
       // card is still held under the reader while it collapses (P10); without
       // that, a phone's tall open card let scroll anchoring move the page.
-      anchor(card, CLOSE_SLIDE_MAX + 120);
+      var place = anchor(card, CLOSE_SLIDE_MAX + 120);
       shut(card);
+      place();
       document.title = baseTitle;
       if (push) {
         /* Closing never traverses history. history.back() made both engines
@@ -1160,8 +1184,8 @@
            The closing card's current height is the upper bound on what is about
            to disappear, so reserve exactly that. */
         var prev = openCard;
+        var placeCard = anchor(card, DUR.slow + 200);
         if (prev && prev !== card) holdHeight(Math.ceil(prev.getBoundingClientRect().height));
-        anchor(card, DUR.slow + 200);   /* the card's growth, and a little */
         if (prev) shut(prev);                   /* P4: one open at a time */
 
         if (card._shutting) clearTimeout(card._shutting);
@@ -1321,6 +1345,7 @@
         var nav = card.querySelector("[data-nav]");
         if (nav) { nav.hidden = false; railProgress(st, nav); }
         loadAhead(st);
+        placeCard();
 
         document.title = (rail.getAttribute("data-title") || "Project") + " — btl architects";
         if (push) {
@@ -1699,6 +1724,7 @@
       var want = fits.filter(function (w) { return w >= need; })[0] || top;
       if (want <= have * 1.15) return;
       var next = src.replace(/([?&])w=\d+/, "$1w=" + want);
+      if (src.indexOf("/assets/media/") !== -1) next = next.replace(/\/w\d+\//, "/w" + want + "/");
       var shown = items[at], pre = new Image();
       pre.onload = function () {
         if (items[at] !== shown || loadedWidth(img.src) >= want) return;   /* moved on, or already sharper */

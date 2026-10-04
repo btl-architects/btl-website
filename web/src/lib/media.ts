@@ -62,10 +62,10 @@ const LADDER = [480, 720, 900, 1080, 1400, 2000, 2800, 4000];
 /* The widths the photograph viewer sharpens to when someone zooms in, above
  * the fitted viewer rendition. Few and fixed for the same reason the ladder is: each is
  * a cold render the first time it is asked for — 4.7s for a 6000px Nelly House
- * frame — so tools/warm-images.mjs renders them at build time, and it can only
+ * frame — so tools/cache-images.mjs copies them into the deployment at build time, and it can only
  * do that for widths it knows in advance. The top rung is capped by the
  * original's own width. Written onto <body> by Base.astro; site.js and the
- * warmer both read it from there, so this is the only place it is set. */
+ * asset cache both use it, so this is the only place it is set. */
 export const ZOOM_LADDER = [3500, 6000];
 
 /** Sanity encodes the original's dimensions in the asset id:
