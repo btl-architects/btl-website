@@ -494,9 +494,10 @@
     rail.scrollBy({ left: direction * rtl * rail.clientWidth * .7, behavior: reduced ? "auto" : "smooth" });
   }
 
+  var browsableOverview = window.matchMedia("(max-width: 85.375rem), (hover: none) and (pointer: coarse)");
   function photographStrip(target) {
     var rail = target.closest && target.closest("[data-rail], .pcard__strip");
-    return rail && !rail.closest('.pcard:not([data-open="true"])') ? rail : null;
+    return rail && (!rail.closest('.pcard:not([data-open="true"])') || browsableOverview.matches) ? rail : null;
   }
 
   /* One mouse drag for Studio, direct project pages and fetched project
@@ -1150,9 +1151,9 @@
        clickable and is not is the least intuitive thing an index can do. The
        caption stays a real <a> underneath for keyboard, middle-click and
        no-JavaScript, but the pointer target is the entire card. */
-    /* Closed strips scroll on phones and on touch screens of any width. The
+    /* Closed strips scroll in phone/tablet layouts and on touch screens of any width. The
        note's placement follows width independently of the input. */
-    var browsableIndex = window.matchMedia("(max-width: 47.99rem), (hover: none) and (pointer: coarse)");
+    var browsableIndex = browsableOverview;
     /* Scrollable strips join the keyboard order too. A wide mouse layout
        stays out, or Firefox lists every closed scroll container as a stop. */
     function strips() {

@@ -7,7 +7,7 @@ Tablet layouts cover 768–1366 CSS pixels, including portrait and landscape. Wi
 | Navigation | Desktop navigation with finger-sized links; phone menu below 768px. |
 | People and Studio | Side-by-side image and text, with a smaller column gap in portrait. |
 | Contact | Two-column layout; visible copy controls on touch, validation and sending feedback, short messages accepted. |
-| Project previews | Compact horizontal strips showing multiple photographs; native swiping on touch. |
+| Project previews | Compact horizontal strips showing multiple photographs; native swiping on touch; horizontal trackpad scrolling and mouse dragging in tablet previews. A swipe never opens a card. |
 | Open project cards | Larger photos, readable text below, close and gallery controls; retain the project through split view and rotation. |
 | Individual project pages | Desktop heading and photograph rail; the compact phone reading block stays a phone layout. |
 | Photograph viewer | Tap for controls, pinch/double-tap to zoom, drag to pan, sideways swipe to change photos, downward swipe to close. |

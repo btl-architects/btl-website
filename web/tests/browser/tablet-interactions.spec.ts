@@ -177,23 +177,28 @@ test('tablet enquiries show validation and submit a short message once',async({p
   expect(messages).toEqual(['Hi']);
 });
 
-test('tablet native swipes browse closed galleries without opening them',async({page,browserName})=>{
-  test.skip(browserName!=='chromium','Native touch injection is available through Chromium; all engines run tap and layout checks.');
-  await page.setViewportSize({width:820,height:1180});
-  await page.goto('/projects/');
-  const strip=page.locator('[data-strip]').first();
-  await strip.scrollIntoViewIfNeeded();
-  const box=(await strip.boundingBox())!;
-  const input=await page.context().newCDPSession(page);
-  const x=box.x+Math.min(box.width-30,600),y=box.y+box.height/2;
-  await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
-  for(let i=1;i<=12;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-400*i/12,y}]});
-  await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(100);
-  await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','false');
-  await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
-  await input.detach();
-});
+for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
+  test(`tablet native swipes browse closed galleries without opening them at ${viewport.width}px`,async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium; all engines run tap and layout checks.');
+    await page.setViewportSize(viewport);
+    const input=await page.context().newCDPSession(page);
+    for(const route of ['/','/projects/']) {
+      await page.goto(route);
+      const strip=page.locator('[data-strip]').first();
+      await strip.scrollIntoViewIfNeeded();
+      const box=(await strip.boundingBox())!;
+      const x=box.x+Math.min(box.width-30,600),y=box.y+box.height/2;
+      await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+      for(let i=1;i<=12;i++)await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-400*i/12,y}]});
+      await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(100);
+      await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','false');
+      await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
+      await expect(page).toHaveURL(new RegExp(route==='/'?'/$':'/projects/$'));
+    }
+    await input.detach();
+  });
+}
 
 for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
   test(`tablet photograph gestures zoom, pan, turn and dismiss at ${viewport.width}px`,async({page,browserName})=>{
@@ -249,6 +254,24 @@ for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
 
 test.describe('tablet mouse preview',()=>{
   test.use({hasTouch:false,isMobile:false,viewport:{width:820,height:1180}});
+  test('closed project strips browse by dragging without opening a card',async({page})=>{
+    for(const route of ['/','/projects/']) {
+      await page.goto(route);
+      const strip=page.locator('[data-strip]').first();
+      await expect(strip).toHaveCSS('overflow-x','auto');
+      await strip.scrollIntoViewIfNeeded();
+      const box=(await strip.boundingBox())!;
+      const x=box.x+box.width*.8,y=box.y+box.height/2;
+      await page.mouse.move(x,y);await page.mouse.down();
+      await page.mouse.move(x-350,y,{steps:20});await page.mouse.up();
+      await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(100);
+      await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','false');
+      await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
+      await expect(page).toHaveURL(new RegExp(route==='/'?'/$':'/projects/$'));
+      await page.mouse.click(x-350,y);
+      await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','true');
+    }
+  });
   test('section underlines animate into view without hovering',async({page})=>{
     await page.emulateMedia({reducedMotion:'no-preference'});
     await page.goto('/');

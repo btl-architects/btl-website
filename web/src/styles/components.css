@@ -712,7 +712,10 @@ html:has(.menu[data-open="true"]) .header {
    long project description or gives away a third of its width to the note. */
 @media (min-width: 48rem) and (max-width: 85.375rem) {
   .pcard, .pcard[data-open="true"] { height: auto; }
-  .pcard__strip { height: var(--project-preview-h); transition: height var(--dur-slow) var(--ease); }
+  .pcard__strip { height: var(--project-preview-h); transition: height var(--dur-slow) var(--ease); overflow-x: auto; overflow-y: hidden; cursor: grab; }
+  .pcard__strip[data-dragging] { cursor: grabbing; }
+  .pcard__t { pointer-events: none; }
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; }
   .pcard[data-open="true"] .pcard__strip { height: var(--project-open-h); }
   .pcard__t { padding: var(--s-6) var(--s-4) var(--s-3); }
   .pcard > .rail__note { display: block; padding: var(--s-5) 0 var(--s-2); }
