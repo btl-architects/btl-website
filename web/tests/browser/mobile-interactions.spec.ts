@@ -74,7 +74,10 @@ test.describe('phone interactions',()=>{
     const rail=page.locator('.landing .srail');
     const words=rail.locator('.srail__links');
     await expect(rail).toHaveAttribute('data-anchor-bottom','');
-    await expect(rail).toHaveCSS('bottom','0px');
+    const linkBox=(await words.boundingBox())!;
+    expect((await rail.boundingBox())!.height).toBeCloseTo(linkBox.height,0);
+    expect(await rail.evaluate(el=>parseFloat(getComputedStyle(el).bottom))).toBeCloseTo(422-linkBox.height/2,0);
+    if(await page.evaluate(()=>CSS.supports('writing-mode','sideways-lr'))) await expect(words).toHaveCSS('transform','none');
     // Model a top toolbar taking 56px of the physical screen. The browser's
     // content origin moves up as its visible height grows; screen Y is their sum.
     const initial=(await words.boundingBox())!.y+56;

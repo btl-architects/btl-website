@@ -38,6 +38,7 @@
     var railWidth = 0;
     var railCentre = 0;
     var railViewport = window.visualViewport;
+    var railWords = socialRail.querySelector(".srail__links");
     // Android Firefox's top toolbar moves the entire content origin. Its
     // compositor compensates bottom-fixed elements; a locked top cannot do so.
     // Keep a constant bottom distance there instead of chasing scroll events.
@@ -47,7 +48,7 @@
       if (!touchRail.matches || (railViewport && railViewport.scale !== 1)) return;
       if (bottomRail) {
         socialRail.setAttribute("data-anchor-bottom", "");
-        socialRail.style.setProperty("--social-bottom", Math.round(railCentre) + "px");
+        socialRail.style.setProperty("--social-bottom", Math.round(railCentre - railWords.offsetHeight / 2) + "px");
       } else {
         var offset = railViewport ? railViewport.offsetTop : 0;
         socialRail.style.setProperty("--social-top", Math.round(railCentre + offset - socialRail.getBoundingClientRect().top) + "px");
@@ -77,6 +78,7 @@
       requestAnimationFrame(function () { railTick = false; pinRail(); });
     }
     afterFirstPaint(pinRail);
+    if ("ResizeObserver" in window) new ResizeObserver(scheduleRail).observe(railWords);
     window.addEventListener("resize", scheduleRail, { passive: true });
     if (railViewport) {
       railViewport.addEventListener("resize", scheduleRail, {passive:true});

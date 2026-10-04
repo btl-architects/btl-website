@@ -1949,8 +1949,14 @@ body[data-preview] .header { top: var(--preview-h); }
 
 /* Firefox Android compensates this edge as its top toolbar moves the content
    area. The words keep their measured distance from it through height changes. */
-.landing .srail[data-anchor-bottom] { top: auto; bottom: 0; height: 100lvh; }
-.landing .srail[data-anchor-bottom] .srail__links { top: calc(100% - var(--social-bottom)); }
+.landing .srail[data-anchor-bottom] { top: auto; bottom: var(--social-bottom); height: auto; }
+.landing .srail[data-anchor-bottom] .srail__links { top: auto; transform: rotate(180deg); }
+/* Native bottom-to-top writing avoids a transformed composited text layer.
+   Firefox supports it; preserve the rotated fallback for older engines. The
+   fixed box is only as tall as the links, with no viewport-sized shell. */
+@supports (writing-mode: sideways-lr) {
+  .landing .srail[data-anchor-bottom] .srail__links { writing-mode: sideways-lr; transform: none; }
+}
 
 /* Rotate the words inside an untransformed fixed container. Mobile browsers
    can move transformed fixed boxes while animating their own toolbars. */
