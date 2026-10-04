@@ -29,6 +29,50 @@
     DUR.slow = durationToken("--dur-slow", 700);
   });
 
+  /* Keep Home's social rail still when mobile browser bars change height.
+     A fixed pixel top avoids viewport-unit recalculation, and the fixed box
+     itself is untransformed. Width changes (rotation/split screen) establish
+     a new centre; ordinary desktop resizing keeps the CSS placement. */
+  var socialRail = document.querySelector(".landing .srail");
+  if (socialRail) {
+    var touchRail = window.matchMedia("(hover: none) and (pointer: coarse)");
+    var railWidth = 0;
+    var railCentre = 0;
+    var railWords = socialRail.querySelector(".srail__links");
+    function placeRail() {
+      socialRail.style.setProperty("--social-top", Math.round(railCentre - railWords.getBoundingClientRect().height / 2) + "px");
+      socialRail.setAttribute("data-pinned", "");
+    }
+    function pinRail() {
+      if (!touchRail.matches) {
+        socialRail.style.removeProperty("--social-top");
+        socialRail.removeAttribute("data-pinned");
+        railWidth = 0;
+        return;
+      }
+      var width = window.innerWidth;
+      if (width === railWidth) return;
+      socialRail.style.removeProperty("--social-top");
+      socialRail.removeAttribute("data-pinned");
+      railCentre = window.innerHeight / 2;
+      railWidth = width;
+      placeRail();
+    }
+    afterFirstPaint(pinRail);
+    window.addEventListener("resize", function () {
+      if (touchRail.matches && window.innerWidth !== railWidth) afterFirstPaint(pinRail);
+    }, { passive: true });
+    window.addEventListener("pageshow", pinRail);
+    touchRail.addEventListener("change", pinRail);
+    if ("ResizeObserver" in window) new ResizeObserver(function () {
+      if (touchRail.matches && railWidth) placeRail();
+    }).observe(railWords);
+    if (document.fonts) document.fonts.ready.then(function () {
+      pinRail();
+      if (touchRail.matches) placeRail();
+    });
+  }
+
   /* --- 1. shared scroll entrances -----------------------------------------
    * One entrance per element, with a short stagger. Initial visible content
    * stays steady: the opening image and page title must not wait on animation.

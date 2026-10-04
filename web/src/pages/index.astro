@@ -42,13 +42,13 @@ const c = settings.contact;
     <section class="landing" data-ground="media" data-stage>
       <h1 class="sr-only">btl architects — architecture and interiors, Kozhikode</h1>
       <MediaStage />
-      {/* The social links come back, but only here — over the opening film,
-          where there is nothing else competing and a visitor is still deciding
-          what this practice is. They do not follow you down the page. */}
+      {/* Home's social rail stays in the right margin while the page scrolls. */}
       <nav class="srail" aria-label="btl architects elsewhere">
-        {settings.social.map((s) => (
-          <a class="srail__i" href={s.url} rel="noopener" target="_blank">{s.label}</a>
-        ))}
+        <div class="srail__links">
+          {settings.social.map((s) => (
+            <a class="srail__i" href={s.url} rel="noopener" target="_blank">{s.label}</a>
+          ))}
+        </div>
       </nav>
     </section>
 
