@@ -25,7 +25,10 @@ The labelled reader demonstration is local test content and never deploys.
 In `web/`, run `npm test`, `npm run build` and `npm run test:e2e`.
 Install Playwright browsers first with `npx playwright install chromium firefox webkit`.
 Stop an existing server on port 8788 before the browser suite starts.
-For performance, start `npm run serve:test`, then `npm run test:performance`.
+For performance, set `PERFORMANCE_ORIGIN` to the exact deployed HTTPS build,
+then run `npm run test:performance`. The gate does not measure the local HTTP server.
+Use `TEST_PORT=8792` for an isolated browser run; its build copy and local
+Wrangler persistence are separate from the default test server.
 
 In `studio/`, run `npm test`, `npx tsc --noEmit` and `npm run build`.
 GitHub runs dependency audits, tests, builds, all three browser engines,
@@ -46,6 +49,10 @@ Protected draft previews require a read-only Sanity token and a Cloudflare
 runtime password of at least 16 characters. Netlify previews use published
 content because Netlify does not run the Cloudflare authentication layer.
 Branch previews do not send enquiries and are excluded from search.
+`build-status.json` records the build mode, source commit and build time. A
+local build also records whether its checkout was dirty. Production static
+pages bypass the preview Function; branch and draft previews retain middleware
+on every URL, including assets. The build generates and checks `_routes.json`.
 
 Original photographs and private backups stay outside Git. Never rerun
 `studio/migrate.mjs` against client content: it is an initial import, not an
