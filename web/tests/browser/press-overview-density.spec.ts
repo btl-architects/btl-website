@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 for(const viewport of [{width:375,height:812},{width:667,height:375},{width:768,height:1024},{width:820,height:1180},{width:1180,height:820},{width:1440,height:900},{width:2560,height:1440}]) {
-  test(`Press thumbnails stay compact as the index grows at ${viewport.width}px`,async({page})=>{
+  test(`Press preserves phone and desktop sizing with compact tablet density at ${viewport.width}px`,async({page})=>{
     await page.emulateMedia({reducedMotion:'reduce'});
     await page.goto('/press/');
     await page.setViewportSize(viewport);
@@ -22,13 +22,18 @@ for(const viewport of [{width:375,height:812},{width:667,height:375},{width:768,
       expect(columns).toBe(2);
       const grid=(await page.locator('.credits').boundingBox())!;
       expect(first.width).toBeCloseTo((grid.width-24)/2,1);
-    } else {
-      expect(columns).toBeGreaterThanOrEqual(3);
+    } else if(viewport.width<=1366) {
+      expect(columns).toBeGreaterThanOrEqual(viewport.width>=1024?3:2);
       for(const card of cards) {
         const frame=(await card.locator('.pc__img').boundingBox())!;
-        expect(Math.round(frame.width*1000)/1000).toBeLessThanOrEqual(viewport.width<=1366?208:240);
-        expect(frame.height).toBeLessThanOrEqual(viewport.height*.28+1);
+        expect(Math.round(frame.width*1000)/1000).toBeLessThanOrEqual(256);
+        expect(frame.height).toBeLessThanOrEqual(viewport.height*.32+1);
       }
+    } else {
+      expect(columns).toBe(2);
+      expect(first.width).toBeCloseTo(416,1);
+      expect(boxes[1]!.x-first.x-first.width).toBeCloseTo(32,1);
+      expect(boxes[2]!.y-first.y-first.height).toBeCloseTo(64,1);
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
     for(const box of boxes) {
@@ -45,7 +50,7 @@ for(const viewport of [{width:1376,height:1032},{width:1600,height:1000}]) {
       await page.emulateMedia({reducedMotion:'reduce'});
       await page.goto('/press/');
       const preview=(await page.locator('.pc__img').first().boundingBox())!;
-      expect(Math.round(preview.width*1000)/1000).toBeLessThanOrEqual(208);
+      expect(Math.round(preview.width*1000)/1000).toBeLessThanOrEqual(256);
       await page.locator('a[data-article]').first().tap();
       const reader=page.getByRole('dialog',{name:'Press reader'});
       await expect(reader).toHaveAttribute('data-detent','peek');

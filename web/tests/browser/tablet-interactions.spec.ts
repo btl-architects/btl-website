@@ -31,8 +31,8 @@ for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:10
       if(route==='/'||route==='/press/') {
         const cards=page.locator('.credits .pc');
         const first=(await cards.nth(0).boundingBox())!,second=(await cards.nth(1).boundingBox())!;
-        expect(Math.round(first.width*1000)/1000).toBeLessThanOrEqual(208);
-        expect(first.width).toBeLessThanOrEqual(viewport.height*.28+1);
+        expect(Math.round(first.width*1000)/1000).toBeLessThanOrEqual(256);
+        expect(first.width).toBeLessThanOrEqual(viewport.height*.32+1);
         expect(second.x).toBeGreaterThan(first.x+first.width);
         expect(Math.abs(second.y-first.y)).toBeLessThan(1);
       }

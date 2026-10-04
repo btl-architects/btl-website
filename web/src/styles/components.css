@@ -1689,10 +1689,19 @@ html:has(.menu[data-open="true"]) .header {
   gap: var(--s-6) var(--s-5);
 }
 
-/* Press is an expandable index: phones keep two compact thumbnails;
-   wider layouts add columns as content grows, without enlarging the artwork.
-   The shared ceiling also limits height on short landscape screens. */
+/* Preserve the authored desktop pair and spacing. Tablet previews have their
+   own density rule below, shared by Home and Press. */
 @media (min-width: 48rem) {
+  .credits {
+    grid-template-columns: repeat(2, minmax(0, var(--card-max)));
+    justify-content: center;
+    gap: var(--s-8) var(--s-6);
+  }
+}
+/* Tablets add columns as the publication index grows. A stable-height ceiling
+   keeps short landscape screens compact without resizing desktop or phone. */
+@media (min-width: 48rem) and (max-width: 85.375rem),
+       (min-width: 48rem) and (hover: none) and (pointer: coarse) {
   .credits {
     grid-template-columns: repeat(auto-fit, minmax(0, var(--card-max)));
     justify-content: center;
