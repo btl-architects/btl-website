@@ -11,8 +11,8 @@ Tablet layouts cover 768–1366 CSS pixels, including portrait and landscape. Wi
 | Open project cards | Larger photos, readable text below, close and gallery controls; retain the project through split view and rotation. |
 | Individual project pages | Desktop heading and photograph rail; the compact phone reading block stays a phone layout. |
 | Photograph viewer | Tap for controls, pinch/double-tap to zoom, drag to pan, sideways swipe to change photos, downward swipe to close. |
-| Press previews | Two centered cards, capped at the smaller of 20rem (320px) and 34svh, with 3rem row and 1.5rem column gaps. Phone keeps its two-up grid; phone/desktop previews also have a 40svh height cap and a 26rem width ceiling. Stable viewport units avoid resizing during browser toolbar movement. |
-| Press reader | Wider touch card with peek/full positions, swipe up to read, pull down to lower/close, outside tap to dismiss. A mouse reader opens fully. |
+| Press previews | Compact thumbnails: the phone’s existing two-up size stays as authored. Tablet thumbnails cap at 208px (including larger touch tablets), desktop at 240px; both cap height at 28svh. Two columns on phones; wider grids add columns for future articles instead of enlarging cards. Shared on Home and Press. |
+| Press reader | Wider touch card with peek/full positions, swipe up to read, pull down to lower/close, outside tap to dismiss. Touch reader gestures do not stop at a tablet width boundary. A mouse reader opens fully. |
 | Link cues | Section underlines draw on entry; inline link marks and touch feedback follow the phone behavior. |
 | Loading and media | Responsive sharp images, low-priority neighboring photos, wide opening footage, reduced-motion and Save-Data handling. |
 | Accessibility | Keyboard controls remain available alongside touch controls; reduced motion suppresses moving cards and reader transitions. |

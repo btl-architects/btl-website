@@ -203,7 +203,7 @@
      the cards instead, so the ceiling is what stops them inflating. 26rem is a
      little above the 24rem the four-column layout settled on, since a card with
      a neighbour rather than three has room to be slightly more generous. */
-  --card-max:         min(26rem, 40svh);
+  --card-max:         min(15rem, 28svh);
 
   /* How wide a person's card wants to be, before the grid decides how many fit.
    *
@@ -329,7 +329,7 @@
 
 @media (min-width: 48rem) and (max-width: 85.375rem) {
   :root {
-    --card-max: min(20rem, 34svh);  /* Press previews also fit short landscape screens. */
+    --card-max: min(13rem, 28svh);  /* Compact Press thumbnails, including landscape. */
     --project-preview-h: clamp(9rem, 18vw, 15rem);
     --project-open-h: clamp(16rem, 32vw, 25rem);
     --project-card-gap: var(--s-6);
@@ -365,4 +365,9 @@
     --project-open-h: clamp(15rem, 33vh, 17.5rem);
     --project-card-gap: var(--s-7);
   }
+}
+
+/* Larger touch tablets keep the same Press thumbnails, regardless of width. */
+@media (min-width: 48rem) and (hover: none) and (pointer: coarse) {
+  :root { --card-max: min(13rem, 28svh); }
 }

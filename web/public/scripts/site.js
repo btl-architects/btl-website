@@ -908,6 +908,7 @@
 
       var lead = st.querySelector(".rail__note");
       card.removeAttribute("data-open");
+      st.tabIndex = browsableOverview.matches ? 0 : -1;
       st.querySelectorAll('.rail__f[role="button"]').forEach(function (f) { f.tabIndex = -1; });
 
       if (instant || reduced || !lead) { finish(); return; }
@@ -1043,6 +1044,7 @@
         /* flush before opening, or the wipes have no closed state to start from */
         void st.offsetHeight;
         card.setAttribute("data-open", "true");
+        st.tabIndex = -1; // Open photographs own the sequential keyboard stops.
 
         if (noteEl && !narrow) {
           var gap = parseFloat(getComputedStyle(st).columnGap) || 0;
@@ -1166,7 +1168,7 @@
     function strips() {
       [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
         var name = st.closest(".pcard").querySelector(".pcard__name");
-        st.tabIndex = browsableIndex.matches ? 0 : -1;
+        st.tabIndex = browsableIndex.matches && st.closest(".pcard").getAttribute("data-open") !== "true" ? 0 : -1;
         if (browsableIndex.matches) { st.setAttribute("role", "region"); st.setAttribute("aria-label", (name ? name.textContent : "Project") + " photographs"); }
         else { st.removeAttribute("role"); st.removeAttribute("aria-label"); }
       });

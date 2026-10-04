@@ -7,7 +7,7 @@
   var opener = null, controller = null, savedScroll = 0, savedStyle = null;
   var historyPending = false;
   var scrollRestoration = null;
-  var touchReader = window.matchMedia("(max-width: 85.375rem) and (hover: none) and (pointer: coarse)");
+  var touchReader = window.matchMedia("(hover: none) and (pointer: coarse)");
 
   function restoreHistoryScroll() {
     requestAnimationFrame(function () {

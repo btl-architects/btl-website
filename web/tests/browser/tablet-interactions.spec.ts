@@ -31,15 +31,15 @@ for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:10
       if(route==='/'||route==='/press/') {
         const cards=page.locator('.credits .pc');
         const first=(await cards.nth(0).boundingBox())!,second=(await cards.nth(1).boundingBox())!;
-        expect(first.width).toBeLessThanOrEqual(320);
-        expect(first.width).toBeLessThanOrEqual(viewport.height*.34+1);
+        expect(Math.round(first.width*1000)/1000).toBeLessThanOrEqual(208);
+        expect(first.width).toBeLessThanOrEqual(viewport.height*.28+1);
         expect(second.x).toBeGreaterThan(first.x+first.width);
         expect(Math.abs(second.y-first.y)).toBeLessThan(1);
       }
       if(route==='/'||route==='/projects/') {
         for(const strip of await page.locator('[data-strip]').all()) {
           const box=(await strip.boundingBox())!;
-          expect(box.height).toBeLessThanOrEqual(240);
+          expect(Math.round(box.height*1000)/1000).toBeLessThanOrEqual(240);
           const frames=await strip.locator('.rail__f').all();
           const widths=await Promise.all(frames.slice(0,2).map(frame=>frame.boundingBox()));
           expect(widths[0]!.width+widths[1]!.width).toBeLessThan(box.width);
