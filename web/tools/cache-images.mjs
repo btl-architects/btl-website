@@ -1,4 +1,4 @@
-/* Sanity remains the sole image transformer. Copy its optimized WebP renditions
+/* Sanity remains the sole image transformer. Copy its optimized image renditions
  * into the static deployment, so visits and browser checks do not spend CMS
  * bandwidth. Asset + crop + quality identify an immutable cache entry. */
 import {createHash} from 'node:crypto';
@@ -42,20 +42,21 @@ function* htmlFiles(dir) {
 }
 export async function cacheImages({dist=join(ROOT,'dist'),cache=join(ROOT,'node_modules/.astro/btl-media-v1'),fetchImage=fetch,zoomWidths}={}) {
   const pages=[...htmlFiles(dist)].map(path=>({path,html:readFileSync(path,'utf8')}));
-  const plans=new Map();const aliases=new Map();const critical=new Map();
-  // Only standalone priority photographs need an extra format. Existing
-  // art-directed pictures keep their authored source selection.
+  const plans=new Map();const aliases=new Map();const photographs=new Map();
+  // Preserve art direction and offer modern formats for each actual photo.
+  // Nearby native-lazy frames also compete with the opening image for bytes.
   for(const page of pages) {
     let inPicture=0;const images=[];
-    for(const token of page.html.matchAll(/<\/?picture\b[^>]*>|<img\b[^>]*>/g)) {
+    for(const token of page.html.matchAll(/<\/?picture\b[^>]*>|<(?:img|source)\b[^>]*>/g)) {
       const tag=token[0];
       if(tag.startsWith('</picture')) {inPicture--;continue;}
       if(tag.startsWith('<picture')) {inPicture++;continue;}
-      if(inPicture || !/fetchpriority="high"/.test(tag)) continue;
+      const isSource=tag.startsWith('<source');
+      if(isSource && !inPicture) continue;
       const candidates=[...tag.matchAll(/https:\/\/cdn\.sanity\.io\/images\/[^\s"'<>]+/g)].map(m=>m[0].split(/&quot;|&#34;|&#x22;/i)[0].replace(/&amp;/g,'&')).map(imagePlan).filter(Boolean);
-      if(candidates.length) images.push({tag,plans:[...new Map(candidates.map(p=>[p.path,p])).values()]});
+      if(candidates.length) images.push({tag,at:token.index,isSource,inPicture:!!inPicture,plans:[...new Map(candidates.map(p=>[p.path,p])).values()]});
     }
-    critical.set(page.path,images);
+    photographs.set(page.path,images);
   }
   for(const page of pages) {
     const rungs=zoomWidths ?? (page.html.match(/data-zoom-widths="([\d,]+)"/)?.[1] ?? '').split(',').map(Number).filter(w=>w>0);
@@ -92,13 +93,13 @@ export async function cacheImages({dist=join(ROOT,'dist'),cache=join(ROOT,'node_
       mkdirSync(dirname(target),{recursive:true});copyFileSync(cached,target);bytes+=body.length;
     }
   }));
-  // AVIF is asynchronous in Sanity: use it for opening photographs only when
+  // AVIF is asynchronous in Sanity: offer a modern source only when
   // every candidate is ready. Otherwise the complete WebP ladder stays valid.
   const avif=new Set();let avifFetched=0,avifReused=0;
-  const openings=[...new Map([...critical.values()].flatMap(images=>images.flatMap(i=>i.plans)).map(p=>[p.path,p])).values()];
+  const formats=[...new Map([...photographs.values()].flatMap(images=>images.flatMap(i=>i.plans)).map(p=>[p.path,p])).values()];
   await Promise.all(Array.from({length:4},async()=>{
-    while(openings.length) {
-      const plan=openings.pop(),path=plan.path.replace(/\.webp$/,'.avif'),cached=join(cache,path);
+    while(formats.length) {
+      const plan=formats.pop(),path=plan.path.replace(/\.webp$/,'.avif'),cached=join(cache,path);
       let body=existsSync(cached) ? readFileSync(cached) : null;
       if(await validImage(body,'avif')) avifReused++;
       else {
@@ -116,16 +117,32 @@ export async function cacheImages({dist=join(ROOT,'dist'),cache=join(ROOT,'node_
   const replacements=[...aliases].sort((a,b)=>b[0].length-a[0].length);
   const rewrite=raw=>{for(const [from,to] of replacements) raw=raw.split(from).join(to);return raw;};
   for(const page of pages) {
-    let html=rewrite(page.html);
-    for(const image of critical.get(page.path)) {
+    let html=page.html;const preloads=new Map();
+    // Replace by original offset, from the end: identical pictures in a
+    // template and its no-script fallback must each receive their own source.
+    for(const image of [...photographs.get(page.path)].reverse()) {
       if(!image.plans.every(plan=>avif.has(plan.path))) continue;
       const tag=rewrite(image.tag);
       const srcset=/\ssrcset="([^"]+)"/.exec(tag)?.[1] ?? /\ssrc="([^"]+)"/.exec(tag)?.[1];
       const sizes=/\ssizes="([^"]+)"/.exec(tag)?.[1];
       const modern=srcset.replace(/\.webp\?/g,'.avif?');
-      html=html.replace(tag,`<picture style="display:contents"><source type="image/avif" srcset="${modern}"${sizes ? ` sizes="${sizes}"` : ''}>${tag}</picture>`);
-      html=html.replace(/<link\b[^>]*>/g,link=>link.includes('as="image"') && link.includes(`imagesrcset="${srcset}"`) ? link.replace(`imagesrcset="${srcset}"`,`type="image/avif" imagesrcset="${modern}"`) : link);
+      let replacement;
+      if(image.isSource) {
+        const source=tag.replace(`srcset="${srcset}"`,`srcset="${modern}"`).replace(/\stype="[^"]*"/,'').replace('<source','<source type="image/avif"');
+        replacement=source+tag;
+      } else {
+        const source=`<source type="image/avif" srcset="${modern}"${sizes ? ` sizes="${sizes}"` : ''}>`;
+        replacement=image.inPicture ? source+tag : `<picture style="display:contents">${source}${tag}</picture>`;
+      }
+      html=html.slice(0,image.at)+replacement+html.slice(image.at+image.tag.length);
+      preloads.set(srcset,modern);
     }
+    html=rewrite(html);
+    html=html.replace(/<link\b[^>]*>/g,link=>{
+      const srcset=/\simagesrcset="([^"]+)"/.exec(link)?.[1];
+      return link.includes('as="image"') && preloads.has(srcset)
+        ? link.replace(`imagesrcset="${srcset}"`,`type="image/avif" imagesrcset="${preloads.get(srcset)}"`) : link;
+    });
     const visibleRemote=/<(?:img|source)\b[^>]*(?:src|srcset)="https:\/\/cdn\.sanity\.io\//.test(html);
     if(!visibleRemote) html=html.replace(/<link\b[^>]*rel="preconnect"[^>]*href="https:\/\/cdn\.sanity\.io"[^>]*>/g,'');
     writeFileSync(page.path,html);

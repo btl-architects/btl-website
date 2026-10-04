@@ -220,7 +220,7 @@ fails the build, including unavailable optimized image assets:
   unchanged files reuse `node_modules/.astro/btl-media-v1` when the host's Astro
   build cache is enabled. Cold caches download each rendition once. CDN failures
   block the new deployment rather than publishing broken photographs. Ready
-  AVIF ladders serve opening photos with complete WebP fallbacks. Enable the
+  AVIF ladders serve photographs with complete WebP fallbacks. Enable the
   Cloudflare Pages build cache to reuse this directory between hosted builds;
   GitHub checks restore and save it automatically.
 

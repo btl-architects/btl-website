@@ -230,10 +230,10 @@ test('opening stills use authored phone framing or the responsive fallback befor
       // source, including later clips, and the landscape fallback when absent.
       const phoneSource=frame.locator('source[media="(max-width: 47.99rem)"]');
       const count=await phoneSource.count();
-      expect(count).toBeLessThanOrEqual(1);
-      const srcset=await (count ? phoneSource : image).getAttribute('srcset');
-      expect(srcset).toBeTruthy();
-      const candidates=srcset!.split(', ').map(s=>new URL(s.split(' ')[0],page.url()).href);
+      expect(count).toBeLessThanOrEqual(2);
+      const srcsets=await (count ? phoneSource : frame.locator('source:not([media]),img')).evaluateAll(els=>els.map(el=>el.getAttribute('srcset')).filter(Boolean));
+      expect(srcsets.length).toBeGreaterThan(0);
+      const candidates=srcsets.flatMap(srcset=>srcset!.split(', ').map(s=>new URL(s.split(' ')[0],page.url()).href));
       await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
       expect(candidates).toContain(await image.evaluate(el=>(el as HTMLImageElement).currentSrc));
       await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);

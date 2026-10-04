@@ -29,7 +29,7 @@ test('cached bytes serve repeated builds without new downloads, including zoom a
     const dist=join(root,'dist'),cache=join(root,'cache');mkdirSync(dist);
     const html=`<body data-zoom-widths="3500,6000"><img src="${image.replace(/&/g,'&amp;')}" srcset="${image.replace(/&/g,'&amp;')} 1080w"><div data-gallery="{&quot;src&quot;:&quot;${image.replace(/&/g,'&amp;')}&quot;}"></div>`;
     writeFileSync(join(dist,'index.html'),html);
-    const requests=[];const fetchImage=async(url)=>{requests.push(url);return new Response(bytes,{headers:{'Content-Type':'image/webp'}});};
+    const requests=[];const fetchImage=async(url)=>{if(new URL(url).searchParams.has('fm')) requests.push(url);return new Response(bytes,{headers:{'Content-Type':'image/webp'}});};
     const result=await cacheImages({dist,cache,fetchImage});
     assert.equal(result.images,3);assert.equal(result.fetched,3);
     assert.deepEqual(requests.map(s=>Number(new URL(s).searchParams.get('w'))).sort((a,b)=>a-b),[1080,3500,6000]);
@@ -72,7 +72,7 @@ test('opening images preload a complete AVIF ladder and reuse it on repeat build
   }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test('an incomplete AVIF ladder keeps WebP and existing art direction unchanged',async()=>{
+test('an incomplete AVIF ladder keeps WebP while complete sources retain art direction',async()=>{
   const root=mkdtempSync(join(tmpdir(),'btl-media-'));
   const modern=await sharp({create:{width:4,height:2,channels:3,background:'#7799aa'}}).avif().toBuffer();
   try {
@@ -85,7 +85,26 @@ test('an incomplete AVIF ladder keeps WebP and existing art direction unchanged'
     }});
     const delivered=readFileSync(join(dist,'index.html'),'utf8');
     assert.equal((delivered.match(/<picture/g)||[]).length,1);
-    assert.ok(!delivered.includes('type="image/avif"'));
+    assert.match(delivered,/<img fetchpriority="high"[^>]*srcset="[^"]*\.webp\?/);
+    assert.match(delivered,/<source type="image\/avif" media="\(max-width: 600px\)"/);
     assert.match(delivered,/<source media="\(max-width: 600px\)"/);
+  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test('identical template and no-script photographs each keep one modern source',async()=>{
+  const root=mkdtempSync(join(tmpdir(),'btl-media-'));
+  const modern=await sharp({create:{width:4,height:2,channels:3,background:'#7799aa'}}).avif().toBuffer();
+  try {
+    const dist=join(root,'dist');mkdirSync(dist);
+    const picture=`<picture><source media="(max-width: 600px)" srcset="${image}"><img src="${image}" srcset="${image} 1080w"></picture>`;
+    writeFileSync(join(dist,'index.html'),`<template>${picture}</template><noscript>${picture}</noscript>`);
+    await cacheImages({dist,cache:join(root,'cache'),zoomWidths:[],fetchImage:async(url)=>{
+      const webp=new URL(url).searchParams.has('fm');return new Response(webp?bytes:modern,{headers:{'Content-Type':webp?'image/webp':'image/avif'}});
+    }});
+    const delivered=readFileSync(join(dist,'index.html'),'utf8');
+    const pictures=[...delivered.matchAll(/<picture>[\s\S]*?<\/picture>/g)].map(m=>m[0]);
+    assert.equal(pictures.length,2);
+    assert.equal(pictures[0],pictures[1]);
+    for(const picture of pictures) assert.equal((picture.match(/type="image\/avif"/g)||[]).length,2);
   }finally{rmSync(root,{recursive:true,force:true});}
 });
