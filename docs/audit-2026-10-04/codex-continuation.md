@@ -128,3 +128,28 @@ or without focus in the card; their failures are preserved separately and
 excluded from product claims. The successful probe follows the documented
 focused-card keyboard path. These are browser simulations, not physical-device
 or input-latency certification.
+
+## `a5800a7` CI and new-tab activation check
+
+[Run 37205297244](https://github.com/btl-architects/btl-website/actions/runs/37205297244)
+completed with 478 passed, 37 explicit skips and one failed Chromium Press
+modifier-click case (also failed its retry). The poster and rail-measurement
+corrections pass; strict phone/desktop close sampling passes all three engines.
+The failure is still reported as a failed gate, not classified as passed.
+Its trace records the native new tab and a correct 200 HTML response in about
+29 ms, but no committed document before the unchanged five-second assertion.
+The test had tried to inspect this background tab without activating it.
+
+The test now explicitly returns to the original tab after closing the external
+source, then activates the native modifier-click article tab before checking
+its URL and visible heading. Native click, expected URL/content, original
+reader-dismissal assertions and all timeouts are unchanged. Six repeated local
+Chromium/WebKit cases pass. Background-tab scheduling is the working diagnosis;
+only the next Linux CI result can verify this correction there.
+Raw failure traces and reports are retained in `.audit-work/ci-artifacts-final/`.
+
+This run's exact `a5800a7` deployed-preview performance medians are Home
+2182 ms / score 99 / max CLS 0, Nelly House 2510 ms / score 97 / max CLS
+0.00000385, and Contact 1009 ms / score 100 / max CLS 0. The Home and project
+LCP gates still fail; all other measured thresholds pass. Web dependencies are
+clean. Studio's known unpatched dependency gate still fails. Nothing is merged.
