@@ -494,9 +494,16 @@
     rail.scrollBy({ left: direction * rtl * rail.clientWidth * .7, behavior: reduced ? "auto" : "smooth" });
   }
 
+  var browsableOverview = window.matchMedia("(max-width: 85.375rem), (hover: none) and (pointer: coarse)");
   function photographStrip(target) {
     var rail = target.closest && target.closest("[data-rail], .pcard__strip");
-    return rail && !rail.closest('.pcard:not([data-open="true"])') ? rail : null;
+    // A closed card's caption covers the lower photograph area. A drag there
+    // still browses the strip; a click retains the real project link.
+    if (!rail && browsableOverview.matches && target.closest) {
+      var caption = target.closest(".pcard:not([data-open=\"true\"]) [data-project]");
+      if (caption) rail = caption.closest(".pcard").querySelector("[data-strip]");
+    }
+    return rail && (!rail.closest('.pcard:not([data-open="true"])') || browsableOverview.matches) ? rail : null;
   }
 
   /* One mouse drag for Studio, direct project pages and fetched project
@@ -545,7 +552,8 @@
   document.addEventListener("click", function (e) {
     var rail = draggedGallery;
     draggedGallery = null;
-    if (!rail || !e.detail || !rail.contains(e.target)) return;
+    var card = rail && rail.closest(".pcard");
+    if (!rail || !e.detail || !(rail.contains(e.target) || card && card.contains(e.target))) return;
     e.preventDefault();
     e.stopImmediatePropagation(); // A drag never opens a viewer or closes a card.
   }, true);
@@ -656,6 +664,7 @@
 
   var pindex = document.querySelector("[data-pindex]");
   if (pindex) {
+    var compactIndex = window.matchMedia("(max-width: 85.375rem)");
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));
     var PEEK = 6;                     /* frames the card renders itself */
     var railCache = {};
@@ -899,6 +908,7 @@
 
       var lead = st.querySelector(".rail__note");
       card.removeAttribute("data-open");
+      st.tabIndex = browsableOverview.matches ? 0 : -1;
       st.querySelectorAll('.rail__f[role="button"]').forEach(function (f) { f.tabIndex = -1; });
 
       if (instant || reduced || !lead) { finish(); return; }
@@ -1014,10 +1024,9 @@
            reveal the text; only the direction differs, which is what makes it
            a mirror rather than a second animation.
 
-           On a phone the note leaves the strip entirely: a 20rem panel inside a
-           375px scroller leaves a sliver of photograph and reads as a mistake,
-           so there it stacks underneath in normal flow. */
-        var narrow = window.matchMedia("(max-width: 51.99rem)").matches;
+           Phones and tablets keep the note below the strip: it stays fully
+           readable without taking width from the compact photograph row. */
+        var narrow = compactIndex.matches;
         var note = rail.querySelector(".rail__note");
         var noteEl = null;
         figs.forEach(function (f) { st.appendChild(f.cloneNode(true)); });
@@ -1035,6 +1044,7 @@
         /* flush before opening, or the wipes have no closed state to start from */
         void st.offsetHeight;
         card.setAttribute("data-open", "true");
+        st.tabIndex = -1; // Open photographs own the sequential keyboard stops.
 
         if (noteEl && !narrow) {
           var gap = parseFloat(getComputedStyle(st).columnGap) || 0;
@@ -1150,29 +1160,44 @@
        clickable and is not is the least intuitive thing an index can do. The
        caption stays a real <a> underneath for keyboard, middle-click and
        no-JavaScript, but the pointer target is the entire card. */
-    /* Below 52rem a closed card's strip can be swiped (components.css). */
-    var narrowIndex = window.matchMedia("(max-width: 51.99rem)");
-    /* A strip that scrolls must be reachable from the keyboard, where the
-       arrow keys then move it. Closed cards only scroll at phone widths, so
-       that is the only place the strip itself joins the tab order (wider, it
-       stays out, or Firefox lists every scroll container as a stop). */
+    /* Closed strips scroll in phone/tablet layouts and on touch screens of any width. The
+       note's placement follows width independently of the input. */
+    var browsableIndex = browsableOverview;
+    /* Scrollable strips join the keyboard order too. A wide mouse layout
+       stays out, or Firefox lists every closed scroll container as a stop. */
     function strips() {
       [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
         var name = st.closest(".pcard").querySelector(".pcard__name");
-        st.tabIndex = narrowIndex.matches ? 0 : -1;
-        if (narrowIndex.matches) { st.setAttribute("role", "region"); st.setAttribute("aria-label", (name ? name.textContent : "Project") + " photographs"); }
+        st.tabIndex = browsableIndex.matches && st.closest(".pcard").getAttribute("data-open") !== "true" ? 0 : -1;
+        if (browsableIndex.matches) { st.setAttribute("role", "region"); st.setAttribute("aria-label", (name ? name.textContent : "Project") + " photographs"); }
         else { st.removeAttribute("role"); st.removeAttribute("aria-label"); }
       });
     }
     strips();
-    narrowIndex.addEventListener("change", strips);
+    browsableIndex.addEventListener("change", strips);
+    // Rotation and split view can cross the tablet/desktop boundary while a
+    // gallery is open. Move its note with the layout, retaining the visible
+    // photograph and the current project history entry.
+    compactIndex.addEventListener("change", function () {
+      if (!openCard) return;
+      var st = strip(openCard);
+      var note = st.querySelector(".rail__note") || openCard.querySelector(":scope > .rail__note");
+      if (!note) return;
+      var edge = st.getBoundingClientRect().left;
+      var frame = [].slice.call(st.querySelectorAll(".rail__f")).find(function (f) { return f.getBoundingClientRect().right > edge; });
+      var left = frame ? frame.getBoundingClientRect().left : 0;
+      st._pin = false; st._follow = false; st._touched = true;
+      if (compactIndex.matches) openCard.appendChild(note);
+      else st.insertBefore(note, st.firstChild);
+      if (frame) st.scrollLeft += frame.getBoundingClientRect().left - left;
+    });
     [].slice.call(pindex.querySelectorAll("[data-strip]")).forEach(function (st) {
       var card = st.closest(".pcard"), tick = false;
       st.addEventListener("scroll", function () {
         if (tick) return; tick = true;
         requestAnimationFrame(function () {
           tick = false;
-          card.toggleAttribute("data-strip-moved", narrowIndex.matches && st.scrollLeft > 24);
+          card.toggleAttribute("data-strip-moved", browsableIndex.matches && st.scrollLeft > 24);
         });
       }, { passive: true });
     });
@@ -1204,7 +1229,7 @@
         ev.preventDefault();
         /* On a phone the closed strip can already be swiped, so the frame that
            was tapped is the one the reader chose; the card opens around it. */
-        card._chosen = narrowIndex.matches && ev.target.closest ? ev.target.closest(".rail__f") : null;
+        card._chosen = browsableIndex.matches && ev.target.closest ? ev.target.closest(".rail__f") : null;
         expand(slug, true).catch(function () { location.href = hrefBySlug[slug]; });
       });
     });

@@ -52,7 +52,7 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
       shorter than its neighbour's and dragged that whole row's caption out of
       line. Empty it draws nothing; it just keeps the row straight. */}
   <span class="pc__img">
-    {image && <Figure image={image} sizes="(min-width: 48rem) 26rem, 45vw" fit={custom ? "contain" : "cover"} />}
+    {image && <Figure image={image} sizes="(max-width: 47.99rem) 45vw, (hover: none) and (pointer: coarse) min(16rem, 32svh), (max-width: 85.375rem) min(16rem, 32svh), 26rem" fit={custom ? "contain" : "cover"} />}
   </span>
   <span class="pc__m" style={captionOffset ? `--caption-offset:${captionOffset.toFixed(4)}%;` : undefined}>{meta}</span>
 </Tag>

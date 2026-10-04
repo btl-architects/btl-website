@@ -324,11 +324,12 @@ const BREAKPOINTS = {
   "40rem":    "a phone column ends; the tall-photograph cap starts tightening",
   "44rem":    "two-up mini lists",
   "47.99rem": "phone / tablet (paired with 48rem)",
-  "48rem":    "tablet up: header mark, press marks",
+  "48rem":    "tablet up: desktop navigation and composition; denser overview galleries",
   "51.99rem": "a project's note leaves the strip and stacks under it",
   "59.99rem": "stacked spreads (paired with 60rem)",
   "60rem":    "two-column spreads and cards",
   "64rem":    "hover-capable wide screens: the header wordmark",
+  "85.375rem": "tablet interaction and project-preview band ends (1366px, including large iPad landscape)",
 };
 const bpSources = [
   ...readdirSync(STYLES).filter((f) => f.endsWith(".css")).map((f) => [f, readFileSync(join(STYLES, f), "utf8")]),

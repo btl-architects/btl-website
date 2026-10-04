@@ -332,7 +332,7 @@ html:has(.menu[data-open="true"]) .header {
   scrollbar-width: none;
 }
 .rail::-webkit-scrollbar { display: none; }
-@media (max-width: 51.99rem) {
+@media (max-width: 47.99rem) {
   .rail { height: clamp(14rem, 40vh, 22rem); }
 }
 
@@ -393,7 +393,7 @@ html:has(.menu[data-open="true"]) .header {
      says "different project", the other says "same project, next frame". At
      1.5rem against 1rem they read as the same interval and the whole page
      flattened into one grid of pictures. */
-  display: flex; flex-direction: column; gap: var(--s-8);
+  display: flex; flex-direction: column; gap: var(--project-card-gap);
   /* The underside is --s-8, not --space-section.
    *
    * The Onward beneath this already brings its own --s-6 of margin, so a full
@@ -409,7 +409,7 @@ html:has(.menu[data-open="true"]) .header {
  * alongside height so opening/closing cannot overwrite the entrance. */
 .pcard {
   position: relative;
-  height: clamp(11rem, 27vh, 21rem);
+  height: var(--project-preview-h);
   transition: height var(--dur-slow) var(--ease), var(--tr-reveal);
   cursor: pointer;
 }
@@ -417,7 +417,7 @@ html:has(.menu[data-open="true"]) .header {
 /* Opening is the gesture you asked for and gets the full duration; closing is
    the card getting out of the way and should not make you wait for it. */
 .pcard:not([data-open="true"]) { transition-duration: var(--dur-hover), var(--dur-reveal), var(--dur-reveal); }
-.pcard[data-open="true"] { height: clamp(19rem, 56vh, 32rem); }
+.pcard[data-open="true"] { height: var(--project-open-h); }
 
 .pcard__strip {
   display: flex; align-items: stretch; gap: var(--s-2);
@@ -488,6 +488,7 @@ html:has(.menu[data-open="true"]) .header {
      only ever written on one way. */
   transition: opacity var(--dur-base) var(--ease);
 }
+.pcard[data-strip-moved] .pcard__t:focus-visible { opacity: 1; }
 .pcard__name {
   grid-row: 1; font-weight: 700; line-height: 1.1;
   font-size: clamp(1rem, 0.85rem + 0.55vw, 1.375rem);
@@ -656,8 +657,7 @@ html:has(.menu[data-open="true"]) .header {
   transition: width var(--dur-fast) linear, transform var(--dur-fast) linear;
 }
 
-@media (max-width: 51.99rem) {
-  .pindex { gap: var(--s-7); }
+@media (max-width: 47.99rem) {
   .pcard[data-open="true"] .pcard__nav { display: flex; }
 
   /* Every strip runs left-to-right on a phone. The mirror is a composition
@@ -679,13 +679,13 @@ html:has(.menu[data-open="true"]) .header {
    * phone can take without lurching. The name rides on the first frame, as on desktop. */
   .pcard, .pcard[data-open="true"] { height: auto; }
   .pcard__strip {
-    height: clamp(10rem, 22vh, 12rem);
+    height: var(--project-preview-h);
     transition: height var(--dur-slow) var(--ease);
     overflow-x: auto; overflow-y: hidden;
   }
   /* Open, a landscape frame runs just past the phone's width: big enough to
      be the project now, not so big that the card lurches to fill the screen. */
-  .pcard[data-open="true"] .pcard__strip { height: clamp(15rem, 33vh, 17.5rem); }
+  .pcard[data-open="true"] .pcard__strip { height: var(--project-open-h); }
   /* The strip runs edge to edge — photographs from the screen's first pixel to
      its last, no dark margin at the start — while the name on it keeps to the
      page column. On the projects page the card sits inside the column, so the
@@ -708,8 +708,22 @@ html:has(.menu[data-open="true"]) .header {
   .pcard > .rail__note .rail__text { max-width: none; }
 }
 
+/* Tablet previews show several whole frames instead of a single oversized
+   cover. On open, text follows the pictures so a short gallery never clips a
+   long project description or gives away a third of its width to the note. */
+@media (min-width: 48rem) and (max-width: 85.375rem) {
+  .pcard, .pcard[data-open="true"] { height: auto; }
+  .pcard__strip { height: var(--project-preview-h); transition: height var(--dur-slow) var(--ease); overflow-x: auto; overflow-y: hidden; cursor: grab; }
+  .pcard__strip[data-dragging] { cursor: grabbing; }
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; pointer-events: none; }
+  .pcard[data-open="true"] .pcard__strip { height: var(--project-open-h); }
+  .pcard__t { padding: var(--s-6) var(--s-4) var(--s-3); }
+  .pcard > .rail__note { display: block; padding: var(--s-5) 0 var(--s-2); }
+  .pcard > .rail__note .rail__text { max-width: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .pcard, .pcard__t, .pcard__peek img { transition: none; }
+  .pcard, .pcard__strip, .pcard__t, .pcard__peek img { transition: none; }
   .pcard:hover:not([data-open="true"]) .pcard__peek img { transform: none; }
   .pcard .rail__note,
   .pcard__strip > .rail__f { clip-path: none; transition: none; }
@@ -739,7 +753,7 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase; color: var(--text-tertiary);
 }
 
-@media (max-width: 51.99rem) {
+@media (max-width: 47.99rem) {
   .pjh__id { grid-template-columns: repeat(6, 1fr); }
   .pjh__name { grid-column: 1 / 7; }
   .pjh__place { grid-column: 1 / 7; text-align: left; margin-top: var(--s-2); }
@@ -1019,6 +1033,17 @@ html:has(.menu[data-open="true"]) .header {
    ------------------------------------------------------------------------- */
 
 .spread { display: grid; gap: var(--s-7); align-items: start; }
+
+/* Tablets have room for the desktop composition, with a smaller gap so both
+   the photograph and the reading column remain useful in portrait. */
+@media (min-width: 48rem) and (max-width: 59.99rem) {
+  .spread {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6);
+    align-items: center;
+  }
+  .spread--flip > .spread__media, .pw.spread > .spread__media { order: 2; }
+}
 
 @media (min-width: 60rem) {
   /* Columns sized by what is in them, not by halving the page.
@@ -1664,33 +1689,23 @@ html:has(.menu[data-open="true"]) .header {
   gap: var(--s-6) var(--s-5);
 }
 
-/* Above the phone the COUNT stops being the constant and the CARD does.
- *
- * This said repeat(3, 1fr), which reads as "three across" but actually means
- * "whatever a third of the page happens to be". At a 96rem page that was 480px
- * and looked deliberate; at 120rem it became 576px and the cards were simply
- * too big — the layout had no opinion about how large a press credit should be,
- * so it inherited one from the window.
- *
- * Stated the other way round, the card holds its size and the number of columns
- * falls out of the width: three at 1280, three at 1440, four from about 1600 up.
- * The card stays between 375 and 425px at every size instead of inflating, and
- * a wider page in future adds a column rather than fattening the cards. */
+/* Preserve the authored desktop pair and spacing. Tablet previews have their
+   own density rule below, shared by Home and Press. */
 @media (min-width: 48rem) {
   .credits {
-    /* Two per line at every size, which is what the practice asked for after
-       seeing five across. That makes the count the constant again — the thing
-       the note above warns about — so the CARD needs its own ceiling or two
-       columns of a 1793px page would be 880px each, half again the 576px that
-       started the complaint. --card-max is that ceiling, and justify-content
-       centres the pair once the page is wider than the two of them.
-
-       So the rule is: never more than two, never wider than --card-max, and
-       centred in whatever is left. The wide margins on a large screen are a
-       consequence of those two instructions together, not of either alone. */
     grid-template-columns: repeat(2, minmax(0, var(--card-max)));
     justify-content: center;
     gap: var(--s-8) var(--s-6);
+  }
+}
+/* Tablets add columns as the publication index grows. A stable-height ceiling
+   keeps short landscape screens compact without resizing desktop or phone. */
+@media (min-width: 48rem) and (max-width: 85.375rem),
+       (min-width: 48rem) and (hover: none) and (pointer: coarse) {
+  .credits {
+    grid-template-columns: repeat(auto-fit, minmax(0, var(--card-max)));
+    justify-content: center;
+    gap: var(--s-6) var(--s-5);
   }
 }
 
@@ -2090,7 +2105,7 @@ body[data-preview] .header { top: var(--preview-h); }
    brightens as it is pulled down. The short rule on top is the handle phones
    use to say a card can be pulled. Reading the original publication is the
    one way out of the site. */
-@media (max-width: 47.99rem) {
+@media (max-width: 47.99rem), (hover: none) and (pointer: coarse) {
   .press-reader {
     width: calc(100% - 2 * var(--s-3)); height: 92dvh; max-height: none; margin: auto auto 0;
     border: 1px solid var(--border-strong); border-bottom: 0;
@@ -2121,14 +2136,20 @@ body[data-preview] .header { top: var(--preview-h); }
   .press-article__body figure, .press-article__quote { margin-block: var(--s-6); }
   .press-article__body h2 { margin-top: var(--s-6); }
 }
+@media (min-width: 48rem) and (hover: none) and (pointer: coarse) {
+  .press-reader { width: min(56rem, calc(100% - 2 * var(--s-5))); }
+}
 @media (prefers-reduced-motion: no-preference) {
   .press-reader[open] { animation: press-reader-in var(--dur-base) var(--ease); }
-  @media (max-width: 47.99rem) {
+  @media (max-width: 47.99rem), (hover: none) and (pointer: coarse) {
     .press-reader[open] { animation: none; }   /* it rises by transform (press-reader.js) */
   }
   .press-reader[open]::backdrop { animation: press-reader-backdrop var(--dur-base) var(--ease); }
   @keyframes press-reader-in { from {opacity: 0; transform: translateY(var(--s-3));} to {opacity: 1; transform: none;} }
   @keyframes press-reader-backdrop { from {opacity: 0;} to {opacity: 1;} }
+}
+@media (prefers-reduced-motion: reduce) {
+  .press-reader, .press-reader::backdrop { transition: none; animation: none; }
 }
 
 /* --- the menu button ------------------------------------------------------
@@ -2455,7 +2476,9 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
     opacity: 0; pointer-events: none;
   }
 }
-@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
+/* Touch controls depend on the input, including tablets with desktop-sized
+   layouts. Only the phone's stacked project note depends on width. */
+@media (hover: none) and (pointer: coarse) {
   .onward__t::after { clip-path: inset(0); }
   /* A link inside a sentence, or standing alone in one, carries a small
      raised arrow after the words instead of a line: the mark readers already
@@ -2489,19 +2512,31 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
   .lb__bar, .lb__cap { transition: opacity var(--dur-base) var(--ease); }
   .lb[data-chrome="off"] :is(.lb__bar, .lb__cap, .lb__step) { opacity: 0; pointer-events: none; }
   .f input { min-height: 2.75rem; }
+  .pcard[data-open="true"] .pcard__nav { display: flex; }
+  .pcard__strip { overflow-x: auto; overflow-y: hidden; }
+  .pcard__t { pointer-events: none; }
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; }
+  .landing .srail__i { min-block-size: 1.5rem; }
+  .pc[href]:active .pc__img { opacity: .85; }
+  a.tl:active, a.ul:active, .onward:active { color: var(--text-primary); }
+}
+@media (hover: none) and (pointer: coarse) and (max-width: 47.99rem) {
   .pj [data-rail] > .rail__note { display: none; }
   .project-note--touch { display: block; margin-top: var(--s-5); }
   .project-note--touch .rail__note { display: block; }
   .project-note--touch .rail__title { display: none; } /* The page heading already names it. */
   .project-note--touch .rail__text { max-width: none; }
-  .pc[href]:active .pc__img { opacity: .85; }
-  a.tl:active, a.ul:active, .onward:active { color: var(--text-primary); }
 }
 /* Below-fold sections enter with .rv; their line waits for the words, then
    draws left to right. Content already on screen at load is revealed before
    .js is set, so its line is simply there. Reduced motion reveals everything
-   at once and the line with it. */
-@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) and (prefers-reduced-motion: no-preference) {
+   at once and the line with it. Tablet previews and tablets with a trackpad
+   retain this cue even when the active pointer can hover. */
+@media (min-width: 48rem) and (max-width: 85.375rem) {
+  .onward__t::after { clip-path: inset(0); }
+}
+@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference),
+       (min-width: 48rem) and (max-width: 85.375rem) and (prefers-reduced-motion: no-preference) {
   :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
   .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
 }

@@ -7,6 +7,7 @@
   var opener = null, controller = null, savedScroll = 0, savedStyle = null;
   var historyPending = false;
   var scrollRestoration = null;
+  var touchReader = window.matchMedia("(hover: none) and (pointer: coarse)");
 
   function restoreHistoryScroll() {
     requestAnimationFrame(function () {
@@ -146,12 +147,12 @@
     content.addEventListener("focus", function () { if (sheet()) settle("full"); });
   }
 
-  // The two resting heights of the phone card, as offsets from fully raised.
+  // Phones and tablets share the two resting heights of the touch reader.
   // Touch only. The lowered card is a look that a finger raises or swipes
   // away; with a mouse there is no swipe, and it sat half-way, cut off and
   // unscrollable. A mouse, even in a narrow window, gets the card raised.
   function sheet() {
-    return window.matchMedia("(max-width: 47.99rem) and (hover: none) and (pointer: coarse)").matches;
+    return touchReader.matches;
   }
   function peekOffset() { return Math.max(0, dialog.clientHeight - window.innerHeight * 0.62); }
   function rest() { return dialog.getAttribute("data-detent") === "full" ? 0 : peekOffset(); }
@@ -160,6 +161,17 @@
     dialog.style.transform = "translateY(" + rest() + "px)";
     dialog.style.removeProperty("--pull");
   }
+  function resizeReader() {
+    if (!dialog || !dialog.open || leaving) return;
+    if (sheet()) settle(dialog.getAttribute("data-detent") || "full");
+    else {
+      dialog.removeAttribute("data-detent");
+      dialog.style.transform = "";
+      dialog.style.removeProperty("--pull");
+    }
+  }
+  window.addEventListener("resize", function () { requestAnimationFrame(resizeReader); }, {passive: true});
+  touchReader.addEventListener("change", resizeReader);
 
   function close() {
     if (!dialog || !dialog.open) return;
@@ -179,7 +191,7 @@
   var leaving = false;
   function dismiss() {
     if (leaving || !dialog || !dialog.open) return;
-    var slide = window.matchMedia("(max-width: 47.99rem)").matches &&
+    var slide = sheet() &&
                 !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     function done() {
       leaving = false;

@@ -225,6 +225,14 @@
    * list at three, including on a wide monitor. */
   --team-min:         16rem;
 
+  /* Project overview density, shared by Home and every project index.
+     Preview frames stay shallow; opening a project gives photographs room.
+     The tablet band uses width, so a tall portrait screen never inflates rows.
+     media.ts mirrors the preview heights when selecting sharp image files. */
+  --project-preview-h: clamp(11rem, 27vh, 21rem);
+  --project-open-h: clamp(19rem, 56vh, 32rem);
+  --project-card-gap: var(--s-8);
+
 
   /* How tall a spread photograph may be — and it depends on what it is sharing
      the screen with.
@@ -319,6 +327,15 @@
   :root { --spread-max-h: 58svh; }
 }
 
+@media (min-width: 48rem) and (max-width: 85.375rem) {
+  :root {
+    --card-max: min(16rem, 32svh);  /* Compact Press thumbnails, including landscape. */
+    --project-preview-h: clamp(9rem, 18vw, 15rem);
+    --project-open-h: clamp(16rem, 32vw, 25rem);
+    --project-card-gap: var(--s-6);
+  }
+}
+
 /* The light register. An editorial choice, applied per section. */
 [data-ground="light"] {
   color-scheme: light;
@@ -342,5 +359,15 @@
 
 /* Shorter travel on small screens keeps entrances within the reading area. */
 @media (max-width: 47.99rem) {
-  :root { --reveal-distance: 24px; --dur-reveal: 700ms; }
+  :root {
+    --reveal-distance: 24px; --dur-reveal: 700ms;
+    --project-preview-h: clamp(10rem, 22vh, 12rem);
+    --project-open-h: clamp(15rem, 33vh, 17.5rem);
+    --project-card-gap: var(--s-7);
+  }
+}
+
+/* Larger touch tablets keep the same Press thumbnails, regardless of width. */
+@media (min-width: 48rem) and (hover: none) and (pointer: coarse) {
+  :root { --card-max: min(16rem, 32svh); }
 }
