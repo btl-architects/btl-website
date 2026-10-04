@@ -57,7 +57,46 @@ budget change, image degradation, CMS write, account operation or live enquiry
 was performed. The two-second project target remains unproven until revised
 deployed measurements pass; previous baseline missed it.
 
-Next: push the correction and open the authorized PR, identify its immutable
-Cloudflare preview by exact source SHA, then report Linux Firefox, dependency
-and deployed performance results honestly. A PR is review/validation, not
-authorization to merge, release Studio or alter owner-managed settings.
+## First PR CI result and published-content test correction
+
+The correction and reports are pushed. Draft [PR #44](https://github.com/btl-architects/btl-website/pull/44)
+is open against `main`; nothing is merged. Its first immutable Cloudflare preview
+is `https://749a2502.btl-website-3wo.pages.dev/`, with verified source
+`fffd9e30f94786bec750299e8342a912f5198b8c`.
+
+[Linux CI run 37202682403](https://github.com/btl-architects/btl-website/actions/runs/37202682403)
+ran Chromium, WebKit and Firefox: 476 passed, 37 explicit API/feature skips,
+and 3 failed (one test in each engine). The strict phone/desktop project-close
+sampling passed in all three engines on its first attempt. The failures came
+from the old no-JavaScript opening-still test waiting for a `source` in the
+first clip. The freshly published sequence contains six clips without the
+optional portrait poster; each renders its supported responsive landscape
+fallback. The earlier one-clip build had a portrait poster, so the old assertion
+happened to pass locally against that content snapshot.
+
+The test now verifies every published frame: an authored phone source is
+selected when present, otherwise the responsive image candidates are selected;
+each image decodes, and no video is instantiated without scripts. No frame is
+skipped, the test timeout is unchanged, and the project-close test is untouched.
+This correction passes locally in Chromium and WebKit (2 passed). Linux CI
+will rerun the entire three-engine suite on the next pushed head.
+
+The first exact-preview mobile performance run used three fresh browser caches
+per route with unchanged gates:
+
+| Route | Median score | Median LCP | Maximum CLS |
+|---|---:|---:|---:|
+| Home | 98 | 2399 ms | 0.00919 |
+| Nelly House | 97 | 2530 ms | 0.00000385 |
+| Contact | 100 | 1536 ms | 0 |
+
+Home and Nelly House fail the under-two-second gate; Contact passes. All three
+meet the score and CLS gates. The first Home run scored 59 with 3807 ms LCP;
+the other two scored 98, so the median is not a guarantee for every visit.
+Web dependency audit is clean. Studio tests/types/build pass; its unchanged
+audit fails on the known 10 high entries rooted in `braces`. These failures
+remain visible and are not waived. Logs and CI artifacts are preserved under
+`.audit-work/`.
+
+A PR is review/validation, not authorization to merge, release Studio or alter
+owner-managed settings. Merge still requires the owner's approval.

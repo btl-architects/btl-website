@@ -214,15 +214,28 @@ test('reduced motion never requests video or advances frames',async({page})=>{
   await page.waitForTimeout(6500);
   await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');expect(media).toEqual([]);
 });
-test('the opening still uses the matching phone framing before JavaScript runs',async({browser,baseURL})=>{
+test('opening stills use authored phone framing or the responsive fallback before JavaScript runs',async({browser,baseURL})=>{
   const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:375,height:812}});
   try {
     const page=await context.newPage(); await page.goto(new URL('/',baseURL).href);
-    const frame=page.locator('.stage__f').first();
-    const candidates=(await frame.locator('source').getAttribute('srcset'))!.split(', ').map(s=>s.split(' ')[0]);
-    await expect.poll(()=>frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
-    expect(candidates).toContain(await frame.locator('img').evaluate(el=>(el as HTMLImageElement).currentSrc));
-    await expect(frame.locator('video')).toHaveCount(0);
+    const frames=page.locator('.stage__f');
+    expect(await frames.count()).toBeGreaterThan(0);
+    for(const frame of await frames.all()) {
+      const image=frame.locator('img');
+      await expect(image).toHaveCount(1);
+      // Portrait posters are optional in Studio. Check every authored phone
+      // source, including later clips, and the landscape fallback when absent.
+      const phoneSource=frame.locator('source[media="(max-width: 47.99rem)"]');
+      const count=await phoneSource.count();
+      expect(count).toBeLessThanOrEqual(1);
+      const srcset=await (count ? phoneSource : image).getAttribute('srcset');
+      expect(srcset).toBeTruthy();
+      const candidates=srcset!.split(', ').map(s=>s.split(' ')[0]);
+      await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).currentSrc)).toBeTruthy();
+      expect(candidates).toContain(await image.evaluate(el=>(el as HTMLImageElement).currentSrc));
+      await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      await expect(frame.locator('video')).toHaveCount(0);
+    }
   } finally {await context.close();}
 });
 
