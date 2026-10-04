@@ -70,10 +70,12 @@ let ok = 0, failed = 0;
    the format from the Accept header and caches each format separately (the
    response says `vary: accept`). fetch() on its own accepts any type, which is
    answered with a JPEG — so this step spent every build warming JPEGs while
-   every current browser was sent a cold WebP. Measured on one 3100px frame:
+   browsers requesting modern formats were sent a cold rendition. Previously
+   measured on one 3100px frame:
    Chrome's first request 2.9s, then Safari's 0.04s for the WebP Chrome had
    caused to exist; the JPEG was a separate 1.5s render no visitor would get.
-   This is Chrome's image Accept; Safari and Firefox are served the same WebP. */
+   Negotiate modern formats rather than assuming one shared WebP: current
+   Accept headers can select AVIF, and each accepted representation may differ. */
 const ACCEPT = "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8";
 
 // A small pool: enough to be quick, not so many that the CDN starts refusing.

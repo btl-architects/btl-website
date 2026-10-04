@@ -11,8 +11,12 @@ while(Date.now()<deadline) {
   const check=data.check_runs.filter(c=>c.name==='Cloudflare Pages').sort((a,b)=>b.id-a.id)[0];
   if(check?.status==='completed') {
     if(check.conclusion!=='success') throw new Error('Cloudflare preview deployment failed.');
-    const origin=check.output?.summary?.match(/href=['"](https:\/\/[a-z0-9-]+\.btl-website-3wo\.pages\.dev)\/?['"]/i)?.[1];
+    const origin=check.output?.summary?.match(/href=['"](https:\/\/[a-f0-9]{8}\.btl-website-3wo\.pages\.dev)\/?['"]/i)?.[1];
     if(!origin) throw new Error('Deployment check did not provide its immutable preview URL.');
+    const markerResponse=await fetch(`${origin}/build-status.json`,{signal:AbortSignal.timeout(30000)});
+    if(!markerResponse.ok) throw new Error('Cannot verify the deployed build marker.');
+    const marker=await markerResponse.json();
+    if(marker.sourceSha!==sha || marker.sourceDirty===true || marker.preview!==false || typeof marker.noindex!=='boolean') throw new Error('The deployed marker does not identify this published source commit.');
     appendFileSync(process.env.GITHUB_ENV,`PERFORMANCE_ORIGIN=${origin}\n`);
     console.log(`Performance target: ${origin} (source ${sha})`);
     process.exit(0);
