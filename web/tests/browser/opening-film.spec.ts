@@ -25,15 +25,88 @@ async function sequence(page: import('@playwright/test').Page, total: number, fa
     let count = 0;
     const body = (await response.text()).replace(/<figure class="stage__f"[\s\S]*?<\/figure>/g, frame => {
       if (++count > 1) return '';
-      return frame + Array.from({length: total - 1}, (_, index) => {
-        const next = frame.replace('data-on="true"', 'data-on="false"');
-        return index + 1 === failedIndex ? next.replace(/(data-src(?:-portrait)?=")([^"]+)"/g, '$1$2?btl-missing=1"') : next;
-      }).join('');
+      return Array.from({length: total}, (_, index) => frame
+        .replace('data-on="true"', `data-on="${index===0}"`)
+        .replace(/(data-src(?:-portrait)?=")([^"]+)"/g,
+          `$1$2?btl-clip=${index}${index===failedIndex?'&amp;btl-missing=1':''}"`)).join('');
     });
     expect(count).toBeGreaterThanOrEqual(1);
     await route.fulfill({response, body});
   });
 }
+
+for (const {width,frameCallback} of [{width:390,frameCallback:true},{width:1440,frameCallback:true},{width:390,frameCallback:false}]) {
+  test(`a delayed incoming film never exposes its poster at ${width}px${frameCallback?'':' without frame callbacks'}`, async ({page}) => {
+    if(!frameCallback) await page.addInitScript(()=>Object.defineProperty(HTMLVideoElement.prototype,'requestVideoFrameCallback',{value:undefined,configurable:true}));
+    await films(page);
+    await sequence(page,3);
+    await page.setViewportSize({width,height:844});
+    let release!:()=>void;
+    const held=new Promise<void>(resolve=>{release=resolve;});
+    let requested=false;
+    await page.route('**/*btl-clip=1',async route=>{
+      requested=true;
+      await held;
+      await route.fallback();
+    });
+    try {
+      await page.goto('/');
+      const frames=page.locator('.stage__f');
+      const first=frames.first().locator('video');
+      await expect(first).toHaveAttribute('data-playing','true');
+      // Preloading starts as soon as the first film is ready, including clips
+      // shorter than the old three-second preload delay.
+      await expect.poll(()=>requested).toBe(true);
+      await first.evaluate(el=>{const v=el as HTMLVideoElement;v.currentTime=v.duration-.1;});
+      await expect(first).toHaveJSProperty('ended',true);
+      const samples=await page.evaluate(async()=>{
+        const frames=[...document.querySelectorAll('.stage__f')];
+        const samples:boolean[]=[];
+        for(let i=0;i<45;i++) {
+          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+          samples.push(frames[0].getAttribute('data-on')==='true' && frames[1].getAttribute('data-on')==='false');
+        }
+        return samples;
+      });
+      expect(samples.every(Boolean)).toBe(true);
+      await page.evaluate(()=>{
+        (window as any).__posterFlashes=[];
+        const observer=new MutationObserver(()=>{
+          const active=document.querySelector('.stage__f[data-on="true"]');
+          if(!active?.querySelector('video[data-playing="true"]')) (window as any).__posterFlashes.push(active?.getAttribute('data-label'));
+        });
+        observer.observe(document.querySelector('[data-stage-frames]')!,{subtree:true,attributes:true,attributeFilter:['data-on','data-playing']});
+      });
+      release();
+      await expect(frames.nth(1)).toHaveAttribute('data-on','true');
+      await expect(frames.nth(1).locator('video')).toHaveAttribute('data-playing','true');
+      expect(await page.evaluate(()=>(window as any).__posterFlashes)).toEqual([]);
+    } finally { release(); }
+  });
+}
+
+test('a pending film cannot advance after reduced motion is enabled', async ({page}) => {
+  await films(page);
+  await sequence(page,2);
+  let release!:()=>void;
+  const held=new Promise<void>(resolve=>{release=resolve;});
+  await page.route('**/*btl-clip=1',async route=>{await held;await route.fallback();});
+  try {
+    await page.goto('/');
+    const first=page.locator('.stage__f').first().locator('video');
+    await expect(first).toHaveAttribute('data-playing','true');
+    await first.evaluate(el=>{const v=el as HTMLVideoElement;v.currentTime=v.duration-.1;});
+    await expect(first).toHaveJSProperty('ended',true);
+    await page.emulateMedia({reducedMotion:'reduce'});
+    release();
+    await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');
+    await expect(page.locator('.stage__f').nth(1)).toHaveAttribute('data-on','false');
+    for(const film of await page.locator('.stage__f video').all()) {
+      await expect(film).not.toHaveAttribute('src');
+      await expect(film).toHaveJSProperty('paused',true);
+    }
+  } finally { release(); }
+});
 
 test('opening films play their complete duration and the sequence restarts', async ({page}) => {
   await films(page);

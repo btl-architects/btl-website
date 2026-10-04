@@ -29,38 +29,59 @@
     DUR.slow = durationToken("--dur-slow", 700);
   });
 
-  /* Keep Home's social rail still when mobile browser bars change height.
-     A fixed pixel top avoids viewport-unit recalculation, and the fixed box
-     itself is untransformed. Width changes (rotation/split screen) establish
-     a new centre; ordinary desktop resizing keeps the CSS placement. */
+  /* Anchor the fixed shell at the top edge, not halfway down the viewport.
+     Position the words inside it. Account for a displaced visual viewport as
+     well as height-only toolbar changes; rotation establishes a new centre. */
   var socialRail = document.querySelector(".landing .srail");
   if (socialRail) {
     var touchRail = window.matchMedia("(hover: none) and (pointer: coarse)");
     var railWidth = 0;
     var railCentre = 0;
+    var railViewport = window.visualViewport;
+    // Android Firefox's top toolbar moves the entire content origin. Its
+    // compositor compensates bottom-fixed elements; a locked top cannot do so.
+    // Keep a constant bottom distance there instead of chasing scroll events.
+    var bottomRail = /Android.*Firefox\//.test(navigator.userAgent);
+    var railTick = false;
     function placeRail() {
-      socialRail.style.setProperty("--social-top", Math.round(railCentre) + "px");
+      if (!touchRail.matches || (railViewport && railViewport.scale !== 1)) return;
+      if (bottomRail) {
+        socialRail.setAttribute("data-anchor-bottom", "");
+        socialRail.style.setProperty("--social-bottom", Math.round(railCentre) + "px");
+      } else {
+        var offset = railViewport ? railViewport.offsetTop : 0;
+        socialRail.style.setProperty("--social-top", Math.round(railCentre + offset - socialRail.getBoundingClientRect().top) + "px");
+      }
       socialRail.setAttribute("data-pinned", "");
     }
     function pinRail() {
       if (!touchRail.matches) {
         socialRail.style.removeProperty("--social-top");
+        socialRail.style.removeProperty("--social-bottom");
+        socialRail.removeAttribute("data-anchor-bottom");
         socialRail.removeAttribute("data-pinned");
         railWidth = 0;
         return;
       }
       var width = window.innerWidth;
-      if (width === railWidth) return;
-      socialRail.style.removeProperty("--social-top");
-      socialRail.removeAttribute("data-pinned");
-      railCentre = window.innerHeight / 2;
-      railWidth = width;
+      if (railViewport && railViewport.scale !== 1) return;
+      if (width !== railWidth) {
+        railCentre = (railViewport ? railViewport.height : window.innerHeight) / 2;
+        railWidth = width;
+      }
       placeRail();
     }
+    function scheduleRail() {
+      if (railTick) return;
+      railTick = true;
+      requestAnimationFrame(function () { railTick = false; pinRail(); });
+    }
     afterFirstPaint(pinRail);
-    window.addEventListener("resize", function () {
-      if (touchRail.matches && window.innerWidth !== railWidth) afterFirstPaint(pinRail);
-    }, { passive: true });
+    window.addEventListener("resize", scheduleRail, { passive: true });
+    if (railViewport) {
+      railViewport.addEventListener("resize", scheduleRail, {passive:true});
+      railViewport.addEventListener("scroll", scheduleRail, {passive:true});
+    }
     window.addEventListener("pageshow", pinRail);
     touchRail.addEventListener("change", pinRail);
   }
@@ -180,7 +201,7 @@
        being hidden, and reduced motion or Save-Data — all of which sync() still
        honours. Keeping the flag with nothing able to set it would have left a
        branch that reads as a feature and can never be reached. */
-    var at = 0, errorTimer = null, preloadNext = null, visible = false;
+    var at = 0, errorTimer = null, visible = false, generation = 0;
     /* The film starts two frames after load, i.e. after first paint: a decoder
        starting earlier held a slow device's first paint back ~2s. */
     var pageReady = false;
@@ -199,41 +220,66 @@
       v.loop = sFrames.length === 1;
       v.addEventListener("ended", function () { if (at === i && canPlay()) show(at + 1); });
       v.addEventListener("error", function () { failed(i); });
-      v.addEventListener("playing", function () { v.setAttribute("data-playing", "true"); });
       v.addEventListener("emptied", function () { v.removeAttribute("data-playing"); });
       return v;
     }
     function load(i) {
       if (stillsOnly()) return;
       var v = player(i), want = source(v);
+      // preload=none left the following film waiting for play() to fetch it.
+      // This runs after first paint, and only prepares the next clip in order.
+      v.preload = "auto";
       if (want && v.getAttribute("src") !== want) { v.src = want; v.load(); }
     }
     function pause() {
-      clearTimeout(errorTimer); clearTimeout(preloadNext); errorTimer = preloadNext = null;
+      generation++;
+      clearTimeout(errorTimer); errorTimer = null;
       sFrames.forEach(function (f) { var v = f.querySelector("video"); if (v) v.pause(); });
     }
     function failed(i) {
       // A preloaded file can fail before becoming active. Apply the same still
       // fallback when revisiting it, rather than waiting for another error.
       if (at !== i || !canPlay() || sFrames.length < 2) return;
+      generation++;
       clearTimeout(errorTimer);
+      // A genuinely unavailable film still gets its authored fallback. Ordinary
+      // buffering never reveals that film's poster between two working videos.
+      revealFilm(i, false);
       errorTimer = setTimeout(function () { if (at === i && canPlay()) show(at + 1); }, 6200);
+    }
+    function revealFilm(i, playing) {
+      if (playing) player(i).setAttribute("data-playing", "true");
+      else { player(i).removeAttribute("data-playing"); player(i).pause(); }
+      sFrames.forEach(function (f, k) {
+        f.setAttribute("data-on", k === i ? "true" : "false");
+        var v = f.querySelector("video");
+        if (k !== i && v) v.pause();
+      });
     }
     function show(i) {
       at = (i + sFrames.length) % sFrames.length;
-      sFrames.forEach(function (f, k) {
-        f.setAttribute("data-on", k === at ? "true" : "false");
-        var v = f.querySelector("video");
-        if (k !== at && v) v.pause();
-      });
+      var next = at, ticket = ++generation;
       clearTimeout(errorTimer); errorTimer = null;
       load(at);
       var current = player(at);
       if (current.error) { failed(at); return; }
-      if (current.ended) current.currentTime = 0;
-      current.play().catch(function () {});
-      clearTimeout(preloadNext);
-      preloadNext = setTimeout(function () { load((at + 1) % sFrames.length); }, 3000);
+      // Keep the outgoing decoded picture until the incoming decoder presents
+      // a frame. `playing` alone can fire before the browser paints that frame.
+      function ready() {
+        if (ticket !== generation || next !== at || !canPlay()) return;
+        clearTimeout(errorTimer); errorTimer = null;
+        revealFilm(next, true);
+        if (sFrames.length > 1) load((next + 1) % sFrames.length);
+      }
+      if (current.ended) { current.removeAttribute("data-playing"); current.currentTime = 0; }
+      if (current.requestVideoFrameCallback) current.requestVideoFrameCallback(ready);
+      else current.addEventListener("playing", function () { afterFirstPaint(ready); }, {once:true});
+      current.play().catch(function () { if (ticket === generation) failed(next); });
+      // A stalled network must not stop the sequence indefinitely. Retain the
+      // outgoing frame while waiting, then use the ordinary error fallback.
+      errorTimer = setTimeout(function () {
+        if (ticket === generation) failed(next);
+      }, 15000);
     }
     function canPlay() { return !stillsOnly() && visible && !document.hidden && pageReady; }
     function sync() {

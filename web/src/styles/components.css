@@ -1939,16 +1939,24 @@ body[data-preview] .header { top: var(--preview-h); }
   position: fixed;
   z-index: var(--z-rail);
   right: 0;
-  top: 50%;
-  /* CSS provides the no-script placement. Touch layouts capture this centre
-     in pixels so toolbar height changes cannot reposition the fixed box. */
-  top: var(--social-top, 50svh);
+  /* Keep the fixed anchor at the top edge. Gecko's toolbar compositor adjusts
+     fixed boxes; the words' centre belongs inside the shell, not to its anchor.
+     The shell is transparent and does not intercept scrolling or taps. */
+  top: 0;
+  height: 100svh;
   pointer-events: none;
 }
+
+/* Firefox Android compensates this edge as its top toolbar moves the content
+   area. The words keep their measured distance from it through height changes. */
+.landing .srail[data-anchor-bottom] { top: auto; bottom: 0; height: 100lvh; }
+.landing .srail[data-anchor-bottom] .srail__links { top: calc(100% - var(--social-bottom)); }
 
 /* Rotate the words inside an untransformed fixed container. Mobile browsers
    can move transformed fixed boxes while animating their own toolbars. */
 .landing .srail__links {
+  position: relative;
+  top: var(--social-top, 50svh);
   display: flex;
   inline-size: max-content;
   /* `row`, not `column`. In vertical writing the inline axis IS the vertical

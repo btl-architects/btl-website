@@ -32,6 +32,62 @@ test.describe('phone interactions',()=>{
     }
   });
 
+  test('social links keep their visual position when the mobile viewport origin changes',async({page})=>{
+    // A plain desktop height resize does not model a toolbar moving the visible
+    // viewport's origin. Exercise both offsets and heights through the API.
+    await page.addInitScript(()=>{
+      const viewport=new EventTarget();
+      Object.assign(viewport,{height:844,offsetTop:0,scale:1});
+      Object.defineProperty(window,'visualViewport',{value:viewport,configurable:true});
+    });
+    await page.goto('/');
+    await page.evaluate(()=>document.fonts.ready);
+    const rail=page.locator('.landing .srail');
+    const words=rail.locator('.srail__links');
+    await expect(rail).toHaveAttribute('data-pinned','');
+    await expect(rail).toHaveCSS('top','0px');
+    const resting=(await words.boundingBox())!;
+    for(const {offsetTop,height} of [{offsetTop:56,height:788},{offsetTop:24,height:820},{offsetTop:0,height:844},{offsetTop:64,height:780},{offsetTop:0,height:900}]) {
+      await page.evaluate(values=>{
+        Object.assign(window.visualViewport!,values);
+        visualViewport!.dispatchEvent(new Event('resize'));
+        visualViewport!.dispatchEvent(new Event('scroll'));
+      },{offsetTop,height});
+      await expect.poll(async()=>Math.abs((await words.boundingBox())!.y-offsetTop-resting.y)).toBeLessThan(1);
+    }
+    // Pinch zoom belongs to the browser. Do not rewrite the position during it.
+    const before=await rail.getAttribute('style');
+    await page.evaluate(()=>{
+      Object.assign(window.visualViewport!,{scale:2,offsetTop:180,height:400});
+      visualViewport!.dispatchEvent(new Event('resize'));
+    });
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    expect(await rail.getAttribute('style')).toBe(before);
+  });
+
+  test('Android Firefox rail retains its position relative to the screen as the top toolbar retracts',async({page})=>{
+    await page.addInitScript(()=>Object.defineProperty(navigator,'userAgent',{
+      value:'Mozilla/5.0 (Android 16; Mobile; rv:157.0) Gecko/157.0 Firefox/157.0',configurable:true
+    }));
+    await page.goto('/');
+    await page.evaluate(()=>document.fonts.ready);
+    const rail=page.locator('.landing .srail');
+    const words=rail.locator('.srail__links');
+    await expect(rail).toHaveAttribute('data-anchor-bottom','');
+    await expect(rail).toHaveCSS('bottom','0px');
+    // Model a top toolbar taking 56px of the physical screen. The browser's
+    // content origin moves up as its visible height grows; screen Y is their sum.
+    const initial=(await words.boundingBox())!.y+56;
+    for(const bar of [40,20,0,12,56]) {
+      await page.setViewportSize({width:390,height:900-bar});
+      await expect.poll(async()=>Math.abs((await words.boundingBox())!.y+bar-initial)).toBeLessThan(1);
+    }
+    for(const viewport of [{width:844,height:390},{width:390,height:844}]) {
+      await page.setViewportSize(viewport);
+      await expect.poll(async()=>{const b=(await words.boundingBox())!;return Math.abs(b.y+b.height/2-viewport.height/2);}).toBeLessThan(1);
+    }
+  });
+
   test('Home contact text is centred and social links stay steady while scrolling on a phone',async({page})=>{
     await page.goto('/');
     await page.evaluate(()=>document.fonts.ready);

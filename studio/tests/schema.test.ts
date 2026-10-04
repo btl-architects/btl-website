@@ -45,6 +45,21 @@ test('image clarity guidance measures the saved crop and remains a warning', () 
 
 import heroClip from '../schemas/heroClip.ts';
 
+test('an empty opening clip exposes the original-video Mux uploader, never the MP4-only file field', () => {
+  assert.deepEqual(heroClip.initialValue, {videoMode:'mux'});
+  const mux = heroClip.fields.find(field=>field.name==='videoMux')!;
+  const file = heroClip.fields.find(field=>field.name==='video')!;
+  assert.equal(mux.type, 'mux.video');
+  for (const parent of [undefined, {}, {video:{}}, {videoMode:'mux'}, {videoMux:{asset:{_ref:'mux-id'}}}]) {
+    assert.equal((mux.hidden as Function)({parent}), false);
+    assert.equal((file.hidden as Function)({parent}), true);
+  }
+  for (const parent of [{video:{asset:{_ref:'legacy-id'}}}, {videoMode:'file'}]) {
+    assert.equal((mux.hidden as Function)({parent}), true);
+    assert.equal((file.hidden as Function)({parent}), false);
+  }
+});
+
 test('automatic films require a completed public MP4 before publishing', async () => {
   const fields = heroClip.fields;
   const callbacks: Function[] = [];
