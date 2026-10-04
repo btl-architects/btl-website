@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import {imageRightsError} from "../../shared/image-rights.ts";
 import {imageResolutionWarning} from "./imageResolution.ts";
 
 /* Shared objects.
@@ -52,7 +53,7 @@ export const figure = defineType({
       title: "Licence",
       type: "string",
       description:
-        "Who owns this photograph and on what terms. Publishing is blocked without it — the AD photographs are Condé Nast's, and this is the field that stops one being used by accident.",
+        "Who owns this photograph and on what terms. Publishing is blocked without a reusable licence. Choose Publication owns it — do not reuse for a prohibited image; remove it before publishing. Only mark an image licensed after permission is verified.",
       options: {
         list: [
           { title: "btl owns it", value: "owned" },
@@ -62,7 +63,7 @@ export const figure = defineType({
         ],
         layout: "radio",
       },
-      validation: (r) => r.required(),
+      validation: (r) => r.required().custom(value => imageRightsError(value) ?? true),
     }),
     defineField({
       name: "kind",
@@ -94,7 +95,7 @@ export const credits = defineType({
   type: "object",
   fields: [
     defineField({ name: "architect", type: "string", initialValue: "btl architects" }),
-    defineField({ name: "photographer", type: "string" }),
+    defineField({ name: "photographer", type: "string", description: "Optional verified attribution. Leave empty until the name is confirmed; provisional labels are omitted on the website." }),
     defineField({
       name: "collaborators",
       type: "array",
