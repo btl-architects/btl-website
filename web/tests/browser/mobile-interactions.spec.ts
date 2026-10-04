@@ -304,6 +304,24 @@ test.describe('phone interactions',()=>{
     await input.detach();
   });
 
+  test('a strip swiped only part way opens with its first frame back on the column',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium.');
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.goto('/projects/');
+    const card=page.locator('.pcard').first(), strip=card.locator('[data-strip]');
+    const first=strip.locator('.pcard__peek').first();
+    // A fling's stopping point varies; set the resting state it can leave directly.
+    await strip.evaluate(el=>{el.scrollLeft=Math.round(el.querySelector('.pcard__peek')!.getBoundingClientRect().width/2);});
+    await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(40);
+    const fb=(await first.boundingBox())!;
+    await page.touchscreen.tap(fb.x+fb.width-30,fb.y+fb.height/2);
+    await expect(card).toHaveAttribute('data-open','true');
+    await page.waitForTimeout(900);
+    const pad=await strip.evaluate(el=>el.getBoundingClientRect().left+parseFloat(getComputedStyle(el).scrollPaddingLeft));
+    expect(Math.abs((await first.boundingBox())!.x-pad)).toBeLessThan(4);
+    await expect(card.locator('[data-pos]')).toHaveText(/^01 \//);
+  });
+
   test('a completed photograph tap works when its compatibility click is withheld',async({page,browserName})=>{
     test.skip(browserName!=='chromium','Native touch injection is available through Chromium.');
     await page.goto('/studio/');

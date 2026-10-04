@@ -327,7 +327,7 @@
   :root { --spread-max-h: 58svh; }
 }
 
-@media (min-width: 48rem) and (max-width: 85.375rem) {
+@media (min-width: 48rem) and (max-width: 85.375rem) and (any-pointer: coarse) {
   :root {
     --card-max: min(16rem, 32svh);  /* Compact Press thumbnails, including landscape. */
     --project-preview-h: clamp(9rem, 18vw, 15rem);

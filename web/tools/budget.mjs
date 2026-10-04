@@ -329,7 +329,7 @@ const BREAKPOINTS = {
   "59.99rem": "stacked spreads (paired with 60rem)",
   "60rem":    "two-column spreads and cards",
   "64rem":    "hover-capable wide screens: the header wordmark",
-  "85.375rem": "tablet interaction and project-preview band ends (1366px, including large iPad landscape)",
+  "85.375rem": "touch-tablet band ends (1366px, including large iPad landscape); always paired with (any-pointer: coarse) so mouse-only windows keep desktop behaviour",
 };
 const bpSources = [
   ...readdirSync(STYLES).filter((f) => f.endsWith(".css")).map((f) => [f, readFileSync(join(STYLES, f), "utf8")]),

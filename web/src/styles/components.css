@@ -193,6 +193,47 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase; letter-spacing: var(--track-meta);
 }
 @media (min-width: 48rem) { .burger { display: none; } }
+
+/* Parsed only without JavaScript. Native details supplies keyboard and touch
+   navigation without relying on the enhanced dialog or its event listeners. */
+.no-script-menu { display: none; }
+/* Without the scroll observer a transparent fixed masthead would cover prose
+   and pale photographs. The fallback keeps its own readable ground. */
+.header:has(.no-script-menu) {
+  background: var(--n-950);
+  border-bottom: 1px solid var(--n-800);
+}
+@media (max-width: 47.99rem) {
+  .header__inner:has(.no-script-menu) .burger { display: none; }
+  .no-script-menu { display: block; }
+  .no-script-menu summary {
+    min-height: 44px;
+    display: flex; align-items: center;
+    padding-inline: var(--s-3);
+    font-size: var(--type-nav);
+    cursor: pointer; list-style: none;
+  }
+  .no-script-menu summary::-webkit-details-marker { display: none; }
+  .no-script-menu nav {
+    position: absolute; top: 100%; inset-inline: 0;
+    max-height: calc(100svh - var(--header-h)); overflow-y: auto;
+    padding-block: var(--s-4);
+    background: var(--surface); border-bottom: 1px solid var(--border-subtle);
+  }
+  .no-script-menu a {
+    display: flex; align-items: center; min-height: 44px;
+    padding-block: var(--s-2); overflow-wrap: anywhere;
+    font-size: var(--type-nav);
+  }
+}
+/* Text enlargement and longer translated/CMS labels can outgrow a wide
+   header too. Runtime uses the real available space rather than a device guess. */
+.header[data-compact] .nav { display: none; }
+.header[data-compact] .burger { display: inline-flex; }
+.header[data-compact][data-nav-measure] .nav {
+  display: flex; position: absolute; visibility: hidden; inline-size: max-content;
+}
+.header[data-compact] .header__expand { display: none; }
 .burger svg { width: 20px; height: 20px; }
 
 /* The menu is always the dark ground, whatever page it opens over — one
@@ -213,7 +254,10 @@ html:has(.menu[data-open="true"]) .header {
   visibility: hidden;
   overflow-y: auto;
 }
-.menu[data-open="true"] { transform: none; visibility: visible; }
+.menu[data-open="true"] {
+  transform: none; visibility: visible;
+  transition: transform var(--dur-base) var(--ease), visibility 0s linear 0s;
+}
 .menu__list { display: flex; flex-direction: column; gap: var(--s-3); }
 .menu__link {
   font-size: var(--type-h3); font-weight: 400;
@@ -341,6 +385,16 @@ html:has(.menu[data-open="true"]) .header {
   display: flex; flex-direction: column; justify-content: flex-end;
   padding-bottom: var(--s-2);
 }
+/* Preserve the photo rail's height without cropping long reading panels on
+   short landscape screens. Safe alignment keeps fitted text bottom-aligned,
+   and overflowing text starts at its accessible top and scrolls vertically. */
+.rail > .rail__note {
+  min-height: 0;
+  overflow-y: auto;
+  justify-content: safe flex-end;
+}
+.rail > .rail__note > * { flex-shrink: 0; }
+
 .rail__title {
   font-size: clamp(1.25rem, 0.9rem + 1vw, 1.75rem);
   font-weight: 900; line-height: 1; letter-spacing: var(--track-display);
@@ -694,8 +748,10 @@ html:has(.menu[data-open="true"]) .header {
   .home-sec--release .pcard__strip { margin-inline: 0; }
   .pcard__t {
     padding: var(--s-6) var(--s-4) var(--s-3) 0;
-    pointer-events: none;   /* a swipe that starts on the name still moves the strip */
   }
+  /* Enhancement handles caption taps and swipes. Without it the real anchor
+     must still accept a pointer press and navigate to the project page. */
+  .js .pcard__t { pointer-events: none; }
   .home-sec--release .pcard__t { padding-left: var(--page-margin); }
   .pcard__name { font-size: 1.0625rem; }
   /* The name belongs to the first frame; once the strip moves on it steps
@@ -711,7 +767,7 @@ html:has(.menu[data-open="true"]) .header {
 /* Tablet previews show several whole frames instead of a single oversized
    cover. On open, text follows the pictures so a short gallery never clips a
    long project description or gives away a third of its width to the note. */
-@media (min-width: 48rem) and (max-width: 85.375rem) {
+@media (min-width: 48rem) and (max-width: 85.375rem) and (any-pointer: coarse) {
   .pcard, .pcard[data-open="true"] { height: auto; }
   .pcard__strip { height: var(--project-preview-h); transition: height var(--dur-slow) var(--ease); overflow-x: auto; overflow-y: hidden; cursor: grab; }
   .pcard__strip[data-dragging] { cursor: grabbing; }
@@ -770,7 +826,7 @@ html:has(.menu[data-open="true"]) .header {
   padding-block: var(--s-6);
   border-top: 1px solid var(--border-subtle);
 }
-.pager a { display: block; text-decoration: none; color: inherit; }
+.pager a { display: block; min-width: 0; overflow-wrap: anywhere; text-decoration: none; color: inherit; }
 .pager__r { text-align: right; }
 .pager__k {
   display: block;
@@ -1223,7 +1279,7 @@ html:has(.menu[data-open="true"]) .header {
   margin-top: var(--s-5);
   text-align: center;
 }
-.spread__names > span { white-space: nowrap; }
+.spread__names > span { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .spread__n {
   display: block; margin: 0;
   font-size: var(--type-body);
@@ -1700,7 +1756,7 @@ html:has(.menu[data-open="true"]) .header {
 }
 /* Tablets add columns as the publication index grows. A stable-height ceiling
    keeps short landscape screens compact without resizing desktop or phone. */
-@media (min-width: 48rem) and (max-width: 85.375rem),
+@media (min-width: 48rem) and (max-width: 85.375rem) and (any-pointer: coarse),
        (min-width: 48rem) and (hover: none) and (pointer: coarse) {
   .credits {
     grid-template-columns: repeat(auto-fit, minmax(0, var(--card-max)));
@@ -1965,7 +2021,6 @@ body[data-preview] .header { top: var(--preview-h); }
 
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
 .landing .srail__links { flex-direction: row-reverse; }
-.landing .srail[data-pinned] > .srail__links { transform: rotate(180deg); }
 
 .landing .srail__i {
   position: relative;
@@ -2087,7 +2142,7 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__quote .press-article__attribution { font-size: var(--type-body-sm); margin: var(--s-4) 0 0; }
 .press-article__credits { max-width: var(--measure); margin: var(--s-7) auto 0; border-top: 1px solid var(--border-subtle); padding-top: var(--s-5); font-size: var(--type-body-sm); }
 .press-article__credits > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--s-4); margin-top: var(--s-3); }
-.press-article__credits dt { color: var(--text-tertiary); }
+.press-article__credits dt { min-width: 0; overflow-wrap: anywhere; color: var(--text-tertiary); }
 .press-article__credits dd { margin: 0; overflow-wrap: anywhere; }
 .press-article__body h2 { font-size: var(--type-h3); font-weight: 400; margin-block: var(--s-7) var(--s-4); }
 .press-article__body h3 { font-size: var(--type-lead); font-weight: 500; margin-block: var(--s-6) var(--s-3); }
@@ -2119,10 +2174,15 @@ body[data-preview] .header { top: var(--preview-h); }
   .press-reader::backdrop { opacity: calc(1 - var(--pull, 0) * .8); transition: opacity 260ms var(--ease); }
   .press-reader[data-pulling]::backdrop { transition: none; }
   .press-reader[data-leaving]::backdrop { opacity: 0; }
-  .press-reader::before {
-    content: ""; flex: none; align-self: center;
-    width: 2.25rem; height: 4px; margin-top: var(--s-2); border-radius: 2px;
-    background: var(--border-strong);
+  /* The pull handle promises the finger gesture, so it uses press-reader.js's
+     own condition. A narrow mouse window or a touchscreen laptop driven by a
+     mouse keeps the card shape without a handle it cannot use. */
+  @media (hover: none) and (pointer: coarse) {
+    .press-reader::before {
+      content: ""; flex: none; align-self: center;
+      width: 2.25rem; height: 4px; margin-top: var(--s-2); border-radius: 2px;
+      background: var(--border-strong);
+    }
   }
   .press-reader__bar { gap: var(--s-2); padding: var(--s-1) var(--page-margin) var(--s-2); touch-action: none; }
   .press-reader__original, .press-reader__close { width: 2.75rem; justify-content: center; padding: 0; }
@@ -2452,7 +2512,11 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
    Standalone controls still get finger room; inline prose links keep their
    text flow. Pointer layouts and their hover behaviour are unchanged. */
 .copy-mark, .project-note--touch { display: none; }
-.contact-links__i { display: block; width: fit-content; max-width: 100%; }
+.contact-links__i { display: block; width: fit-content; max-width: min(100%, calc(var(--content-inline-size) - 1.5rem)); }
+/* The mark deliberately has no text-layout width. Reserve its space only at
+   the line limit; centered Home details need that breathing room on both sides. */
+.home-contact .contact-links__i { max-width: min(100%, calc(var(--content-inline-size) - 3rem)); }
+.contact-links__i > a { max-width: 100%; overflow-wrap: anywhere; }
 /* One copy symbol for contact details on both pointer and touch layouts.
    It takes no width so the existing alignment stays the same. */
 .copy-mark {
@@ -2511,10 +2575,13 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
   .lb[data-chrome="on"]:not([data-zoomed="true"]) .lb__step { opacity: 1; }
   .lb__bar, .lb__cap { transition: opacity var(--dur-base) var(--ease); }
   .lb[data-chrome="off"] :is(.lb__bar, .lb__cap, .lb__step) { opacity: 0; pointer-events: none; }
+  /* A tablet/phone can have a hardware keyboard or switch access. Focus must
+     expose the controls even when a finger previously hid the chrome. */
+  .lb[data-chrome="off"]:has(:focus-visible) :is(.lb__bar, .lb__cap, .lb__step) { opacity: 1; pointer-events: auto; }
   .f input { min-height: 2.75rem; }
   .pcard[data-open="true"] .pcard__nav { display: flex; }
   .pcard__strip { overflow-x: auto; overflow-y: hidden; }
-  .pcard__t { pointer-events: none; }
+  .js .pcard__t { pointer-events: none; }
   .pcard[data-strip-moved] .pcard__t { opacity: 0; }
   .landing .srail__i { min-block-size: 1.5rem; }
   .pc[href]:active .pc__img { opacity: .85; }
@@ -2530,13 +2597,14 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
 /* Below-fold sections enter with .rv; their line waits for the words, then
    draws left to right. Content already on screen at load is revealed before
    .js is set, so its line is simply there. Reduced motion reveals everything
-   at once and the line with it. Tablet previews and tablets with a trackpad
-   retain this cue even when the active pointer can hover. */
-@media (min-width: 48rem) and (max-width: 85.375rem) {
+   at once and the line with it. Touch tablets, including ones with a
+   trackpad attached, retain this cue; mouse-only windows in the same width
+   band keep the desktop hover line. */
+@media (min-width: 48rem) and (max-width: 85.375rem) and (any-pointer: coarse) {
   .onward__t::after { clip-path: inset(0); }
 }
 @media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference),
-       (min-width: 48rem) and (max-width: 85.375rem) and (prefers-reduced-motion: no-preference) {
+       (min-width: 48rem) and (max-width: 85.375rem) and (any-pointer: coarse) and (prefers-reduced-motion: no-preference) {
   :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
   .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
 }

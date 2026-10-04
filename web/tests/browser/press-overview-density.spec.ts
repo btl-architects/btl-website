@@ -1,7 +1,12 @@
 import {test,expect} from '@playwright/test';
 
 for(const viewport of [{width:375,height:812},{width:667,height:375},{width:768,height:1024},{width:820,height:1180},{width:1180,height:820},{width:1440,height:900},{width:2560,height:1440}]) {
-  test(`Press preserves phone and desktop sizing with compact tablet density at ${viewport.width}px`,async({page})=>{
+  test(`Press preserves phone and desktop sizing with compact tablet density at ${viewport.width}px`,async({browser})=>{
+    // Tablet density belongs to touch tablets; mouse-only windows at these
+    // widths keep desktop sizing (tablet-interactions.spec.ts).
+    const tablet=viewport.width>=768&&viewport.width<=1366;
+    const context=await browser.newContext(tablet?{hasTouch:true,isMobile:true}:{});
+    const page=await context.newPage();
     await page.emulateMedia({reducedMotion:'reduce'});
     await page.goto('/press/');
     await page.setViewportSize(viewport);
@@ -40,6 +45,7 @@ for(const viewport of [{width:375,height:812},{width:667,height:375},{width:768,
       expect(box!.x).toBeGreaterThanOrEqual(0);
       expect(box!.x+box!.width).toBeLessThanOrEqual(viewport.width+1);
     }
+    await context.close();
   });
 }
 

@@ -126,6 +126,9 @@ main[data-under-header] { padding-top: var(--preview-offset, 0px); }
    they ran from the screen's edge on Home. */
 .home-sec--release .pcard__nav,
 .home-sec--release .pcard > .rail__note {
+  /* Available page width for controls that sit outside shrinkwrapped text.
+     Keep this derivation with the one capped content edge, not in components. */
+  --content-inline-size: calc(min(100vw, var(--max-width)) - 2 * var(--page-margin));
   width: 100%;
   max-width: var(--max-width);
   margin-inline: auto;
