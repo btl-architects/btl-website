@@ -656,7 +656,7 @@
 
   var pindex = document.querySelector("[data-pindex]");
   if (pindex) {
-    var compactIndex = window.matchMedia("(max-width: 47.99rem)");
+    var compactIndex = window.matchMedia("(max-width: 85.375rem)");
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));
     var PEEK = 6;                     /* frames the card renders itself */
     var railCache = {};
@@ -1015,9 +1015,8 @@
            reveal the text; only the direction differs, which is what makes it
            a mirror rather than a second animation.
 
-           On a phone the note leaves the strip entirely: a 20rem panel inside a
-           375px scroller leaves a sliver of photograph and reads as a mistake,
-           so there it stacks underneath in normal flow. */
+           Phones and tablets keep the note below the strip: it stays fully
+           readable without taking width from the compact photograph row. */
         var narrow = compactIndex.matches;
         var note = rail.querySelector(".rail__note");
         var noteEl = null;
@@ -1152,7 +1151,7 @@
        caption stays a real <a> underneath for keyboard, middle-click and
        no-JavaScript, but the pointer target is the entire card. */
     /* Closed strips scroll on phones and on touch screens of any width. The
-       card's layout still follows width; tablets keep the note in the rail. */
+       note's placement follows width independently of the input. */
     var browsableIndex = window.matchMedia("(max-width: 47.99rem), (hover: none) and (pointer: coarse)");
     /* Scrollable strips join the keyboard order too. A wide mouse layout
        stays out, or Firefox lists every closed scroll container as a stop. */
@@ -1166,7 +1165,7 @@
     }
     strips();
     browsableIndex.addEventListener("change", strips);
-    // Rotation and split view can cross the phone/tablet boundary while a
+    // Rotation and split view can cross the tablet/desktop boundary while a
     // gallery is open. Move its note with the layout, retaining the visible
     // photograph and the current project history entry.
     compactIndex.addEventListener("change", function () {

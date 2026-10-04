@@ -2,8 +2,13 @@ import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const routes=['/','/projects/','/projects/nelly-house/','/press/','/people/','/studio/','/contact/'];
-test.use({isMobile:true,hasTouch:true,deviceScaleFactor:2});
-test.beforeEach(async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});});
+test.use({viewport:{width:820,height:1180},isMobile:true,hasTouch:true,deviceScaleFactor:2});
+test.beforeEach(async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
+  // Firefox can wait indefinitely when resizing the initial about:blank
+  // mobile page. Load the site before exercising viewport changes.
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+});
 
 for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:1024,height:768},{width:1180,height:820},{width:1366,height:1024}]) {
   test(`tablet layout keeps desktop composition and touch targets at ${viewport.width}px`,async({page})=>{
@@ -17,10 +22,20 @@ for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:10
       await expect(page.locator('.burger')).toBeHidden();
       for(const control of await page.locator('.nav__link,.header__logo,.onward,.footer__links a,.chips .chip,.f input:not([type="hidden"]),a.tl[href^="mailto:"],a.tl[href^="tel:"]').all()) {
         const box=await control.boundingBox();
-        if(box)expect(box.height).toBeGreaterThanOrEqual(44);
+        // Firefox reports 44px targets as 43.999998px at device scale 2.
+        if(box)expect(Math.round(box.height*1000)/1000).toBeGreaterThanOrEqual(44);
       }
       if(route==='/'||route==='/contact/') {
         for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
+      }
+      if(route==='/'||route==='/projects/') {
+        for(const strip of await page.locator('[data-strip]').all()) {
+          const box=(await strip.boundingBox())!;
+          expect(box.height).toBeLessThanOrEqual(240);
+          const frames=await strip.locator('.rail__f').all();
+          const widths=await Promise.all(frames.slice(0,2).map(frame=>frame.boundingBox()));
+          expect(widths[0]!.width+widths[1]!.width).toBeLessThan(box.width);
+        }
       }
       if(route==='/'||route==='/studio/'||route==='/people/') {
         for(const spread of await page.locator('.spread').all()) {
@@ -58,8 +73,8 @@ test('tablet project cards open around the touched frame and close with a tap',a
   await expect(strip).toHaveAttribute('tabindex','0');
   await card.locator('.pcard__peek').first().tap();
   await expect(card).toHaveAttribute('data-open','true');
-  await expect(strip.locator('.rail__note')).toBeVisible();
-  await expect(card.locator(':scope > .rail__note')).toHaveCount(0);
+  await expect(card.locator(':scope > .rail__note')).toBeVisible();
+  await expect(strip.locator('.rail__note')).toHaveCount(0);
   const viewer=page.getByRole('dialog',{name:'Photograph viewer'});
   await expect(viewer).toBeHidden();
   await card.locator('.rail__f').first().tap();
@@ -74,7 +89,7 @@ test('tablet project cards open around the touched frame and close with a tap',a
   await page.setViewportSize({width:640,height:900});
   await expect(card.locator(':scope > .rail__note')).toBeVisible();
   await expect(strip.locator('.rail__note')).toHaveCount(0);
-  await page.setViewportSize({width:1024,height:768});
+  await page.setViewportSize({width:1440,height:900});
   await expect(strip.locator('.rail__note')).toBeVisible();
   await expect(card.locator(':scope > .rail__note')).toHaveCount(0);
   await expect(card.locator('[data-project]')).toHaveAttribute('aria-expanded','true');
@@ -101,7 +116,26 @@ test('tablet copy buttons copy details without following contact links',async({p
   }
 });
 
-test('tablet Press uses the desktop reader with touch controls',async({page})=>{
+test('tablet onward links draw the green underline when their section appears',async({page})=>{
+  await page.setViewportSize({width:820,height:1180});
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveClass(/js/);
+  const link=page.getByRole('link',{name:'See every project'});
+  const line=link.locator('.onward__t');
+  await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
+  await link.scrollIntoViewIfNeeded();
+  await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px)');
+  const style=await line.evaluate(el=>{
+    const s=getComputedStyle(el,'::after');
+    return {duration:s.transitionDuration,delay:s.transitionDelay,colour:s.backgroundColor,mark:getComputedStyle(el).getPropertyValue('--mark').trim()};
+  });
+  expect(style.duration).toBe('0.7s');
+  expect(style.delay).toBe('0.24s');
+  expect(style.colour).toBe('rgb(0, 255, 102)');
+});
+
+test('tablet Press uses a wider gesture reader and restores the page',async({page})=>{
   await page.setViewportSize({width:1024,height:768});
   await page.goto('/press/');
   const card=page.locator('a[data-article]').first();
@@ -110,10 +144,14 @@ test('tablet Press uses the desktop reader with touch controls',async({page})=>{
   await card.tap();
   const reader=page.getByRole('dialog',{name:'Press reader'});
   await expect(reader.locator('.press-article')).toBeVisible();
-  await expect(reader).not.toHaveAttribute('data-detent','peek');
-  const box=(await reader.boundingBox())!;
-  expect(box.y).toBeGreaterThan(0);
-  expect(box.y+box.height).toBeLessThan(768);
+  await expect(reader).toHaveAttribute('data-detent','peek');
+  await page.setViewportSize({width:820,height:1180});
+  await expect.poll(async()=>{const box=(await reader.boundingBox())!;return Math.abs(box.y-1180*.38);}).toBeLessThan(1);
+  await page.setViewportSize({width:1024,height:768});
+  await expect.poll(async()=>{const box=(await reader.boundingBox())!;return Math.abs(box.y-768*.38);}).toBeLessThan(1);
+  await reader.locator('.press-reader__content').tap();
+  await expect(reader).toHaveAttribute('data-detent','full');
+  await expect.poll(async()=>{const box=(await reader.boundingBox())!;return box.y+box.height;}).toBeLessThanOrEqual(768);
   await reader.getByRole('button',{name:'Close article'}).tap();
   await expect(reader).toBeHidden();
   expect(await page.evaluate(()=>scrollY)).toBeCloseTo(position,0);
@@ -156,3 +194,105 @@ test('tablet native swipes browse closed galleries without opening them',async({
   await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
   await input.detach();
 });
+
+for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
+  test(`tablet photograph gestures zoom, pan, turn and dismiss at ${viewport.width}px`,async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium; all engines run tap and layout checks.');
+    await page.setViewportSize(viewport);
+    await page.goto('/studio/');
+    await page.locator('[data-rail] .rail__f').first().tap();
+    const viewer=page.getByRole('dialog',{name:'Photograph viewer'});
+    const count=viewer.locator('[data-count]');
+    await expect(viewer).toBeVisible();
+    const input=await page.context().newCDPSession(page);
+    const touch=(type:'touchStart'|'touchMove'|'touchEnd',points:{x:number,y:number}[])=>input.send('Input.dispatchTouchEvent',{type,touchPoints:points});
+    const x=viewport.width/2,y=viewport.height/2;
+    async function tap() {await touch('touchStart',[{x,y}]);await touch('touchEnd',[]);}
+    async function drag(dx:number,dy:number) {
+      const start=x-dx/2;
+      await touch('touchStart',[{x:start,y}]);
+      for(let i=1;i<=12;i++)await touch('touchMove',[{x:start+dx*i/12,y:y+dy*i/12}]);
+      await touch('touchEnd',[]);
+    }
+    async function pinch(from:number,to:number) {
+      await touch('touchStart',[{x:x-from,y},{x:x+from,y}]);
+      for(let i=1;i<=12;i++) {
+        const distance=from+(to-from)*i/12;
+        await touch('touchMove',[{x:x-distance,y},{x:x+distance,y}]);
+      }
+      await touch('touchEnd',[]);
+    }
+    await pinch(60,160);
+    await expect(viewer).toHaveAttribute('data-zoomed','true');
+    const before=await viewer.locator('.lb__img').evaluate(el=>getComputedStyle(el).transform);
+    // A zoomed portrait can still fit across a landscape viewport. Pan along
+    // the axis that has off-screen detail rather than pushing against a bound.
+    const zoomed=(await viewer.locator('.lb__img').boundingBox())!;
+    await drag(zoomed.width>viewport.width?120:0,zoomed.width>viewport.width?0:120);
+    await expect(count).toHaveText(/^1 \//);
+    await expect.poll(()=>viewer.locator('.lb__img').evaluate(el=>getComputedStyle(el).transform)).not.toBe(before);
+    await pinch(160,60);
+    await expect(viewer).toHaveAttribute('data-zoomed','false');
+    await tap();await page.waitForTimeout(60);await tap();
+    await expect(viewer).toHaveAttribute('data-zoomed','true');
+    await tap();await page.waitForTimeout(60);await tap();
+    await expect(viewer).toHaveAttribute('data-zoomed','false');
+    await drag(-viewport.width*.45,0);
+    await expect(count).toHaveText(/^2 \//);
+    await drag(viewport.width*.45,0);
+    await expect(count).toHaveText(/^1 \//);
+    await drag(0,viewport.height*.3);
+    await expect(viewer).toBeHidden();
+    await input.detach();
+  });
+}
+
+test.describe('tablet mouse preview',()=>{
+  test.use({hasTouch:false,isMobile:false,viewport:{width:820,height:1180}});
+  test('section underlines animate into view without hovering',async({page})=>{
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.goto('/');
+    const link=page.getByRole('link',{name:'See every project'});
+    const line=link.locator('.onward__t');
+    await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
+    await link.scrollIntoViewIfNeeded();
+    await expect(link).not.toHaveCSS('cursor','default');
+    await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px)');
+  });
+});
+
+for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
+  test(`tablet Press gestures raise, lower and dismiss the reader at ${viewport.width}px`,async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Native touch injection is available through Chromium; all engines run tap and layout checks.');
+    await page.setViewportSize(viewport);
+    await page.goto('/press/');
+    const card=page.locator('a[data-article]').first();
+    await card.scrollIntoViewIfNeeded();
+    await card.tap();
+    const reader=page.getByRole('dialog',{name:'Press reader'});
+    await expect(reader.locator('.press-article')).toBeVisible();
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await page.waitForTimeout(450);
+    const input=await page.context().newCDPSession(page);
+    async function swipe(y:number,dy:number) {
+      const x=viewport.width/2;
+      await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+      for(let i=1;i<=20;i++) {
+        await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y+dy*i/20}]});
+        await page.waitForTimeout(16);
+      }
+      await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }
+    await swipe(viewport.height*.82,-viewport.height*.22);
+    await expect(reader).toHaveAttribute('data-detent','full');
+    await page.waitForTimeout(450);
+    const bar=(await reader.locator('.press-reader__bar').boundingBox())!;
+    await swipe(bar.y+bar.height/2,viewport.height*.15);
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await page.waitForTimeout(450);
+    await swipe(viewport.height*.82,viewport.height*.14);
+    await expect(reader).toBeHidden();
+    await expect(page).toHaveURL(/\/press\/$/);
+    await input.detach();
+  });
+}

@@ -216,6 +216,7 @@ export function railSizes(image: SiteImage): string {
 export function peekSizes(image: SiteImage): string {
   const ratio = resolveImage(image)?.ratio || 1.5;
   return `(max-width: 47.99rem) calc(clamp(10rem, 22vh, 12rem) * ${ratio}), ` +
+         `(max-width: 85.375rem) calc(clamp(9rem, 18vw, 15rem) * ${ratio}), ` +
          `calc(clamp(11rem, 27vh, 21rem) * ${ratio})`;
 }
 

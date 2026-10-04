@@ -393,7 +393,7 @@ html:has(.menu[data-open="true"]) .header {
      says "different project", the other says "same project, next frame". At
      1.5rem against 1rem they read as the same interval and the whole page
      flattened into one grid of pictures. */
-  display: flex; flex-direction: column; gap: var(--s-8);
+  display: flex; flex-direction: column; gap: var(--project-card-gap);
   /* The underside is --s-8, not --space-section.
    *
    * The Onward beneath this already brings its own --s-6 of margin, so a full
@@ -409,7 +409,7 @@ html:has(.menu[data-open="true"]) .header {
  * alongside height so opening/closing cannot overwrite the entrance. */
 .pcard {
   position: relative;
-  height: clamp(11rem, 27vh, 21rem);
+  height: var(--project-preview-h);
   transition: height var(--dur-slow) var(--ease), var(--tr-reveal);
   cursor: pointer;
 }
@@ -417,7 +417,7 @@ html:has(.menu[data-open="true"]) .header {
 /* Opening is the gesture you asked for and gets the full duration; closing is
    the card getting out of the way and should not make you wait for it. */
 .pcard:not([data-open="true"]) { transition-duration: var(--dur-hover), var(--dur-reveal), var(--dur-reveal); }
-.pcard[data-open="true"] { height: clamp(19rem, 56vh, 32rem); }
+.pcard[data-open="true"] { height: var(--project-open-h); }
 
 .pcard__strip {
   display: flex; align-items: stretch; gap: var(--s-2);
@@ -657,7 +657,6 @@ html:has(.menu[data-open="true"]) .header {
 }
 
 @media (max-width: 47.99rem) {
-  .pindex { gap: var(--s-7); }
   .pcard[data-open="true"] .pcard__nav { display: flex; }
 
   /* Every strip runs left-to-right on a phone. The mirror is a composition
@@ -679,13 +678,13 @@ html:has(.menu[data-open="true"]) .header {
    * phone can take without lurching. The name rides on the first frame, as on desktop. */
   .pcard, .pcard[data-open="true"] { height: auto; }
   .pcard__strip {
-    height: clamp(10rem, 22vh, 12rem);
+    height: var(--project-preview-h);
     transition: height var(--dur-slow) var(--ease);
     overflow-x: auto; overflow-y: hidden;
   }
   /* Open, a landscape frame runs just past the phone's width: big enough to
      be the project now, not so big that the card lurches to fill the screen. */
-  .pcard[data-open="true"] .pcard__strip { height: clamp(15rem, 33vh, 17.5rem); }
+  .pcard[data-open="true"] .pcard__strip { height: var(--project-open-h); }
   /* The strip runs edge to edge — photographs from the screen's first pixel to
      its last, no dark margin at the start — while the name on it keeps to the
      page column. On the projects page the card sits inside the column, so the
@@ -708,8 +707,20 @@ html:has(.menu[data-open="true"]) .header {
   .pcard > .rail__note .rail__text { max-width: none; }
 }
 
+/* Tablet previews show several whole frames instead of a single oversized
+   cover. On open, text follows the pictures so a short gallery never clips a
+   long project description or gives away a third of its width to the note. */
+@media (min-width: 48rem) and (max-width: 85.375rem) {
+  .pcard, .pcard[data-open="true"] { height: auto; }
+  .pcard__strip { height: var(--project-preview-h); transition: height var(--dur-slow) var(--ease); }
+  .pcard[data-open="true"] .pcard__strip { height: var(--project-open-h); }
+  .pcard__t { padding: var(--s-6) var(--s-4) var(--s-3); }
+  .pcard > .rail__note { display: block; padding: var(--s-5) 0 var(--s-2); }
+  .pcard > .rail__note .rail__text { max-width: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .pcard, .pcard__t, .pcard__peek img { transition: none; }
+  .pcard, .pcard__strip, .pcard__t, .pcard__peek img { transition: none; }
   .pcard:hover:not([data-open="true"]) .pcard__peek img { transform: none; }
   .pcard .rail__note,
   .pcard__strip > .rail__f { clip-path: none; transition: none; }
@@ -2101,7 +2112,7 @@ body[data-preview] .header { top: var(--preview-h); }
    brightens as it is pulled down. The short rule on top is the handle phones
    use to say a card can be pulled. Reading the original publication is the
    one way out of the site. */
-@media (max-width: 47.99rem) {
+@media (max-width: 47.99rem), (max-width: 85.375rem) and (hover: none) and (pointer: coarse) {
   .press-reader {
     width: calc(100% - 2 * var(--s-3)); height: 92dvh; max-height: none; margin: auto auto 0;
     border: 1px solid var(--border-strong); border-bottom: 0;
@@ -2132,14 +2143,20 @@ body[data-preview] .header { top: var(--preview-h); }
   .press-article__body figure, .press-article__quote { margin-block: var(--s-6); }
   .press-article__body h2 { margin-top: var(--s-6); }
 }
+@media (min-width: 48rem) and (max-width: 85.375rem) and (hover: none) and (pointer: coarse) {
+  .press-reader { width: min(56rem, calc(100% - 2 * var(--s-5))); }
+}
 @media (prefers-reduced-motion: no-preference) {
   .press-reader[open] { animation: press-reader-in var(--dur-base) var(--ease); }
-  @media (max-width: 47.99rem) {
+  @media (max-width: 47.99rem), (max-width: 85.375rem) and (hover: none) and (pointer: coarse) {
     .press-reader[open] { animation: none; }   /* it rises by transform (press-reader.js) */
   }
   .press-reader[open]::backdrop { animation: press-reader-backdrop var(--dur-base) var(--ease); }
   @keyframes press-reader-in { from {opacity: 0; transform: translateY(var(--s-3));} to {opacity: 1; transform: none;} }
   @keyframes press-reader-backdrop { from {opacity: 0;} to {opacity: 1;} }
+}
+@media (prefers-reduced-motion: reduce) {
+  .press-reader, .press-reader::backdrop { transition: none; animation: none; }
 }
 
 /* --- the menu button ------------------------------------------------------
@@ -2520,8 +2537,13 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
 /* Below-fold sections enter with .rv; their line waits for the words, then
    draws left to right. Content already on screen at load is revealed before
    .js is set, so its line is simply there. Reduced motion reveals everything
-   at once and the line with it. */
-@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+   at once and the line with it. Tablet previews and tablets with a trackpad
+   retain this cue even when the active pointer can hover. */
+@media (min-width: 48rem) and (max-width: 85.375rem) {
+  .onward__t::after { clip-path: inset(0); }
+}
+@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference),
+       (min-width: 48rem) and (max-width: 85.375rem) and (prefers-reduced-motion: no-preference) {
   :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
   .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
 }
