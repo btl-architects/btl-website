@@ -309,14 +309,20 @@ test.describe('touch runtime audit regressions',()=>{
     await input.detach();
   });
 
-  test('pinning the social rail produces no rail layout-shift entry',async({page,browserName})=>{
+  test('pinning the social rail produces no container layout-shift entry',async({page,browserName})=>{
     test.skip(browserName!=='chromium','Layout Instability API is exposed by Chromium.');
+    const errors:string[]=[];
+    page.on('pageerror',error=>errors.push(error.message));
     await page.emulateMedia({reducedMotion:'reduce'});
     await page.addInitScript(()=>{
       (window as any).__railShifts=[];
       new PerformanceObserver(list=>{
         for(const entry of list.getEntries() as any)
-          for(const source of entry.sources??[]) if(source.node?.matches('.landing .srail')) (window as any).__railShifts.push({value:entry.value,previous:source.previousRect,current:source.currentRect});
+          for(const source of entry.sources??[]) {
+            // Other sources may be Text nodes. This checks the container's
+            // structural displacement, separately from font-swap text shifts.
+            if(source.node instanceof Element && source.node.matches('.landing .srail')) (window as any).__railShifts.push({value:entry.value,previous:source.previousRect,current:source.currentRect});
+          }
       }).observe({type:'layout-shift',buffered:true});
     });
     await page.setViewportSize({width:412,height:823});
@@ -325,5 +331,6 @@ test.describe('touch runtime audit regressions',()=>{
     await expect(page.locator('.landing .srail')).toHaveAttribute('data-pinned','');
     await page.waitForTimeout(500);
     expect(await page.evaluate(()=>(window as any).__railShifts)).toEqual([]);
+    expect(errors).toEqual([]);
   });
 });

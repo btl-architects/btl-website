@@ -100,3 +100,31 @@ remain visible and are not waived. Logs and CI artifacts are preserved under
 
 A PR is review/validation, not authorization to merge, release Studio or alter
 owner-managed settings. Merge still requires the owner's approval.
+
+## Retained CI trace: repair the measurement observer
+
+Reviewing the first CI log also found `_source$node.matches is not a function`
+inside the test's Layout Instability observer. Attribution can name a Text node,
+so that observer could stop processing a shift and let an empty-array assertion
+pass. This was a measurement defect, not a demonstrated production exception.
+The observer now checks `instanceof Element` before calling `matches` and
+asserts there were no page errors. Its unchanged selector and empty-array
+assertion measure structural displacement of the rail container, as originally
+intended; the test name now states that scope. Text/font-shape shifts are
+separate from moving that container. An expanded diagnostic that counted rail
+text descendants found a small 0.000408 shift while fallback text changed font;
+that is retained in `codex-rail-observer-regression.log` rather than described as
+zero total CLS. The corrected original container test passes on three repeated
+local Chromium cases with zero page errors. A separate corrected observer on
+the deployed desktop preview reports no rail shifts or page errors. The full
+Linux suite is rerun after this correction.
+
+The current `80c1fe2` deployed preview additionally passes six diagnostic phone
+close cases: button, caption and focused-card Escape in Chromium/WebKit.
+All 47 recorded samples per case hold both scroll and card position exactly,
+with no page errors. Evidence: `.audit-work/evidence/DEPLOYED/phone-close.json`.
+The initial diagnostic probes dispatched Escape at an invalid Document target
+or without focus in the card; their failures are preserved separately and
+excluded from product claims. The successful probe follows the documented
+focused-card keyboard path. These are browser simulations, not physical-device
+or input-latency certification.
