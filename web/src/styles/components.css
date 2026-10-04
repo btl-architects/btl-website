@@ -332,7 +332,7 @@ html:has(.menu[data-open="true"]) .header {
   scrollbar-width: none;
 }
 .rail::-webkit-scrollbar { display: none; }
-@media (max-width: 51.99rem) {
+@media (max-width: 47.99rem) {
   .rail { height: clamp(14rem, 40vh, 22rem); }
 }
 
@@ -656,7 +656,7 @@ html:has(.menu[data-open="true"]) .header {
   transition: width var(--dur-fast) linear, transform var(--dur-fast) linear;
 }
 
-@media (max-width: 51.99rem) {
+@media (max-width: 47.99rem) {
   .pindex { gap: var(--s-7); }
   .pcard[data-open="true"] .pcard__nav { display: flex; }
 
@@ -739,7 +739,7 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase; color: var(--text-tertiary);
 }
 
-@media (max-width: 51.99rem) {
+@media (max-width: 47.99rem) {
   .pjh__id { grid-template-columns: repeat(6, 1fr); }
   .pjh__name { grid-column: 1 / 7; }
   .pjh__place { grid-column: 1 / 7; text-align: left; margin-top: var(--s-2); }
@@ -1019,6 +1019,17 @@ html:has(.menu[data-open="true"]) .header {
    ------------------------------------------------------------------------- */
 
 .spread { display: grid; gap: var(--s-7); align-items: start; }
+
+/* Tablets have room for the desktop composition, with a smaller gap so both
+   the photograph and the reading column remain useful in portrait. */
+@media (min-width: 48rem) and (max-width: 59.99rem) {
+  .spread {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6);
+    align-items: center;
+  }
+  .spread--flip > .spread__media, .pw.spread > .spread__media { order: 2; }
+}
 
 @media (min-width: 60rem) {
   /* Columns sized by what is in them, not by halving the page.
@@ -2455,7 +2466,9 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
     opacity: 0; pointer-events: none;
   }
 }
-@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) {
+/* Touch controls depend on the input, including tablets with desktop-sized
+   layouts. Only the phone's stacked project note depends on width. */
+@media (hover: none) and (pointer: coarse) {
   .onward__t::after { clip-path: inset(0); }
   /* A link inside a sentence, or standing alone in one, carries a small
      raised arrow after the words instead of a line: the mark readers already
@@ -2489,19 +2502,26 @@ a[data-going]:not(.onward) { opacity: .55; transition: opacity var(--dur-fast) v
   .lb__bar, .lb__cap { transition: opacity var(--dur-base) var(--ease); }
   .lb[data-chrome="off"] :is(.lb__bar, .lb__cap, .lb__step) { opacity: 0; pointer-events: none; }
   .f input { min-height: 2.75rem; }
+  .pcard[data-open="true"] .pcard__nav { display: flex; }
+  .pcard__strip { overflow-x: auto; overflow-y: hidden; }
+  .pcard__t { pointer-events: none; }
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; }
+  .landing .srail__i { min-block-size: 1.5rem; }
+  .pc[href]:active .pc__img { opacity: .85; }
+  a.tl:active, a.ul:active, .onward:active { color: var(--text-primary); }
+}
+@media (hover: none) and (pointer: coarse) and (max-width: 47.99rem) {
   .pj [data-rail] > .rail__note { display: none; }
   .project-note--touch { display: block; margin-top: var(--s-5); }
   .project-note--touch .rail__note { display: block; }
   .project-note--touch .rail__title { display: none; } /* The page heading already names it. */
   .project-note--touch .rail__text { max-width: none; }
-  .pc[href]:active .pc__img { opacity: .85; }
-  a.tl:active, a.ul:active, .onward:active { color: var(--text-primary); }
 }
 /* Below-fold sections enter with .rv; their line waits for the words, then
    draws left to right. Content already on screen at load is revealed before
    .js is set, so its line is simply there. Reduced motion reveals everything
    at once and the line with it. */
-@media (hover: none) and (pointer: coarse) and (max-width: 51.99rem) and (prefers-reduced-motion: no-preference) {
+@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
   :where(.js) .onward.rv:not(.in) .onward__t::after { clip-path: inset(0 100% 0 0); }
   .onward.rv .onward__t::after { transition-duration: var(--dur-slow); transition-delay: 240ms; }
 }

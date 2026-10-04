@@ -60,7 +60,7 @@ test.describe('photographs are fetched at the size they are drawn',()=>{
     // downloading a larger fallback that the photograph never displays.
     expect(requested.filter(url=>new URL(url).pathname===asset)).toEqual([selected]);
   });
-  for(const width of [375,1024,1440]) test(`at ${width}px`,async({page})=>{
+  for(const width of [375,768,820,1024,1440]) test(`at ${width}px`,async({page})=>{
     await page.setViewportSize({width,height:900});
     const found:string[]=[];
     /* domcontentloaded, not load: this walks every route in one test, and the
@@ -71,7 +71,7 @@ test.describe('photographs are fetched at the size they are drawn',()=>{
        will not settle that redirect inside this test's budget. Same page,
        asked for by the address the site actually publishes. */
     for(const {route} of pages()){await page.goto(route.replace(/\.html$/,''),{waitUntil:'domcontentloaded'});found.push(...(await underResolved(page)).map(s=>`${route} ${s}`));}
-    await page.goto('/projects/',{waitUntil:'domcontentloaded'});await page.locator(width<832?'.pcard__peek':'[data-project]').first().click();
+    await page.goto('/projects/',{waitUntil:'domcontentloaded'});await page.locator(width<768?'.pcard__peek':'[data-project]').first().click();
     await expect(page.locator('.pcard[data-open="true"] .rail__f:not(.pcard__peek)').first()).toBeAttached();
     found.push(...(await underResolved(page)).map(s=>`open project ${s}`));
     expect(found).toEqual([]);

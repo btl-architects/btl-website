@@ -184,7 +184,7 @@ export function spreadSizes(image: SiteImage): string {
   const cap = `calc(74svh * ${ratio})`;
   // The cap holds below 60rem too, so a stacked portrait is asked for at the
   // size it is drawn rather than at the full column.
-  return `(min-width: 60rem) min(46vw, ${cap}), min(92vw, ${cap})`;
+  return `(min-width: 60rem) min(46vw, ${cap}), (min-width: 48rem) min(calc(50vw - clamp(1.25rem, 0.6rem + 2.8vw, 4.5rem) - 1rem), calc(58svh * ${ratio})), min(92vw, ${cap})`;
 }
 
 /* A photograph cropped to fill a box (object-fit: cover), given the box's width
@@ -208,14 +208,14 @@ export function coverSizes(image: SiteImage, wide: string, narrow: string): stri
  * ceiling under-requested landscape frames on large, sharp screens. */
 export function railSizes(image: SiteImage): string {
   const ratio = resolveImage(image)?.ratio || 1.5;
-  return `(max-width: 51.99rem) calc(clamp(14rem, 40vh, 22rem) * ${ratio}), ` +
+  return `(max-width: 47.99rem) calc(clamp(14rem, 40vh, 22rem) * ${ratio}), ` +
          `calc(clamp(18rem, 56vh, 34rem) * ${ratio})`;
 }
 
 /** Closed project strips have a different height from the opened gallery. */
 export function peekSizes(image: SiteImage): string {
   const ratio = resolveImage(image)?.ratio || 1.5;
-  return `(max-width: 51.99rem) calc(clamp(10rem, 22vh, 12rem) * ${ratio}), ` +
+  return `(max-width: 47.99rem) calc(clamp(10rem, 22vh, 12rem) * ${ratio}), ` +
          `calc(clamp(11rem, 27vh, 21rem) * ${ratio})`;
 }
 
