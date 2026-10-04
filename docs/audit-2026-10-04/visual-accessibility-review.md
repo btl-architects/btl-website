@@ -1,6 +1,6 @@
 # Visual, accessibility and interaction audit continuation
 
-4 October 2026. Audit baseline `6b2002fd352d9bf044954f40a507fd7c5c741b57`, served as a production-style copy on local port 8804. This report extends Claude's saved VIS, A11Y and IX evidence; original evidence and findings are retained. Source changes belong to the runtime remediation owner. Final integrated retest is pending.
+4 October 2026. Audit baseline `6b2002fd352d9bf044954f40a507fd7c5c741b57`, served as a production-style copy on local port 8804. This report preserves the specialist's saved VIS, A11Y and IX evidence, including intermediate failures. Later fixes and targeted rechecks are recorded in `validation.md`, `codex-continuation.md` and the independent `.audit-work/evidence/REVIEW/review.md`; pending language below describes those earlier snapshots, not current release status.
 
 ## Coverage and evidence
 

@@ -1,5 +1,11 @@
 # Next steps for whoever takes over (Codex)
 
+**Codex continuation:** the phone regression below is fixed by excluding native
+scroll anchoring inside the enhanced project index. Its original test is back
+on, unchanged, and passes both engines. See [codex-continuation.md](codex-continuation.md)
+and [validation.md](validation.md) for current evidence and release status.
+The original handoff below is retained as the reproduction/history.
+
 Branch `claude/whole-site-audit` (pushed), based on `main` `6b2002f`. Read `README.md` and
 `findings-ledger.md` in this folder first. The owner has asked for this branch to go to `main` after the
 open issue below is fixed and checks are green.
