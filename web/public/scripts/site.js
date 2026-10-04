@@ -497,6 +497,12 @@
   var browsableOverview = window.matchMedia("(max-width: 85.375rem), (hover: none) and (pointer: coarse)");
   function photographStrip(target) {
     var rail = target.closest && target.closest("[data-rail], .pcard__strip");
+    // A closed card's caption covers the lower photograph area. A drag there
+    // still browses the strip; a click retains the real project link.
+    if (!rail && browsableOverview.matches && target.closest) {
+      var caption = target.closest(".pcard:not([data-open=\"true\"]) [data-project]");
+      if (caption) rail = caption.closest(".pcard").querySelector("[data-strip]");
+    }
     return rail && (!rail.closest('.pcard:not([data-open="true"])') || browsableOverview.matches) ? rail : null;
   }
 
@@ -546,7 +552,8 @@
   document.addEventListener("click", function (e) {
     var rail = draggedGallery;
     draggedGallery = null;
-    if (!rail || !e.detail || !rail.contains(e.target)) return;
+    var card = rail && rail.closest(".pcard");
+    if (!rail || !e.detail || !(rail.contains(e.target) || card && card.contains(e.target))) return;
     e.preventDefault();
     e.stopImmediatePropagation(); // A drag never opens a viewer or closes a card.
   }, true);

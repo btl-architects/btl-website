@@ -488,6 +488,7 @@ html:has(.menu[data-open="true"]) .header {
      only ever written on one way. */
   transition: opacity var(--dur-base) var(--ease);
 }
+.pcard[data-strip-moved] .pcard__t:focus-visible { opacity: 1; }
 .pcard__name {
   grid-row: 1; font-weight: 700; line-height: 1.1;
   font-size: clamp(1rem, 0.85rem + 0.55vw, 1.375rem);
@@ -714,8 +715,7 @@ html:has(.menu[data-open="true"]) .header {
   .pcard, .pcard[data-open="true"] { height: auto; }
   .pcard__strip { height: var(--project-preview-h); transition: height var(--dur-slow) var(--ease); overflow-x: auto; overflow-y: hidden; cursor: grab; }
   .pcard__strip[data-dragging] { cursor: grabbing; }
-  .pcard__t { pointer-events: none; }
-  .pcard[data-strip-moved] .pcard__t { opacity: 0; }
+  .pcard[data-strip-moved] .pcard__t { opacity: 0; pointer-events: none; }
   .pcard[data-open="true"] .pcard__strip { height: var(--project-open-h); }
   .pcard__t { padding: var(--s-6) var(--s-4) var(--s-3); }
   .pcard > .rail__note { display: block; padding: var(--s-5) 0 var(--s-2); }
@@ -1685,7 +1685,8 @@ html:has(.menu[data-open="true"]) .header {
    thing on the phone after the work itself. */
 .credits {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, var(--card-max)));
+  justify-content: center;
   gap: var(--s-6) var(--s-5);
 }
 
@@ -1717,6 +1718,10 @@ html:has(.menu[data-open="true"]) .header {
     justify-content: center;
     gap: var(--s-8) var(--s-6);
   }
+}
+
+@media (min-width: 48rem) and (max-width: 85.375rem) {
+  .credits { gap: var(--s-7) var(--s-5); }
 }
 
 .pc {

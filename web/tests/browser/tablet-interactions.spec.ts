@@ -28,6 +28,14 @@ for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:10
       if(route==='/'||route==='/contact/') {
         for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
       }
+      if(route==='/'||route==='/press/') {
+        const cards=page.locator('.credits .pc');
+        const first=(await cards.nth(0).boundingBox())!,second=(await cards.nth(1).boundingBox())!;
+        expect(first.width).toBeLessThanOrEqual(320);
+        expect(first.width).toBeLessThanOrEqual(viewport.height*.34+1);
+        expect(second.x).toBeGreaterThan(first.x+first.width);
+        expect(Math.abs(second.y-first.y)).toBeLessThan(1);
+      }
       if(route==='/'||route==='/projects/') {
         for(const strip of await page.locator('[data-strip]').all()) {
           const box=(await strip.boundingBox())!;
@@ -155,6 +163,14 @@ test('tablet Press uses a wider gesture reader and restores the page',async({pag
   await reader.getByRole('button',{name:'Close article'}).tap();
   await expect(reader).toBeHidden();
   expect(await page.evaluate(()=>scrollY)).toBeCloseTo(position,0);
+  await card.tap();
+  await expect(reader).toHaveAttribute('data-detent','peek');
+  await page.touchscreen.tap(5,25);
+  await expect(reader).toBeHidden();
+  await card.tap();
+  await expect(reader).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(reader).toBeHidden();
 });
 
 test('tablet enquiries show validation and submit a short message once',async({page})=>{
@@ -261,13 +277,17 @@ test.describe('tablet mouse preview',()=>{
       await expect(strip).toHaveCSS('overflow-x','auto');
       await strip.scrollIntoViewIfNeeded();
       const box=(await strip.boundingBox())!;
-      const x=box.x+box.width*.8,y=box.y+box.height/2;
+      const x=box.x+box.width*.8,y=box.y+box.height-20;
       await page.mouse.move(x,y);await page.mouse.down();
       await page.mouse.move(x-350,y,{steps:20});await page.mouse.up();
       await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(100);
       await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','false');
       await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
       await expect(page).toHaveURL(new RegExp(route==='/'?'/$':'/projects/$'));
+      const entry=page.locator('[data-project]').first();
+      await page.keyboard.press('Tab');
+      await entry.focus();
+      await expect(entry).toHaveCSS('opacity','1');
       await page.mouse.click(x-350,y);
       await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','true');
     }
