@@ -268,39 +268,43 @@ for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
   });
 }
 
-test.describe('tablet mouse preview',()=>{
-  test.use({hasTouch:false,isMobile:false,viewport:{width:820,height:1180}});
-  test('closed project strips browse by dragging without opening a card',async({page})=>{
-    for(const route of ['/','/projects/']) {
-      await page.goto(route);
-      const strip=page.locator('[data-strip]').first();
-      await expect(strip).toHaveCSS('overflow-x','auto');
-      await strip.scrollIntoViewIfNeeded();
-      const box=(await strip.boundingBox())!;
-      const x=box.x+box.width*.8,y=box.y+box.height-20;
-      await page.mouse.move(x,y);await page.mouse.down();
-      await page.mouse.move(x-350,y,{steps:20});await page.mouse.up();
-      await expect.poll(()=>strip.evaluate(el=>el.scrollLeft)).toBeGreaterThan(100);
-      await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','false');
-      await expect(page.getByRole('dialog',{name:'Photograph viewer'})).toBeHidden();
-      await expect(page).toHaveURL(new RegExp(route==='/'?'/$':'/projects/$'));
-      const entry=page.locator('[data-project]').first();
-      await page.keyboard.press('Tab');
-      await entry.focus();
-      await expect(entry).toHaveCSS('opacity','1');
-      await page.mouse.click(x-350,y);
-      await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','true');
-    }
-  });
-  test('section underlines animate into view without hovering',async({page})=>{
-    await page.emulateMedia({reducedMotion:'no-preference'});
-    await page.goto('/');
-    const link=page.getByRole('link',{name:'See every project'});
-    const line=link.locator('.onward__t');
-    await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
-    await link.scrollIntoViewIfNeeded();
-    await expect(link).not.toHaveCSS('cursor','default');
-    await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px)');
+/* Tablet treatment follows the device's touchscreen, not the window width. A
+   mouse-only desktop window inside the tablet width band (a laptop, an
+   unmaximised window, browser zoom) keeps the desktop cues and sizes. */
+test.describe('mouse-only windows at tablet widths stay desktop',()=>{
+  test.use({hasTouch:false,isMobile:false,deviceScaleFactor:1});
+  for(const viewport of [{width:820,height:1180},{width:1024,height:768},{width:1280,height:800},{width:1366,height:768}]) {
+    test(`at ${viewport.width}px the green line waits for hover and desktop sizes hold`,async({page})=>{
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({reducedMotion:'no-preference'});
+      expect(await page.evaluate(()=>matchMedia('(any-pointer: coarse)').matches)).toBe(false);
+      await page.goto('/');
+      const link=page.getByRole('link',{name:'See every project'});
+      const line=link.locator('.onward__t');
+      await link.scrollIntoViewIfNeeded();
+      await expect(link.locator('xpath=ancestor-or-self::*[contains(concat(" ",@class," ")," rv ")][1]')).toHaveClass(/\bin\b/);
+      await page.waitForTimeout(900);
+      expect(await line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px 100% 0px 0px)');
+      await link.hover();
+      await expect.poll(()=>line.evaluate(el=>getComputedStyle(el,'::after').clipPath)).toBe('inset(0px)');
+      // Desktop project-preview token, not the tablet one.
+      expect(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--project-preview-h').trim())).toBe('clamp(11rem, 27vh, 21rem)');
+      if(viewport.width>=1024) {
+        await page.goto('/press/');
+        const width=await page.locator('.pc').first().evaluate(el=>el.getBoundingClientRect().width);
+        expect(width).toBeGreaterThan(300);
+      }
+    });
+  }
+  test('closed project cards open with a click rather than browsing as a tablet strip',async({page})=>{
+    await page.setViewportSize({width:1024,height:768});
+    await page.goto('/projects/');
+    const card=page.locator('.pcard').first();
+    await card.scrollIntoViewIfNeeded();
+    await card.click({position:{x:120,y:40}});
+    await expect(page.locator('[data-project]').first()).toHaveAttribute('aria-expanded','true');
+    // The desktop card carries its note inside the strip, not stacked below.
+    await expect(card.locator('[data-strip] > .rail__note')).toHaveCount(1);
   });
 });
 

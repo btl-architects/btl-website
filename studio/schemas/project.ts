@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import {isSafeSlug} from "../../shared/slug.ts";
 
 /* A project.
  *
@@ -51,7 +52,7 @@ export default defineType({
           return !taken;
         },
       },
-      validation: (r) => r.required(),
+      validation: (r) => r.required().custom(value => isSafeSlug(value?.current) && !["type", "place"].includes(value.current) || "Use lowercase letters, numbers and single hyphens; type and place are reserved."),
     }),
     defineField({name: 'previousSlugs', title: 'Previous addresses', type: 'array', of: [{type:'string'}], readOnly: true, group:'meta', description:'Recorded automatically when a published address changes.'}),
     defineField({

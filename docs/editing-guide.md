@@ -378,7 +378,9 @@ website automatically uses the extra detail after publishing and rebuilding.
 
 Open **Site settings → The practice → The opening sequence**. New clips default
 to **Automatic processing (Mux)**. Upload the original landscape video; Mux
-converts and compresses it into a web-ready MP4 up to 1080p. You can upload a
+accepts normal MOV and MP4 source files and converts and compresses them into a
+web-ready MP4 up to 1080p. Use **Original film (landscape) — Mux**; you do not
+need to convert your video to MP4 first. You can upload a
 separate portrait film framed for a phone, with the same duration. This processes
 video format and resolution; it does not invent a portrait crop or edit the film.
 Add matching still frames. Wait for the optimised MP4 to finish before publishing;
@@ -386,11 +388,18 @@ the editor blocks an unfinished film. If it stays pending after processing,
 refresh the asset in **Videos**. Publishing rebuilds the website.
 
 Existing clips keep **Prepared MP4** until you explicitly switch them. In this
-mode, export H.264, web optimisation / fast start and no audio; aim under 3 MB for
+mode (labelled **Already optimised MP4 — manual upload**), export H.264, web optimisation / fast start and no audio; aim under 3 MB for
 landscape and under 1 MB for a 720×1280 portrait. These file uploads are not
 converted. Switching modes keeps the old source available for reverting.
 
-Each clip plays to its end before advancing. The sequence repeats; if there is
+If an upload asks specifically for MP4, check **Video processing**: the manual
+file field bypasses Mux. Choose automatic processing to upload an original.
+If the Mux field itself rejects a file, record its exact error and check the
+asset in **Videos** rather than converting all future uploads manually.
+
+Each clip plays to its end before advancing. The next clip preloads while the
+current one plays, and the outgoing picture remains until the incoming video
+has a decoded frame, so normal buffering does not flash a poster. The sequence repeats; if there is
 only one clip, it loops. Films play muted, pause offscreen or in a hidden tab,
 and reduced-motion / Save-Data visitors see the still instead. The website uses
 its own lightweight player with the optimised MP4, without Mux analytics scripts.
@@ -434,4 +443,3 @@ People page, the same way Press features do. The practice has not asked for it,
 so it is switched off in `web/server/features.js` (`PROFILES = false`): names
 on People are not links, and no person pages are published. Bios you enter are
 kept. Switching it on is a one-line change and a rebuild.
-

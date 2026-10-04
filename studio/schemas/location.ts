@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import {isSafeSlug} from "../../shared/slug.ts";
 
 /* A place.
  *
@@ -28,7 +29,7 @@ export default defineType({
       title: "Web address",
       type: "slug",
       options: { source: "label", maxLength: 40 },
-      validation: (r) => r.required(),
+      validation: (r) => r.required().custom(value => isSafeSlug(value?.current) && value.current.length <= 40 || "Use lowercase letters, numbers and single hyphens, up to 40 characters."),
     }),
     defineField({
       name: "order",

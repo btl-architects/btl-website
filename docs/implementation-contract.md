@@ -9,6 +9,14 @@ in `§` point at the design system document.
 
 Version 0.3 · 11 August 2026 · not yet approved
 
+This is a historical draft. Later owner decisions and the current
+[deployment guide](deploying.md), [design memory](design-memory.md) and
+[tablet interaction system](tablet-interaction-system.md) govern the live
+implementation where they differ: Cloudflare Pages, direct Web3Forms enquiries,
+complete Press artwork, three people per desktop row and the ambient film
+exception. The audit does not treat those approved decisions as regressions.
+Current performance and accessibility targets remain in force.
+
 ---
 
 ## 1. Non-negotiables

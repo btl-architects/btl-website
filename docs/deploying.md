@@ -187,6 +187,19 @@ Because the build appends, **first match wins** and the hand-written rules come
 first. `web/tools/redirects.mjs` refuses to build on a loop, a self-redirect, a
 duplicate, or a redirect pointing at a page that does not exist.
 
+`function-routes.mjs` generates `_routes.json` from the rendered build marker.
+Published production pages/assets use Pages static delivery directly; only
+`/build-status.json` invokes the marker guard. Public branch previews retain
+middleware on all URLs for `noindex`; protected draft previews retain it for
+authentication as well. Missing or inconsistent build-mode fields stop route
+generation. The broad source `_routes.json` remains a defensive fallback.
+`site-check.mjs` rejects generated coverage inconsistent with the marker.
+
+The marker records `sourceSha`, `sourceDirty` and `builtAt`, alongside its mode.
+Cloudflare supplies its commit SHA; a local build reads Git and reports dirty
+source honestly. A marker identifies the source build, not whether external
+CMS content has changed since that build.
+
 ---
 
 ## What the build refuses to ship

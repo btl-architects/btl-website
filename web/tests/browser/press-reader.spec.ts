@@ -176,8 +176,12 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   const [external] = await Promise.all([context.waitForEvent('page'), reader.getByRole('link', {name: 'Read the original on External publication'}).click()]);
   await expect(external).toHaveURL('https://example.com/original');
   await external.close();
+  await page.bringToFront();
   await reader.getByRole('button', {name: 'Close article'}).click();
   const [article] = await Promise.all([context.waitForEvent('page'), page.locator('a[data-article]').first().click({modifiers: ['ControlOrMeta']})]);
+  // A modifier click creates a background tab. Activate it as the reader
+  // would before asserting its committed document and visible content.
+  await article.bringToFront();
   await expect(article).toHaveURL(/\/press\/reader-fixture\/$/);
   await expect(article.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   await expect(reader).not.toBeVisible();

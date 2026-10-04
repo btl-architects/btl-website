@@ -134,12 +134,11 @@ species, not a degraded one.
 navigation sit on the edges of the frame and stay there, on every page: they read as the
 building's structure, not as a toolbar that scrolled into view.
 
-The social rail used to be part of that and has been removed. Three links pinned to the edge
-of every screen compete with the photographs on a site whose entire argument is the
-photographs, and nobody arrives at an architecture practice looking for its Instagram. Social
-lives in the footer and on Contact, where someone who wants it will look. Structural chrome
-earns its permanence by being needed everywhere; anything else is decoration that follows you
-around.
+The owner's later decision restores the social rail on Home only, at the right
+edge. Other pages use footer and Contact links. The fixed container stays
+untransformed; its lettering is oriented inside it. On touch devices, its
+vertical anchor stays stable through height-only browser-bar changes and is
+recalculated for width/orientation changes. Keyboard focus remains visible.
 
 **R15 — A section with nothing real in it does not render.** Placeholder is not content. Four
 rows of "Publication to come" under one genuine credit make the practice look like it is
@@ -425,15 +424,14 @@ carry it and no video is requested. A portrait encode serves phones, and it must
 same subject** as its landscape twin: the frame carries a label, and a portrait cut showing a
 different building under the caption "Nelly House" is simply wrong.
 
-**Social rail** — LinkedIn, Instagram, YouTube, set vertically up the left margin, fixed, on
-every page. Structural chrome (R14), not a footer afterthought. Hidden below 64rem, where
-there is no margin to give it.
+**Social rail** — LinkedIn, Instagram and YouTube on Home's right edge, as
+specified in R14. Do not infer an all-page or desktop-only rail from older drafts.
 
-**Press index** — publication at display scale, headline under it, year alone in the margin,
-a hairline drawing along the row on hover. No images. Simulating spreads out of project
-photography was wrong twice over: it read as decoration rather than evidence, and the pages
-were never pages. The mastheads are the composition. When real scans arrive they become the
-hover state and nothing else has to move.
+**Press index** — complete authored publication artwork, with quiet captions;
+never crop the masthead. Phone sizing and desktop's 416px two-up artwork are
+approved. Tablet artwork caps at 256px and 32svh, with additional grid columns
+for growth. Home and Press share the same system. Opening an article uses the
+shared reader panel with touch gestures and explicit accessible controls.
 
 **Person** — two tiers. Principals at scale with a bio; everyone else in a compact grid that
 works at four people or forty.
@@ -450,10 +448,13 @@ capped) → press (release) → contact (compress, resolves).
 - Hybrid structure: scrolling home page, real pages behind every section. The nav always
   navigates to a page — never to an anchor on the home page, and there is no scroll spy. A
   menu item that scrolls you somewhere instead of going where it says reads as a broken link.
-- Press is a typographic index, not simulated spreads. Decided; see the Press index pattern.
+- Press uses complete authored artwork; see the Press index pattern and tablet interaction system.
 - Featured work is a scroll sequence on the project page and the work index on the home page.
 - Categories exist in the model but stay out of the interface until there is enough work.
-- Astro 7.2 + Sanity + Netlify. Engineering rules live in `implementation-contract.md`.
+- Astro 7.3.5 + Sanity + Cloudflare Pages; Web3Forms handles browser enquiries.
+  Netlify is a legacy published-content preview host awaiting retirement.
+  Engineering rules live in `implementation-contract.md`, with current deployment
+  details in `deploying.md`.
 - No analytics, no third-party scripts, no CSS or animation framework.
 
 ---

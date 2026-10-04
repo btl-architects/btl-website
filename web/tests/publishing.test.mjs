@@ -38,7 +38,7 @@ test('redirect graph rejects duplicates, cycles, self redirects, missing and sha
   ]) assert.throws(()=>resolveRedirects(rows,pages));
 });
 function preview(previewFlag, password='a-long-test-password') {
-  return {ASSETS:{fetch:async()=>Response.json({preview:previewFlag})},PREVIEW_PASSWORD:password};
+  return {ASSETS:{fetch:async()=>Response.json({preview:previewFlag,noindex:previewFlag})},PREVIEW_PASSWORD:password};
 }
 const next=async()=>new Response('<h1>Draft content</h1>');
 test('draft output requires authentication regardless of URL',async()=>{
@@ -55,6 +55,31 @@ test('production needs no preview password; missing marker fails closed',async()
   const request=new Request('https://btldesigns.in/');
   assert.equal((await protectPreview({request,env:preview(false,''),next})).status,200);
   assert.equal((await protectPreview({request,env:{ASSETS:{fetch:async()=>new Response('missing',{status:404})}},next})).status,503);
+});
+test('incomplete markers and indexable draft markers fail closed',async()=>{
+  for (const marker of [{preview:false}, {preview:true,noindex:false}, {preview:false,noindex:'false'}]) {
+    const response=await protectPreview({request:new Request('https://preview.example/'),env:{ASSETS:{fetch:async()=>Response.json(marker)}},next});
+    assert.equal(response.status,503);
+    assert.equal(response.headers.get('Cache-Control'),'no-store');
+    assert.notEqual(await response.text(),'<h1>Draft content</h1>');
+  }
+});
+test('preview authentication accepts a case-insensitive scheme and UTF-8 credentials',async()=>{
+  for (const password of ['a-long-ascii-password','pässwörd—0123456789']) {
+    const authorization='basic '+Buffer.from('preview:'+password,'utf8').toString('base64');
+    const response=await protectPreview({request:new Request('https://preview.example/asset.jpg',{headers:{authorization}}),env:preview(true,password),next});
+    assert.equal(response.status,200);
+    assert.equal(response.headers.get('Cache-Control'),'no-store');
+    assert.match(response.headers.get('X-Robots-Tag'),/noindex/);
+  }
+});
+test('invalid preview credential configuration fails privately instead of throwing',async()=>{
+  for (const env of [{...preview(true),PREVIEW_USERNAME:'invalid:user'},preview(true,'long-password-with\ncontrol')]) {
+    const response=await protectPreview({request:new Request('https://preview.example/'),env,next});
+    assert.equal(response.status,503);
+    assert.equal(response.headers.get('Cache-Control'),'no-store');
+    assert.match(response.headers.get('X-Robots-Tag'),/noindex/);
+  }
 });
 /* The form sends from the browser, so "a preview never sends real email" is
    now decided by whether the build is given the key at all. */

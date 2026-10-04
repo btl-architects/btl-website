@@ -1,6 +1,13 @@
 # Tablet layout and interaction system
 
-Tablet layouts cover 768–1366 CSS pixels, including portrait and landscape. Width chooses the composition and density; input chooses touch gestures or mouse behavior. Section-link underlines animate into view across this tablet band, including previews with a cursor. Reduced motion shows the cue immediately.
+Tablet layouts cover 768–1366 CSS pixels on touch-capable devices, including portrait and landscape. The band is always written as `(min-width: 48rem) and (max-width: 85.375rem) and (any-pointer: coarse)`: width chooses the density, and the presence of a touchscreen decides whether the tablet treatment applies at all. A tablet with a trackpad attached still has a touchscreen and keeps it. A mouse-only desktop window in the same width range (a laptop, an unmaximised window, browser zoom) keeps desktop behaviour: hover-drawn green lines, desktop project previews and desktop Press cards (416px from about 1024px wide, proportionally narrower below that). Larger touch tablets beyond 1366px are matched by `(hover: none) and (pointer: coarse)`. Section-link underlines animate into view on touch tablets; reduced motion shows the cue immediately.
+
+Never gate a touch cue, density token or gesture on width alone: the same width is used by tablets and by desktop windows. Phone layout below 768px remains width-based, because a narrow window needs the narrow composition, but finger-only affordances (the Press reader's pull handle, resting link lines, copy marks) follow the input.
+
+When enlarged text leaves insufficient room for the full header navigation,
+the shared menu becomes available based on actual fit. This preserves access
+without shrinking text or changing ordinary tablet layouts. Oversized gallery
+notes scroll vertically within the existing photo height and accept keyboard focus.
 
 | Feature | Tablet decision |
 | --- | --- |

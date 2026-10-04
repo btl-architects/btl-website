@@ -7,11 +7,10 @@
  * shape of those files, the swap changed nothing above this line except that
  * the calls are now awaited.
  *
- * Two rules that used to live here as defensive filtering are now enforced by
- * the CMS itself, and so have been deleted rather than carried over: alt text
- * and licence are required fields, and placeholder documents were never
- * imported. The one filter that remains is `lifecycle == "published"`, because
- * that is a genuine editorial state rather than a data-quality workaround.
+ * Build validation enforces image, route and content invariants even for API
+ * imports. The content seam also omits exact provisional photographer labels:
+ * unsupplied optional attribution is absent, never replaced with an invented name.
+ * Lifecycle remains the editorial distinction between an index and a public URL.
  */
 
 import { sanity, isPreview } from "./sanity";
@@ -22,6 +21,7 @@ import type {SearchListing, PageSearchListings} from './seo';
 import type {ArticleBlock, OpeningMode} from "./press";
 import {articleUrl} from "./press";
 import {clipVideoSources, type ClipVideoSources} from "../../../shared/video";
+import {optionalPhotographerCredit} from "../../../shared/credits";
 import {artworkBounds} from '../../server/artwork-bounds.js';
 import {urlFor} from './sanity';
 
@@ -232,11 +232,12 @@ const getAllProjects = once(async (): Promise<Project[]> => {
     // The cover leads the sequence rather than being held out of it: on the
     // project page it would otherwise be missing, and on a card it is the frame
     // already on screen when the card opens.
-    const imgs = p.images ?? [];
+    const imgs = (p.images ?? []).map(image => ({...image, credit: optionalPhotographerCredit(image.credit)}));
     const cover = imgs.find((i) => i?.kind === "cover") ?? imgs[0];
     const ordered = cover ? [cover, ...imgs.filter((i) => i !== cover)] : imgs;
     return {
       ...p,
+      credits: {...p.credits, photographer: optionalPhotographerCredit(p.credits.photographer)},
       images: ordered as SiteImage[],
       hook: (cover ?? ordered[0]) as SiteImage,
     };
@@ -345,8 +346,10 @@ export const getPublications = once(async (): Promise<Publication[]> => {
   }`);
   return Promise.all((rows ?? []).map(async x => ({
     ...x,
+    articleCredits: x.articleCredits ? {...x.articleCredits, photographer: optionalPhotographerCredit(x.articleCredits.photographer)} : undefined,
+    articleHero: x.articleHero?.source?.asset ? {...x.articleHero, credit: optionalPhotographerCredit(x.articleHero.credit)} : null,
+    readerContent: x.readerContent?.map(block => block._type === "figure" ? {...block, credit: optionalPhotographerCredit(block.credit)} : block),
     image: x.image?.source?.asset ? {...x.image,artworkBounds:await artworkBounds(urlFor(typeof x.image.source==='object' ? {...x.image.source,crop:undefined,hotspot:undefined} : x.image.source).width(400).format('png').fit('max').url())} : null,
-    articleHero: x.articleHero?.source?.asset ? x.articleHero : null,
     relatedProject: x.relatedProject ?? null,
   })));
 });

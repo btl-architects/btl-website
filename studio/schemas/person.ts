@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import {isSafeSlug} from "../../shared/slug.ts";
 
 /* A person.
  *
@@ -34,6 +35,7 @@ export default defineType({
       type: "slug",
       options: { source: "name", maxLength: 96 },
       description: "Only needed if this person gets their own page.",
+      validation: (r) => r.custom(value => value == null || isSafeSlug(value.current) || "Use lowercase letters, numbers and single hyphens."),
     }),
     defineField({
       name: "bio",

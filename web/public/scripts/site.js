@@ -29,48 +29,63 @@
     DUR.slow = durationToken("--dur-slow", 700);
   });
 
-  /* Keep Home's social rail still when mobile browser bars change height.
-     A fixed pixel top avoids viewport-unit recalculation, and the fixed box
-     itself is untransformed. Width changes (rotation/split screen) establish
-     a new centre; ordinary desktop resizing keeps the CSS placement. */
+  /* Anchor the fixed shell at the top edge, not halfway down the viewport.
+     Position the words inside it. Account for a displaced visual viewport as
+     well as height-only toolbar changes; rotation establishes a new centre. */
   var socialRail = document.querySelector(".landing .srail");
   if (socialRail) {
     var touchRail = window.matchMedia("(hover: none) and (pointer: coarse)");
     var railWidth = 0;
     var railCentre = 0;
+    var railViewport = window.visualViewport;
     var railWords = socialRail.querySelector(".srail__links");
+    // Android Firefox's top toolbar moves the entire content origin. Its
+    // compositor compensates bottom-fixed elements; a locked top cannot do so.
+    // Keep a constant bottom distance there instead of chasing scroll events.
+    var bottomRail = /Android.*Firefox\//.test(navigator.userAgent);
+    var railTick = false;
     function placeRail() {
-      socialRail.style.setProperty("--social-top", Math.round(railCentre - railWords.getBoundingClientRect().height / 2) + "px");
+      if (!touchRail.matches || (railViewport && railViewport.scale !== 1)) return;
+      if (bottomRail) {
+        socialRail.setAttribute("data-anchor-bottom", "");
+        socialRail.style.setProperty("--social-bottom", Math.round(railCentre - railWords.offsetHeight / 2) + "px");
+      } else {
+        var offset = railViewport ? railViewport.offsetTop : 0;
+        socialRail.style.setProperty("--social-top", Math.round(railCentre + offset - socialRail.getBoundingClientRect().top) + "px");
+      }
       socialRail.setAttribute("data-pinned", "");
     }
     function pinRail() {
       if (!touchRail.matches) {
         socialRail.style.removeProperty("--social-top");
+        socialRail.style.removeProperty("--social-bottom");
+        socialRail.removeAttribute("data-anchor-bottom");
         socialRail.removeAttribute("data-pinned");
         railWidth = 0;
         return;
       }
       var width = window.innerWidth;
-      if (width === railWidth) return;
-      socialRail.style.removeProperty("--social-top");
-      socialRail.removeAttribute("data-pinned");
-      railCentre = window.innerHeight / 2;
-      railWidth = width;
+      if (railViewport && railViewport.scale !== 1) return;
+      if (width !== railWidth) {
+        railCentre = (railViewport ? railViewport.height : window.innerHeight) / 2;
+        railWidth = width;
+      }
       placeRail();
     }
+    function scheduleRail() {
+      if (railTick) return;
+      railTick = true;
+      requestAnimationFrame(function () { railTick = false; pinRail(); });
+    }
     afterFirstPaint(pinRail);
-    window.addEventListener("resize", function () {
-      if (touchRail.matches && window.innerWidth !== railWidth) afterFirstPaint(pinRail);
-    }, { passive: true });
+    if ("ResizeObserver" in window) new ResizeObserver(scheduleRail).observe(railWords);
+    window.addEventListener("resize", scheduleRail, { passive: true });
+    if (railViewport) {
+      railViewport.addEventListener("resize", scheduleRail, {passive:true});
+      railViewport.addEventListener("scroll", scheduleRail, {passive:true});
+    }
     window.addEventListener("pageshow", pinRail);
     touchRail.addEventListener("change", pinRail);
-    if ("ResizeObserver" in window) new ResizeObserver(function () {
-      if (touchRail.matches && railWidth) placeRail();
-    }).observe(railWords);
-    if (document.fonts) document.fonts.ready.then(function () {
-      pinRail();
-      if (touchRail.matches) placeRail();
-    });
   }
 
   /* --- 1. shared scroll entrances -----------------------------------------
@@ -188,7 +203,7 @@
        being hidden, and reduced motion or Save-Data — all of which sync() still
        honours. Keeping the flag with nothing able to set it would have left a
        branch that reads as a feature and can never be reached. */
-    var at = 0, errorTimer = null, preloadNext = null, visible = false;
+    var at = 0, errorTimer = null, visible = false, generation = 0;
     /* The film starts two frames after load, i.e. after first paint: a decoder
        starting earlier held a slow device's first paint back ~2s. */
     var pageReady = false;
@@ -207,41 +222,66 @@
       v.loop = sFrames.length === 1;
       v.addEventListener("ended", function () { if (at === i && canPlay()) show(at + 1); });
       v.addEventListener("error", function () { failed(i); });
-      v.addEventListener("playing", function () { v.setAttribute("data-playing", "true"); });
       v.addEventListener("emptied", function () { v.removeAttribute("data-playing"); });
       return v;
     }
     function load(i) {
       if (stillsOnly()) return;
       var v = player(i), want = source(v);
+      // preload=none left the following film waiting for play() to fetch it.
+      // This runs after first paint, and only prepares the next clip in order.
+      v.preload = "auto";
       if (want && v.getAttribute("src") !== want) { v.src = want; v.load(); }
     }
     function pause() {
-      clearTimeout(errorTimer); clearTimeout(preloadNext); errorTimer = preloadNext = null;
+      generation++;
+      clearTimeout(errorTimer); errorTimer = null;
       sFrames.forEach(function (f) { var v = f.querySelector("video"); if (v) v.pause(); });
     }
     function failed(i) {
       // A preloaded file can fail before becoming active. Apply the same still
       // fallback when revisiting it, rather than waiting for another error.
       if (at !== i || !canPlay() || sFrames.length < 2) return;
+      generation++;
       clearTimeout(errorTimer);
+      // A genuinely unavailable film still gets its authored fallback. Ordinary
+      // buffering never reveals that film's poster between two working videos.
+      revealFilm(i, false);
       errorTimer = setTimeout(function () { if (at === i && canPlay()) show(at + 1); }, 6200);
+    }
+    function revealFilm(i, playing) {
+      if (playing) player(i).setAttribute("data-playing", "true");
+      else { player(i).removeAttribute("data-playing"); player(i).pause(); }
+      sFrames.forEach(function (f, k) {
+        f.setAttribute("data-on", k === i ? "true" : "false");
+        var v = f.querySelector("video");
+        if (k !== i && v) v.pause();
+      });
     }
     function show(i) {
       at = (i + sFrames.length) % sFrames.length;
-      sFrames.forEach(function (f, k) {
-        f.setAttribute("data-on", k === at ? "true" : "false");
-        var v = f.querySelector("video");
-        if (k !== at && v) v.pause();
-      });
+      var next = at, ticket = ++generation;
       clearTimeout(errorTimer); errorTimer = null;
       load(at);
       var current = player(at);
       if (current.error) { failed(at); return; }
-      if (current.ended) current.currentTime = 0;
-      current.play().catch(function () {});
-      clearTimeout(preloadNext);
-      preloadNext = setTimeout(function () { load((at + 1) % sFrames.length); }, 3000);
+      // Keep the outgoing decoded picture until the incoming decoder presents
+      // a frame. `playing` alone can fire before the browser paints that frame.
+      function ready() {
+        if (ticket !== generation || next !== at || !canPlay()) return;
+        clearTimeout(errorTimer); errorTimer = null;
+        revealFilm(next, true);
+        if (sFrames.length > 1) load((next + 1) % sFrames.length);
+      }
+      if (current.ended) { current.removeAttribute("data-playing"); current.currentTime = 0; }
+      if (current.requestVideoFrameCallback) current.requestVideoFrameCallback(ready);
+      else current.addEventListener("playing", function () { afterFirstPaint(ready); }, {once:true});
+      current.play().catch(function () { if (ticket === generation) failed(next); });
+      // A stalled network must not stop the sequence indefinitely. Retain the
+      // outgoing frame while waiting, then use the ordinary error fallback.
+      errorTimer = setTimeout(function () {
+        if (ticket === generation) failed(next);
+      }, 15000);
     }
     function canPlay() { return !stillsOnly() && visible && !document.hidden && pageReady; }
     function sync() {
@@ -318,6 +358,49 @@
   if (menu && openBtn) {
     var lastFocus = null;
     var menuFocusFrame = null;
+    var menuFocusTimer = null;
+    function cancelMenuFocus() {
+      if (menuFocusFrame !== null) cancelAnimationFrame(menuFocusFrame);
+      if (menuFocusTimer !== null) clearTimeout(menuFocusTimer);
+      menuFocusFrame = menuFocusTimer = null;
+    }
+
+    var headerInner = header && header.querySelector(".header__inner");
+    var primaryList = header && header.querySelector(".nav");
+    var headerLogo = header && header.querySelector(".header__logo");
+    var fitFrame = null;
+    var wideNavigation = window.matchMedia("(min-width: 48rem)");
+    function fitNavigation() {
+      fitFrame = null;
+      if (!headerInner || !primaryList || !headerLogo) return;
+      // Measure a compact header's hidden nav without hiding its focused
+      // burger. The temporary absolute list never participates in layout.
+      var navHadFocus = primaryList.contains(document.activeElement);
+      header.toggleAttribute("data-nav-measure", header.hasAttribute("data-compact") && wideNavigation.matches);
+      if (!wideNavigation.matches) header.removeAttribute("data-compact");
+      if (getComputedStyle(primaryList).display !== "none") {
+        var style = getComputedStyle(headerInner);
+        var available = headerInner.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        var required = primaryList.scrollWidth + headerLogo.getBoundingClientRect().width + (parseFloat(style.columnGap) || 0);
+        header.toggleAttribute("data-compact", required > available + 1);
+      }
+      header.removeAttribute("data-nav-measure");
+      if (navHadFocus && getComputedStyle(primaryList).display === "none") openBtn.focus({ preventScroll: true });
+      if (menu.getAttribute("data-open") === "true" && getComputedStyle(openBtn).display === "none") close();
+    }
+    function queueNavigationFit() {
+      if (fitFrame === null) fitFrame = requestAnimationFrame(fitNavigation);
+    }
+    afterFirstPaint(queueNavigationFit);
+    window.addEventListener("resize", queueNavigationFit, { passive: true });
+    if ("ResizeObserver" in window && headerInner && headerLogo) {
+      var headerSize = new ResizeObserver(queueNavigationFit);
+      headerSize.observe(headerInner);
+      headerSize.observe(headerLogo);
+      headerSize.observe(primaryList);
+    }
+    if (primaryList && "MutationObserver" in window) new MutationObserver(queueNavigationFit).observe(primaryList, { subtree: true, childList: true, characterData: true });
+    if (document.fonts) document.fonts.ready.then(queueNavigationFit);
 
     /* Only what is actually rendered. A display:none link cannot take focus,
        so one left in the cycle makes the trap's .focus() on it silently fail
@@ -341,14 +424,28 @@
       document.documentElement.style.overflow = "hidden";
       if (menuLabel) menuLabel.textContent = "Close";
       var f = focusables();
-      if (f.length > 1) menuFocusFrame = requestAnimationFrame(function () {
-        menuFocusFrame = null;
-        // A quick Tab or Escape must not be undone by deferred initial focus.
-        if (menu.getAttribute("data-open") === "true" && document.activeElement === lastFocus) f[1].focus();
-      });
+      if (f.length > 1) {
+        var until = performance.now() + 450;
+        function grabMenuFocus() {
+          // Called by the frame loop or the backstop timer; only one may run.
+          if (menuFocusFrame !== null) cancelAnimationFrame(menuFocusFrame);
+          menuFocusFrame = null;
+          // WebKit can still report hidden during the first reduced-motion
+          // frame. Retry visibility, while never undoing a quick Tab/Escape.
+          if (menu.getAttribute("data-open") !== "true" || document.activeElement !== lastFocus) return;
+          if (getComputedStyle(f[1]).visibility === "visible") {
+            f[1].focus();
+            if (document.activeElement === f[1]) { cancelMenuFocus(); return; }
+          }
+          if (performance.now() < until) menuFocusFrame = requestAnimationFrame(grabMenuFocus);
+        }
+        menuFocusFrame = requestAnimationFrame(grabMenuFocus);
+        menuFocusTimer = setTimeout(grabMenuFocus, 400);
+      }
     }
+
     function close() {
-      if (menuFocusFrame !== null) { cancelAnimationFrame(menuFocusFrame); menuFocusFrame = null; }
+      cancelMenuFocus();
       isolateMenu(false);
       menu.setAttribute("data-open", "false");
       openBtn.setAttribute("aria-expanded", "false");
@@ -356,16 +453,18 @@
       if (menuLabel) menuLabel.textContent = "Menu";
       if (lastFocus) lastFocus.focus();
     }
-    window.addEventListener("resize", function () { if (menu.getAttribute("data-open") === "true" && getComputedStyle(openBtn).display === "none") close(); });
+    // Reset before freezing in bfcache; returning to a page restores its
+    // content rather than a stale navigation dialog and inert background.
+    window.addEventListener("pagehide", function () {
+      if (menu.getAttribute("data-open") === "true") { lastFocus = null; close(); }
+    });
     openBtn.addEventListener("click", function () {
       menu.getAttribute("data-open") === "true" ? close() : open();
     });
 
     document.addEventListener("keydown", function (e) {
       if (menu.getAttribute("data-open") !== "true") return;
-      if ((e.key === "Tab" || e.key === "Escape") && menuFocusFrame !== null) {
-        cancelAnimationFrame(menuFocusFrame); menuFocusFrame = null;
-      }
+      if (e.key === "Tab" || e.key === "Escape") cancelMenuFocus();
       if (e.key === "Escape") { close(); return; }
       if (e.key !== "Tab") return;
       var f = focusables();
@@ -464,6 +563,30 @@
       }
     });
   }
+  // Inline reading panels may overflow vertically on short screens or at
+  // enlarged text sizes. A keyboard stop allows native scrolling of the copy.
+  // Only a note that actually overflows becomes a stop; one that fits adds
+  // nothing to scroll and would be an empty Tab on every project page.
+  var readingNotes = [].slice.call(document.querySelectorAll("[data-rail] > .rail__note"));
+  function noteStops() {
+    readingNotes.forEach(function (note) {
+      if (note.scrollHeight > note.clientHeight + 1) note.tabIndex = 0;
+      else if (note !== document.activeElement) note.removeAttribute("tabindex");
+    });
+  }
+  if (readingNotes.length) {
+    afterFirstPaint(noteStops);
+    window.addEventListener("resize", function () { requestAnimationFrame(noteStops); }, { passive: true });
+    if (document.fonts) document.fonts.ready.then(noteStops);
+    // Text size and spacing changes resize the copy without resizing the window.
+    if ("ResizeObserver" in window) {
+      var noteSize = new ResizeObserver(noteStops);
+      readingNotes.forEach(function (note) {
+        noteSize.observe(note);
+        [].forEach.call(note.children, function (child) { noteSize.observe(child); });
+      });
+    }
+  }
   var openingPicture = document.querySelector('img[fetchpriority="high"]');
   function initialAhead(st) {
     if (!openingPicture || openingPicture.complete) { loadAhead(st); return; }
@@ -494,7 +617,7 @@
     rail.scrollBy({ left: direction * rtl * rail.clientWidth * .7, behavior: reduced ? "auto" : "smooth" });
   }
 
-  var browsableOverview = window.matchMedia("(max-width: 85.375rem), (hover: none) and (pointer: coarse)");
+  var browsableOverview = window.matchMedia("(max-width: 47.99rem), (max-width: 85.375rem) and (any-pointer: coarse), (hover: none) and (pointer: coarse)");
   function photographStrip(target) {
     var rail = target.closest && target.closest("[data-rail], .pcard__strip");
     // A closed card's caption covers the lower photograph area. A drag there
@@ -664,12 +787,13 @@
 
   var pindex = document.querySelector("[data-pindex]");
   if (pindex) {
-    var compactIndex = window.matchMedia("(max-width: 85.375rem)");
+    var compactIndex = window.matchMedia("(max-width: 47.99rem), (max-width: 85.375rem) and (any-pointer: coarse)");
     var heads = [].slice.call(pindex.querySelectorAll("[data-project]"));
     var PEEK = 6;                     /* frames the card renders itself */
     var railCache = {};
     var expansionVersion = 0;
     var indexUrl = location.href;
+    var onSpentEntry = !!(history.state && history.state.closedIndex === indexUrl);
     var baseTitle = document.title;
 
     /* Resolved to absolute NOW: pushState rewrites the document base, so a
@@ -744,9 +868,10 @@
     var warming = {};
 
     function warm(slug) {
-      if (!slug || railCache[slug] || warming[slug]) return;
-      warming[slug] = true;
-      fetchRail(slug).then(function (rail) {
+      if (!slug) return Promise.resolve();
+      if (warming[slug]) return warming[slug];
+      if (railCache[slug]) return Promise.resolve();
+      warming[slug] = fetchRail(slug).then(function (rail) {
         /* Fetching the markup is only half of it: the photographs it references
            have not been asked for yet, and the first one is what the reader
            looks at the instant the card opens. Pull that one now, off-screen,
@@ -754,11 +879,21 @@
            arrive as the strip is scrolled. */
         var first = rail && rail.querySelector("img");
         if (!first) return;
-        var pre = new Image();
-        if (first.getAttribute("sizes")) pre.sizes = first.getAttribute("sizes");
-        if (first.getAttribute("srcset")) pre.srcset = first.getAttribute("srcset");
-        pre.src = first.getAttribute("src");
-      }).catch(function () { warming[slug] = false; });
+        return new Promise(function (resolve) {
+          var pre = new Image();
+          pre.onload = pre.onerror = function () { pre.onload = pre.onerror = null; resolve(); };
+          pre.fetchPriority = "low";
+          if (first.getAttribute("sizes")) pre.sizes = first.getAttribute("sizes");
+          if (first.getAttribute("srcset")) pre.srcset = first.getAttribute("srcset");
+          pre.src = first.getAttribute("src");
+          if (pre.complete) { pre.onload = pre.onerror = null; resolve(); }
+        });
+      }).catch(function () { delete warming[slug]; });
+      /* Automatic warming runs one project at a time. A request that never
+         answers must not stop the queue for good, so each step also ends on a
+         clock; the request itself carries on and still fills the cache. */
+      warming[slug] = Promise.race([warming[slug], new Promise(function (resolve) { setTimeout(resolve, 10000); })]);
+      return warming[slug];
     }
 
     var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 200); };
@@ -772,15 +907,29 @@
     if ("IntersectionObserver" in window) {
       var queue = [];
       var draining = false;
+      var warmOpening = document.querySelector('img[fetchpriority="high"]');
       function drain() {
-        if (draining || !queue.length) return;
+        // Idle only describes CPU availability; the opening photograph may
+        // still be using a slow connection. Automatic work waits for it.
+        if (draining || !queue.length || warmOpening && !warmOpening.complete) return;
         draining = true;
         idle(function () {
           var slug = queue.shift();
-          warm(slug);
-          draining = false;
-          if (queue.length) setTimeout(drain, 300);
+          warm(slug).then(function () {
+            draining = false;
+            if (queue.length) setTimeout(drain, 300);
+          });
         });
+      }
+      if (warmOpening && !warmOpening.complete) {
+        function openingReady() {
+          warmOpening.removeEventListener("load", openingReady);
+          warmOpening.removeEventListener("error", openingReady);
+          warmOpening = null;
+          drain();
+        }
+        warmOpening.addEventListener("load", openingReady);
+        warmOpening.addEventListener("error", openingReady);
       }
       var warmer = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
@@ -860,7 +1009,7 @@
     /* Closing is a real gesture now, not a snap. The card shrinks and its
        photographs wipe back down; the injected markup is only removed once
        that has finished, so there is something to animate. Re-opening the same
-       card cancels the pending clean-up rather than racing it. */
+       card completes the old clean-up before starting a fresh expansion. */
     /* Closing: the card collapses and the note scrolls off the edge at the same
        time — one continuous movement, which is what this looked like when it
        read best.
@@ -890,6 +1039,7 @@
       function finish() {
         card._closing = false;
         card._shutting = null;
+        card._finish = null;
         /* Drop the transform and delete the note in the same frame: the shift
            was exactly the space the note occupied, so the photographs do not
            move by so much as a pixel. */
@@ -906,8 +1056,12 @@
         if (nav) nav.hidden = true;
       }
 
+      card._finish = finish;
       var lead = st.querySelector(".rail__note");
       card.removeAttribute("data-open");
+      // Navigation disappears with the collapse, not in the delayed clean-up.
+      var closingNav = card.querySelector("[data-nav]");
+      if (closingNav) closingNav.hidden = true;
       st.tabIndex = browsableOverview.matches ? 0 : -1;
       st.querySelectorAll('.rail__f[role="button"]').forEach(function (f) { f.tabIndex = -1; });
 
@@ -938,7 +1092,7 @@
       card._shutting = window.setTimeout(finish, Math.round(dur) + 40);
     }
 
-    /* Longest close slide (shut); the close anchor must outlast it. */
+    /* Bound the sideways close slide. */
     var CLOSE_SLIDE_MAX = 640;
 
     var holdTimer = null;
@@ -962,11 +1116,25 @@
       if (!openCard) return;
       var card = openCard;
       openCard = null;
-      holdHeight(Math.ceil(card.getBoundingClientRect().height));   /* reserve first */
+      // Pure closes need no reserved space: near the document end it cannot
+      // be compensated, and releasing it creates a final scroll clamp. The
+      // card is still held under the reader while it collapses (P10); without
+      // that, a phone's tall open card let scroll anchoring move the page.
+      anchor(card, CLOSE_SLIDE_MAX + 120);
       shut(card);
-      anchor(card, CLOSE_SLIDE_MAX + 120);   /* the slide back, its clean-up, and a little */
       document.title = baseTitle;
-      if (push) history.pushState({}, "", indexUrl);
+      if (push) {
+        /* Closing never traverses history. history.back() made both engines
+           restore the index entry's saved scroll, so the page jumped back to
+           where the card was opened, and its late popstate could cancel a card
+           opened straight afterwards. The project entry becomes a spent index
+           entry instead; the next open reuses it and Back skips it, so history
+           never grows by more than one step. */
+        if (history.state && history.state.projectIndex === indexUrl) {
+          history.replaceState({ closedIndex: indexUrl }, "", indexUrl);
+          onSpentEntry = true;
+        } else history.replaceState(history.state && history.state.closedIndex === indexUrl ? history.state : {}, "", indexUrl);
+      }
     }
 
     function expand(slug, push) {
@@ -996,7 +1164,8 @@
         anchor(card, DUR.slow + 200);   /* the card's growth, and a little */
         if (prev) shut(prev);                   /* P4: one open at a time */
 
-        if (card._shutting) { clearTimeout(card._shutting); card._shutting = null; }
+        if (card._shutting) clearTimeout(card._shutting);
+        if (card._finish) card._finish();
         card._closing = false;
         var st = strip(card);
 
@@ -1101,9 +1270,11 @@
 
         /* A phone opened from a frame part-way along the strip keeps that frame
            where the reader left it while every frame grows, then leaves the
-           strip to them. The first frame needs nothing: the rest is 0. */
+           strip to them. The first frame needs nothing only when the strip is
+           already at rest: a swipe can stop with it still partly in view, and
+           tapping it then must bring it back to the column too. */
         var chosen = card._chosen; card._chosen = null;
-        if (narrow && chosen && chosen.previousElementSibling) {
+        if (narrow && chosen && (chosen.previousElementSibling || st.scrollLeft > 0)) {
           st._touched = true;
           var pad = parseFloat(getComputedStyle(st).scrollPaddingLeft) || 0;
           var place = function () {
@@ -1152,7 +1323,15 @@
         loadAhead(st);
 
         document.title = (rail.getAttribute("data-title") || "Project") + " — btl architects";
-        if (push) history.pushState({ slug: slug }, "", hrefBySlug[slug]);
+        if (push) {
+          // One in-page project entry above its originating index. Switching
+          // replaces that entry; closing consumes it. URLs stay shareable.
+          var state = { slug: slug, projectIndex: indexUrl };
+          if (history.state && (history.state.projectIndex === indexUrl || history.state.closedIndex === indexUrl))
+            history.replaceState(state, "", hrefBySlug[slug]);
+          else history.pushState(state, "", hrefBySlug[slug]);
+          onSpentEntry = false;
+        }
       });
     }
 
@@ -1259,13 +1438,19 @@
     });
 
     window.addEventListener("popstate", function (ev) {
+      var leftSpent = onSpentEntry;
+      onSpentEntry = !!(ev.state && ev.state.closedIndex === indexUrl);
       var slug = ev.state && ev.state.slug;
       if (slug) {
         if (!openCard || openCard.getAttribute("data-card") !== slug) expand(slug, false).catch(function () { location.href = hrefBySlug[slug]; });
-      } else closeAll(false);
+      } else if (openCard) closeAll(false);
+      /* Back from a spent entry lands on an identical index; one press should
+         leave the page, as it would have before a project was viewed. */
+      else if (leftSpent && !onSpentEntry) history.back();
     });
 
-    /* Landing on /projects/<slug> with the index in history: open it directly. */
+    /* A restored index document can carry project state (for example bfcache).
+       A full reload at the shareable URL correctly serves the project page. */
     if (history.state && history.state.slug) expand(history.state.slug, false);
   }
 
@@ -1709,15 +1894,7 @@
              and with the viewer gone it lands on the page underneath — on a
              photograph, which opened the viewer straight back up, or on a
              link. The tap was spent closing; its click is swallowed. */
-          function clearSpent() {
-            window.removeEventListener("click", spent, true);
-            window.removeEventListener("pointerdown", clearSpent, true);
-          }
-          var spent = function (ev) { clearSpent(); ev.preventDefault(); ev.stopPropagation(); };
-          window.addEventListener("click", spent, true);   /* window: ahead of every document listener */
-          // A new press is a new choice, even within the old click's timeout.
-          window.addEventListener("pointerdown", clearSpent, true);
-          setTimeout(clearSpent, 500);
+          swallowNextClick();
           return;
         }
         if (lastTap && now - lastTap.t < 300 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40) {
@@ -1903,12 +2080,16 @@
           zoomAt(scale / 1.4, cx, cy); apply(true); break;
         case "0":          e.preventDefault(); reset(true); break;
         case "Tab": {
-          /* Focus stays inside while it is open. */
-          var f = lb.querySelectorAll("button:not([hidden])");
+          /* Safari's native Tab policy can skip buttons, and tapping the
+             photograph can leave focus on BODY. Own every step, including
+             re-entry, rather than trapping only the sequence's endpoints. */
+          var f = [].slice.call(lb.querySelectorAll("button:not([hidden]):not([disabled])"))
+            .filter(function (button) { return button.getClientRects().length > 0; });
           if (!f.length) return;
-          var first = f[0], last = f[f.length - 1];
-          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+          e.preventDefault();
+          var i = f.indexOf(document.activeElement);
+          var next = i < 0 ? (e.shiftKey ? f.length - 1 : 0) : (i + (e.shiftKey ? -1 : 1) + f.length) % f.length;
+          f[next].focus();
           break;
         }
       }
@@ -1937,6 +2118,20 @@
      * The capture phase runs before any of that, while the card still holds the
      * state it had when the reader clicked — which is the state the decision
      * actually depends on. */
+    // Touch activation can change the hit target before its compatibility
+    // click is delivered. Consume that spent click, but release the guard on
+    // the next pointerdown so a fresh intentional press always works.
+    function swallowNextClick() {
+      function clearSpent() {
+        window.removeEventListener("click", spent, true);
+        window.removeEventListener("pointerdown", clearSpent, true);
+      }
+      function spent(ev) { clearSpent(); ev.preventDefault(); ev.stopImmediatePropagation(); }
+      window.addEventListener("click", spent, true);
+      window.addEventListener("pointerdown", clearSpent, true);
+      setTimeout(clearSpent, 500);
+    }
+
     function activatePicture(e) {
       if (isOpen()) return;
       var figure = e.target.closest && e.target.closest('.rail__f[role="button"]');
@@ -1996,7 +2191,10 @@
       var press = picturePress;
       picturePress = null;
       if (press && e.pointerId === press.id && press.figure.contains(e.target) &&
-          Math.hypot(e.clientX - press.x, e.clientY - press.y) <= 8) activatePicture(e);
+          Math.hypot(e.clientX - press.x, e.clientY - press.y) <= 8) {
+        activatePicture(e);
+        if (isOpen()) swallowNextClick();
+      }
     }, true);
     document.addEventListener("keydown", function (e) {
       if ((e.key === "Enter" || e.key === " ") && e.target.matches('.rail__f[role="button"]')) activatePicture(e);

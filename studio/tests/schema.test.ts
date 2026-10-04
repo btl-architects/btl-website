@@ -45,6 +45,21 @@ test('image clarity guidance measures the saved crop and remains a warning', () 
 
 import heroClip from '../schemas/heroClip.ts';
 
+test('an empty opening clip exposes the original-video Mux uploader, never the MP4-only file field', () => {
+  assert.deepEqual(heroClip.initialValue, {videoMode:'mux'});
+  const mux = heroClip.fields.find(field=>field.name==='videoMux')!;
+  const file = heroClip.fields.find(field=>field.name==='video')!;
+  assert.equal(mux.type, 'mux.video');
+  for (const parent of [undefined, {}, {video:{}}, {videoMode:'mux'}, {videoMux:{asset:{_ref:'mux-id'}}}]) {
+    assert.equal((mux.hidden as Function)({parent}), false);
+    assert.equal((file.hidden as Function)({parent}), true);
+  }
+  for (const parent of [{video:{asset:{_ref:'legacy-id'}}}, {videoMode:'file'}]) {
+    assert.equal((mux.hidden as Function)({parent}), true);
+    assert.equal((file.hidden as Function)({parent}), false);
+  }
+});
+
 test('automatic films require a completed public MP4 before publishing', async () => {
   const fields = heroClip.fields;
   const callbacks: Function[] = [];
@@ -57,4 +72,30 @@ test('automatic films require a completed public MP4 before publishing', async (
   context.getClient = () => ({fetch:async () => ({status:'preparing'})});
   assert.equal(typeof await callbacks[1]({asset:{_ref:'video-id'}},context),'string');
   assert.equal(await callbacks[1]({asset:{_ref:'video-id'}},{...context,parent:{videoMode:'file'}}),true);
+});
+
+test('a prohibited publication-owned image cannot be published while reusable licences remain valid', () => {
+  const field=figure.fields.find(field=>field.name==='rights')!;
+  let validate!: (value: unknown) => boolean | string;
+  const r:any={required:()=>r,custom:(callback:typeof validate)=>{validate=callback;return r;}};
+  (field.validation as Function)(r);
+  for(const licence of ['owned','client-supplied','licensed']) assert.equal(validate(licence),true);
+  for(const licence of ['publication','unknown',undefined]) assert.equal(typeof validate(licence),'string');
+});
+
+import project from '../schemas/project.ts';
+import category from '../schemas/category.ts';
+import location from '../schemas/location.ts';
+
+test('Studio refuses unsafe route segments and reserved project paths before publication', () => {
+  for (const schema of [project,category,location,person]) {
+    let validate!: (value: any) => boolean | string;
+    const r:any={required:()=>r,custom:(callback:typeof validate)=>{validate=callback;return r;}};
+    (schema.fields.find(field=>field.name==='slug')!.validation as Function)(r);
+    assert.equal(validate({current:'safe-web-address'}),true,schema.name);
+    for(const current of ['../escape','unsafe/path','Capitalised','contains spaces']) assert.equal(typeof validate({current}),'string',schema.name);
+    if(schema.name==='person') assert.equal(validate(undefined),true,'optional person profiles remain optional');
+    if(schema.name==='project') for(const current of ['type','place']) assert.equal(typeof validate({current}),'string');
+    if(['category','location'].includes(schema.name)) assert.equal(typeof validate({current:'x'.repeat(41)}),'string');
+  }
 });

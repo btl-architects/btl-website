@@ -5,6 +5,7 @@ node_modules/
 # build output
 dist/
 .test-dist/
+.test-dist-*/
 .astro/
 .netlify/
 studio/dist/
@@ -67,3 +68,6 @@ backups/
 
 # Local browser evidence includes photographs; keep it outside the code remote.
 /docs/client-feedback-evidence-2026-10-02/
+
+# Audit working files (evidence, traces, agent findings); summarised in docs/audit-2026-10-04/
+.audit-work/

@@ -1,10 +1,13 @@
 import {existsSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {pages,dist} from './pages.mjs';
+import {functionRoutes} from '../server/function-routes.js';
 const errors=[];const inventory=pages();const known=new Map(inventory.map(p=>[p.route,p]));
 const sitemap=readFileSync(join(dist,'sitemap-index.xml'),'utf8');
 const marker=JSON.parse(readFileSync(join(dist,'build-status.json'),'utf8'));
 const preview=marker.preview || marker.noindex;
+const routes=JSON.parse(readFileSync(join(dist,'_routes.json'),'utf8'));
+if(JSON.stringify(routes)!==JSON.stringify(functionRoutes(marker))) errors.push('_routes.json: Function coverage does not match the rendered build mode');
 for(const page of inventory) {
   const fail=message=>errors.push(page.route+': '+message);
   if ((page.html.match(/<h1\b/g)||[]).length!==1) fail('Expected one h1');

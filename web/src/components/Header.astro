@@ -6,11 +6,8 @@
  * goes reads as a broken link, not as a clever one-pager. The home page is
  * still a one-pager: you scroll it, but the nav is navigation.
  *
- * The social rail used to be fixed vertical chrome on every page. It came off:
- * three links pinned to the edge of every screen compete with the photographs
- * for attention on a site whose entire argument is the photographs, and they
- * are not what anyone came for. Social lives in the footer and on Contact,
- * where someone looking for it will actually look.
+ * Home renders the owner's approved social rail separately. Other pages use
+ * footer and Contact links; this shared masthead does not add an all-page rail.
  *
  * Nav and contact are settings content (contract §1 forbids hard-coding any of
  * them), so adding a destination is an edit in the CMS, not a deploy.
@@ -64,6 +61,21 @@ const logo = LOGO_WHITE;
       <span class="burger__label" data-menu-label>Menu</span>
       <span class="burger__mark" aria-hidden="true"><i></i><i></i></span>
     </button>
+    {/* Native navigation remains available when enhancement cannot run. With
+        JavaScript enabled noscript has no rendered children, so this does not
+        add a second menu or alter the approved masthead. */}
+    <noscript>
+      <details class="no-script-menu">
+        <summary>Menu</summary>
+        <nav aria-label="Primary">
+          <ul class="container">
+            {settings.nav.map((n) => (
+              <li><a href={hrefFor(n.href)} aria-current={n.href === current ? "page" : undefined}>{n.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </details>
+    </noscript>
   </div>
 </header>
 

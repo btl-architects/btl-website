@@ -28,9 +28,20 @@ export interface ClipVideoSources {
   videoPortraitMux?: MuxVideoAsset | null;
 }
 
+/** Preserve saved legacy uploads, but an empty/new clip always uses Mux. */
+export function clipVideoMode(clip?: {videoMode?: string; video?: unknown; videoMux?: unknown} | null): 'mux' | 'file' {
+  if (clip?.videoMode === 'file') return 'file';
+  if (clip?.videoMode === 'mux' || clip?.videoMux) return 'mux';
+  const legacy = clip?.video;
+  const saved = typeof legacy === 'string' ? legacy.trim() :
+    legacy && typeof legacy === 'object' && 'asset' in legacy &&
+    (legacy.asset as { _ref?: string } | undefined)?._ref;
+  return saved ? 'file' : 'mux';
+}
+
 export function clipVideoSources(clip: ClipVideoSources): {video: string; videoPortrait: string} {
-  // Existing clips have no mode and keep their original, prepared sources.
-  const video = (clip.videoMode === 'mux' ? muxVideoUrl(clip.videoMux) : clip.video) || '';
-  const portrait = clip.videoMode === 'mux' ? muxVideoUrl(clip.videoPortraitMux) : clip.videoPortrait;
+  const automatic = clipVideoMode(clip) === 'mux';
+  const video = (automatic ? muxVideoUrl(clip.videoMux) : clip.video) || '';
+  const portrait = automatic ? muxVideoUrl(clip.videoPortraitMux) : clip.videoPortrait;
   return {video, videoPortrait: portrait || video};
 }
