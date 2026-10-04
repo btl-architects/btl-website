@@ -55,9 +55,6 @@ test.describe('runtime audit regressions',()=>{
      the index entry's saved scroll: the page jumped to where the card opened. */
   for(const viewport of [{width:1440,height:900,touch:false},{width:390,height:844,touch:true}])
     test(`closing a project leaves the page where the reader is at ${viewport.width}px`,async({browser})=>{
-      // OPEN (REV-01 phone): on a 390px touch layout the page still moves ~334px when a
-      // tall open card closes. Desktop is fixed. Kept as a visible known failure.
-      test.fixme(viewport.touch,'REV-01 phone variant still open; see docs/audit-2026-10-04/findings-ledger.md');
       const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},...(viewport.touch?{hasTouch:true,isMobile:true}:{})});
       const page=await context.newPage();
       await page.emulateMedia({reducedMotion:'no-preference'});
@@ -69,6 +66,10 @@ test.describe('runtime audit regressions',()=>{
       await page.waitForTimeout(1000);
       await page.evaluate(()=>scrollBy(0,400));
       await page.waitForTimeout(300);
+      // This assertion samples animation frames in its own context. Keep that
+      // page foregrounded so Chromium cannot suspend the measurement clock.
+      await page.bringToFront();
+      expect(await page.evaluate(()=>document.visibilityState)).toBe('visible');
       const result=await card.evaluate(el=>new Promise<{scroll:number[],top:number[],start:number,startTop:number}>(resolve=>{
         const start=scrollY,startTop=el.getBoundingClientRect().top,scroll:number[]=[],top:number[]=[];
         (el.querySelector('[data-project-close]') as HTMLElement).click();

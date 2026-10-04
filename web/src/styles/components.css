@@ -437,6 +437,11 @@ html:has(.menu[data-open="true"]) .header {
 /* held open for the length of a transition so the scroll anchor always has
    range to work with; it eases away afterwards rather than snapping */
 .pindex[data-holding] { padding-bottom: calc(var(--space-section) + var(--hold, 0px)); }
+/* The enhanced index owns its transition anchor. Native scroll anchoring can
+   otherwise choose the reading panel and move the page synchronously when
+   that panel disappears, before our next frame can hold the card in place.
+   Keep native anchoring for the ordinary no-script document. */
+:where(.js) .pindex { overflow-anchor: none; }
 /* No transition on the reserved height: animating it away drags the document
    height for another 320ms after everything else has settled, which is its own
    small glitch. It is given back in one step, inside the anchor's window. */
