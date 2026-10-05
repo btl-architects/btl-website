@@ -102,6 +102,51 @@ test.describe('runtime audit regressions',()=>{
     await expect(page).toHaveURL(/\/projects\/$/);
   });
 
+  for(const viewport of [{width:1280,height:720},{width:1780,height:1080}])
+    test(`desktop switching the last projects does not jump when reserving space at ${viewport.width}px`,async({page})=>{
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({reducedMotion:'no-preference'});
+      await page.goto('/projects/');
+      const cards=page.locator('.pcard'),last=cards.last(),previous=cards.nth(await cards.count()-2);
+      await last.locator('[data-project]').press('Enter');
+      await expect(last).toHaveAttribute('data-open','true');
+      await page.waitForTimeout(1400);
+      // Match the recording: the previous project is partly behind the header
+      // and the last project is open near the footer. Locator.click() would
+      // scroll the caption into view first and conceal the original failure.
+      await previous.evaluate(el=>scrollBy(0,el.getBoundingClientRect().top+40));
+      await page.waitForTimeout(750);
+      for(const card of [previous,last,previous,last]) {
+        const box=(await card.boundingBox())!,startTop=box.y;
+        await card.evaluate(el=>{
+          (window as any).__desktopSwitchTops=[];
+          const observer=new MutationObserver(()=>{
+            if(el.getAttribute('data-open')!=='true')return;
+            observer.disconnect();
+            requestAnimationFrame(function sample(){
+              const samples=(window as any).__desktopSwitchTops;
+              samples.push(el.getBoundingClientRect().top);
+              if(samples.length<70)requestAnimationFrame(sample);
+            });
+          });
+          observer.observe(el,{attributes:true,attributeFilter:['data-open']});
+        });
+        // Click a visible photograph without an implicit focus/scroll operation.
+        await page.mouse.click(box.x+150,Math.max(110,box.y+70));
+        await expect(card).toHaveAttribute('data-open','true');
+        await expect.poll(()=>page.evaluate(()=>(window as any).__desktopSwitchTops.length)).toBe(70);
+        const tops:number[]=await page.evaluate(()=>(window as any).__desktopSwitchTops);
+        for(const top of tops)expect(Math.abs(top-startTop)).toBeLessThanOrEqual(2);
+        await expect(page.locator('.pcard[data-open="true"]')).toHaveCount(1);
+        await expect(page.locator('.pcard .rail__note')).toHaveCount(1);
+        await expect(page.locator('[data-pindex]')).not.toHaveAttribute('data-holding','');
+        const note=await card.locator('.rail__note').boundingBox();
+        const strip=await card.locator('[data-strip]').boundingBox();
+        expect(note!.x).toBeGreaterThanOrEqual(strip!.x-2);
+        expect(note!.x+note!.width).toBeLessThanOrEqual(strip!.x+strip!.width+2);
+      }
+    });
+
   for(const route of ['/', '/projects/']) for(const width of [390,820]) for(const motion of ['no-preference','reduce'] as const)
     test(`touch switching projects keeps the tapped photographs in place on ${route} at ${width}px (${motion})`,async({browser})=>{
       const context=await browser.newContext({viewport:{width,height:width===390?844:1180},hasTouch:true,isMobile:true,reducedMotion:motion});
