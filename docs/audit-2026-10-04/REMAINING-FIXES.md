@@ -93,3 +93,26 @@ suppression.
   scroll with the film on phones), which contradicts the owner's request that they stay in place, so it is not made.
 - Small frame drop when switching projects on a phone: not reproducible in Chromium/WebKit at 6× CPU slowdown, so
   any change would be blind. Re-measure on the physical phone after this release before tuning further.
+
+## Project-page speed and card-opening flicker, 5 October (Claude)
+
+**Held later photographs.** Chrome's own lazy loading reaches past a phone screen on slow connections, so the next
+three rail photographs (about 230 kB on Nelly House) downloaded beside the first, which is the LCP image. The build
+(`tools/defer-rail-images.mjs`, run after `cache-images.mjs`) now gives every project-page rail photograph after the
+first a transparent placeholder `src`, keeps the real `src`/`srcset` in data attributes, and adds a `<noscript>` copy.
+`site.js` restores them once the first photograph is painted, or at the first touch, click or key press. Cards that
+open on index pages restore them at once. Without scripts the `<noscript>` copy shows. Held photographs keep their
+proportions, so nothing shifts.
+
+Local Lighthouse (mobile, simulated throttling, same build without and with the hold): Nelly House median LCP
+2561 → 2038 ms; score 97 → 99; CLS unchanged at 0.0004. Home 1664 ms. Deployed CI is the authority on the gate.
+
+**Card-opening flicker.** Opening a card changed the visible preview photographs' `sizes` in place, and the browser
+dropped the drawn thumbnail before the larger file arrived: 5–6 blank frames in Chromium. The larger file is now
+fetched and decoded off-screen first (`enlarge()` in `site.js`): 0 blank frames in Chromium and WebKit at 390 and
+1440 px.
+
+**Tests.** New regressions: later project photographs wait for the first to be painted (held decode); without
+scripts every project photograph is shown once. The two founder-name tests no longer pin the editorial "Ar."
+honorific, which the studio removed from Home on 5 October; names and order are still checked. Full local suite:
+375 passed, 19 skipped, 0 failed (Chromium and WebKit); 71 unit tests.
