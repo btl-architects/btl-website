@@ -4,6 +4,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      browser_test_filter:
+        description: Optional regex for manual diagnostics; PR and main always run the full browser suite
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
   checks: read
@@ -44,7 +50,15 @@ jobs:
           path: web/node_modules/.astro/btl-media-v1
           key: ${{ steps.image-cache.outputs.cache-primary-key }}
       - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run test:e2e
+      - name: Run browser checks
+        env:
+          BROWSER_TEST_FILTER: ${{ github.event_name == 'workflow_dispatch' && inputs.browser_test_filter || '' }}
+        run: |
+          if [ -n "$BROWSER_TEST_FILTER" ]; then
+            npx playwright test --grep "$BROWSER_TEST_FILTER"
+          else
+            npm run test:e2e
+          fi
       - name: Find the deployed preview for this commit
         id: preview
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}

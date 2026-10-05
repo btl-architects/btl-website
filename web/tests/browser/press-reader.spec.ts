@@ -190,10 +190,11 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   // A modifier click creates a background tab. Activate it as the reader
   // would before asserting its committed document and visible content.
   await article.bringToFront();
-  // Commit the new document before querying its URL/content; loading media
-  // in a newly activated background tab must not become the navigation gate.
-  await article.waitForURL(/\/press\/reader-fixture\/$/,{waitUntil:'domcontentloaded'});
-  await expect(article).toHaveURL(/\/press\/reader-fixture\/$/);
+  // Linux Chromium's protocol can retain an empty cached frame URL for a
+  // modifier-opened noopener tab even after the article renders (CI trace).
+  // Verify the real document location, then its heading; do not navigate it
+  // ourselves or relax the required destination.
+  await expect.poll(()=>article.evaluate(()=>location.href)).toMatch(/\/press\/reader-fixture\/$/);
   await expect(article.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   await expect(reader).not.toBeVisible();
   await article.close();
