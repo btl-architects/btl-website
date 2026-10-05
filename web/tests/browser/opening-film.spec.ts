@@ -35,6 +35,25 @@ async function sequence(page: import('@playwright/test').Page, total: number, fa
   });
 }
 
+/* Firefox on Android does not paint or decode a transparent video, so its frame
+   callback never comes while the incoming film is still hidden. The opening sat
+   on its first still until the 15-second stall timer, then on each later still.
+   Model that engine: callbacks are accepted but never delivered. */
+for (const width of [390,1440])
+  test(`films start without presented-frame callbacks for hidden video at ${width}px`, async ({page}) => {
+    await page.addInitScript(()=>Object.defineProperty(HTMLVideoElement.prototype,'requestVideoFrameCallback',{value:function(){return 1;},configurable:true}));
+    await films(page);
+    await sequence(page,3);
+    await page.setViewportSize({width,height:844});
+    await page.goto('/');
+    const first=page.locator('.stage__f').first().locator('video');
+    await expect(first).toHaveAttribute('data-playing','true',{timeout:5000});
+    await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');
+    // The sequence continues to the next film the same way.
+    await first.evaluate(el=>{const v=el as HTMLVideoElement;v.currentTime=v.duration-.1;});
+    await expect(page.locator('.stage__f').nth(1).locator('video')).toHaveAttribute('data-playing','true',{timeout:5000});
+  });
+
 for (const {width,frameCallback} of [{width:390,frameCallback:true},{width:1440,frameCallback:true},{width:390,frameCallback:false}]) {
   test(`a delayed incoming film never exposes its poster at ${width}px${frameCallback?'':' without frame callbacks'}`, async ({page}) => {
     if(!frameCallback) await page.addInitScript(()=>Object.defineProperty(HTMLVideoElement.prototype,'requestVideoFrameCallback',{value:undefined,configurable:true}));
