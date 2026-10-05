@@ -15,7 +15,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io https://stream.mux.com; font-src 'self' data:; connect-src 'self' https://aur12nrf.api.sanity.io https://api.web3forms.com; frame-src https:; form-action 'self' https://api.web3forms.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.sanity.io; media-src 'self' https://cdn.sanity.io https://stream.mux.com; font-src 'self' data:; connect-src 'self' https://aur12nrf.api.sanity.io https://api.web3forms.com https://cloudflareinsights.com; frame-src https:; form-action 'self' https://api.web3forms.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # Editors can choose HTTPS publisher pages for the Press overlay. Those frames
 # load only when a visitor opens an article, are sandboxed, and cannot navigate
@@ -36,15 +36,19 @@
 # font subset; font-src data: permits that fixed font asset. Executable inline
 # scripts remain blocked.
 #
-# script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's only script
-# is /scripts/site.js from this origin, and that is the restriction that matters.
+# script-src has no 'unsafe-inline' and no 'unsafe-eval'. The site's own scripts
+# come from this origin. The one outside script is Cloudflare Web Analytics
+# (static.cloudflareinsights.com), which Cloudflare inserts into every page of
+# btldesigns.in; its reports go to cloudflareinsights.com (connect-src). The
+# owner chose to keep it (5 October 2026) and the privacy page describes it.
+# Without these two entries the policy blocked it on every page.
 #
-# form-action and connect-src each allow exactly one outside address,
-# api.web3forms.com, because the enquiry form now posts there from the
-# visitor's browser. It used to post to our own /api/enquiry relay, but
-# Web3Forms rate-limits by source IP and the relay's Cloudflare IP is shared
-# with a great many other sites, so it was refused 429 on first real use.
-# Everything else is still this origin only.
+# form-action and connect-src allow api.web3forms.com, because the enquiry
+# form posts there from the visitor's browser. It used to post to our own
+# /api/enquiry relay, but Web3Forms rate-limits by source IP and the relay's
+# Cloudflare IP is shared with a great many other sites, so it was refused 429
+# on first real use. connect-src also allows cloudflareinsights.com for the
+# analytics reports described above, and the Sanity API host.
 
 # Fingerprinted build assets never change under the same name, so they can be
 # cached forever.

@@ -261,5 +261,12 @@ the studio's Google Workspace email and have nothing to do with the website.
 DKIM and a DMARC record are still recommended, set up from the Google
 Workspace admin console.
 
+**Analytics:** Cloudflare Web Analytics is enabled for btldesigns.in and Cloudflare
+inserts its script into every page. The owner chose to keep it (5 October 2026), so
+the CSP in `web/public/_headers` allows `static.cloudflareinsights.com` (script) and
+`cloudflareinsights.com` (reports), and the privacy page describes what it records.
+Turning it off in Cloudflare (Analytics & Logs → Web Analytics) needs only the
+privacy paragraph and those two CSP entries removed.
+
 The site sends `Strict-Transport-Security` with `includeSubDomains; preload`,
 so any future `*.btldesigns.in` subdomain must serve HTTPS.
