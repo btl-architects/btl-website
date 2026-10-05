@@ -229,25 +229,37 @@ published: the previous version stays live.
 
 ---
 
-## Pointing btldesigns.in at it
+## The domain: btldesigns.in
 
-Only when the practice is ready to go live.
+Live since 5 October 2026. How it is wired, so nobody has to rediscover it:
 
-In Cloudflare Pages: **Custom domains → Set up a custom domain** → `btldesigns.in`,
-and again for `www.btldesigns.in`. Cloudflare issues the certificate itself.
+- **Registrar:** Suryanandan.net (third party). Registration expires 8 May 2027.
+- **DNS:** the zone is in the BTL Cloudflare account ("Studio.betweentheli…"),
+  nameservers `peter.ns.cloudflare.com` and `samara.ns.cloudflare.com`. DNSSEC
+  is off.
+- **Records:**
+  - Email: `MX @ aspmx.l.google.com` (priority 1) and
+    `TXT @ v=spf1 include:_spf.google.com ~all`.
+  - Website: `CNAME @` and `CNAME www` → `btl-website-3wo.pages.dev`, proxied.
+    Pages created the first itself; the `www` one was added by hand.
+- **Pages custom domains:** `btldesigns.in` and `www.btldesigns.in`, both Active
+  with Cloudflare-issued certificates.
+- **Main address:** `https://btldesigns.in`. The Pages production variable
+  `SITE_URL=https://btldesigns.in` makes every canonical link, sitemap entry and
+  share link use it; changing it needs a redeploy.
+- **Redirects:**
+  - Zone Redirect Rule "www to btldesigns.in": `www.btldesigns.in/*` →
+    `https://btldesigns.in/*`, 301, query kept.
+  - Account Bulk Redirect list `pages_dev_to_domain`:
+    `btl-website-3wo.pages.dev` → `https://btldesigns.in`, 301, path and query
+    kept, **Include subdomains off**. Immutable previews such as
+    `abc12345.btl-website-3wo.pages.dev` are deliberately not redirected,
+    because CI measures them.
 
-Add **only** the records it asks for — a `CNAME` for `www` and the apex record.
-**Do not touch `MX`, `SPF`, `DKIM` or `DMARC`.** Those carry the studio's email,
-they have nothing to do with the website, and changing one silently stops mail
-arriving.
+**Do not touch `MX` or `SPF`** (or DKIM/DMARC when they are added). They carry
+the studio's Google Workspace email and have nothing to do with the website.
+DKIM and a DMARC record are still recommended, set up from the Google
+Workspace admin console.
 
-
-## Canonical hostname
-
-Until the custom domain is connected, metadata and sitemap URLs use
-`https://btl-website-3wo.pages.dev`. After verifying the custom domain serves
-this deployment over HTTPS, set `SITE_URL=https://btldesigns.in` in the host
-build environment and rebuild. Use one preferred hostname and redirect its
-`www` alternative. `SITE_URL` accepts a public HTTPS origin, not a subpath.
-Website hostname records are separate from mail records; preserve all existing
-MX, SPF, DKIM and DMARC records.
+The site sends `Strict-Transport-Security` with `includeSubDomains; preload`,
+so any future `*.btldesigns.in` subdomain must serve HTTPS.

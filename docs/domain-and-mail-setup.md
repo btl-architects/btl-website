@@ -1,5 +1,8 @@
 # Domain and mail activation
 
+> **Status, 5 October 2026:** the website domain is connected. The current setup is recorded in
+> [deploying.md](deploying.md#the-domain-btldesignsin). DKIM and DMARC below are still to do.
+
 3 October 2026: domain login is deferred at the owner's request. The website
 continues using its working Pages origin until the custom domain serves valid
 HTTPS. Do not switch canonicals or add a host redirect before then.
