@@ -27,7 +27,9 @@ export default defineConfig({
   plugins: [structureTool({ structure }), muxInput({
     video_quality: 'basic',
     max_resolution_tier: '1080p',
-    static_renditions: ['highest'],
+    // Fixed sizes rather than 'highest': desktops play 1080p, phones 720p
+    // (shared/video.ts). Mux never upscales, so 480p covers small uploads.
+    static_renditions: ['1080p', '720p', '480p'],
     defaultPublic: true,
     defaultSigned: false,
     disableUploadConfig: true,
