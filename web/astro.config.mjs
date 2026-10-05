@@ -1,9 +1,11 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 
-// Use the working public host until the custom domain is connected. An explicit
-// SITE_URL changes every canonical, sitemap and share URL together on rebuild.
-const site = new URL(process.env.SITE_URL || "https://btl-website-3wo.pages.dev");
+// The live domain (connected 5 October 2026). Production also sets SITE_URL; this
+// default means a build that lost the variable still names the real address,
+// not the old pages.dev host, which now redirects. SITE_URL changes every
+// canonical, sitemap and share URL together on rebuild.
+const site = new URL(process.env.SITE_URL || "https://btldesigns.in");
 if (site.protocol !== "https:" || site.username || site.password || site.pathname !== "/" || site.search || site.hash) {
   throw new Error("SITE_URL must be a public HTTPS origin without a path or credentials.");
 }
