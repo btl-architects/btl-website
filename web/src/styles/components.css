@@ -784,6 +784,26 @@ html[data-project-anchoring] { overflow-anchor: none; }
   .pcard > .rail__note .rail__text { max-width: none; }
 }
 
+/* Later project photographs are held until the first is painted
+   (tools/defer-rail-images.mjs). Without scripts nothing would release them, so
+   the <noscript> copy beside each one is the photograph and the held one hides. */
+/* The <img> itself is hidden: the <picture> around it carries an inline
+   `display: contents` from cache-images.mjs, which a stylesheet cannot override. */
+@media (scripting: none) {
+  :is([data-defer] > img, img[data-defer]) { display: none; }
+}
+/* A held image's transparent placeholder is a loaded 1x1 file, and a loaded
+   image's own proportions override its width/height attributes. Browsers also
+   keep that file's proportions after the real address is set, until the real
+   file arrives. Either way it laid out square and the strip shifted. A page's
+   own rail photographs (the only ones held) therefore always take the
+   proportions Figure.astro publishes, which are the photograph's own. Index
+   cards size their frames differently and are left alone. */
+[data-rail] > .rail__f img { aspect-ratio: var(--img-ratio, auto); }
+/* A <noscript> holds elements only when scripts are off, so this also covers
+   browsers or modes that do not report `scripting: none`. */
+.rail__f:has(> noscript :is(picture, img)) :is([data-defer] > img, img[data-defer]) { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .pcard, .pcard__strip, .pcard__t, .pcard__peek img { transition: none; }
   .pcard:hover:not([data-open="true"]) .pcard__peek img { transform: none; }

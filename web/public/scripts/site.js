@@ -44,6 +44,33 @@
     return function (fn) { if (done) fn(); else waiting.push(fn); };
   })();
 
+  /* Later project photographs are held by the build (tools/defer-rail-images.mjs)
+     with their real files in data attributes, so they cannot compete with the
+     opening photograph. Restore them once it is painted, or the moment the
+     reader touches, clicks or types, whichever is first. The <noscript> copy
+     beside each held picture exists only for a browser without scripts. */
+  function undefer(root) {
+    [].forEach.call(root.querySelectorAll("[data-defer]"), function (held) {
+      held.removeAttribute("data-defer");
+      var parts = held.tagName === "IMG" ? [held] : held.querySelectorAll("source, img");
+      [].forEach.call(parts, function (el) {
+        var srcset = el.getAttribute("data-srcset"), src = el.getAttribute("data-src");
+        if (srcset !== null) { el.setAttribute("srcset", srcset); el.removeAttribute("data-srcset"); }
+        if (src !== null) { el.setAttribute("src", src); el.removeAttribute("data-src"); }
+      });
+      var copy = held.nextElementSibling;
+      if (copy && copy.tagName === "NOSCRIPT") copy.remove();
+    });
+  }
+  if (document.querySelector("[data-defer]")) {
+    var undeferPage = function () {
+      ["pointerdown", "keydown"].forEach(function (type) { window.removeEventListener(type, undeferPage, true); });
+      undefer(document);
+    };
+    openingPainted(undeferPage);
+    ["pointerdown", "keydown"].forEach(function (type) { window.addEventListener(type, undeferPage, true); });
+  }
+
   /* Durations from tokens.css: the card timers wait on CSS transitions. */
   function durationToken(name, fallback) {
     var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -871,6 +898,31 @@
     absolutise(document, location.href);
 
 
+    /* A kept thumbnail is drawn larger once its card opens, so it takes its
+       frame's own `sizes`. Changing `sizes` on the visible image made the
+       browser drop the drawn thumbnail before the larger file arrived: one or
+       two blank frames as the card opened. The larger file is fetched and
+       decoded off-screen first, so the visible image switches to a picture the
+       browser already holds. A clock ends the wait if the network stalls. */
+    function enlarge(im, sizes) {
+      var picture = im.closest("picture");
+      function apply() {
+        if (picture) picture.querySelectorAll("source[srcset]").forEach(function (source) { source.sizes = sizes; });
+        im.sizes = sizes;
+      }
+      var probe = (picture || im).cloneNode(true);
+      var larger = probe.tagName === "IMG" ? probe : probe.querySelector("img");
+      if (!larger || !larger.decode) { apply(); return; }
+      larger.loading = "eager";
+      larger.removeAttribute("fetchpriority");
+      if (probe !== larger) probe.querySelectorAll("source[srcset]").forEach(function (source) { source.sizes = sizes; });
+      larger.sizes = sizes;
+      var done = false;
+      function swap() { if (done) return; done = true; apply(); }
+      larger.decode().then(swap, swap);
+      window.setTimeout(swap, 8000);
+    }
+
     function fetchRail(slug) {
       if (railCache[slug]) return Promise.resolve(railCache[slug]);
       return fetch(hrefBySlug[slug], { credentials: "same-origin" })
@@ -890,6 +942,11 @@
           rail.querySelectorAll("img[fetchpriority]").forEach(function (im) {
             im.removeAttribute("fetchpriority");
           });
+          // The project page holds its later photographs until its own first
+          // one is painted. An opened card shows them at once, and DOMParser
+          // (no scripting) parses each <noscript> copy into a real picture.
+          undefer(rail);
+          rail.querySelectorAll("noscript").forEach(function (copy) { copy.remove(); });
           absolutise(rail, hrefBySlug[slug]);
           railCache[slug] = rail;
           return rail;
@@ -1241,11 +1298,7 @@
         var railImgs = rail.querySelectorAll(".rail__f img");
         st.querySelectorAll(".pcard__peek img[srcset]").forEach(function (im, k) {
           var own = railImgs[k] && railImgs[k].getAttribute("sizes");
-          if (own) {
-            im.sizes = own;
-            var picture = im.closest("picture");
-            if (picture) picture.querySelectorAll("source[srcset]").forEach(function (source) { source.sizes = own; });
-          }
+          if (own && im.getAttribute("sizes") !== own) enlarge(im, own);
         });
 
         /* Inject once. Expanding a card that is already expanded appended the

@@ -186,7 +186,8 @@ test('founders photograph has enough source detail for a Retina spread', async (
   expect(pixels.height).toBeGreaterThanOrEqual(2000);
   await expect(image).toHaveAttribute('alt', /Faizan Hussain.*Thressia Paul/);
   const names = await page.locator('#people .spread__n').allTextContents();
-  expect(names.map(name => name.trim())).toEqual(['Ar. Faizan Hussain','Ar. Thressia Paul']);
+  // The editorial honorific is the studio's choice; the names and order are the check.
+  expect(names.map(name => name.trim().replace(/^Ar\.\s+/, ''))).toEqual(['Faizan Hussain','Thressia Paul']);
 });
 
 

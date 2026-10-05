@@ -320,6 +320,50 @@ test.describe('text enlargement and future content',()=>{
       await context.close();
     });
 
+  /* Chrome's own lazy-loading distance reaches past a phone screen on a slow
+     connection, so the next rail photographs used to download beside the
+     project's first one (its LCP image). The build now holds them until it is
+     painted; without scripts a <noscript> copy shows each one. */
+  test('later project photographs wait for the first to be painted',async({browser})=>{
+    const context=await browser.newContext({viewport:{width:412,height:823},hasTouch:true,isMobile:true,deviceScaleFactor:1.75});
+    await context.addInitScript(()=>{
+      let release!:()=>void; const held=new Promise<void>(r=>release=r); (window as any).__releaseDecode=release;
+      const decode=HTMLImageElement.prototype.decode;
+      HTMLImageElement.prototype.decode=function(){return this.getAttribute('fetchpriority')==='high'?held.then(()=>decode.call(this)):decode.call(this);};
+    });
+    const page=await context.newPage();
+    const media:string[]=[];
+    page.on('request',req=>{const path=new URL(req.url()).pathname;if(path.startsWith('/assets/media/'))media.push(path.split('/')[3]);});
+    await page.goto('/projects/nelly-house/');
+    const opening=page.locator('img[fetchpriority="high"]');
+    await expect.poll(()=>opening.evaluate(el=>(el as HTMLImageElement).complete)).toBe(true);
+    await page.waitForTimeout(1500);
+    const openingAsset=(await opening.evaluate(el=>new URL((el as HTMLImageElement).currentSrc).pathname)).split('/')[3];
+    expect(new Set(media)).toEqual(new Set([openingAsset]));
+    expect(await page.locator('[data-rail] [data-defer]').count()).toBeGreaterThan(0);
+    await page.evaluate(()=>(window as any).__releaseDecode());
+    await expect.poll(()=>page.locator('[data-rail] [data-defer]').count()).toBe(0);
+    await expect.poll(()=>new Set(media).size).toBeGreaterThan(1);
+    await expect(page.locator('[data-rail] noscript')).toHaveCount(0);
+    await context.close();
+  });
+
+  test('without scripts every project photograph is shown once',async({browser})=>{
+    const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:1440,height:900}});
+    const page=await context.newPage();
+    await page.goto('/projects/nelly-house/');
+    const frames=page.locator('[data-rail] .rail__f');
+    const total=await frames.count();
+    expect(total).toBeGreaterThan(1);
+    for(let i=0;i<total;i++) {
+      const visible=frames.nth(i).locator('img:visible');
+      await expect(visible).toHaveCount(1);
+      await frames.nth(i).scrollIntoViewIfNeeded();
+      await expect.poll(()=>visible.evaluate(el=>(el as HTMLImageElement).naturalWidth),{timeout:10000}).toBeGreaterThan(1);
+    }
+    await context.close();
+  });
+
   test('automatic project warming waits for the opening photograph to finish',async({page,request})=>{
     const html=await (await request.get('/projects/')).text();
     const priority=html.match(/<img\b[^>]*fetchpriority="high"[^>]*>/)![0];
