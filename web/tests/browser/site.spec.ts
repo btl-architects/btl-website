@@ -27,6 +27,11 @@ for(const {route} of pages()) {
    picture's file must carry at least 1.5 pixels per CSS pixel, unless it is
    already the largest file offered. */
 async function underResolved(page:import('@playwright/test').Page) {
+  // Later project photographs are held until the first is painted
+  // (tools/defer-rail-images.mjs). Measure the settled page: a held image's
+  // placeholder is already "complete", and one released between the wait below
+  // and the measurement would still be on its placeholder file.
+  await page.waitForFunction(()=>!document.querySelector('[data-defer]'),null,{timeout:15000});
   await page.evaluate(async()=>{document.querySelectorAll('img').forEach(i=>i.loading='eager');
     await Promise.all([...document.images].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;})));});
   return page.evaluate(()=>[...document.querySelectorAll('img[srcset]')].flatMap(i=>{
