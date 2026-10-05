@@ -13,6 +13,37 @@
     requestAnimationFrame(function () { requestAnimationFrame(callback); });
   }
 
+  /* Speculative work (neighbouring photographs, warmed projects, prefetched
+     pages) waits until the opening photograph is on screen, not merely
+     downloaded: between its load event and its first paint it still has to be
+     decoded and drawn, and anything started in that gap competes with it on a
+     slow connection. Decode, then one frame, then a task. A frame loop alone
+     stalls in a background tab, so a clock ends the wait as well. */
+  var openingPainted = (function () {
+    var img = document.querySelector('img[fetchpriority="high"]');
+    var done = false, waiting = [];
+    function release() {
+      if (done) return;
+      done = true;
+      // Later islands in this file have their own scope; they listen for this.
+      document.documentElement.setAttribute("data-opening-shown", "");
+      document.dispatchEvent(new Event("btl:opening-shown"));
+      waiting.splice(0).forEach(function (fn) { fn(); });
+    }
+    if (img) {
+      var shown = function () { requestAnimationFrame(function () { setTimeout(release, 0); }); };
+      var ready = function () {
+        img.removeEventListener("load", ready);
+        img.removeEventListener("error", ready);
+        if (img.decode) img.decode().then(shown, shown); else shown();
+      };
+      if (img.complete) ready();
+      else { img.addEventListener("load", ready); img.addEventListener("error", ready); }
+      setTimeout(release, 8000);
+    } else release();
+    return function (fn) { if (done) fn(); else waiting.push(fn); };
+  })();
+
   /* Durations from tokens.css: the card timers wait on CSS transitions. */
   function durationToken(name, fallback) {
     var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -595,16 +626,8 @@
       });
     }
   }
-  var openingPicture = document.querySelector('img[fetchpriority="high"]');
   function initialAhead(st) {
-    if (!openingPicture || openingPicture.complete) { loadAhead(st); return; }
-    function ready() {
-      openingPicture.removeEventListener("load", ready);
-      openingPicture.removeEventListener("error", ready);
-      loadAhead(st);
-    }
-    openingPicture.addEventListener("load", ready);
-    openingPicture.addEventListener("error", ready);
+    openingPainted(function () { loadAhead(st); });
   }
   var aheadWatch = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { aheadWatch.unobserve(e.target); initialAhead(e.target); } });
@@ -915,11 +938,11 @@
     if ("IntersectionObserver" in window) {
       var queue = [];
       var draining = false;
-      var warmOpening = document.querySelector('img[fetchpriority="high"]');
+      var openingShown = false;
       function drain() {
         // Idle only describes CPU availability; the opening photograph may
         // still be using a slow connection. Automatic work waits for it.
-        if (draining || !queue.length || warmOpening && !warmOpening.complete) return;
+        if (draining || !queue.length || !openingShown) return;
         draining = true;
         idle(function () {
           var slug = queue.shift();
@@ -929,16 +952,7 @@
           });
         });
       }
-      if (warmOpening && !warmOpening.complete) {
-        function openingReady() {
-          warmOpening.removeEventListener("load", openingReady);
-          warmOpening.removeEventListener("error", openingReady);
-          warmOpening = null;
-          drain();
-        }
-        warmOpening.addEventListener("load", openingReady);
-        warmOpening.addEventListener("error", openingReady);
-      }
+      openingPainted(function () { openingShown = true; drain(); });
       var warmer = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
           if (!e.isIntersecting) return;
@@ -1529,19 +1543,12 @@
       [].forEach.call(document.querySelectorAll("a.onward, .pager a"), function (a) { near.observe(a); });
     }
     // Speculative pages must not compete with the opening photograph. A press
-    // still prefetches immediately; automatic warming follows its load.
-    var opening = document.querySelector('img[fetchpriority="high"]');
+    // still prefetches immediately; automatic warming follows its first paint.
     function warmOnward() {
-      if (opening) {
-        opening.removeEventListener("load", warmOnward);
-        opening.removeEventListener("error", warmOnward);
-      }
       (window.requestIdleCallback || function (fn) { setTimeout(fn, 200); })(watchOnward);
     }
-    if (opening && !opening.complete) {
-      opening.addEventListener("load", warmOnward);
-      opening.addEventListener("error", warmOnward);
-    } else warmOnward();
+    if (document.documentElement.hasAttribute("data-opening-shown")) warmOnward();
+    else document.addEventListener("btl:opening-shown", warmOnward, { once: true });
     document.addEventListener("pointerdown", function (e) {
       fetchAhead(e.target.closest && e.target.closest("a[href]"));
     }, { passive: true });

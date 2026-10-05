@@ -288,6 +288,38 @@ test.describe('text enlargement and future content',()=>{
     expect(maxActive).toBe(1);
   });
 
+  /* Downloaded is not drawn: neighbouring photographs, warmed projects and
+     prefetched pages started between the opening photograph's load and its
+     first paint compete with it, which is what lab LCP measurements counted
+     against the project page. Holding that photograph's decode must hold all
+     speculative work; releasing it lets the work begin. */
+  for(const route of ['/projects/nelly-house/','/projects/','/'])
+    test(`speculative requests wait until the opening photograph can be painted on ${route}`,async({browser})=>{
+      const context=await browser.newContext({viewport:{width:412,height:823},hasTouch:true,isMobile:true,deviceScaleFactor:1.75});
+      await context.addInitScript(()=>{
+        const w=window as any, log:string[]=w.__speculative=[];
+        let release!:()=>void; const held=new Promise<void>(r=>release=r); w.__releaseDecode=release;
+        const decode=HTMLImageElement.prototype.decode;
+        HTMLImageElement.prototype.decode=function(){return this.getAttribute('fetchpriority')==='high'?held.then(()=>decode.call(this)):decode.call(this);};
+        const loading=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'loading')!;
+        Object.defineProperty(HTMLImageElement.prototype,'loading',{get(){return loading.get!.call(this);},set(v){if(v==='eager'&&document.readyState!=='loading')log.push('eager');loading.set!.call(this,v);}});
+        const rel=Object.getOwnPropertyDescriptor(HTMLLinkElement.prototype,'rel')!;
+        Object.defineProperty(HTMLLinkElement.prototype,'rel',{get(){return rel.get!.call(this);},set(v){if(v==='prefetch')log.push('prefetch');rel.set!.call(this,v);}});
+        const fetcher=window.fetch; window.fetch=function(...args:Parameters<typeof fetch>){log.push('fetch');return fetcher.apply(this,args);};
+      });
+      const page=await context.newPage();
+      await page.goto(route);
+      const opening=page.locator('img[fetchpriority="high"]');
+      if(!await opening.count()){await context.close();test.skip(true,'This route has no opening photograph.');return;}
+      await expect.poll(()=>opening.evaluate(el=>(el as HTMLImageElement).complete)).toBe(true);
+      await page.waitForTimeout(1500);
+      expect(await page.evaluate(()=>(window as any).__speculative)).toEqual([]);
+      await page.evaluate(()=>(window as any).__releaseDecode());
+      await page.evaluate(()=>scrollBy(0,innerHeight));
+      await expect.poll(()=>page.evaluate(()=>(window as any).__speculative.length),{timeout:10000}).toBeGreaterThan(0);
+      await context.close();
+    });
+
   test('automatic project warming waits for the opening photograph to finish',async({page,request})=>{
     const html=await (await request.get('/projects/')).text();
     const priority=html.match(/<img\b[^>]*fetchpriority="high"[^>]*>/)![0];
