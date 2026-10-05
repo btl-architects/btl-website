@@ -177,7 +177,15 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   await expect(external).toHaveURL('https://example.com/original');
   await external.close();
   await page.bringToFront();
-  await reader.getByRole('button', {name: 'Close article'}).click();
+  // Close traverses the reader's same-URL history entry after hiding the
+  // dialog. Do not start a native new-tab navigation while Back is in flight:
+  // Chromium can cancel that navigation before it creates the tab.
+  await Promise.all([
+    page.evaluate(()=>new Promise<void>(resolve=>window.addEventListener('popstate',()=>{
+      requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()));
+    },{once:true}))),
+    reader.getByRole('button', {name: 'Close article'}).click()
+  ]);
   const [article] = await Promise.all([context.waitForEvent('page'), page.locator('a[data-article]').first().click({modifiers: ['ControlOrMeta']})]);
   // A modifier click creates a background tab. Activate it as the reader
   // would before asserting its committed document and visible content.
