@@ -315,6 +315,20 @@
       if (current.ended) { current.removeAttribute("data-playing"); current.currentTime = 0; }
       if (current.requestVideoFrameCallback) current.requestVideoFrameCallback(ready);
       else current.addEventListener("playing", function () { afterFirstPaint(ready); }, {once:true});
+      /* A presented frame is the preferred signal, but an engine may never
+         present one for a video that is still transparent: Firefox on Android
+         skips painting and decoding invisible video, so the callback above never
+         came and the opening sat on its first still until the stall timer.
+         Playback time advancing does not depend on painting. Once it has moved
+         a little, reveal; the decoder then runs because the video is visible. */
+      var started = current.currentTime;
+      function progressed() {
+        if (ticket !== generation || current.hasAttribute("data-playing")) { current.removeEventListener("timeupdate", progressed); return; }
+        if (current.currentTime - started < 0.15) return;
+        current.removeEventListener("timeupdate", progressed);
+        ready();
+      }
+      current.addEventListener("timeupdate", progressed);
       current.play().catch(function () { if (ticket === generation) failed(next); });
       // A stalled network must not stop the sequence indefinitely. Retain the
       // outgoing frame while waiting, then use the ordinary error fallback.
