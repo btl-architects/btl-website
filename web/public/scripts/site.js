@@ -1202,7 +1202,11 @@
         var railImgs = rail.querySelectorAll(".rail__f img");
         st.querySelectorAll(".pcard__peek img[srcset]").forEach(function (im, k) {
           var own = railImgs[k] && railImgs[k].getAttribute("sizes");
-          if (own) im.sizes = own;
+          if (own) {
+            im.sizes = own;
+            var picture = im.closest("picture");
+            if (picture) picture.querySelectorAll("source[srcset]").forEach(function (source) { source.sizes = own; });
+          }
         });
 
         /* Inject once. Expanding a card that is already expanded appended the

@@ -239,10 +239,10 @@ test.describe('text enlargement and future content',()=>{
   test('automatic project warming waits for the opening photograph to finish',async({page,request})=>{
     const html=await (await request.get('/projects/')).text();
     const priority=html.match(/<img\b[^>]*fetchpriority="high"[^>]*>/)![0];
-    const coverPath=new URL(priority.match(/src="([^"]+)"/)![1].replaceAll('&amp;','&')).pathname;
+    const coverAsset=new URL(priority.match(/src="([^"]+)"/)![1].replaceAll('&amp;','&'),test.info().project.use.baseURL).pathname.split('/').pop()!.replace(/\.[a-z]+$/,'');
     let release!:()=>void;
     const held=new Promise<void>(resolve=>release=resolve);
-    await page.route(url=>url.pathname===coverPath,async route=>{await held;await route.continue();});
+    await page.route(url=>url.pathname.split('/').pop()!.replace(/\.[a-z]+$/,'')===coverAsset,async route=>{await held;await route.continue();});
     const warmed:string[]=[];
     page.on('request',req=>{if(req.resourceType()==='fetch' && new URL(req.url()).pathname.startsWith('/projects/')) warmed.push(req.url());});
     try {

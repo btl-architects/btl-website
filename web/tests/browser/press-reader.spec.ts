@@ -182,6 +182,9 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   // A modifier click creates a background tab. Activate it as the reader
   // would before asserting its committed document and visible content.
   await article.bringToFront();
+  // Commit the new document before querying its URL/content; loading media
+  // in a newly activated background tab must not become the navigation gate.
+  await article.waitForURL(/\/press\/reader-fixture\/$/,{waitUntil:'domcontentloaded'});
   await expect(article).toHaveURL(/\/press\/reader-fixture\/$/);
   await expect(article.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   await expect(reader).not.toBeVisible();
