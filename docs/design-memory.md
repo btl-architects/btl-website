@@ -455,7 +455,10 @@ capped) → press (release) → contact (compress, resolves).
   Netlify is a legacy published-content preview host awaiting retirement.
   Engineering rules live in `implementation-contract.md`, with current deployment
   details in `deploying.md`.
-- No analytics, no third-party scripts, no CSS or animation framework.
+- No CSS or animation framework, and no third-party scripts beyond one owner-approved
+  exception: Cloudflare Web Analytics (cookieless, inserted by Cloudflare on
+  btldesigns.in, described on the privacy page; kept by decision on 5 October 2026,
+  see `deploying.md`). No other analytics or tracking.
 
 ---
 
