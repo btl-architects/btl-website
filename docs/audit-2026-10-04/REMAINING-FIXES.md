@@ -51,3 +51,45 @@ Two desktop regression cases (1280×720 and 1780×1080) reproduce the partially 
 The subsequent full run `37257577375` passed 525 checks, skipped 37 explicit unsupported-API cases, had one navigation-load flake (passed on retry), and failed the Chromium native Press-tab test. Its first trace contains the new tab's 200 document response but no attached Page event; the retry reads location during document replacement. The test now activates the actual native Chromium background target before waiting for its Page object, then waits for the unchanged visible heading before checking the real document URL. It preserves the combined external-source/close/modifier-click sequence, native click, expected URL/content and reader-dismissal assertions; it never creates or navigates a replacement tab. Ten repeated local Chromium/WebKit checks pass. Linux related checks are pending.
 
 The full trace also exposed the Press demonstration fixture silently dropping its photograph after AVIF added a picture wrapper. The fixture now finds the fallback image inside that wrapper and fails loudly if no built photograph is available. The flaky tablet underline check waits for DOM readiness and its existing animation assertions rather than the live opening film's load event. These are test-only changes. Runtime, build and dependency source remain identical to the already tested `f1a358d` tree. Full-run mobile medians were Home 1929 ms, Nelly House 2585 ms and Contact 1522 ms; the project speed gate and Studio advisory remain open.
+
+## Paint-first speculative loading, 5 October (Claude)
+
+**Project speed gate.** The latest CI Lighthouse reports for Nelly House show a correctly prioritised opening
+photograph (102 kB AVIF, discoverable, `fetchpriority=high`, not lazy). The gap came from what started
+alongside it. `site.js` began neighbouring gallery photographs, automatic project warming and onward prefetches on
+the photograph's `load` event, which comes before decode and first paint. In the unthrottled trace that Lighthouse
+simulates from, ~98 kB of neighbouring photographs (w480 and w900) began in that gap and were modelled as sharing
+slow-4G bandwidth with the photograph.
+
+Change: one `openingPainted()` helper (decode, then one frame, then a task, with an 8 s clock backstop for
+background tabs) now gates all three. Clicks, taps, focus and scrolling still start work immediately. Photograph
+sizes, quality, crops and layout are unchanged.
+
+Regression: `runtime-audit-regressions.spec.ts`, "speculative requests wait until the opening photograph can be
+painted", holds the opening photograph's decode and asserts that no eager neighbour, warming fetch or prefetch
+starts until it is released (Home, Projects, Nelly House; Chromium and WebKit). It fails on the previous code in
+all six cases and passes after the change.
+
+Limits, stated plainly:
+- Under realistic throttling in a real browser, the script work already followed the paint closely. This mainly
+  corrects ordering in the lab model, so the measured gain must come from CI's deployed run, not this note.
+- Chrome's native lazy loading still fetches one neighbouring photograph on Nelly House (~130 kB) and about 26 on
+  `/projects/` (~740 kB) early on slow connections. That is browser behaviour; removing it would need script-gated
+  image sources plus `noscript` duplicates, which is not done here.
+
+The under-two-second target remains unproven until deployed CI measures it.
+
+**Studio advisory (`braces`, GHSA-vfj7-8cjw-p6xm).** Re-checked 5 October: npm latest is still 3.0.3, the advisory
+lists no patched version, and upstream PR micromatch/braces#72 is open and mergeable. The path is
+`sanity → @sanity/cli → @sanity/codegen → chokidar 3 / globby → braces`; it is Studio development tooling only.
+When 3.0.4 (or later) is published, run `npm update braces` in `studio/` (lockfile only, within existing ranges),
+then `npm audit`, `npm test`, `npx tsc --noEmit` and `npm run build`. No override to an unreleased commit and no
+suppression.
+
+**Physical-phone residue.** These need a physical device, and the owner has accepted both for release:
+- Android Firefox toolbar jitter on the Home social links: the rail is already untransformed, bottom-anchored and
+  measured, and six approaches were compared on the owner's phone. The remaining movement happens inside
+  Firefox's compositor during its toolbar animation. The only remaining lever is a design change (links that
+  scroll with the film on phones), which contradicts the owner's request that they stay in place, so it is not made.
+- Small frame drop when switching projects on a phone: not reproducible in Chromium/WebKit at 6× CPU slowdown, so
+  any change would be blind. Re-measure on the physical phone after this release before tuning further.
