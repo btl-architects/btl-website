@@ -1,7 +1,7 @@
 import {spawnSync} from 'node:child_process';
 import {mkdirSync,readFileSync} from 'node:fs';
 mkdirSync('reports',{recursive:true});
-const origin=new URL(process.env.PERFORMANCE_ORIGIN || 'https://btl-website-3wo.pages.dev').origin;
+const origin=new URL(process.env.PERFORMANCE_ORIGIN || 'https://btldesigns.in').origin;
 if(!origin.startsWith('https://')) throw new Error('Launch performance must measure a deployed HTTPS website.');
 const runs=Number(process.env.PERFORMANCE_RUNS || 3);
 if(!Number.isInteger(runs) || runs<1 || runs>5) throw new Error('Use one to five performance runs.');
