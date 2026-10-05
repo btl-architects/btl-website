@@ -38,7 +38,7 @@ if (process.argv.includes('--apply')) {
       if (!ref) continue;
       const file = await client.fetch('*[_id == $id][0]{url,originalFilename}',{id:ref});
       if (!file?.url?.startsWith('https://cdn.sanity.io/files/')) throw new Error('Expected an existing Sanity film source.');
-      const asset = await mux('assets',{inputs:[{url:file.url}],playback_policies:['public'],video_quality:'basic',max_resolution_tier:'1080p',static_renditions:[{resolution:'highest'}]});
+      const asset = await mux('assets',{inputs:[{url:file.url}],playback_policies:['public'],video_quality:'basic',max_resolution_tier:'1080p',static_renditions:[{resolution:'1080p'},{resolution:'720p'},{resolution:'480p'}]});
       created.push({clip:clip._key,source,id:asset.id});
       writeFileSync(progress,JSON.stringify(created,null,2),{mode:0o600});
       console.log(JSON.stringify({clip:clip.label,cut:source,asset:asset.id,status:asset.status}));

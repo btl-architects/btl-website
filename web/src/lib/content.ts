@@ -20,7 +20,7 @@ import type { SiteImage } from "./media";
 import type {SearchListing, PageSearchListings} from './seo';
 import type {ArticleBlock, OpeningMode} from "./press";
 import {articleUrl} from "./press";
-import {clipVideoSources, type ClipVideoSources} from "../../../shared/video";
+import {clipVideoMode, clipVideoSources, muxPlaybackId, type ClipVideoSources} from "../../../shared/video";
 import {optionalPhotographerCredit} from "../../../shared/credits";
 import {artworkBounds} from '../../server/artwork-bounds.js';
 import {urlFor} from './sanity';
@@ -364,6 +364,27 @@ export interface HeroClip {
   posterPortrait: SiteImage | null;
 }
 
+/* A 720p file added in Mux after upload (for example to an existing asset)
+ * exists before Sanity's stored copy of the asset lists it. Ask Mux directly
+ * so the phone file is used as soon as it is ready; any failure keeps the
+ * file the record names. */
+async function phoneRendition(clip: ClipVideoSources, chosen: string): Promise<string> {
+  if (clipVideoMode(clip) !== 'mux' || /\/720p\.mp4$/.test(chosen || '')) return chosen;
+  for (const asset of [clip.videoPortraitMux, clip.videoMux]) {
+    const id = muxPlaybackId(asset);
+    if (!id) continue;
+    const url = `https://stream.mux.com/${id}/720p.mp4`;
+    try {
+      const response = await fetch(url, {method: 'HEAD', signal: AbortSignal.timeout(8000)});
+      if (response.ok) return url;
+    } catch { /* keep the recorded file */ }
+    // The portrait cut is preferred; only fall through to the landscape film
+    // when there is no portrait cut at all.
+    if (asset === clip.videoPortraitMux) break;
+  }
+  return chosen;
+}
+
 /** The opening sequence, straight from the CMS. Empty is a legitimate state:
  *  the landing simply has no film in it and the page still works. */
 export const getHeroClips = once(async (): Promise<HeroClip[]> => {
@@ -382,8 +403,11 @@ export const getHeroClips = once(async (): Promise<HeroClip[]> => {
                 "lqip": posterPortrait.asset->metadata.lqip,
                 "dimensions": posterPortrait.asset->metadata.dimensions{width, height} }
   }`);
-  return (rows ?? [])
-    .map(c => ({...c, ...clipVideoSources(c)}))
+  const withSources = await Promise.all((rows ?? []).map(async c => {
+    const sources = clipVideoSources(c);
+    return {...c, ...sources, videoPortrait: await phoneRendition(c, sources.videoPortrait)};
+  }));
+  return withSources
     .filter(c => c.video)
     .map((c): HeroClip => ({
       key: c.key,

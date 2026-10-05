@@ -38,7 +38,7 @@ const muxReady = (r: any) => r.custom(async (value: {asset?: {_ref?: string}} | 
   if (clipVideoMode(context.parent) !== 'mux' || !value?.asset?._ref) return true;
   const asset = await context.getClient({apiVersion: '2026-09-01'}).fetch(
     '*[_id == $id][0]{status, data{playback_ids[]{id,policy},static_renditions{files[]{status,name,ext}}}}', {id:value.asset._ref}) as MuxVideoAsset | null;
-  return muxVideoUrl(asset) ? true : 'Wait for the optimised MP4 to finish processing before publishing. If it remains pending, refresh the video asset in Videos. Public playback and a highest MP4 rendition are required.';
+  return muxVideoUrl(asset) ? true : 'Wait for the optimised MP4 to finish processing before publishing. If it remains pending, refresh the video asset in Videos. Public playback and an MP4 rendition (1080p, 720p or highest) are required.';
 });
 
 export default defineType({
