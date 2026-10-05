@@ -16,7 +16,12 @@ export async function seedReaderDemo(directory) {
     const {getProjects} = await server.ssrLoadModule("/src/lib/content.ts");
     const project = (await getProjects()).find(p => p.slug === "nelly-house");
     const template = readFileSync(join(directory, "press/index.html"), "utf8");
-    const tag = /class="pc__img"[^>]*>\s*(<img\b[^>]*>)/.exec(template)?.[1];
+    // Delivery may wrap the fallback image in a picture with AVIF sources.
+    // Keep the real photograph in this fixture instead of silently generating
+    // an empty card when the build's markup changes.
+    const frame = /class="pc__img"[^>]*>([\s\S]*?)<\/span>/.exec(template)?.[1];
+    const tag = /<img\b[^>]*>/.exec(frame ?? '')?.[0];
+    if (!tag) throw new Error('The Press reader fixture requires a built photograph.');
     const attr = name => new RegExp(`\\b${name}="([^"]+)"`).exec(tag ?? "")?.[1]?.replaceAll("&amp;", "&");
     const image = tag ? {static: {src: attr("src"), width: Number(attr("width")), height: Number(attr("height"))}, alt: "Feature photograph for the local reader demonstration"} : null;
     const text = value => ({_type: "block", style: "normal", children: [{text: value, marks: []}], markDefs: []});
