@@ -166,7 +166,7 @@ test('reader fits phones and honours reduced motion', async ({page}) => {
   await expect(reader).not.toBeVisible();
 });
 
-test('external mode uses the same panel and its source opens a new tab; modifier clicks retain native article pages', async ({page, context}) => {
+test('external mode uses the same panel and its source opens a new tab; modifier clicks retain native article pages', async ({page, context, browser, browserName}) => {
   await context.route('https://example.com/original', route => route.fulfill({contentType: 'text/html', body: '<h1>Original article</h1>'}));
   await page.goto('/__reader-demo/');
   await page.locator('a[data-article]').nth(2).click();
@@ -177,13 +177,40 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   await expect(external).toHaveURL('https://example.com/original');
   await external.close();
   await page.bringToFront();
-  await reader.getByRole('button', {name: 'Close article'}).click();
-  const [article] = await Promise.all([context.waitForEvent('page'), page.locator('a[data-article]').first().click({modifiers: ['ControlOrMeta']})]);
-  // A modifier click creates a background tab. Activate it as the reader
-  // would before asserting its committed document and visible content.
+  // Close traverses the reader's same-URL history entry after hiding the
+  // dialog. Do not start a native new-tab navigation while Back is in flight:
+  // Chromium can cancel that navigation before it creates the tab.
+  await Promise.all([
+    page.evaluate(()=>new Promise<void>(resolve=>window.addEventListener('popstate',()=>{
+      requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()));
+    },{once:true}))),
+    reader.getByRole('button', {name: 'Close article'}).click()
+  ]);
+  await expect(reader).not.toBeVisible();
+  const articleOpened = context.waitForEvent('page');
+  if (browserName === 'chromium') {
+    // Activate the native background target before waiting for Playwright's
+    // Page object: CI can record its 200 response without finishing attachment.
+    // This selects the tab; it never creates a tab or supplies its navigation.
+    const session = await browser.newBrowserCDPSession();
+    try {
+      const known = new Set((await session.send('Target.getTargets')).targetInfos.map(target=>target.targetId));
+      await page.locator('a[data-article]').first().click({modifiers:['ControlOrMeta']});
+      let targetId = '';
+      await expect.poll(async()=>{
+        const targets=(await session.send('Target.getTargets')).targetInfos.filter(target=>target.type==='page' && !known.has(target.targetId));
+        targetId=targets.length===1 ? targets[0].targetId : '';
+        return targets.length;
+      }).toBe(1);
+      await session.send('Target.activateTarget',{targetId});
+    } finally {await session.detach();}
+  } else await page.locator('a[data-article]').first().click({modifiers:['ControlOrMeta']});
+  const article = await articleOpened;
   await article.bringToFront();
-  await expect(article).toHaveURL(/\/press\/reader-fixture\/$/);
+  // A visible article heading establishes document readiness before reading
+  // its location. The cached frame URL can be empty for a noopener tab in CI.
   await expect(article.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
+  await expect.poll(()=>article.evaluate(()=>location.href)).toMatch(/\/press\/reader-fixture\/$/);
   await expect(reader).not.toBeVisible();
   await article.close();
 });

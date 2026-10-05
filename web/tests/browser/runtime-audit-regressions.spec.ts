@@ -102,6 +102,96 @@ test.describe('runtime audit regressions',()=>{
     await expect(page).toHaveURL(/\/projects\/$/);
   });
 
+  for(const viewport of [{width:1280,height:720},{width:1780,height:1080}])
+    test(`desktop switching the last projects does not jump when reserving space at ${viewport.width}px`,async({page})=>{
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({reducedMotion:'no-preference'});
+      await page.goto('/projects/');
+      const cards=page.locator('.pcard'),last=cards.last(),previous=cards.nth(await cards.count()-2);
+      await last.locator('[data-project]').press('Enter');
+      await expect(last).toHaveAttribute('data-open','true');
+      await page.waitForTimeout(1400);
+      // Match the recording: the previous project is partly behind the header
+      // and the last project is open near the footer. Locator.click() would
+      // scroll the caption into view first and conceal the original failure.
+      await previous.evaluate(el=>scrollBy(0,el.getBoundingClientRect().top+40));
+      await page.waitForTimeout(750);
+      for(const card of [previous,last,previous,last]) {
+        const box=(await card.boundingBox())!,startTop=box.y;
+        await card.evaluate(el=>{
+          (window as any).__desktopSwitchTops=[];
+          const observer=new MutationObserver(()=>{
+            if(el.getAttribute('data-open')!=='true')return;
+            observer.disconnect();
+            requestAnimationFrame(function sample(){
+              const samples=(window as any).__desktopSwitchTops;
+              samples.push(el.getBoundingClientRect().top);
+              if(samples.length<70)requestAnimationFrame(sample);
+            });
+          });
+          observer.observe(el,{attributes:true,attributeFilter:['data-open']});
+        });
+        // Click a visible photograph without an implicit focus/scroll operation.
+        await page.mouse.click(box.x+150,Math.max(110,box.y+70));
+        await expect(card).toHaveAttribute('data-open','true');
+        await expect.poll(()=>page.evaluate(()=>(window as any).__desktopSwitchTops.length)).toBe(70);
+        const tops:number[]=await page.evaluate(()=>(window as any).__desktopSwitchTops);
+        for(const top of tops)expect(Math.abs(top-startTop)).toBeLessThanOrEqual(2);
+        await expect(page.locator('.pcard[data-open="true"]')).toHaveCount(1);
+        await expect(page.locator('.pcard .rail__note')).toHaveCount(1);
+        await expect(page.locator('[data-pindex]')).not.toHaveAttribute('data-holding','');
+        const note=await card.locator('.rail__note').boundingBox();
+        const strip=await card.locator('[data-strip]').boundingBox();
+        expect(note!.x).toBeGreaterThanOrEqual(strip!.x-2);
+        expect(note!.x+note!.width).toBeLessThanOrEqual(strip!.x+strip!.width+2);
+      }
+    });
+
+  for(const route of ['/', '/projects/']) for(const width of [390,820]) for(const motion of ['no-preference','reduce'] as const)
+    test(`touch switching projects keeps the tapped photographs in place on ${route} at ${width}px (${motion})`,async({browser})=>{
+      const context=await browser.newContext({viewport:{width,height:width===390?844:1180},hasTouch:true,isMobile:true,reducedMotion:motion});
+      const page=await context.newPage();await page.goto(route);
+      const first=page.locator('[data-card="the-conservatory"]'),second=page.locator('[data-card="teak-and-terra"]');
+      await first.locator('[data-project]').press('Enter');
+      await expect(first).toHaveAttribute('data-open','true');await page.waitForTimeout(1000);
+      await second.evaluate(el=>scrollBy(0,el.getBoundingClientRect().top-220));
+      // Let the scroll entrance finish before measuring a tap on the resting card.
+      await page.waitForTimeout(750);
+      const photo=second.locator('.pcard__peek').first(),box=(await photo.boundingBox())!;
+      const startTop=box.y;
+      const previousPhotosOffscreen=await first.locator('[data-strip]').evaluate(el=>el.getBoundingClientRect().bottom<=0);
+      await second.evaluate(el=>{
+        const values:number[]=[];
+        (window as any).__switchSamples=values;
+        (window as any).__switchScroll=[];
+        const observer=new MutationObserver(()=>{
+          if(el.getAttribute('data-open')!=='true')return;
+          observer.disconnect();
+          requestAnimationFrame(function sample(){
+            values.push(el.querySelector('[data-strip]')!.getBoundingClientRect().top);
+            (window as any).__switchScroll.push(scrollY);
+            if(values.length<60)requestAnimationFrame(sample);
+          });
+        });
+        observer.observe(el,{attributes:true,attributeFilter:['data-open']});
+      });
+      await page.touchscreen.tap(Math.max(30,Math.min(width-30,box.x+60)),box.y+60);
+      await expect(second).toHaveAttribute('data-open','true');
+      await expect.poll(()=>page.evaluate(()=>(window as any).__switchSamples.length)).toBe(60);
+      const tops:number[]=await page.evaluate(()=>(window as any).__switchSamples);
+      for(const top of tops) expect(Math.abs(top-startTop)).toBeLessThanOrEqual(2);
+      const scroll:number[]=await page.evaluate(()=>(window as any).__switchScroll);
+      // Visible photographs retain their collapse animation; an unseen strip
+      // should finish at once, without repeated whole-page scroll corrections.
+      if(previousPhotosOffscreen) expect(new Set(scroll.map(y=>Math.round(y))).size).toBeLessThanOrEqual(2);
+      await expect(first).not.toHaveAttribute('data-open','true');
+      const final=(await second.locator('[data-strip]').boundingBox())!;
+      expect(final.y).toBeGreaterThan(100);
+      expect(await second.locator('.rail__note').evaluate(el=>el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(final.y+final.height-2);
+      await expect(page).toHaveURL(/\/projects\/teak-and-terra\/$/);
+      await context.close();
+    });
+
   for(const width of [1024,1440]) test(`pure close at page end adds no hold and hides navigation immediately at ${width}px`,async({page})=>{
     await page.goto('/projects/');await page.setViewportSize({width,height:900});
     const card=page.locator('.pcard').last();
@@ -201,10 +291,10 @@ test.describe('text enlargement and future content',()=>{
   test('automatic project warming waits for the opening photograph to finish',async({page,request})=>{
     const html=await (await request.get('/projects/')).text();
     const priority=html.match(/<img\b[^>]*fetchpriority="high"[^>]*>/)![0];
-    const coverPath=new URL(priority.match(/src="([^"]+)"/)![1].replaceAll('&amp;','&')).pathname;
+    const coverAsset=new URL(priority.match(/src="([^"]+)"/)![1].replaceAll('&amp;','&'),test.info().project.use.baseURL).pathname.split('/').pop()!.replace(/\.[a-z]+$/,'');
     let release!:()=>void;
     const held=new Promise<void>(resolve=>release=resolve);
-    await page.route(url=>url.pathname===coverPath,async route=>{await held;await route.continue();});
+    await page.route(url=>url.pathname.split('/').pop()!.replace(/\.[a-z]+$/,'')===coverAsset,async route=>{await held;await route.continue();});
     const warmed:string[]=[];
     page.on('request',req=>{if(req.resourceType()==='fetch' && new URL(req.url()).pathname.startsWith('/projects/')) warmed.push(req.url());});
     try {

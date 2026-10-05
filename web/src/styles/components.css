@@ -442,6 +442,7 @@ html:has(.menu[data-open="true"]) .header {
    that panel disappears, before our next frame can hold the card in place.
    Keep native anchoring for the ordinary no-script document. */
 :where(.js) .pindex { overflow-anchor: none; }
+html[data-project-anchoring] { overflow-anchor: none; }
 /* No transition on the reserved height: animating it away drags the document
    height for another 320ms after everything else has settled, which is its own
    small glitch. It is given back in one step, inside the anchor's window. */
@@ -1947,13 +1948,10 @@ body[data-preview] .header { top: var(--preview-h); }
   pointer-events: none;
 }
 
-/* Firefox Android compensates this edge as its top toolbar moves the content
-   area. The words keep their measured distance from it through height changes. */
+/* Firefox Android's compositor keeps the bottom-fixed box steady as its
+   top toolbar moves the content origin. Never rewrite it on toolbar frames. */
 .landing .srail[data-anchor-bottom] { top: auto; bottom: var(--social-bottom); height: auto; }
 .landing .srail[data-anchor-bottom] .srail__links { top: auto; transform: rotate(180deg); }
-/* Native bottom-to-top writing avoids a transformed composited text layer.
-   Firefox supports it; preserve the rotated fallback for older engines. The
-   fixed box is only as tall as the links, with no viewport-sized shell. */
 @supports (writing-mode: sideways-lr) {
   .landing .srail[data-anchor-bottom] .srail__links { writing-mode: sideways-lr; transform: none; }
 }
@@ -2040,6 +2038,14 @@ body[data-preview] .header { top: var(--preview-h); }
 
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
 .landing .srail__links { flex-direction: row-reverse; }
+/* Use the final text direction before the first paint, avoiding a label-order
+   shift when the measured touch anchor is installed. */
+@supports (writing-mode: sideways-lr) {
+  @media (hover: none) and (pointer: coarse) {
+    .landing .srail__links { writing-mode: sideways-lr; transform: translate3d(0, -50%, 0); }
+    .landing .srail[data-anchor-bottom] .srail__links { transform: none; }
+  }
+}
 
 .landing .srail__i {
   position: relative;

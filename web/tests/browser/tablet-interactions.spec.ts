@@ -127,7 +127,8 @@ test('tablet copy buttons copy details without following contact links',async({p
 test('tablet onward links draw the green underline when their section appears',async({page})=>{
   await page.setViewportSize({width:820,height:1180});
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await page.goto('/');
+  // This checks the link's scroll animation, not completion of the live film.
+  await page.goto('/',{waitUntil:'domcontentloaded'});
   await expect(page.locator('html')).toHaveClass(/js/);
   const link=page.getByRole('link',{name:'See every project'});
   const line=link.locator('.onward__t');

@@ -27,8 +27,14 @@ const clips = await getHeroClips();
       return (
         <figure class="stage__f" data-on={i === 0 ? "true" : "false"} data-label={clip.label}>
           {/* The browser selects the correctly framed still before scripts run.
-              A failed or suppressed video leaves the responsive image intact. */}
-          {clip.poster && <ResponsiveFigure image={clip.poster} portrait={clip.posterPortrait} priority={i === 0} />}
+              Later stills stay inert until a film fails, avoiding a download for
+              every hidden poster. Without scripts all authored stills remain. */}
+          {clip.poster && (i === 0
+            ? <ResponsiveFigure image={clip.poster} portrait={clip.posterPortrait} priority />
+            : <>
+                <template data-stage-poster><ResponsiveFigure image={clip.poster} portrait={clip.posterPortrait} /></template>
+                <noscript><ResponsiveFigure image={clip.poster} portrait={clip.posterPortrait} /></noscript>
+              </>)}
           <template data-stage-video><video
             aria-hidden="true"
             muted

@@ -65,7 +65,7 @@ test.describe('phone interactions',()=>{
     expect(await rail.getAttribute('style')).toBe(before);
   });
 
-  test('Android Firefox rail retains its position relative to the screen as the top toolbar retracts',async({page})=>{
+  test('Android Firefox rail stays steady without scroll-time CSS writes',async({page})=>{
     await page.addInitScript(()=>Object.defineProperty(navigator,'userAgent',{
       value:'Mozilla/5.0 (Android 16; Mobile; rv:157.0) Gecko/157.0 Firefox/157.0',configurable:true
     }));
@@ -78,13 +78,18 @@ test.describe('phone interactions',()=>{
     expect((await rail.boundingBox())!.height).toBeCloseTo(linkBox.height,0);
     expect(await rail.evaluate(el=>parseFloat(getComputedStyle(el).bottom))).toBeCloseTo(422-linkBox.height/2,0);
     if(await page.evaluate(()=>CSS.supports('writing-mode','sideways-lr'))) await expect(words).toHaveCSS('transform','none');
-    // Model a top toolbar taking 56px of the physical screen. The browser's
-    // content origin moves up as its visible height grows; screen Y is their sum.
+    // B/E held their physical position in the owner's phone comparison.
+    // Model top-toolbar motion, and forbid writes that fight its compositor.
+    await page.evaluate(()=>{
+      (window as any).__railWrites=[];
+      new MutationObserver(records=>(window as any).__railWrites.push(...records.map(r=>r.attributeName))).observe(document.querySelector('.srail')!,{attributes:true});
+    });
     const initial=(await words.boundingBox())!.y+56;
     for(const bar of [40,20,0,12,56]) {
       await page.setViewportSize({width:390,height:900-bar});
       await expect.poll(async()=>Math.abs((await words.boundingBox())!.y+bar-initial)).toBeLessThan(1);
     }
+    expect(await page.evaluate(()=>(window as any).__railWrites)).toEqual([]);
     for(const viewport of [{width:844,height:390},{width:390,height:844}]) {
       await page.setViewportSize(viewport);
       await expect.poll(async()=>{const b=(await words.boundingBox())!;return Math.abs(b.y+b.height/2-viewport.height/2);}).toBeLessThan(1);
