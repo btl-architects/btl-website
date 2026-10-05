@@ -3,9 +3,9 @@
 Astro renders static pages from Sanity. Cloudflare Pages serves the website;
 Sanity Studio is a separate editing application.
 
-- Website: https://btl-website-3wo.pages.dev/
+- Website: https://btldesigns.in (live since 5 October 2026; `www` and the old
+  `btl-website-3wo.pages.dev` address redirect to it)
 - Editor: https://btldesigns.sanity.studio/
-- Intended canonical domain: https://btldesigns.in
 - Sanity project: `aur12nrf`, dataset: `production`
 
 ## Local setup
