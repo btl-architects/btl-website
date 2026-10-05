@@ -1186,7 +1186,18 @@
         var prev = openCard;
         var placeCard = anchor(card, DUR.slow + 200);
         if (prev && prev !== card) holdHeight(Math.ceil(prev.getBoundingClientRect().height));
-        if (prev) shut(prev);                   /* P4: one open at a time */
+        if (prev) {
+          var previousStrip = strip(prev);
+          if (compactIndex.matches && previousStrip.getBoundingClientRect().bottom <= 0) {
+            // A phone has already scrolled past these photographs. Finish their
+            // height change now instead of laying out two galleries and scrolling
+            // the whole page on every frame just to animate an unseen strip.
+            previousStrip.style.transitionDuration = "0s";
+            shut(prev, true);
+            void previousStrip.offsetHeight;
+            previousStrip.style.removeProperty("transition-duration");
+          } else shut(prev);
+        }
 
         if (card._shutting) clearTimeout(card._shutting);
         if (card._finish) card._finish();

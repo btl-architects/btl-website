@@ -114,14 +114,17 @@ test.describe('runtime audit regressions',()=>{
       await page.waitForTimeout(750);
       const photo=second.locator('.pcard__peek').first(),box=(await photo.boundingBox())!;
       const startTop=box.y;
+      const previousPhotosOffscreen=await first.locator('[data-strip]').evaluate(el=>el.getBoundingClientRect().bottom<=0);
       await second.evaluate(el=>{
         const values:number[]=[];
         (window as any).__switchSamples=values;
+        (window as any).__switchScroll=[];
         const observer=new MutationObserver(()=>{
           if(el.getAttribute('data-open')!=='true')return;
           observer.disconnect();
           requestAnimationFrame(function sample(){
             values.push(el.querySelector('[data-strip]')!.getBoundingClientRect().top);
+            (window as any).__switchScroll.push(scrollY);
             if(values.length<60)requestAnimationFrame(sample);
           });
         });
@@ -132,6 +135,10 @@ test.describe('runtime audit regressions',()=>{
       await expect.poll(()=>page.evaluate(()=>(window as any).__switchSamples.length)).toBe(60);
       const tops:number[]=await page.evaluate(()=>(window as any).__switchSamples);
       for(const top of tops) expect(Math.abs(top-startTop)).toBeLessThanOrEqual(2);
+      const scroll:number[]=await page.evaluate(()=>(window as any).__switchScroll);
+      // Visible photographs retain their collapse animation; an unseen strip
+      // should finish at once, without repeated whole-page scroll corrections.
+      if(previousPhotosOffscreen) expect(new Set(scroll.map(y=>Math.round(y))).size).toBeLessThanOrEqual(2);
       await expect(first).not.toHaveAttribute('data-open','true');
       const final=(await second.locator('[data-strip]').boundingBox())!;
       expect(final.y).toBeGreaterThan(100);
