@@ -2,6 +2,15 @@
 (function () {
   var form = document.querySelector('[data-enquiry]');
   if (!form) return;
+
+  // AbortSignal.timeout arrived in Chrome 103 and Safari 16; older browsers
+  // threw here and the enquiry was never sent.
+  function timeoutSignal(ms) {
+    if (window.AbortSignal && AbortSignal.timeout) return AbortSignal.timeout(ms);
+    var controller = new AbortController();
+    setTimeout(function () { controller.abort(); }, ms);
+    return controller.signal;
+  }
   var button = form.querySelector('[type="submit"]');
   var status = form.querySelector('[data-enquiry-status]');
   var email = form.querySelector('[name="email"]');
@@ -63,7 +72,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(data),
-        signal: AbortSignal.timeout(15000),
+        signal: timeoutSignal(15000),
       });
       var result = await response.json();
       if (response.ok && result.success === true) { location.assign('/contact/thanks/'); return; }

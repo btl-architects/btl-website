@@ -15,6 +15,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
+import { viewportUnitProblems } from "./viewport-units.mjs";
 
 const DIST = resolve(dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const STYLES = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src", "styles");
@@ -344,6 +345,19 @@ for (const [file, text] of bpSources) {
       failures.push(`${file}:${line} uses breakpoint ${m[1]}, which is not in the list in tools/budget.mjs — use one of ${Object.keys(BREAKPOINTS).join(", ")} or add it there with what it means`);
     }
   }
+}
+
+/* --- viewport units keep their fallback (tools/viewport-units.mjs) ------------
+ * Checked on the hand-written CSS and again on a built page, because the
+ * minifier is what deleted the fallbacks before (tools/browser-targets.mjs). */
+for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css")))
+  failures.push(...viewportUnitProblems(readFileSync(join(STYLES, file), "utf8"), file));
+{
+  const home = readFileSync(join(DIST, "index.html"), "utf8");
+  const inline = [...home.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
+  failures.push(...viewportUnitProblems(inline, "built index.html"));
+  if (!/\.landing\{[^}]*height:100vh;[^}]*height:100svh/.test(inline))
+    failures.push("built index.html: the opening lost its 100vh fallback (check tools/browser-targets.mjs reaches the CSS minifier)");
 }
 
 /* --- colour lives in tokens.css ---------------------------------------------

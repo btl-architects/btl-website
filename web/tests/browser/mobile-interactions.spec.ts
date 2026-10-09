@@ -3,6 +3,28 @@ import AxeBuilder from '@axe-core/playwright';
 
 const routes=['/','/projects/','/projects/nelly-house/','/press/','/people/','/studio/','/contact/'];
 
+/* The opening is the whole first screen on a phone: nothing below it shows
+   until the reader scrolls, and the social links stay inside the screen. */
+for (const viewport of [{width:360,height:740},{width:390,height:844},{width:412,height:915},{width:360,height:800}])
+  test(`the opening fills the first screen with its links in view at ${viewport.width}x${viewport.height}`,async({browser})=>{
+    for (const javaScriptEnabled of [true,false]) {
+      const context=await browser.newContext({viewport,hasTouch:true,isMobile:true,javaScriptEnabled});
+      const page=await context.newPage();
+      await page.goto('/');
+      await page.waitForTimeout(600);
+      const box=await page.locator('.landing').boundingBox();
+      expect(Math.round(box!.height)).toBeGreaterThanOrEqual(viewport.height-1);
+      const statement=await page.locator('#statement').boundingBox();
+      expect(statement!.y).toBeGreaterThanOrEqual(viewport.height-1);
+      for (const link of await page.locator('.landing .srail__i').all()) {
+        const r=(await link.boundingBox())!;
+        expect(r.y).toBeGreaterThanOrEqual(0);
+        expect(r.y+r.height).toBeLessThanOrEqual(viewport.height);
+      }
+      await context.close();
+    }
+  });
+
 test.describe('phone interactions',()=>{
   test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
   test.beforeEach(async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});});

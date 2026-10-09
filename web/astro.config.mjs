@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
+import { esbuildCssTarget, lightningTargets } from "./tools/browser-targets.mjs";
 
 // The live domain (connected 5 October 2026). Production also sets SITE_URL; this
 // default means a build that lost the variable still names the real address,
@@ -21,4 +22,9 @@ export default defineConfig({
   // default per-component scoping would fragment it, so styles are global and
   // authored as a system — see src/styles/. No CSS framework (contract §1).
   scopedStyleStrategy: "class",
+  // Keep CSS fallbacks for older browsers (tools/browser-targets.mjs).
+  vite: {
+    css: { lightningcss: { targets: lightningTargets } },
+    build: { cssTarget: esbuildCssTarget },
+  },
 });

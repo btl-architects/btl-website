@@ -2,6 +2,12 @@
    btl architects — the four islands
    No framework, no router, no animation library. Vanilla, ~4 KB.
    ========================================================================== */
+/* Safari before 14 (and so iOS 13) gives MediaQueryList only the older
+   addListener. Without this, the first preference listener threw and stopped
+   the whole script: no opening film, reveals or menu on those phones. */
+if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && MediaQueryList.prototype.addListener) {
+  MediaQueryList.prototype.addEventListener = function (type, listener) { if (type === "change") this.addListener(listener); };
+}
 (function () {
   "use strict";
 
@@ -356,12 +362,42 @@
         ready();
       }
       current.addEventListener("timeupdate", progressed);
-      current.play().catch(function () { if (ticket === generation) failed(next); });
+      current.play().catch(function (err) {
+        if (ticket !== generation) return;
+        if (err && err.name === "NotAllowedError") startOnGesture();
+        failed(next);
+      });
       // A stalled network must not stop the sequence indefinitely. Retain the
       // outgoing frame while waiting, then use the ordinary error fallback.
       errorTimer = setTimeout(function () {
         if (ticket === generation) failed(next);
       }, 15000);
+    }
+    /* Some browsers refuse to start even a muted film until the visitor has
+       touched the page: Android in-app browsers (the System WebView behind
+       WhatsApp, Instagram and others) and iPhones in Low Power Mode. play()
+       then rejects with NotAllowedError, and until now the opening only ever
+       showed its stills there. The stills still carry it; the first tap, click
+       or key press starts the film, inside that gesture, which is what those
+       browsers require. Films already given an address are started and paused
+       in the same gesture, so the next one in the sequence may play too. */
+    var awaitingGesture = false;
+    function startOnGesture() {
+      if (awaitingGesture) return;
+      awaitingGesture = true;
+      var kinds = ["touchend", "click", "keydown"];
+      function go() {
+        kinds.forEach(function (kind) { document.removeEventListener(kind, go, true); });
+        awaitingGesture = false;
+        sFrames.forEach(function (frame, k) {
+          var v = frame.querySelector("video");
+          if (!v || k === at || !v.getAttribute("src")) return;
+          var started = v.play();
+          if (started && started.then) started.then(function () { if (k !== at) v.pause(); }, function () {});
+        });
+        sync();
+      }
+      kinds.forEach(function (kind) { document.addEventListener(kind, go, true); });
     }
     function canPlay() { return !stillsOnly() && visible && !document.hidden && pageReady; }
     function sync() {
