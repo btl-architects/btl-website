@@ -54,6 +54,47 @@ for (const width of [390,1440])
     await expect(page.locator('.stage__f').nth(1).locator('video')).toHaveAttribute('data-playing','true',{timeout:5000});
   });
 
+/* Android in-app browsers (System WebView) and iPhones in Low Power Mode refuse
+   to start even a muted film without a tap: play() rejects NotAllowedError.
+   The opening shows its stills, and the first tap starts the film. */
+test('a film the browser will not autoplay starts on the first tap', async ({page}) => {
+  await page.addInitScript(() => {
+    const w = window as any; w.__activated = false;
+    document.addEventListener('click', () => { w.__activated = true; }, true);
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      return w.__activated ? play.call(this) : Promise.reject(new DOMException('needs a gesture', 'NotAllowedError'));
+    };
+  });
+  await films(page);
+  await sequence(page, 3);
+  await page.setViewportSize({width: 390, height: 844});
+  await page.goto('/');
+  await page.waitForTimeout(2500);
+  await expect(page.locator('.stage__f video[data-playing="true"]')).toHaveCount(0);
+  const tapped = Date.now();
+  await page.mouse.click(195, 420);
+  // The tap itself starts the film, rather than the next stills cycle 6 s later.
+  await expect(page.locator('.stage__f video[data-playing="true"]')).toHaveCount(1, {timeout: 2500});
+  expect(Date.now() - tapped).toBeLessThan(2500);
+});
+
+/* Safari before 14 (iOS 13) has only MediaQueryList.addListener. The first
+   preference listener used to throw and stop the whole script. */
+test('the opening plays where media queries only offer addListener', async ({page}) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  // addEventListener is inherited from EventTarget; Safari 13 lacks it on
+  // MediaQueryList, which this models by shadowing it with undefined.
+  await page.addInitScript(() => { Object.defineProperty(MediaQueryList.prototype, 'addEventListener', {value: undefined, writable: true, configurable: true}); });
+  await films(page);
+  await sequence(page, 2);
+  await page.setViewportSize({width: 390, height: 844});
+  await page.goto('/');
+  await expect(page.locator('.stage__f video[data-playing="true"]')).toHaveCount(1, {timeout: 8000});
+  expect(errors).toEqual([]);
+});
+
 for (const {width,frameCallback} of [{width:390,frameCallback:true},{width:1440,frameCallback:true},{width:390,frameCallback:false}]) {
   test(`a delayed incoming film never exposes its poster at ${width}px${frameCallback?'':' without frame callbacks'}`, async ({page}) => {
     if(!frameCallback) await page.addInitScript(()=>Object.defineProperty(HTMLVideoElement.prototype,'requestVideoFrameCallback',{value:undefined,configurable:true}));

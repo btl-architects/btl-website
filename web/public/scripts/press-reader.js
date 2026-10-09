@@ -1,4 +1,10 @@
 /* Press is progressive: the links still lead to readable pages without JS. */
+/* Safari before 14 (and so iOS 13) gives MediaQueryList only the older
+   addListener. Without this, the first preference listener threw and stopped
+   the whole script: no opening film, reveals or menu on those phones. */
+if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && MediaQueryList.prototype.addListener) {
+  MediaQueryList.prototype.addEventListener = function (type, listener) { if (type === "change") this.addListener(listener); };
+}
 (function () {
   "use strict";
   if (!window.HTMLDialogElement || !HTMLDialogElement.prototype.showModal) return;
@@ -172,13 +178,15 @@
   }
   window.addEventListener("resize", function () { requestAnimationFrame(resizeReader); }, {passive: true});
   touchReader.addEventListener("change", resizeReader);
+  // replaceChildren needs Chrome 86 / Safari 14.
+  function clearContent() { while (content && content.firstChild) content.removeChild(content.firstChild); }
 
   function close() {
     if (!dialog || !dialog.open) return;
     if (controller) controller.abort();
     dialog.close();
     // Removing the frame stops its media/scripts and network activity.
-    content.replaceChildren();
+    clearContent();
     Object.keys(savedStyle).forEach(function (name) {document.body.style[name] = savedStyle[name];});
     window.scrollTo({top: savedScroll, left: 0, behavior: "instant"});
     if (opener && opener.isConnected) opener.focus({preventScroll: true});
@@ -318,7 +326,8 @@
       // Content brought from another page arrives without the scroll
       // entrance that page would have run, so it is shown as entered.
       article.querySelectorAll(".rv, .rvc").forEach(function (el) { el.classList.add("in"); el.setAttribute("data-reveal-instant", ""); });
-      content.replaceChildren(article);
+      clearContent();
+      content.appendChild(article);
       content.scrollTop = 0;
       content.setAttribute("aria-busy", "false");
       var image = article.querySelector(".press-article__image img");
