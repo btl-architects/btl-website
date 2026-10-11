@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@sanity/client": "8.9.0",
-    "@sanity/ui": "4.3.0",
+    "@sanity/ui": "4.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "sanity": "6.17.0",
