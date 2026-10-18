@@ -15,7 +15,7 @@
   "dependencies": {
     "@sanity/client": "8.9.0",
     "@sanity/image-url": "2.1.1",
-    "astro": "7.3.5"
+    "astro": "7.3.8"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
