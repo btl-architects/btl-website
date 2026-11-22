@@ -23,9 +23,34 @@
 
   function loadFrames(root) {
     root.querySelectorAll("[data-article-frame]").forEach(function (frame) {
-      if (!frame.src) frame.src = frame.getAttribute("data-article-frame");
+      if (frame.src) return;
+      frame.src = frame.getAttribute("data-article-frame");
+      // An Instagram post that never reports (blocked, offline) offers its link.
+      var box = frame.parentNode;
+      if (box.hasAttribute("data-ig-post")) setTimeout(function () { box.setAttribute("data-failed", ""); }, 12000);
     });
   }
+  /* Instagram's embed reports its height (MEASURE), again on every width
+     change. Its 54px header and 154px footer are the same for photos,
+     carousels, videos and reels (measured 2026-11-23), so the media is the
+     height less 208: the box crops to that. A result no post could have
+     means Instagram changed its layout; then the whole post shows, sized to
+     fit, rather than a wrong crop. */
+  addEventListener("message", function (ev) {
+    if (ev.origin !== "https://www.instagram.com") return;
+    var d;
+    try { d = JSON.parse(ev.data); } catch (e) { return; }
+    if (!d || d.type !== "MEASURE" || !d.details) return;
+    document.querySelectorAll("[data-ig-post] iframe").forEach(function (frame) {
+      if (frame.contentWindow !== ev.source) return;
+      var box = frame.parentNode, h = +d.details.height, media = h - 208, w = frame.offsetWidth;
+      var crop = media > w * .45 && media < w * 1.45;
+      frame.style.height = h + "px";
+      frame.style.top = crop ? "-54px" : "0";
+      box.style.height = (crop ? media : h) + "px";
+      box.setAttribute("data-ready", "");
+    });
+  });
   // A direct article page is also the fallback for modified/new-tab clicks.
   loadFrames(document);
 

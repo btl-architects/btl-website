@@ -28,8 +28,11 @@ const BUDGET = {
      in-app browser film fixes left 26 bytes on a Mac, and Node's gzip output
      depends on the machine's processor, so the same files measured over the
      line on the x64 CI and Cloudflare builders and production stopped
-     deploying. The owner chose this over dropping the iOS 13 support. */
-  js: 21 * 1024,
+     deploying. The owner chose this over dropping the iOS 13 support.
+     Raised again to 22 kB on 23 November 2026, also the owner's decision: the
+     home Recognition rotation and the Instagram post sizing took the margin
+     to 129 bytes over. 22 kB leaves about 900 bytes for machine differences. */
+  js: 22 * 1024,
   font: 50 * 1024,   // one variable face
   eagerImages: 3,    // images that load before anything else can paint
 };
