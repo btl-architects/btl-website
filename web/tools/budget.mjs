@@ -23,7 +23,13 @@ const STYLES = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src", "st
 const BUDGET = {
   html: 60 * 1024,   // one page's markup, gzipped — includes the inline blur previews
   css: 40 * 1024,    // the whole design system, gzipped
-  js: 20 * 1024,     // all of it, gzipped. There is no framework here and there should not be
+  /* All of it, gzipped. There is no framework here and there should not be.
+     Raised from 20 kB on 22 November 2026, at the owner's decision: the
+     in-app browser film fixes left 26 bytes on a Mac, and Node's gzip output
+     depends on the machine's processor, so the same files measured over the
+     line on the x64 CI and Cloudflare builders and production stopped
+     deploying. The owner chose this over dropping the iOS 13 support. */
+  js: 21 * 1024,
   font: 50 * 1024,   // one variable face
   eagerImages: 3,    // images that load before anything else can paint
 };
