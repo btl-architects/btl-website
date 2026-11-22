@@ -1293,7 +1293,20 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       if (openCard === card) { closeAll(push); return Promise.resolve(); }
 
       var version = ++expansionVersion;
-      return fetchRail(slug).then(function (rail) {
+      /* Usually already warmed and immediate. When it is not, the btl line
+         after the project's place says the tap was heard (.wait sits out its
+         own 400ms pause, so a warmed project never shows it). */
+      var title = card.querySelector(".pcard__place") || card.querySelector(".pcard__t"), mark = null;
+      if (title && !title.querySelector(".wait")) {
+        mark = document.createElement("span");
+        mark.className = "wait pcard__wait";
+        mark.setAttribute("data-on-media", "");
+        mark.setAttribute("aria-hidden", "true");
+        title.appendChild(mark);
+      }
+      var fetched = fetchRail(slug);
+      fetched.then(function () { if (mark) mark.remove(); }, function () { if (mark) mark.remove(); });
+      return fetched.then(function (rail) {
         if (version !== expansionVersion) return;
         /* Both cards move at once — the old one shrinking, the new one growing
            — and the card under the pointer is held still for the whole of it.
@@ -1714,7 +1727,7 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
         return { src: bits[0], w: parseInt(bits[1], 10) || 0 };
       }).filter(function (c) { return c.src; }).sort(function (x, y) { return x.w - y.w; });
       var fit = all.filter(function (c) { return c.w >= need; })[0] || all[all.length - 1];
-      return fit ? fit.src : el.currentSrc || el.src;
+      return fit || { src: el.currentSrc || el.src, w: 0 };
     }
 
     function build() {
@@ -1729,6 +1742,7 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
         '<div class="lb__stage" data-stage>' +
           '<img class="lb__img" alt="" draggable="false">' +
         '</div>' +
+        '<span class="wait lb__wait" data-on-media aria-hidden="true"></span>' +
         '<div class="lb__bar">' +
           '<span class="lb__count" data-count aria-live="polite"></span>' +
           '<button class="lb__x" type="button" data-close>Close' +
@@ -1885,24 +1899,65 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       img = next;
     }
 
+    /* Opening is instant because the page already holds the photograph: the
+       reader just clicked it, in a strip, at a strip's size. Until the viewer's
+       own file has arrived that copy stands in, drawn at the size the full file
+       will take, and the full file replaces it in place the moment it is ready
+       — the same photograph, only sharper, so swapping the src is right here.
+       The stage is empty, and the btl line waits on it, only for a photograph
+       the page never loaded (a deferred one, or a neighbour stepped to before
+       the warm-up reached it). */
+    function fitted(it) {
+      var cs = getComputedStyle(img);
+      var w = Math.min(parseFloat(cs.maxWidth) || window.innerWidth,
+                       (parseFloat(cs.maxHeight) || window.innerHeight) * it.ratio, it.w || Infinity);
+      return { w: w, h: w / it.ratio };
+    }
+    function standingIn() {
+      var it = items[at];
+      return !!(it && it.lo && it.lo !== it.src && img.getAttribute("src") === it.lo);
+    }
+    function pinStandIn() {
+      var box = fitted(items[at]);
+      img.style.width = box.w + "px"; img.style.height = box.h + "px";
+      natural.w = box.w; natural.h = box.h;
+    }
+    function waiting(on) { lb.setAttribute("data-waiting", on ? "true" : "false"); }
+
     function show(i) {
       at = (i + items.length) % items.length;
       var it = items[at];
       if (img.getAttribute("src") !== it.src) fresh();
       reset(false);
       img.style.width = ""; img.style.height = "";   /* unpin a sharpened predecessor */
-      img.src = it.src;
+      var file = it._pre || (it._pre = new Image());
+      if (!file.src) file.src = it.src;
+      var arrived = file.complete && file.naturalWidth > 0;
+      var shown = img;
+      natural.w = 0; natural.h = 0;
+      shown.onload = function () {
+        if (shown !== img) return;
+        if (!standingIn()) { natural.w = shown.clientWidth; natural.h = shown.clientHeight; }
+        waiting(false);
+      };
+      shown.onerror = function () { if (shown === img) waiting(false); };
+      if (arrived || !it.lo) img.src = it.src;
+      else {
+        img.src = it.lo;
+        pinStandIn();
+        file.decode().then(function () {
+          if (shown !== img || !standingIn()) return;   /* moved on, or zoom already sharpened it */
+          img.style.width = ""; img.style.height = "";
+          img.src = it.src;
+        }, function () {});
+      }
       img.alt = it.alt || "";
       capEl.textContent = it.caption || "";
       countEl.textContent = (at + 1) + " / " + items.length;
       var many = items.length > 1;
       prevBtn.hidden = !many; nextBtn.hidden = !many;
-      var shown = img;
-      natural.w = 0; natural.h = 0;
-      shown.onload = function () {
-        if (shown === img) { natural.w = shown.clientWidth; natural.h = shown.clientHeight; }
-      };
-      if (img.complete) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
+      if (img.complete && !standingIn()) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
+      waiting(!img.complete);
       // the neighbours, two each way, so a run of swipes never waits
       if (many) {
         [1, -1, 2, -2].forEach(function (k) {
@@ -2275,9 +2330,11 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
 
     window.addEventListener("resize", function () {
       if (!isOpen()) return;
-      /* A sharpened photograph is pinned to the fitted size of the old window. */
+      /* A sharpened photograph is pinned to the fitted size of the old window;
+         a stand-in is pinned to the new one. */
       img.style.width = ""; img.style.height = "";
-      natural.w = img.clientWidth; natural.h = img.clientHeight;
+      if (standingIn()) pinStandIn();
+      else { natural.w = img.clientWidth; natural.h = img.clientHeight; }
       reset(false);
     });
 
@@ -2342,8 +2399,12 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       var list = figures.map(function (fig) {
         var im = fig.querySelector("img");
         var cap = fig.querySelector("figcaption");
-        return { src: bestSrc(im), alt: im.getAttribute("alt") || "",
-                 caption: cap ? cap.textContent.trim() : "" };
+        var best = bestSrc(im);
+        return { src: best.src, w: best.w, alt: im.getAttribute("alt") || "",
+                 caption: cap ? cap.textContent.trim() : "",
+                 /* The copy the page already holds, to stand in (show()). */
+                 lo: im.complete && im.naturalWidth ? im.currentSrc : "",
+                 ratio: (+im.getAttribute("width") || im.naturalWidth || 3) / (+im.getAttribute("height") || im.naturalHeight || 2) };
       });
       var i = figures.indexOf(picture.closest(".rail__f"));
       open(list, i < 0 ? 0 : i, figure);

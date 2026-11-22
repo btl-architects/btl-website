@@ -22,9 +22,12 @@ async function slowImages(page:Page) {
 const drawn=(page:Page)=>page.screenshot({clip:{x:420,y:250,width:600,height:400}});
 const same=(a:Buffer,b:Buffer)=>a.equals(b);
 /* Loaded is not drawn: WebKit reports complete a frame or two before it paints.
-   A snapshot taken in that gap is an empty stage, and two of those compare equal. */
-const painted=(page:Page)=>page.locator('.lb__img').evaluate((im:HTMLImageElement)=>im.decode()
-  .then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))));
+   A snapshot taken in that gap is an empty stage, and two of those compare equal.
+   decode() rejects when the src changes under it, which it does when the
+   strip's copy hands over to the viewer's own file, so it is asked again. */
+const painted=(page:Page)=>expect.poll(()=>page.locator('.lb__img').evaluate((im:HTMLImageElement)=>im.decode()
+  .then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))
+  .then(()=>true,()=>false)),{timeout:15000}).toBe(true);
 
 test('a project\'s first photograph never shows the previous project\'s in the viewer',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
