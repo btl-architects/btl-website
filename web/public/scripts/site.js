@@ -436,18 +436,27 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
   /* --- 1c. the home Recognition pair ---------------------------------------
      Two cards at a time, taking turns through every award and feature (the
      practice's request, 2026-11-22). The motion lives in CSS (.rot); this only
-     moves the pair on. It waits while the pair is off-screen, the tab hidden,
-     the reader open, or the visitor is pointing at, touching or focused in it,
-     so a card never changes under the hand that is reaching for it. */
+     moves the pair on.
+     Timing (2026-11-23, quickened twice at the practice's request): the first
+     change comes 1.2s after the pair is in view, so a visitor sees that it
+     rotates before scrolling on; then every 3.5s, for as long as it is in
+     view (the dissolve itself takes ~1.4s, leaving ~2s at rest). Coming back
+     to it, the first change is at 2s.
+     It waits while off-screen, the tab hidden, the reader open, a mouse over
+     it, a finger on it, or keyboard focus in it: a card never changes under
+     the hand reaching for it. Only keyboard focus: a tapped card keeps focus
+     (and gets it back when its reader closes), and holding for that focus
+     stopped the rotation for good after the first tap. */
   var rotor = document.querySelector("[data-rotate]");
   if (rotor && window.IntersectionObserver) {
     var rItems = [].slice.call(rotor.children), rPairs = Math.ceil(rItems.length / 2);
-    var rPage = 0, rTimer = 0, rHold = 0, rHover = matchMedia("(hover: hover)");
+    var rPage = 0, rTimer = 0, rHold = 0, rSeen = 0, rHover = matchMedia("(hover: hover)");
+    function rKeys() { try { return !!rotor.querySelector(":focus-visible"); } catch (e) { return false; } }
     function rTick() {
       var now = Date.now();
       // Anything holding the pair also holds it 2.5 s after it lets go.
       if (document.hidden || now < rHold || document.querySelector("dialog[open]") ||
-          rotor.matches(":focus-within") || rHover.matches && rotor.matches(":hover")) {
+          rKeys() || rHover.matches && rotor.matches(":hover")) {
         rHold = Math.max(rHold, now + 2500);
         rTimer = setTimeout(rTick, 1000);
         return;
@@ -463,12 +472,12 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       setTimeout(function () {
         rItems.forEach(function (el) { if (el.getAttribute("data-rot") === "out") el.setAttribute("data-rot", "off"); });
       }, 1700);
-      rTimer = setTimeout(rTick, 6500);
+      rTimer = setTimeout(rTick, 3500);
     }
-    rotor.addEventListener("pointerdown", function () { rHold = Date.now() + 6500; }, {passive: true});
+    rotor.addEventListener("pointerdown", function () { rHold = Date.now() + 3500; }, {passive: true});
     new IntersectionObserver(function (entries) {
       clearTimeout(rTimer);
-      if (entries[0].isIntersecting) rTimer = setTimeout(rTick, 6500);
+      if (entries[0].isIntersecting) rTimer = setTimeout(rTick, rSeen++ ? 2000 : 1200);
     }, {threshold: 0.35}).observe(rotor);
   }
 
