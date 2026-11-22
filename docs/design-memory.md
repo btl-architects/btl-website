@@ -461,7 +461,7 @@ capped) → press (release) → contact (compress, resolves).
 - Featured work is a scroll sequence on the project page and the work index on the home page.
 - Categories exist in the model but stay out of the interface until there is enough work.
 - Astro 7.3.5 + Sanity + Cloudflare Pages; Web3Forms handles browser enquiries.
-  Netlify is a legacy published-content preview host awaiting retirement.
+  Netlify (the previous host) was retired on 2026-11-23.
   Engineering rules live in `implementation-contract.md`, with current deployment
   details in `deploying.md`.
 - No CSS or animation framework, and no third-party scripts beyond one owner-approved

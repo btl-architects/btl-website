@@ -1,13 +1,13 @@
 # Response headers. Contract §5a.
 #
 # This file is the single source of truth for headers, and it is written in the
-# one format both Netlify and Cloudflare Pages read. They used to live in
-# netlify.toml, which meant moving host meant rewriting the security policy —
+# _headers format Cloudflare Pages reads (Netlify, the previous host, read the
+# same format). They used to live in netlify.toml, which meant moving host meant
+# rewriting the security policy —
 # the last thing that should have to be retyped under time pressure. Now the
 # host only supplies a build command.
 #
 # One rule: a value cannot span lines here, so the CSP is a single long line.
-# It is the same policy netlify.toml carried, character for character.
 
 /*
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload

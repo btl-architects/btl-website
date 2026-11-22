@@ -7,7 +7,6 @@ dist/
 .test-dist/
 .test-dist-*/
 .astro/
-.netlify/
 studio/dist/
 studio/.sanity/
 
@@ -35,7 +34,7 @@ studio/.migrate-cache.json
 /projects/
 
 # The site's OWN assets must be tracked, or a fresh clone builds a site with no
-# logo and no opening film — which is exactly what Netlify does on every deploy.
+# logo and no opening film — which is exactly what a host's build does.
 #
 # So the rule is drawn by PATH, not by extension. The two folders above hold the
 # camera originals — 3.7 GB, single drone files over 500 MB — and neither ships.
