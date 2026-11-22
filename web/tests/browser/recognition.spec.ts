@@ -42,8 +42,8 @@ test('the home pair rotates through every entry without moving the page', async 
     pair.forEach(text => seen.add(text.trim()));
     await expect(page.locator('[data-rotate] > .rot:not([data-rot="on"])').first()).toHaveJSProperty('inert', true);
     await page.mouse.move(0, 0);
-    // The first change comes 1.8s after the pair is in view, then every 4.5s.
-    await page.clock.runFor(step === 0 ? 1900 : 4600);
+    // The first change comes 1.2s after the pair is in view, then every 3.5s.
+    await page.clock.runFor(step === 0 ? 1300 : 3600);
     await page.clock.runFor(1800);
     expect((await rotor.boundingBox())!.height).toBeCloseTo(height, 0);
   }
@@ -57,12 +57,12 @@ test('the first change comes soon after the pair is in view, and it never stops'
   await page.locator('[data-rotate]').scrollIntoViewIfNeeded();
   await page.mouse.move(0, 0);
   const first = await visible(page);
-  await page.clock.runFor(2000);
+  await page.clock.runFor(1300);
   expect(await visible(page)).not.toEqual(first);
   // Twelve more turns: it keeps rotating for as long as it is in view.
   let last = await visible(page);
   for (let i = 0; i < 12; i++) {
-    await page.clock.runFor(4600);
+    await page.clock.runFor(3600);
     const now = await visible(page);
     expect(now).not.toEqual(last);
     last = now;
@@ -80,20 +80,25 @@ test('tapping a card does not stop the rotation', async ({page}) => {
   await page.locator('[data-rotate] > .rot[data-rot="on"] .pc').first().evaluate(el => (el as HTMLElement).focus({focusVisible: false} as FocusOptions));
   await page.mouse.move(0, 0);
   const before = await visible(page);
-  await page.clock.runFor(2000 + 2600);
+  await page.clock.runFor(1300 + 2600);
   expect(await visible(page)).not.toEqual(before);
 });
 
 test('keyboard focus holds the pair', async ({page}) => {
-  await page.clock.install();
+  // Frozen while focus is placed: a slower engine would otherwise see the
+  // first change (1.2s) happen before the keyboard gets there.
+  await page.clock.install({time: new Date('2026-11-23T00:00:00')});
   await threeEntries(page);
   await page.goto('/');
+  await page.clock.pauseAt(new Date('2026-11-23T00:00:01'));
   await page.locator('[data-rotate]').scrollIntoViewIfNeeded();
   await page.mouse.move(0, 0);
+  // A key press marks keyboard use; focusing a card then counts as keyboard
+  // focus in every engine (Safari does not Tab to links by default).
+  await page.keyboard.press('Shift');
   const link = page.locator('[data-rotate] > .rot[data-rot="on"] .pc').first();
   await link.focus();
-  await page.keyboard.press('Shift+Tab');
-  await page.keyboard.press('Tab');
+  expect(await link.evaluate(el => el.matches(':focus-visible'))).toBe(true);
   const before = await visible(page);
   await page.clock.runFor(15000);
   expect(await visible(page)).toEqual(before);

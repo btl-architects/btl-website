@@ -437,9 +437,11 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
      Two cards at a time, taking turns through every award and feature (the
      practice's request, 2026-11-22). The motion lives in CSS (.rot); this only
      moves the pair on.
-     Timing (2026-11-23): the first change comes 1.8s after the pair is in view,
-     so a visitor sees that it rotates before scrolling on; then every 4.5s, for
-     as long as it is in view. Coming back to it, the first change is at 3s.
+     Timing (2026-11-23, quickened twice at the practice's request): the first
+     change comes 1.2s after the pair is in view, so a visitor sees that it
+     rotates before scrolling on; then every 3.5s, for as long as it is in
+     view (the dissolve itself takes ~1.4s, leaving ~2s at rest). Coming back
+     to it, the first change is at 2s.
      It waits while off-screen, the tab hidden, the reader open, a mouse over
      it, a finger on it, or keyboard focus in it: a card never changes under
      the hand reaching for it. Only keyboard focus: a tapped card keeps focus
@@ -470,12 +472,12 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       setTimeout(function () {
         rItems.forEach(function (el) { if (el.getAttribute("data-rot") === "out") el.setAttribute("data-rot", "off"); });
       }, 1700);
-      rTimer = setTimeout(rTick, 4500);
+      rTimer = setTimeout(rTick, 3500);
     }
-    rotor.addEventListener("pointerdown", function () { rHold = Date.now() + 4500; }, {passive: true});
+    rotor.addEventListener("pointerdown", function () { rHold = Date.now() + 3500; }, {passive: true});
     new IntersectionObserver(function (entries) {
       clearTimeout(rTimer);
-      if (entries[0].isIntersecting) rTimer = setTimeout(rTick, rSeen++ ? 3000 : 1800);
+      if (entries[0].isIntersecting) rTimer = setTimeout(rTick, rSeen++ ? 2000 : 1200);
     }, {threshold: 0.35}).observe(rotor);
   }
 
