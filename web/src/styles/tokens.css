@@ -98,6 +98,10 @@
   --on-media-secondary: rgb(255 255 255 / 0.82);
   --on-media-tertiary:  rgb(255 255 255 / 0.62);
   --overlay:            rgb(5 5 5 / 0.97);
+  /* Instagram letterboxes a post's media in pure black. An embedded post's
+     box uses the same black, so the preview photo and the post meet with no
+     seam (.ig-post). */
+  --instagram-ground:   #000000;
   --overlay-press:      rgb(5 5 5 / 0.78);
   --reader-width:       64rem;
   --drop-on-image:      drop-shadow(0 2px 20px rgb(5 5 5 / 0.7));

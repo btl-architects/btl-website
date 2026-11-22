@@ -4,6 +4,7 @@ import ArticleBody from "./ArticleBody.astro";
 import Paragraphs from "./Paragraphs.astro";
 import type {Publication, Project} from "../lib/content";
 import {articleUrl, frameUrl, sourceName} from "../lib/press";
+import {resolveImage} from "../lib/media";
 interface Props {item: Publication; project?: Project}
 const {item, project} = Astro.props;
 const image = item.image ?? (item.useProjectImage ? project?.hook : null);
@@ -12,6 +13,10 @@ const embed = item.openingMode === "embed" && original?.startsWith("https://");
 const managed = item.openingMode === "reader";
 const where = sourceName(original, item.publication);
 const watch = where === "Instagram";
+// The preview photo's shape holds the box until the post reports its own, so
+// a first photo shaped like the post (as Instagram's are) means no jump.
+const preview = watch && item.articleHero ? resolveImage(item.articleHero) : null;
+const previewShape = preview?.width && preview?.height ? `aspect-ratio: ${preview.width} / ${preview.height};` : undefined;
 const openingImage = managed ? item.articleHero ?? project?.hook ?? image : image;
 const credits = managed ? item.articleCredits : undefined;
 const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, item.date?.slice(0, 4)].filter(Boolean).join(" · ");
@@ -36,8 +41,13 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
            is Instagram's page: white header and footer around the media. It
            reports its height (press-reader.js), and this box crops to the
            media between them, so there is no inner scrolling and no white. */
-        <div class="ig-post" data-ig-post>
-          <span class="wait" aria-hidden="true"></span>
+        <div class:list={["ig-post", item.articleHero && "ig-post--preview"]} style={previewShape} data-ig-post>
+          {/* The post's first photo, from the site's own image delivery: on
+              screen at first paint while Instagram's scripts and photos (about
+              4 MB) load, then under the post once it fades in. */}
+          {item.articleHero
+            ? <Figure image={item.articleHero} fit="contain" class="ig-post__preview" sizes="(min-width: 36rem) 33rem, 92vw" priority />
+            : <span class="wait" aria-hidden="true"></span>}
           <iframe class="press-article__frame" title={`${item.title}, on ${where}`} data-article-frame={frameUrl(original!)} scrolling="no"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
             referrerpolicy="strict-origin-when-cross-origin"></iframe>

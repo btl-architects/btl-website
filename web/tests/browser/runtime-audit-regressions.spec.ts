@@ -492,7 +492,7 @@ test.describe('touch runtime audit regressions',()=>{
       }).observe({type:'layout-shift',buffered:true});
     });
     await page.setViewportSize({width:412,height:823});
-    await page.route('**/scripts/site.js',async route=>{await new Promise(resolve=>setTimeout(resolve,250));await route.continue();});
+    await page.route('**/scripts/site.js*',async route=>{await new Promise(resolve=>setTimeout(resolve,250));await route.continue();});
     await page.goto('/');await page.evaluate(()=>document.fonts.ready);
     await expect(page.locator('.landing .srail')).toHaveAttribute('data-pinned','');
     await page.waitForTimeout(500);
