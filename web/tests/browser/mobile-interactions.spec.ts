@@ -492,7 +492,9 @@ test.describe('phone interactions',()=>{
 
   test('Press opens as a card to look into, put away with a thumb or a tap outside',async({page,browserName})=>{
     await page.goto('/recognition/');
-    const card=page.locator('a[data-article]').first();
+    // An article: scrolling its text back is part of what this checks, and a
+    // raised award card gives its embedded post the touches instead.
+    const card=page.locator('#press a[data-article]').first();
     await card.scrollIntoViewIfNeeded();
     await card.tap();
     const reader=page.getByRole('dialog',{name:'Press reader'});
@@ -692,4 +694,28 @@ test('mouse layouts show the contact copy mark on hover and focus at desktop and
     await expect(page.locator('.project-note--touch')).toBeHidden();
     await expect(page.locator('[data-rail] > .rail__note')).toBeVisible();
   }
+});
+
+/* An award can embed another site's post. A frame keeps its touches, so at
+   peek the card must still close on a downward swipe and rise on a tap. */
+test.describe('phone award card', ()=>{
+  test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  test('an embedded post never traps the card at peek',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','CDP touch input');
+    await page.goto('/recognition/');
+    const award=page.locator('#awards a[data-article]').first();
+    test.skip(!(await award.count()),'No award with a reader page is published.');
+    await award.scrollIntoViewIfNeeded();
+    await award.tap();
+    const reader=page.getByRole('dialog',{name:'Press reader'});
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    const frame=reader.locator('.press-article__frame');
+    test.skip(!(await frame.count()),'The published award is not an embed.');
+    await expect(frame).toHaveCSS('pointer-events','none');
+    await page.waitForTimeout(450);
+    const box=(await frame.boundingBox())!;
+    await page.touchscreen.tap(box.x+box.width/2,Math.min(box.y+40,820));
+    await expect(reader).toHaveAttribute('data-detent','full');
+    await expect(frame).not.toHaveCSS('pointer-events','none');
+  });
 });

@@ -12,20 +12,21 @@ for(const viewport of [{width:375,height:812},{width:667,height:375},{width:768,
     await page.setViewportSize(viewport);
     await page.evaluate(()=>document.fonts.ready);
     await page.evaluate(()=>{
-      const grid=document.querySelector('.credits')!;
+      // The Press section's grid; Awards has its own above it.
+      const grid=document.querySelector('#press .credits')!;
       const seed=grid.firstElementChild!;
       while(grid.children.length<12) {
         const copy=seed.cloneNode(true) as HTMLElement;
         copy.classList.remove('rv');grid.append(copy);
       }
     });
-    const cards=await page.locator('.credits .pc').all();
+    const cards=await page.locator('#press .credits .pc').all();
     const boxes=await Promise.all(cards.map(card=>card.boundingBox()));
     const first=boxes[0]!;
     const columns=boxes.filter(box=>box&&Math.abs(box.y-first.y)<1).length;
     if(viewport.width<768) {
       expect(columns).toBe(2);
-      const grid=(await page.locator('.credits').boundingBox())!;
+      const grid=(await page.locator('#press .credits').boundingBox())!;
       expect(first.width).toBeCloseTo((grid.width-24)/2,1);
     } else if(viewport.width<=1366) {
       expect(columns).toBeGreaterThanOrEqual(viewport.width>=1024?3:2);
@@ -57,7 +58,9 @@ for(const viewport of [{width:1376,height:1032},{width:1600,height:1000}]) {
       await page.goto('/recognition/');
       const preview=(await page.locator('.pc__img').first().boundingBox())!;
       expect(Math.round(preview.width*1000)/1000).toBeLessThanOrEqual(256);
-      await page.locator('a[data-article]').first().tap();
+      // An article, not an award: an award may embed a cross-site post, and a tap
+      // inside another site's frame never reaches the reader.
+      await page.locator('#press a[data-article]').first().tap();
       const reader=page.getByRole('dialog',{name:'Press reader'});
       await expect(reader).toHaveAttribute('data-detent','peek');
       await reader.locator('.press-reader__content').tap();

@@ -3,7 +3,6 @@
 import Paragraphs from "./Paragraphs.astro";
 import type {Project} from "../lib/content";
 import {getPublications} from "../lib/content";
-import {articlePagePath} from "../lib/press";
 interface Props {project: Project; class?: string}
 const {project, class: extra} = Astro.props;
 // Title and location are dropped from the meta: the index row above the rail
@@ -25,12 +24,11 @@ const awards = (await getPublications()).filter(p => p.kind === "award" && p.rel
         <div class="rail__m"><dt>{k}</dt><dd>{v}</dd></div>
       ))}
       {awards.length > 0 && (
-        <div class="rail__m rail__m--award"><dt>{awards.length > 1 ? "Awards" : "Award"}</dt>
-          {awards.map((a) => {
-            const href = articlePagePath(a);
-            const text = <>{a.title}<span class="rail__award-body">{a.publication}</span></>;
-            return <dd>{href ? <a class="tl" href={href} data-article data-publication={a.publication} aria-haspopup="dialog">{text}</a> : text}</dd>;
-          })}
+        <div class="rail__m"><dt>{awards.length > 1 ? "Awards" : "Award"}</dt>
+          {/* Plain text, not a link: a link here sat in the tab order ahead of
+              the photographs and was warmed before the opening photograph
+              painted. The award has its own page under Recognition. */}
+          {awards.map((a) => <dd>{a.title}<span class="rail__award-body">{a.publication}</span></dd>)}
         </div>
       )}
     </dl>
