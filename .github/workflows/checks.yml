@@ -49,16 +49,6 @@ jobs:
         with:
           path: web/node_modules/.astro/btl-media-v1
           key: ${{ steps.image-cache.outputs.cache-primary-key }}
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - name: Run browser checks
-        env:
-          BROWSER_TEST_FILTER: ${{ github.event_name == 'workflow_dispatch' && inputs.browser_test_filter || '' }}
-        run: |
-          if [ -n "$BROWSER_TEST_FILTER" ]; then
-            npx playwright test --grep "$BROWSER_TEST_FILTER"
-          else
-            npm run test:e2e
-          fi
       - name: Find the deployed preview for this commit
         id: preview
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
@@ -75,10 +65,58 @@ jobs:
         if: always()
         with:
           name: website-check-results
+          path: web/reports/
+  # The browser suite, once per engine, side by side. It ran Chromium, WebKit
+  # and Firefox one after another in the job above, about 30 minutes; each
+  # engine on its own runner takes about a third of that. Each job builds the
+  # site itself from the shared image cache rather than waiting on the job
+  # above. fail-fast is off so one engine's failure never hides another's.
+  browsers:
+    name: browsers (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit, firefox]
+    defaults:
+      run:
+        working-directory: web
+    env:
+      SANITY_PROJECT_ID: aur12nrf
+      SANITY_DATASET: production
+      SANITY_PREVIEW: 'false'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: web/.node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: web/node_modules/.astro/btl-media-v1
+          key: btl-media-v1-${{ github.sha }}
+          restore-keys: btl-media-v1-
+      - run: npm run build
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Run browser checks
+        env:
+          BROWSER_TEST_FILTER: ${{ github.event_name == 'workflow_dispatch' && inputs.browser_test_filter || '' }}
+        run: |
+          if [ -n "$BROWSER_TEST_FILTER" ]; then
+            npx playwright test --project=${{ matrix.browser }} --grep "$BROWSER_TEST_FILTER"
+          else
+            npx playwright test --project=${{ matrix.browser }}
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: browser-results-${{ matrix.browser }}
           path: |
             web/playwright-report/
             web/test-results/
-            web/reports/
   studio:
     runs-on: ubuntu-latest
     defaults:
