@@ -2306,6 +2306,12 @@ body[data-preview] .header { top: var(--preview-h); }
   /* Lowered, the card is a look, not a read: nothing scrolls, so any swipe on
      it moves the card itself. */
   .press-reader[data-detent="peek"] .press-reader__content { overflow: hidden; }
+  /* An embedded post (Instagram, a publisher's page) is another site's frame,
+     and a frame keeps every touch for itself: swiping down on it did not put
+     the card away, and tapping it did not raise it. At peek the card is for
+     glancing, so touches pass through the frame to the card; raised to full,
+     the frame answers its own taps (play, scroll). */
+  .press-reader[data-detent="peek"] .press-article__frame { pointer-events: none; }
   .press-reader__content { padding-bottom: max(var(--s-7), env(safe-area-inset-bottom)); }
   .press-reader::backdrop { opacity: calc(1 - var(--pull, 0) * .8); transition: opacity 260ms var(--ease); }
   .press-reader[data-pulling]::backdrop { transition: none; }
