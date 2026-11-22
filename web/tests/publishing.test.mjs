@@ -12,10 +12,9 @@ test('published and archived routes survive while only published projects are in
 test('preview cannot fall back silently or run on main',()=>{
   assert.throws(()=>buildMode({SANITY_PROJECT_ID:'test',SANITY_PREVIEW:'true'}),/TOKEN/);
   assert.throws(()=>buildMode({SANITY_PROJECT_ID:'test',SANITY_PREVIEW:'true',SANITY_PREVIEW_TOKEN:'test',CF_PAGES_BRANCH:'main'}),/production/);
-  assert.throws(()=>buildMode({SANITY_PROJECT_ID:'test',SANITY_PREVIEW:'true',SANITY_PREVIEW_TOKEN:'test',NETLIFY:'true',CONTEXT:'deploy-preview'}),/authentication/);
 });
 test('published branch previews are not indexable and still read only published content',()=>{
-  for (const env of [{CF_PAGES_BRANCH:'feature'}, {CONTEXT:'deploy-preview',NETLIFY:'true'}]) {
+  for (const env of [{CF_PAGES_BRANCH:'feature'}, {CF_PAGES_BRANCH:'redesign'}]) {
     const mode=buildMode({SANITY_PROJECT_ID:'test',...env});
     assert.equal(mode.preview,false); assert.equal(mode.noindex,true); assert.equal(mode.client.perspective,'published');
   }
@@ -90,6 +89,4 @@ test('only a production build carries the enquiry key',()=>{
   assert.equal(enquiryKey({...key,CF_PAGES:'1',CF_PAGES_BRANCH:'main',SANITY_PREVIEW:'true'}),'', 'draft previews get no key');
   assert.equal(enquiryKey({CF_PAGES:'1',CF_PAGES_BRANCH:'main'}),'', 'no key configured means none');
   assert.equal(enquiryKey({...key}),'real-key', 'a local or CI build uses a key only if one is given');
-  assert.equal(enquiryKey({...key,CONTEXT:'production'}),'real-key');
-  for (const CONTEXT of ['deploy-preview','branch-deploy','dev']) assert.equal(enquiryKey({...key,CONTEXT}),'');
 });

@@ -46,8 +46,7 @@ feature preview use the same panel. See the [editing guide](docs/editing-guide.m
 and [deployment guide](docs/deploying.md).
 
 Protected draft previews require a read-only Sanity token and a Cloudflare
-runtime password of at least 16 characters. Netlify previews use published
-content because Netlify does not run the Cloudflare authentication layer.
+runtime password of at least 16 characters.
 Branch previews do not send enquiries and are excluded from search.
 `build-status.json` records the build mode, source commit and build time. A
 local build also records whether its checkout was dirty. Production static

@@ -4,7 +4,7 @@
 # anything a publication printed — must keep working, so these are 301s and they
 # are permanent commitments.
 #
-# Read by both Netlify and Cloudflare Pages, same format. First match wins,
+# Read by Cloudflare Pages. First match wins,
 # which is why these sit here rather than being appended: tools/redirects.mjs
 # adds the per-project rules and the CMS's own redirects to dist/_redirects
 # after the build, below these.
