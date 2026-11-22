@@ -13,10 +13,10 @@ import "../styles/components.css";
 
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { getSettings, getHome } from "../lib/content";
+import { getSettings, getHome, getPublications } from "../lib/content";
 import { isPreview, isNoindex } from "../lib/sanity";
 import { socialImage, resolveImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
-import {pageSearchListing, searchMetadata, businessStructuredData, jsonLd, type SearchListing} from "../lib/seo";
+import {pageSearchListing, searchMetadata, businessStructuredData, awardName, jsonLd, type SearchListing} from "../lib/seo";
 
 interface Props {
   title: string;
@@ -39,9 +39,11 @@ interface Props {
   preloadImage?: {image: SiteImage; sizes: string};
   articleReader?: boolean;
   article?: {date: string; author: string; authorType?: "Person" | "Organization"; headline?: string; publisher?: string; source?: string};
+  /** Extra structured data for this page (a project's CreativeWork). */
+  structuredData?: Record<string, unknown>;
 }
 
-const { title: fallbackTitle, description: fallbackDescription, seo, current = "", ground = "dark", noindex = false, share, articleReader = false, article } = Astro.props;
+const { title: fallbackTitle, description: fallbackDescription, seo, current = "", ground = "dark", noindex = false, share, articleReader = false, article, structuredData } = Astro.props;
 const settings = await getSettings();
 const {title, description} = searchMetadata({
   title: Astro.url.pathname === "/" ? `${settings.name} — Architecture & Interiors, Kozhikode` : fallbackTitle,
@@ -62,7 +64,10 @@ const shareAlt = (share ?? home.founders ?? home.studio.image)?.alt ?? settings.
 /* The business is the same entity on every page. Its image comes from the
  * practice rather than whichever project happens to be shared. */
 const origin = Astro.site?.href ?? new URL('/', canonical).href;
-const org = businessStructuredData(settings, origin, socialImage(home.founders ?? home.studio.image));
+// Every award the practice has won, on every page, so search engines connect
+// the name with the recognition wherever they enter.
+const awards = (await getPublications()).filter(p => p.kind === "award").map(awardName);
+const org = businessStructuredData(settings, origin, socialImage(home.founders ?? home.studio.image), awards);
 const website = Astro.url.pathname === "/" ? {
   "@context": "https://schema.org", "@type": "WebSite",
   "@id": new URL('#website', origin).href, name: settings.name, url: origin,
@@ -124,6 +129,7 @@ const website = Astro.url.pathname === "/" ? {
     />
     <script type="application/ld+json" set:html={jsonLd(org)} is:inline />
     {website && <script type="application/ld+json" set:html={jsonLd(website)} is:inline />}
+    {structuredData && <script type="application/ld+json" set:html={jsonLd(structuredData)} is:inline />}
     {article && <script type="application/ld+json" set:html={jsonLd({
       "@context": "https://schema.org", "@type": "Article", headline: article.headline ?? title,
       description, mainEntityOfPage: canonical,
@@ -147,6 +153,6 @@ const website = Astro.url.pathname === "/" ? {
     <slot />
     <Footer settings={settings} current={current} />
     <script src="/scripts/site.js" is:inline defer></script>
-    {(articleReader || current === "press") && <script src="/scripts/press-reader.js" is:inline defer></script>}
+    {(articleReader || current === "recognition") && <script src="/scripts/press-reader.js" is:inline defer></script>}
   </body>
 </html>

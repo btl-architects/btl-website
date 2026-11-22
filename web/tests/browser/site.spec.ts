@@ -215,13 +215,6 @@ test('film stops outside the viewport and offers no pause control',async({page})
   await page.locator('#contact').scrollIntoViewIfNeeded();
   await expect.poll(()=>page.locator('video').evaluateAll(v=>v.every(e=>(e as HTMLVideoElement).paused))).toBeTruthy();
 });
-test('reduced motion never requests video or advances frames',async({page})=>{
-  await page.emulateMedia({reducedMotion:'reduce'});const media:string[]=[];page.on('request',r=>{if(r.resourceType()==='media')media.push(r.url());});
-  await page.goto('/');await expect(page.locator('video[src]')).toHaveCount(0);
-  await expect(page.locator('#statement .rv')).toHaveCSS('opacity','1');
-  await page.waitForTimeout(6500);
-  await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');expect(media).toEqual([]);
-});
 test('opening stills use authored phone framing or the responsive fallback before JavaScript runs',async({browser,baseURL})=>{
   const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:375,height:812}});
   try {

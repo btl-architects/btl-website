@@ -2,7 +2,7 @@ import {test, expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test('complete Press artwork responds to hover and keyboard focus without clipping', async ({page}) => {
-  for (const route of ['/', '/press/']) {
+  for (const route of ['/', '/recognition/']) {
     await page.emulateMedia({reducedMotion:'no-preference'});
     await page.goto(route, {waitUntil:'domcontentloaded'});
     const card = page.locator('a.pc--custom').first();
@@ -73,7 +73,7 @@ test('BTL reader keeps the page, traps focus, restores scroll and dismisses with
 
 test('Press captions follow the photograph anchor inside complete artwork at every breakpoint', async ({page}) => {
   await page.emulateMedia({reducedMotion:'reduce'});
-  for (const route of ['/', '/press/']) {
+  for (const route of ['/', '/recognition/']) {
     await page.goto(route);
     const caption = page.locator('.pc__m').first();
     await caption.evaluate(el => el.textContent = 'Feature · A house with a deliberately longer project name in Wayanad · 2026');
@@ -122,22 +122,22 @@ test('a blocked publisher retains its escape route and leaves BTL usable', async
   await page.goto('/__reader-demo/');
   await page.locator('a[data-article]').nth(1).click();
   const reader = page.getByRole('dialog', {name: 'Press reader'});
-  await expect(reader.locator('.press-article__help')).toContainText('If the article does not appear');
+  await expect(reader.locator('.press-article__help')).toContainText('If it does not appear');
   await expect(reader.getByRole('link', {name: 'Open original'})).toHaveAttribute('href', 'https://example.com/embedded-article');
   await reader.getByRole('button', {name: 'Close article'}).click();
-  await expect(page.getByRole('heading', {name: 'Press', exact: true})).toBeVisible();
+  await expect(page.getByRole('heading', {name: 'Recognition', exact: true})).toBeVisible();
 });
 
 test('a failed or cancelled fetch cannot leave the visitor trapped or reopen the panel', async ({page}) => {
-  await page.route('**/press/reader-fixture/', route => route.fulfill({status: 503, body: 'Unavailable'}));
+  await page.route('**/recognition/reader-fixture/', route => route.fulfill({status: 503, body: 'Unavailable'}));
   await page.goto('/__reader-demo/');
   await page.locator('a[data-article]').first().click();
   const reader = page.getByRole('dialog', {name: 'Press reader'});
   await expect(reader.getByRole('link', {name: 'Open article page'})).toBeVisible();
   await reader.getByRole('button', {name: 'Close article'}).click();
   await expect(reader).not.toBeVisible();
-  await page.unroute('**/press/reader-fixture/');
-  await page.route('**/press/reader-fixture/', async route => {await new Promise(r => setTimeout(r, 300)); await route.continue().catch(() => {});});
+  await page.unroute('**/recognition/reader-fixture/');
+  await page.route('**/recognition/reader-fixture/', async route => {await new Promise(r => setTimeout(r, 300)); await route.continue().catch(() => {});});
   await page.locator('a[data-article]').first().click();
   await reader.getByRole('button', {name: 'Close article'}).click();
   await page.waitForTimeout(450);
@@ -210,7 +210,7 @@ test('external mode uses the same panel and its source opens a new tab; modifier
   // A visible article heading establishes document readiness before reading
   // its location. The cached frame URL can be empty for a noopener tab in CI.
   await expect(article.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
-  await expect.poll(()=>article.evaluate(()=>location.href)).toMatch(/\/press\/reader-fixture\/$/);
+  await expect.poll(()=>article.evaluate(()=>location.href)).toMatch(/\/recognition\/reader-fixture\/$/);
   await expect(reader).not.toBeVisible();
   await article.close();
 });
@@ -220,7 +220,7 @@ test('BTL-managed article links remain readable without JavaScript', async ({bro
   const page = await context.newPage();
   await page.goto(new URL('/__reader-demo/',baseURL).href);
   await page.locator('a[data-article]').first().click();
-  await expect(page).toHaveURL(/\/press\/reader-fixture\/$/);
+  await expect(page).toHaveURL(/\/recognition\/reader-fixture\/$/);
   await expect(page.getByRole('heading', {name: 'A quiet place to read'})).toBeVisible();
   await expect(page.locator('.press-article__body')).toContainText('This is sample content');
   await context.close();

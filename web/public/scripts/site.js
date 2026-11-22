@@ -255,16 +255,15 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
      stops entirely when it is off-screen so a page nobody is looking at is not
      decoding video.
 
-     Video is fetched lazily and only when it will actually be watched. Under
-     reduced motion, or on a metered connection, the poster frames alone carry
-     the sequence and no video is requested. */
+     Video is fetched lazily and only when it will actually be watched. On a
+     metered connection (Save-Data) the poster frames alone carry the sequence
+     and no video is requested. */
   var stage = document.querySelector("[data-stage-frames]");
   if (stage) {
     var sFrames = [].slice.call(stage.querySelectorAll(".stage__f"));
     /* The opening no longer captions itself, so nothing reads data-label. The
        attribute stays on each frame — it is the clip's name in the CMS. */
     var connection = navigator.connection;
-    var motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     var narrowStage = window.matchMedia("(max-width: 47.99rem)");
     /* No userPaused. The pause control was removed at the practice's request, so
        the only things that stop the sequence are leaving the viewport, the tab
@@ -277,7 +276,13 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
     var pageReady = false;
     function afterPaint() { afterFirstPaint(function () { pageReady = true; sync(); }); }
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
-    function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
+    /* Reduce Motion no longer switches the film off: the practice decided on
+       2026-11-22 that the opening plays for everyone. iPhones with Reduce
+       Motion on were left on a still with nothing that would start the film —
+       the gesture fallback below only answers a refused play(), and with
+       stills-only no play() was ever attempted. Save-Data still gets the
+       stills: it is a request not to download video at all. */
+    function stillsOnly() { return !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
     // Inert templates avoid constructing a media player for every clip during
     // HTML parsing. Only the current clip (and its later preload) needs one.
@@ -420,13 +425,51 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       show(at);
     }
     document.addEventListener("visibilitychange", sync);
-    motion.addEventListener("change", sync);
     narrowStage.addEventListener("change", sync);
     if (connection && connection.addEventListener) connection.addEventListener("change", sync);
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; sync(); }, {threshold:0.25}).observe(stage);
     } else { visible = true; }
     sync();
+  }
+
+  /* --- 1c. the home Recognition pair ---------------------------------------
+     Two cards at a time, taking turns through every award and feature (the
+     practice's request, 2026-11-22). The motion lives in CSS (.rot); this only
+     moves the pair on. It waits while the pair is off-screen, the tab hidden,
+     the reader open, or the visitor is pointing at, touching or focused in it,
+     so a card never changes under the hand that is reaching for it. */
+  var rotor = document.querySelector("[data-rotate]");
+  if (rotor && window.IntersectionObserver) {
+    var rItems = [].slice.call(rotor.children), rPairs = Math.ceil(rItems.length / 2);
+    var rPage = 0, rTimer = 0, rHold = 0, rHover = matchMedia("(hover: hover)");
+    function rTick() {
+      var now = Date.now();
+      // Anything holding the pair also holds it 2.5 s after it lets go.
+      if (document.hidden || now < rHold || document.querySelector("dialog[open]") ||
+          rotor.matches(":focus-within") || rHover.matches && rotor.matches(":hover")) {
+        rHold = Math.max(rHold, now + 2500);
+        rTimer = setTimeout(rTick, 1000);
+        return;
+      }
+      var was = rPage;
+      rPage = (rPage + 1) % rPairs;
+      rItems.forEach(function (el, k) {
+        var on = (k >> 1) === rPage;
+        if (!on && (k >> 1) !== was) return;
+        el.inert = !on;
+        el.setAttribute("data-rot", on ? "on" : "out");
+      });
+      setTimeout(function () {
+        rItems.forEach(function (el) { if (el.getAttribute("data-rot") === "out") el.setAttribute("data-rot", "off"); });
+      }, 1700);
+      rTimer = setTimeout(rTick, 6500);
+    }
+    rotor.addEventListener("pointerdown", function () { rHold = Date.now() + 6500; }, {passive: true});
+    new IntersectionObserver(function (entries) {
+      clearTimeout(rTimer);
+      if (entries[0].isIntersecting) rTimer = setTimeout(rTick, 6500);
+    }, {threshold: 0.35}).observe(rotor);
   }
 
   /* --- 2. header contrast -------------------------------------------------
@@ -1293,7 +1336,20 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       if (openCard === card) { closeAll(push); return Promise.resolve(); }
 
       var version = ++expansionVersion;
-      return fetchRail(slug).then(function (rail) {
+      /* Usually already warmed and immediate. When it is not, the btl line
+         after the project's place says the tap was heard (.wait sits out its
+         own 400ms pause, so a warmed project never shows it). */
+      var title = card.querySelector(".pcard__place") || card.querySelector(".pcard__t"), mark = null;
+      if (title && !title.querySelector(".wait")) {
+        mark = document.createElement("span");
+        mark.className = "wait pcard__wait";
+        mark.setAttribute("data-on-media", "");
+        mark.setAttribute("aria-hidden", "true");
+        title.appendChild(mark);
+      }
+      var fetched = fetchRail(slug);
+      fetched.then(function () { if (mark) mark.remove(); }, function () { if (mark) mark.remove(); });
+      return fetched.then(function (rail) {
         if (version !== expansionVersion) return;
         /* Both cards move at once — the old one shrinking, the new one growing
            — and the card under the pointer is held still for the whole of it.
@@ -1714,7 +1770,7 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
         return { src: bits[0], w: parseInt(bits[1], 10) || 0 };
       }).filter(function (c) { return c.src; }).sort(function (x, y) { return x.w - y.w; });
       var fit = all.filter(function (c) { return c.w >= need; })[0] || all[all.length - 1];
-      return fit ? fit.src : el.currentSrc || el.src;
+      return fit || { src: el.currentSrc || el.src, w: 0 };
     }
 
     function build() {
@@ -1729,6 +1785,7 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
         '<div class="lb__stage" data-stage>' +
           '<img class="lb__img" alt="" draggable="false">' +
         '</div>' +
+        '<span class="wait lb__wait" data-on-media aria-hidden="true"></span>' +
         '<div class="lb__bar">' +
           '<span class="lb__count" data-count aria-live="polite"></span>' +
           '<button class="lb__x" type="button" data-close>Close' +
@@ -1866,21 +1923,84 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
 
     /* --- showing ----------------------------------------------------------- */
 
+    /* Each photograph is drawn by a new <img>, never by giving the old one a
+       new src. A browser goes on painting an image's previous picture until
+       the new file has arrived — Chromium even reports it gone (currentSrc is
+       empty) while it is still on screen — so the count and caption moved on
+       at once while the last photograph stayed up. On a large screen, which
+       asks for a file nothing has fetched yet, opening a project's first
+       photograph showed the previous project's for as long as the download
+       took. An empty stage for that moment is the truth; the old picture was
+       not. sharpen() is the one place that does swap a src in place, and it
+       swaps in the same photograph at a higher resolution, already loaded. */
+    function fresh() {
+      var next = document.createElement("img");
+      next.className = img.className;
+      next.setAttribute("alt", "");
+      next.setAttribute("draggable", "false");
+      stage.replaceChild(next, img);
+      img = next;
+    }
+
+    /* Opening is instant because the page already holds the photograph: the
+       reader just clicked it, in a strip, at a strip's size. Until the viewer's
+       own file has arrived that copy stands in, drawn at the size the full file
+       will take, and the full file replaces it in place the moment it is ready
+       — the same photograph, only sharper, so swapping the src is right here.
+       The stage is empty, and the btl line waits on it, only for a photograph
+       the page never loaded (a deferred one, or a neighbour stepped to before
+       the warm-up reached it). */
+    function fitted(it) {
+      var cs = getComputedStyle(img);
+      var w = Math.min(parseFloat(cs.maxWidth) || window.innerWidth,
+                       (parseFloat(cs.maxHeight) || window.innerHeight) * it.ratio, it.w || Infinity);
+      return { w: w, h: w / it.ratio };
+    }
+    function standingIn() {
+      var it = items[at];
+      return !!(it && it.lo && it.lo !== it.src && img.getAttribute("src") === it.lo);
+    }
+    function pinStandIn() {
+      var box = fitted(items[at]);
+      img.style.width = box.w + "px"; img.style.height = box.h + "px";
+      natural.w = box.w; natural.h = box.h;
+    }
+    function waiting(on) { lb.setAttribute("data-waiting", on ? "true" : "false"); }
+
     function show(i) {
       at = (i + items.length) % items.length;
       var it = items[at];
+      if (img.getAttribute("src") !== it.src) fresh();
       reset(false);
       img.style.width = ""; img.style.height = "";   /* unpin a sharpened predecessor */
-      img.src = it.src;
+      var file = it._pre || (it._pre = new Image());
+      if (!file.src) file.src = it.src;
+      var arrived = file.complete && file.naturalWidth > 0;
+      var shown = img;
+      natural.w = 0; natural.h = 0;
+      shown.onload = function () {
+        if (shown !== img) return;
+        if (!standingIn()) { natural.w = shown.clientWidth; natural.h = shown.clientHeight; }
+        waiting(false);
+      };
+      shown.onerror = function () { if (shown === img) waiting(false); };
+      if (arrived || !it.lo) img.src = it.src;
+      else {
+        img.src = it.lo;
+        pinStandIn();
+        file.decode().then(function () {
+          if (shown !== img || !standingIn()) return;   /* moved on, or zoom already sharpened it */
+          img.style.width = ""; img.style.height = "";
+          img.src = it.src;
+        }, function () {});
+      }
       img.alt = it.alt || "";
       capEl.textContent = it.caption || "";
       countEl.textContent = (at + 1) + " / " + items.length;
       var many = items.length > 1;
       prevBtn.hidden = !many; nextBtn.hidden = !many;
-      img.onload = function () {
-        natural.w = img.clientWidth; natural.h = img.clientHeight;
-      };
-      if (img.complete) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
+      if (img.complete && !standingIn()) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
+      waiting(!img.complete);
       // the neighbours, two each way, so a run of swipes never waits
       if (many) {
         [1, -1, 2, -2].forEach(function (k) {
@@ -2253,9 +2373,11 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
 
     window.addEventListener("resize", function () {
       if (!isOpen()) return;
-      /* A sharpened photograph is pinned to the fitted size of the old window. */
+      /* A sharpened photograph is pinned to the fitted size of the old window;
+         a stand-in is pinned to the new one. */
       img.style.width = ""; img.style.height = "";
-      natural.w = img.clientWidth; natural.h = img.clientHeight;
+      if (standingIn()) pinStandIn();
+      else { natural.w = img.clientWidth; natural.h = img.clientHeight; }
       reset(false);
     });
 
@@ -2320,8 +2442,12 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       var list = figures.map(function (fig) {
         var im = fig.querySelector("img");
         var cap = fig.querySelector("figcaption");
-        return { src: bestSrc(im), alt: im.getAttribute("alt") || "",
-                 caption: cap ? cap.textContent.trim() : "" };
+        var best = bestSrc(im);
+        return { src: best.src, w: best.w, alt: im.getAttribute("alt") || "",
+                 caption: cap ? cap.textContent.trim() : "",
+                 /* The copy the page already holds, to stand in (show()). */
+                 lo: im.complete && im.naturalWidth ? im.currentSrc : "",
+                 ratio: (+im.getAttribute("width") || im.naturalWidth || 3) / (+im.getAttribute("height") || im.naturalHeight || 2) };
       });
       var i = figures.indexOf(picture.closest(".rail__f"));
       open(list, i < 0 ? 0 : i, figure);

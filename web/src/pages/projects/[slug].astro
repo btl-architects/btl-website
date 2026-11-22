@@ -10,7 +10,10 @@ import Base from "../../layouts/Base.astro";
 import ProjectRail from "../../components/ProjectRail.astro";
 import ProjectNote from "../../components/ProjectNote.astro";
 import RailNav from "../../components/RailNav.astro";
-import { getProjects, getProjectRoutes } from "../../lib/content";
+import { getProjects, getProjectRoutes, getPublications } from "../../lib/content";
+import {awardName, projectStructuredData} from "../../lib/seo";
+import {articlePagePath} from "../../lib/press";
+import {socialImage} from "../../lib/media";
 import Onward from "../../components/Onward.astro";
 import {railSizes} from "../../lib/media";
 
@@ -31,6 +34,10 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { project, prev, next } = Astro.props;
+const won = (await getPublications()).filter(p => p.kind === "award" && p.relatedProject === project.slug);
+const awards = won.map(awardName);
+const origin = Astro.site?.href ?? new URL("/", Astro.url).href;
+const work = projectStructuredData(project, origin, new URL("#practice", origin).href, socialImage(project.hook), awards);
 ---
 
 <Base
@@ -40,6 +47,8 @@ const { project, prev, next } = Astro.props;
     || `${project.title}, ${project.location} — btl architects.`}
   current="projects"
   share={project.hook}
+  structuredData={work}
+  articleReader={won.some(a => articlePagePath(a))}
   preloadImage={project.images[0] ? {image:project.images[0],sizes:railSizes(project.images[0])} : undefined}
 >
   <main id="main" data-ground="dark" class="pj">

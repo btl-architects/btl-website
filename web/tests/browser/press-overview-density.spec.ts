@@ -8,7 +8,7 @@ for(const viewport of [{width:375,height:812},{width:667,height:375},{width:768,
     const context=await browser.newContext(tablet?{hasTouch:true,isMobile:true}:{});
     const page=await context.newPage();
     await page.emulateMedia({reducedMotion:'reduce'});
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     await page.setViewportSize(viewport);
     await page.evaluate(()=>document.fonts.ready);
     await page.evaluate(()=>{
@@ -54,7 +54,7 @@ for(const viewport of [{width:1376,height:1032},{width:1600,height:1000}]) {
     test.use({viewport,hasTouch:true,isMobile:true});
     test('Press keeps compact previews and swipe reader resting positions',async({page})=>{
       await page.emulateMedia({reducedMotion:'reduce'});
-      await page.goto('/press/');
+      await page.goto('/recognition/');
       const preview=(await page.locator('.pc__img').first().boundingBox())!;
       expect(Math.round(preview.width*1000)/1000).toBeLessThanOrEqual(256);
       await page.locator('a[data-article]').first().tap();

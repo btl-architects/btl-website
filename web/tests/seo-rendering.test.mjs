@@ -17,7 +17,7 @@ before(async () => {
   await server[Symbol.for('astro.devServerAppReady')];
   ({sanity} = await server.ssrLoadModule('/src/lib/sanity.ts'));
   originalFetch = sanity.fetch;
-  sanity.fetch = async query => query.includes('_type == "category"') ? [] : settings;
+  sanity.fetch = async query => query.includes('_type == "category"') || query.includes('_type == "publication"') ? [] : settings;
   container = await experimental_AstroContainer.create({astroConfig: {site: 'https://btl-website-3wo.pages.dev'}});
   Base = (await server.ssrLoadModule('/src/layouts/Base.astro')).default;
 });
@@ -44,7 +44,7 @@ test('main-page and explicit search overrides change the head while preserving t
 });
 
 test('article metadata keeps its editorial headline and preview indexing rules', async () => {
-  const html = await render('/press/a-feature/', {
+  const html = await render('/recognition/a-feature/', {
     current: 'press', noindex: true,
     seo: {title: 'Independent search title'},
     article: {date: '2026-10-02', author: 'btl architects', headline: 'Original article headline'},

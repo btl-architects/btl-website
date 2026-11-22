@@ -5,7 +5,7 @@ for (const width of [375, 1440]) {
     await page.setViewportSize({width, height: 900});
     await page.emulateMedia({reducedMotion: 'no-preference'});
     await page.goto('/');
-    const card = page.locator('#press .pc').first();
+    const card = page.locator('#recognition .pc').first();
     await card.evaluate(el => window.scrollTo({top: el.getBoundingClientRect().top + scrollY - innerHeight + 12, behavior: 'instant'}));
     await page.waitForTimeout(1350);
     await expect(card).not.toHaveClass(/\bin\b/);
@@ -76,9 +76,9 @@ test('Press and team content stays visible without animation support', async ({b
       delete (window as any).IntersectionObserver;
     });
     const page = await context.newPage();
-    for (const route of ['/press/', '/people/']) {
+    for (const route of ['/recognition/', '/people/']) {
       await page.goto(new URL(route,baseURL).href);
-      const cards = page.locator(route === '/press/' ? '.pc' : '.trow');
+      const cards = page.locator(route === '/recognition/' ? '.pc' : '.trow');
       for (const card of await cards.all()) {
         await expect(card).toHaveCSS('opacity', '1');
         await expect(card).toHaveCSS('transform', 'none');
@@ -91,7 +91,7 @@ test('Press and team content stays visible without animation support', async ({b
 test('focusing an entering Press card keeps its pointer target steady', async ({page}) => {
   await page.emulateMedia({reducedMotion: 'no-preference'});
   await page.goto('/');
-  const card = page.locator('#press .pc').first();
+  const card = page.locator('#recognition .pc').first();
   await card.scrollIntoViewIfNeeded();
   await expect(card).toHaveClass(/\bin\b/);
   await card.focus();

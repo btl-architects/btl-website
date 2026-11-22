@@ -19,5 +19,9 @@
 /projects.html   /projects/   301
 /studio.html     /studio/     301
 /people.html     /people/     301
-/press.html      /press/      301
+/press.html      /recognition/      301
+
+# Press became Recognition on 2026-11-22. The old index keeps working; each
+# article's /press/<slug>/ address is added by tools/redirects.mjs.
+/press/          /recognition/      301
 /contact.html    /contact/    301

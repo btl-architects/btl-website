@@ -5,7 +5,7 @@ for(const viewport of [{width:1440,height:1300},{width:375,height:900}]) {
     await page.setViewportSize(viewport);
     await page.emulateMedia({reducedMotion:'reduce'});
     let referencePadding: string | undefined;
-    for(const path of ['/press/','/404.html','/contact/','/people/','/projects/nelly-house/']) {
+    for(const path of ['/recognition/','/404.html','/contact/','/people/','/projects/nelly-house/']) {
       await page.goto(path);
       await page.evaluate(()=>document.fonts.ready);
       const layout=await page.evaluate(()=>{

@@ -17,7 +17,7 @@ export const structure: StructureResolver = (S) =>
       S.documentTypeListItem("person").title("People"),
       S.listItem().title("Arrange people").id("arrange-people")
         .child(S.component().id("person-order").title("Arrange people").component(OrderPane).options({type: "person"})),
-      S.documentTypeListItem("publication").title("Press & awards"),
+      S.documentTypeListItem("publication").title("Recognition — awards & press"),
       S.documentTypeListItem("category").title("Categories"),
       S.documentTypeListItem("location").title("Locations"),
       S.documentTypeListItem("redirect").title("Redirects"),

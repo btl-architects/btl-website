@@ -22,7 +22,7 @@ test.describe('runtime audit regressions',()=>{
 
   test('closing projects consumes the in-page history entry while Back and Forward remain native',async({page})=>{
     await page.emulateMedia({reducedMotion:'reduce'});
-    await page.goto('/press/');await page.goto('/projects/');
+    await page.goto('/recognition/');await page.goto('/projects/');
     for(const slug of ['nelly-house','the-conservatory','teak-and-terra']) {
       const card=page.locator(`[data-card="${slug}"]`);
       await card.locator('[data-project]').press('Enter');
@@ -31,7 +31,7 @@ test.describe('runtime audit regressions',()=>{
       await expect(page).toHaveURL(/\/projects\/$/);
       await expect(card).not.toHaveAttribute('data-open','true');
     }
-    await page.goBack();await expect(page).toHaveURL(/\/press\/$/);
+    await page.goBack();await expect(page).toHaveURL(/\/recognition\/$/);
     await page.goForward();await expect(page).toHaveURL(/\/projects\/$/);
     const first=page.locator('[data-card="nelly-house"]');
     await first.locator('[data-project]').press('Enter');
@@ -258,7 +258,7 @@ test.describe('text enlargement and future content',()=>{
   });
 
   test('enlarged Press credit labels do not overlap their values',async({page})=>{
-    await page.goto('/press/elle-decor-nelly-house/');await page.setViewportSize({width:390,height:844});
+    await page.goto('/recognition/elle-decor-nelly-house/');await page.setViewportSize({width:390,height:844});
     await page.addStyleTag({content:'html{font-size:200% !important}'});
     const overlaps=await page.locator('.press-article__credits > div').evaluateAll(rows=>rows.map(row=>{
       const label=row.querySelector('dt')!.getBoundingClientRect(),value=row.querySelector('dd')!.getBoundingClientRect();
@@ -409,8 +409,8 @@ test.describe('touch runtime audit regressions',()=>{
     await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/studio/');
     await page.getByRole('button',{name:'Menu',exact:true}).press('Enter');
     await expect(page.locator('.menu').getByRole('link',{name:'Home',exact:true})).toBeFocused();
-    await page.locator('.menu').getByRole('link',{name:'Press',exact:true}).click();
-    await expect(page).toHaveURL(/\/press\/$/);await page.goBack();
+    await page.locator('.menu').getByRole('link',{name:'Recognition',exact:true}).click();
+    await expect(page).toHaveURL(/\/recognition\/$/);await page.goBack();
     await expect(page).toHaveURL(/\/studio\/$/);
     await expect(page.locator('.menu')).toHaveAttribute('data-open','false');
     await expect(page.locator('main')).toHaveJSProperty('inert',false);

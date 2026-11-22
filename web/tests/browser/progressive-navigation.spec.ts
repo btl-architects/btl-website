@@ -25,7 +25,7 @@ test.describe('navigation without JavaScript',()=>{
     await page.locator('[data-card="nelly-house"] [data-project]').click();
     await expect(page).toHaveURL(/\/projects\/nelly-house\/$/);
     await expect(page.getByRole('heading',{level:1})).toContainText('Nelly House');
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     const article=page.locator('a.pc').first();
     await expect(article).toBeVisible();
     const destination=await article.getAttribute('href');
@@ -34,7 +34,7 @@ test.describe('navigation without JavaScript',()=>{
     // the labelled local reader fixture verifies the managed route fallback.
     await page.goto('/__reader-demo/');
     await page.locator('a[data-article]').first().click();
-    await expect(page).toHaveURL(/\/press\/reader-fixture\/$/);
+    await expect(page).toHaveURL(/\/recognition\/reader-fixture\/$/);
     await expect(page.getByRole('heading',{name:'A quiet place to read'})).toBeVisible();
     await page.goto('/contact/');
     await expect(page.locator('a[href^="mailto:"]').first()).toBeVisible();

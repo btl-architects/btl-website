@@ -22,6 +22,47 @@
  * of it. There is one underline on the site, and only its vertical position
  * differs by component — .onward__t has no bottom padding to sit the rule in,
  * so it hangs just below its own box instead. */
+/* --- waiting ----------------------------------------------------------------
+ * The btl line element, drawn while something the reader asked for is still on
+ * its way — and only then. It sits out a pause first, so anything that arrives
+ * within 400ms never shows it: instant stays instant, and the mark is reserved
+ * for a wait long enough to need an answer. It draws in, holds, and leaves to
+ * the right, the way the onward links' rule leaves when they are followed.
+ *
+ * The real artwork, at a size that can carry its peak (the marker slot was too
+ * small, which is why it left that slot). The path is the brand file's own curve
+ * data, verbatim — 002 Element files/002 Short/PDF/S003.pdf through pdftocairo,
+ * first added in 986df8d — and is inlined rather than fetched, because a
+ * loading mark that itself waits on the network is no mark at all. It is a
+ * mask, so it takes --mark: green on a photograph or the viewer, the ground's
+ * own mark elsewhere. 4.91:1 is the artwork's clip box. Explicit height rather
+ * than aspect-ratio, which Safari 14 lacks. */
+.wait {
+  display: block; flex: none;
+  width: var(--wait-w, 4.5rem); height: calc(var(--wait-w, 4.5rem) / 4.91);
+  background: var(--mark);
+  -webkit-mask: var(--btl-line) no-repeat center / contain;
+          mask: var(--btl-line) no-repeat center / contain;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  pointer-events: none;
+  animation: wait-in 1ms linear 400ms forwards, wait-draw 2.4s var(--ease) 400ms infinite;
+}
+:root {
+  --btl-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0.34375 128.0 652.65625 133.0'%3E%3Cpath d='M 0.34375 260.535156 L 0.34375 230.808594 L 221.621094 230.804688 C 311.445312 230.804688 398.53125 129.417969 399.398438 128.394531 L 423.3125 145.933594 C 404.121094 176.378906 397.363281 200.058594 404.289062 212.617188 C 414.328125 230.804688 454.058594 230.804688 471.027344 230.804688 L 652.9375 230.804688 L 652.9375 260.53125 L 471.148438 260.53125 C 446.925781 260.53125 396.777344 260.53125 378.261719 226.976562 C 373.234375 217.859375 371.144531 207.496094 372.015625 195.78125 C 334.457031 226.503906 279.738281 260.53125 221.621094 260.53125 Z M 0.34375 260.535156 '/%3E%3C/svg%3E");
+}
+@keyframes wait-in { to { opacity: 1; } }
+@keyframes wait-draw {
+  0%       { clip-path: inset(0 100% 0 0); }
+  45%, 60% { clip-path: inset(0 0 0 0); }
+  100%     { clip-path: inset(0 0 0 100%); }
+}
+/* Still, for anyone who asked for no motion: the whole mark, after the same
+   pause, at rest. */
+@media (prefers-reduced-motion: reduce) {
+  .wait { clip-path: none; animation: wait-in 1ms linear 400ms forwards; }
+}
+
 .ul, .tl { position: relative; display: inline-block; padding-bottom: 0.4em; font-weight: 500; }
 
 .ul::after, .tl::after, .onward__t::after {
@@ -410,6 +451,8 @@ html:has(.menu[data-open="true"]) .header {
   text-transform: uppercase; color: var(--text-tertiary);
 }
 .rail__m dd { margin: var(--s-1) 0 0; font-size: var(--type-body-sm); }
+/* An award reads as what was won, then who gave it. */
+.rail__award-body { display: block; color: var(--text-tertiary); }
 
 .rail__f { margin: 0; flex: 0 0 auto; height: 100%; }
 .rail__f img {
@@ -555,6 +598,10 @@ html[data-project-anchoring] { overflow-anchor: none; }
   letter-spacing: -0.02em; color: var(--on-media);
   text-shadow: var(--shadow-on-image);
 }
+/* After the place name, inline and shorter than the line it sits in, so adding
+   it on a tap moves nothing — it is there from the tap, seen only after the
+   pause. */
+.pcard__wait { display: inline-block; vertical-align: middle; margin-left: var(--s-3); --wait-w: 2.5rem; }
 .pcard__place {
   grid-row: 2; grid-column: 1; margin-top: var(--s-2);
   font-size: var(--type-meta); letter-spacing: var(--track-meta);
@@ -2054,7 +2101,6 @@ body[data-preview] .header { top: var(--preview-h); }
     display: inline-flex; align-items: flex-end; justify-content: center;
     block-size: 1.5rem; padding-inline: 0.5em;
   }
-  .landing .srail__i::after { inset-inline-end: 0; }
 }
 
 /* Reversed to undo the rotation, so LinkedIn still comes first. */
@@ -2082,22 +2128,15 @@ body[data-preview] .header { top: var(--preview-h); }
   padding-inline: 0.3em;
   transition: color var(--dur-hover) var(--ease);
 }
-.landing .srail__i::after {
-  content: "";
-  position: absolute; inset-block: 0; inset-inline-end: -0.35em;
-  width: 1px; background: currentColor;
-  transform: scaleY(0); transform-origin: 50% 100%;
-  transition: transform var(--dur-base) var(--ease);
-}
+/* No drawn rule beside the words: the practice asked for the line off on
+   2026-11-22. Hover brightens the word; keyboard focus keeps the outline. */
 @media (hover: hover) {
   .landing .srail__i:hover { color: var(--on-media); }
-  .landing .srail__i:hover::after { transform: scaleY(1); }
 }
 .landing .srail__i:focus-visible { color: var(--on-media); }
-.landing .srail__i:focus-visible::after { transform: scaleY(1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing .srail__i, .landing .srail__i::after { transition: none; }
+  .landing .srail__i { transition: none; }
 }
 
 /* The home page shows the first few, in the same shape. */
@@ -2106,6 +2145,53 @@ body[data-preview] .header { top: var(--preview-h); }
    appeared under the press page's masthead where it was not wanted. Stated as
    a sibling rule it applies exactly where the pairing occurs. */
 .home-sec__head + .credits { margin-top: var(--s-7); }
+/* --- home: the rotating Recognition pair ------------------------------------
+   Practice request, 2026-11-22: two cards on screen, taking turns through every
+   award and feature. Every card shares grid row 1 and one of two columns, so
+   the cards in a column overlap, the row is as tall as the tallest of them, and
+   nothing below moves during a change.
+
+   The change is a cross-dissolve with depth: the outgoing card drifts up,
+   softens and fades; the incoming one rises from slightly below, sharpening as
+   it arrives. The incoming card is held back a little so the two never read as
+   one sliding strip, and the right-hand column follows the left by a beat.
+   Timing uses the reveal easing, a long, settling tail, so it feels placed
+   rather than pushed. Reduced motion keeps the dissolve without movement or
+   blur. */
+.credits--rotate > .rot { grid-row: 1; min-width: 0; }
+.credits--rotate > .rot[data-slot="0"] { grid-column: 1; }
+.credits--rotate > .rot[data-slot="1"] { grid-column: 2; }
+.rot {
+  --rot-dur: 1100ms;
+  --rot-stagger: 0ms;
+  transition:
+    opacity calc(var(--rot-dur) * .8) var(--ease-reveal) var(--rot-delay, 0ms),
+    translate var(--rot-dur) var(--ease-reveal) var(--rot-delay, 0ms),
+    scale var(--rot-dur) var(--ease-reveal) var(--rot-delay, 0ms),
+    filter calc(var(--rot-dur) * .7) var(--ease-reveal) var(--rot-delay, 0ms),
+    visibility 0s linear var(--rot-delay, 0ms);
+}
+.rot[data-slot="1"] { --rot-stagger: 160ms; }
+.rot[data-rot="on"] { --rot-delay: calc(var(--rot-stagger) + 260ms); }
+.rot[data-rot="out"] {
+  --rot-delay: var(--rot-stagger);
+  opacity: 0; translate: 0 -0.75rem; scale: .985; filter: blur(6px);
+  pointer-events: none;
+}
+.rot[data-rot="off"], .rot[data-rot="enter"] {
+  opacity: 0; translate: 0 1rem; scale: .985; filter: blur(6px);
+  visibility: hidden; pointer-events: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rot { --rot-dur: 900ms; }
+  .rot[data-rot] { translate: none; scale: none; filter: none; }
+}
+
+/* Recognition: Awards then Press, each the same heading-and-credits pair the
+   home section uses. The second section is held off the first by the gap
+   between home sections, not by a rule. */
+.recognition-sec + .recognition-sec { margin-top: var(--space-section, var(--s-9)); }
 
 /* Press reader: the site's dark ground and fine rules, with the page still
    visible around a quiet reading panel. Full height on a narrow phone. */
@@ -2156,6 +2242,7 @@ body[data-preview] .header { top: var(--preview-h); }
   padding: var(--s-7) var(--s-5); scrollbar-gutter: stable;
 }
 .press-reader__status { color: var(--text-secondary); }
+.press-reader__status .wait { margin: var(--s-8) auto; }
 .press-reader__status a { display: inline-block; margin-top: var(--s-4); text-decoration: underline; }
 .press-article { max-width: 52rem; margin-inline: auto; }
 .press-article__head { max-width: var(--measure-lead); margin-bottom: var(--s-7); }
@@ -2198,6 +2285,9 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__source { border-top: 1px solid var(--border-subtle); padding-top: var(--s-5); margin-top: var(--s-7); color: var(--text-secondary); font-size: var(--type-body-sm); }
 .press-article__help { font-size: var(--type-body-sm); color: var(--text-secondary); margin-bottom: var(--s-4); }
 .press-article__frame { display: block; width: 100%; height: 70vh; height: 70dvh; border: 1px solid var(--border-subtle); background: var(--surface); }
+/* An Instagram post is a phone-shaped card, not a page: framed at its own
+   width and centred, tall enough for a portrait video and its caption. */
+.press-article__frame--post { width: min(100%, 33rem); height: min(80vh, 52rem); height: min(80dvh, 52rem); margin-inline: auto; border: 0; }
 /* On a phone the reader is a card to look into, not a page to be inside
    (press-reader.js). It rises part way — a look at the article, nothing
    scrolling, so a thumb swiping down anywhere puts it away — and swipes or
@@ -2347,6 +2437,12 @@ body[data-preview] .header { top: var(--preview-h); }
   background: var(--overlay);
   opacity: var(--lb-shade, 1);
 }
+
+/* Only when the stage has nothing to draw: the photograph's own file is still
+   coming and the page had no copy of it to show meanwhile (site.js, show()).
+   display:none in between, so each wait starts its pause from the beginning. */
+.lb__wait { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1; }
+.lb[data-waiting="true"] .lb__wait { display: block; }
 
 /* The surface that receives the gestures. touch-action none because the
    browser's own pan and pinch would otherwise fight ours for the same
