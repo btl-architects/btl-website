@@ -281,7 +281,9 @@
     var status = document.createElement("p");
     status.className = "press-reader__status";
     status.setAttribute("role", "status");
-    status.textContent = "Opening article…";
+    // Said to a screen reader at once; shown as the btl line only if the
+    // article takes long enough to need it (.wait, components.css).
+    status.innerHTML = '<span class="sr-only">Opening article…</span><span class="wait" aria-hidden="true"></span>';
     content.appendChild(status);
     content.setAttribute("aria-busy", "true");
     savedScroll = window.scrollY;
