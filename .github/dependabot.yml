@@ -1,10 +1,16 @@
 version: 2
+# Grouped (2026-11-23): one PR per folder per week instead of one per
+# package. Fourteen separate PRs had piled up unreviewed, each conflicting
+# with the last on the lockfile. Security updates still arrive on their own.
 updates:
   - package-ecosystem: npm
     directory: /web
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      web-dependencies:
+        patterns: ["*"]
     ignore:
       - dependency-name: typescript
         versions: [">=7.0.0 <8.0.0"]
@@ -13,6 +19,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      studio-dependencies:
+        patterns: ["*"]
     ignore:
       - dependency-name: typescript
         versions: [">=7.0.0 <8.0.0"]
@@ -20,3 +29,6 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
