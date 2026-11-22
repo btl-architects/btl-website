@@ -8,10 +8,10 @@ New content reaches the live site by **rebuilding**, not by saving. Publishing i
 the Studio fires a webhook, the host rebuilds, and a minute or so later the page
 is live.
 
-It deploys to **Cloudflare Pages**. It used to be Netlify, and `netlify.toml` is
-still here for published-content previews. Netlify does not run the Cloudflare
-draft authentication middleware. Moving production back would require matching
-authentication before draft previews, plus deployment and domain verification.
+It deploys to **Cloudflare Pages**, and only there. It used to be Netlify; the
+Netlify configuration was removed on 2026-11-23. Moving to another host would
+need an equivalent of the Cloudflare draft-preview authentication, plus
+deployment and domain verification.
 
 ---
 
@@ -49,7 +49,6 @@ Once, by hand. Everything after this is automatic.
    Preview needs the Sanity project and dataset, but no enquiry key. Draft
    previews also need `SANITY_PREVIEW_TOKEN`, `SANITY_PREVIEW=true` and runtime
    `PREVIEW_PASSWORD` (at least 16 characters). Never enable drafts on `main`.
-   Netlify previews use published content only.
 
    | Name | Value | What it is |
    | --- | --- | --- |
@@ -89,7 +88,7 @@ Web3Forms' captcha option, or moving to a provider that authenticates with a
 secret key from a server.
 
 **Previews never send real email.** The key is only written into the page when
-Cloudflare is building `main` or Netlify its production context (see `enquiryKey()` in
+Cloudflare is building `main` (see `enquiryKey()` in
 `web/server/build-mode.js`). Branch and draft-preview builds have no key, and
 their form says it is unavailable without contacting anyone.
 
@@ -178,8 +177,9 @@ Neither lives in a host's config file any more. They are in:
   rules.
 - `web/public/_redirects` — the permanent redirects for the old `.html` URLs.
 
-Both are in a format Netlify and Cloudflare Pages read identically, which is the
-point: the security policy should not have to be retyped to change host. The
+Both are in the plain `_headers` / `_redirects` format most static hosts read,
+which is the point: the security policy should not have to be retyped to change
+host. The
 build appends the per-project redirects and any redirects set in the Studio to
 `_redirects` afterwards, below the ones already there.
 
