@@ -1866,9 +1866,29 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
 
     /* --- showing ----------------------------------------------------------- */
 
+    /* Each photograph is drawn by a new <img>, never by giving the old one a
+       new src. A browser goes on painting an image's previous picture until
+       the new file has arrived — Chromium even reports it gone (currentSrc is
+       empty) while it is still on screen — so the count and caption moved on
+       at once while the last photograph stayed up. On a large screen, which
+       asks for a file nothing has fetched yet, opening a project's first
+       photograph showed the previous project's for as long as the download
+       took. An empty stage for that moment is the truth; the old picture was
+       not. sharpen() is the one place that does swap a src in place, and it
+       swaps in the same photograph at a higher resolution, already loaded. */
+    function fresh() {
+      var next = document.createElement("img");
+      next.className = img.className;
+      next.setAttribute("alt", "");
+      next.setAttribute("draggable", "false");
+      stage.replaceChild(next, img);
+      img = next;
+    }
+
     function show(i) {
       at = (i + items.length) % items.length;
       var it = items[at];
+      if (img.getAttribute("src") !== it.src) fresh();
       reset(false);
       img.style.width = ""; img.style.height = "";   /* unpin a sharpened predecessor */
       img.src = it.src;
@@ -1877,8 +1897,10 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       countEl.textContent = (at + 1) + " / " + items.length;
       var many = items.length > 1;
       prevBtn.hidden = !many; nextBtn.hidden = !many;
-      img.onload = function () {
-        natural.w = img.clientWidth; natural.h = img.clientHeight;
+      var shown = img;
+      natural.w = 0; natural.h = 0;
+      shown.onload = function () {
+        if (shown === img) { natural.w = shown.clientWidth; natural.h = shown.clientHeight; }
       };
       if (img.complete) { natural.w = img.clientWidth; natural.h = img.clientHeight; }
       // the neighbours, two each way, so a run of swipes never waits
