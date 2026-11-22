@@ -27,7 +27,9 @@
       frame.src = frame.getAttribute("data-article-frame");
       // An Instagram post that never reports (blocked, offline) offers its link.
       var box = frame.parentNode;
-      if (box.hasAttribute("data-ig-post")) setTimeout(function () { box.setAttribute("data-failed", ""); }, 12000);
+      if (!box.hasAttribute("data-ig-post")) return;
+      box.setAttribute("data-ig-wait", "");
+      setTimeout(function () { box.setAttribute("data-failed", ""); }, 12000);
     });
   }
   /* Instagram's embed reports its height (MEASURE), again on every width

@@ -94,3 +94,26 @@ test('an Instagram post shows only its media, at its own height, with no inner s
   expect(boxH / boxW).toBeLessThan(1.45);
   await expect(box.locator('.ig-post__failed')).toBeHidden();
 });
+
+/* After a deploy a returning visitor could get the new page with an old,
+   cached press-reader.js: the post was hidden waiting for a reveal that old
+   script never made. Without the current script the post must simply show. */
+test('an embedded post is never hidden when its script is missing or stale', async ({page}) => {
+  await page.goto('/recognition/');
+  const href = await page.locator('#awards a[data-article]').first().getAttribute('href').catch(() => null);
+  test.skip(!href, 'No award with a reader page is published.');
+  await page.route('**/scripts/press-reader.js*', route => route.fulfill({contentType: 'text/javascript', body: 'document.querySelectorAll("[data-article-frame]").forEach(function(f){f.src=f.getAttribute("data-article-frame")});'}));
+  await page.goto(href!);
+  const box = page.locator('[data-ig-post]');
+  test.skip(!(await box.count()), 'The published award does not embed an Instagram post.');
+  await page.waitForTimeout(500);
+  await expect(box.locator('iframe')).toHaveCSS('opacity', '1');
+  await expect(box.locator('.wait')).toHaveCount(await box.locator('.wait').count());
+});
+
+test('script addresses carry a content fingerprint', async ({page}) => {
+  await page.goto('/recognition/');
+  const srcs = await page.locator('script[src^="/scripts/"]').evaluateAll(els => els.map(e => e.getAttribute('src')));
+  expect(srcs.length).toBeGreaterThan(0);
+  for (const src of srcs) expect(src).toMatch(/^\/scripts\/[a-z-]+\.js\?v=[0-9a-f]{12}$/);
+});

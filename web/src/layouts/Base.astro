@@ -16,6 +16,7 @@ import Footer from "../components/Footer.astro";
 import { getSettings, getHome, getPublications } from "../lib/content";
 import { isPreview, isNoindex } from "../lib/sanity";
 import { socialImage, resolveImage, ZOOM_LADDER, type SiteImage } from "../lib/media";
+import {scriptUrl} from "../lib/scripts";
 import {pageSearchListing, searchMetadata, businessStructuredData, awardName, jsonLd, type SearchListing} from "../lib/seo";
 
 interface Props {
@@ -152,7 +153,7 @@ const website = Astro.url.pathname === "/" ? {
     <Header settings={settings} current={current} />
     <slot />
     <Footer settings={settings} current={current} />
-    <script src="/scripts/site.js" is:inline defer></script>
-    {(articleReader || current === "recognition") && <script src="/scripts/press-reader.js" is:inline defer></script>}
+    <script src={scriptUrl("site.js")} is:inline defer></script>
+    {(articleReader || current === "recognition") && <script src={scriptUrl("press-reader.js")} is:inline defer></script>}
   </body>
 </html>

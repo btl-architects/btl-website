@@ -22,6 +22,7 @@ import { enquiryKey } from "../../server/build-mode.js";
 
 const c = (await getSettings()).contact;
 const accessKey = enquiryKey(process.env);
+import {scriptUrl} from "../lib/scripts";
 ---
 
 {/* Dark, like every other page. The white ground was a deliberate idea — the
@@ -85,4 +86,4 @@ const accessKey = enquiryKey(process.env);
   </main>
 </Base>
 
-<script src="/scripts/enquiry.js" is:inline defer></script>
+<script src={scriptUrl("enquiry.js")} is:inline defer></script>

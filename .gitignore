@@ -7,6 +7,8 @@ dist/
 .test-dist/
 .test-dist-*/
 .astro/
+# Local state from the retired Netlify CLI can linger in old checkouts.
+.netlify/
 studio/dist/
 studio/.sanity/
 

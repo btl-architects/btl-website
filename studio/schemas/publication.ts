@@ -74,8 +74,8 @@ export default defineType({
     }),
     defineField({
       name: "articleHero", title: "Article opening photograph", type: "figure",
-      hidden: ({document}) => document?.openingMode !== "reader",
-      description: "Separate from the PNG artwork used on the Press card. If empty, the article uses its related project's cover, then its Press artwork.",
+      hidden: ({document}) => document?.openingMode === "external",
+      description: "BTL reader: the photograph above the article; if empty, the related project's cover, then the card artwork. Embedded Instagram post: upload the post's first photo. It shows instantly, on the site's own image delivery, while Instagram loads (several seconds on a phone), and stays if Instagram is blocked.",
     }),
     defineField({
       name: "articleCredits", title: "Article credits", type: "credits",
