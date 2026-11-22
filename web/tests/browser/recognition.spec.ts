@@ -68,3 +68,29 @@ test('two or fewer entries never rotate', async ({page}) => {
   await expect(page.locator('[data-rotate]')).toHaveCount(0);
   await expect(page.locator('#recognition .rot[data-rot="on"]')).toHaveCount(sets);
 });
+
+/* An Instagram post shows only its media: Instagram reports its height and the
+   box crops away the white 54px header and 154px footer. This loads the real
+   Instagram embed, so it skips (not fails) if Instagram is unreachable. */
+test('an Instagram post shows only its media, at its own height, with no inner scroll', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844});
+  await page.goto('/recognition/');
+  const href = await page.locator('#awards a[data-article]').first().getAttribute('href').catch(() => null);
+  test.skip(!href, 'No award with a reader page is published.');
+  await page.goto(href!);
+  const box = page.locator('[data-ig-post]');
+  test.skip(!(await box.count()), 'The published award does not embed an Instagram post.');
+  await expect(box).toHaveAttribute('data-ready', '', {timeout: 20000}).catch(() => test.skip(true, 'Instagram did not respond.'));
+  const frame = box.locator('iframe');
+  await expect(frame).toHaveAttribute('scrolling', 'no');
+  await expect.poll(() => frame.evaluate(el => getComputedStyle(el).opacity)).toBe('1');
+  const {boxH, frameH, top, boxW} = await box.evaluate(el => {
+    const f = el.querySelector('iframe') as HTMLIFrameElement;
+    return {boxH: el.getBoundingClientRect().height, boxW: el.getBoundingClientRect().width, frameH: parseFloat(f.style.height), top: f.style.top};
+  });
+  expect(top).toBe('-54px');
+  expect(boxH).toBeCloseTo(frameH - 208, 0);
+  expect(boxH / boxW).toBeGreaterThan(.45);
+  expect(boxH / boxW).toBeLessThan(1.45);
+  await expect(box.locator('.ig-post__failed')).toBeHidden();
+});

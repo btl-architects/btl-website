@@ -31,10 +31,26 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
   </header>
   {embed ? (
     <>
-      <p class="press-article__help">{watch ? "On" : "Reading on"} {where}. If it does not appear, <a href={original!} target="_blank" rel="noopener noreferrer">open it on {where} <span aria-hidden="true">↗</span></a>.</p>
-      <iframe class:list={["press-article__frame", watch && "press-article__frame--post"]} title={watch ? `${item.title}, on ${where}` : `Article on ${item.publication}`} data-article-frame={frameUrl(original!)}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-        referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      {watch ? (
+        /* An Instagram post, shown as its photographs or video only. The frame
+           is Instagram's page: white header and footer around the media. It
+           reports its height (press-reader.js), and this box crops to the
+           media between them, so there is no inner scrolling and no white. */
+        <div class="ig-post" data-ig-post>
+          <span class="wait" aria-hidden="true"></span>
+          <iframe class="press-article__frame" title={`${item.title}, on ${where}`} data-article-frame={frameUrl(original!)} scrolling="no"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <p class="ig-post__failed">This post could not be shown here. <a href={original!} target="_blank" rel="noopener noreferrer">View it on Instagram <span aria-hidden="true">↗</span></a></p>
+        </div>
+      ) : (
+        <>
+          <p class="press-article__help">Reading on {where}. If it does not appear, <a href={original!} target="_blank" rel="noopener noreferrer">open it on {where} <span aria-hidden="true">↗</span></a>.</p>
+          <iframe class="press-article__frame" title={`Article on ${item.publication}`} data-article-frame={frameUrl(original!)}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </>
+      )}
       <noscript><p>Read this article <a href={original!} target="_blank" rel="noopener noreferrer">on {item.publication}</a>.</p></noscript>
     </>
   ) : (
@@ -50,5 +66,5 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
       </dl>}
     </>
   )}
-  {original && <p class="press-article__source"><a href={original} target="_blank" rel="noopener noreferrer">{watch ? `Watch on ${where}` : `Read the original on ${item.publication}`} <span aria-hidden="true">↗</span></a></p>}
+  {original && <p class="press-article__source"><a href={original} target="_blank" rel="noopener noreferrer">{watch ? `View on ${where}` : `Read the original on ${item.publication}`} <span aria-hidden="true">↗</span></a></p>}
 </article>

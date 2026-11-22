@@ -173,9 +173,13 @@ test("publisher frames are deferred, sandboxed and retain a visible source link"
 test("an Instagram post is framed through its embed address and offered as a watch link", async () => {
   const html = await container.renderToString(PressArticle, {props: {item: {...item, kind: "award", title: "Gold, Single Dwelling", openingMode: "embed", url: "https://www.instagram.com/p/DfwpIUPn8R9/"}}});
   assert.match(html, /data-article-frame="https:\/\/www.instagram.com\/p\/DfwpIUPn8R9\/embed\/"/);
-  assert.match(html, /press-article__frame--post/);
-  assert.match(html, /On Instagram\. If it does not appear/);
-  assert.match(html, /href="https:\/\/www.instagram.com\/p\/DfwpIUPn8R9\/"[^>]*>Watch on Instagram/);
+  // Cropped to the media in a box that waits for Instagram's height, with a
+  // fallback link if the post never loads; no "Reading on" line above it.
+  assert.match(html, /class="ig-post" data-ig-post/);
+  assert.match(html, /scrolling="no"/);
+  assert.match(html, /class="ig-post__failed"[\s\S]*View it on Instagram/);
+  assert.doesNotMatch(html, /press-article__help/);
+  assert.match(html, /href="https:\/\/www.instagram.com\/p\/DfwpIUPn8R9\/"[^>]*>View on Instagram/);
   assert.equal(press.frameUrl("https://www.instagram.com/reel/abc/"), "https://www.instagram.com/reel/abc/embed/");
   assert.equal(press.frameUrl("https://example.com/p/abc/"), "https://example.com/p/abc/");
 });

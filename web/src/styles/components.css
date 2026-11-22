@@ -2287,7 +2287,32 @@ body[data-preview] .header { top: var(--preview-h); }
 .press-article__frame { display: block; width: 100%; height: 70vh; height: 70dvh; border: 1px solid var(--border-subtle); background: var(--surface); }
 /* An Instagram post is a phone-shaped card, not a page: framed at its own
    width and centred, tall enough for a portrait video and its caption. */
-.press-article__frame--post { width: min(100%, 33rem); height: min(80vh, 52rem); height: min(80dvh, 52rem); margin-inline: auto; border: 0; }
+/* An Instagram post: only its media, on the page's own dark ground.
+   Until Instagram reports its height the box holds a 4:5 space with the btl
+   line (after 400ms, as elsewhere); the post then fades in, cropped to the
+   media, at its true height. press-reader.js sets the heights. */
+.ig-post {
+  position: relative; overflow: hidden;
+  width: min(100%, 33rem); aspect-ratio: 4 / 5; margin-inline: auto;
+  background: var(--surface-sunken);
+}
+.ig-post[data-ready] { aspect-ratio: auto; background: none; }
+.ig-post .wait { position: absolute; inset: 0; margin: auto; }
+.ig-post[data-ready] .wait, .ig-post[data-failed] .wait { display: none; }
+.ig-post .press-article__frame {
+  position: absolute; left: 0; top: 0; height: 100%;
+  border: 0; background: none;
+  opacity: 0; transition: opacity var(--dur-slow) var(--ease);
+}
+.ig-post[data-ready] .press-article__frame { opacity: 1; }
+.ig-post__failed {
+  display: none; position: absolute; inset: 0; margin: 0; padding: var(--s-5);
+  place-content: center; text-align: center;
+  font-size: var(--type-body-sm); color: var(--text-secondary);
+}
+.ig-post__failed a { text-decoration: underline; text-underline-offset: .2em; }
+.ig-post[data-failed]:not([data-ready]) .ig-post__failed { display: grid; }
+@media (prefers-reduced-motion: reduce) { .ig-post .press-article__frame { transition: none; } }
 /* On a phone the reader is a card to look into, not a page to be inside
    (press-reader.js). It rises part way — a look at the article, nothing
    scrolling, so a thumb swiping down anywhere puts it away — and swipes or
