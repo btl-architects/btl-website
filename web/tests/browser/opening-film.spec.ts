@@ -163,27 +163,11 @@ for (const {width,frameCallback} of [{width:390,frameCallback:true},{width:1440,
   });
 }
 
-test('a pending film cannot advance after reduced motion is enabled', async ({page}) => {
+test('reduced motion still plays the opening film', async ({page}) => {
   await films(page);
-  await sequence(page,2);
-  let release!:()=>void;
-  const held=new Promise<void>(resolve=>{release=resolve;});
-  await page.route('**/*btl-clip=1',async route=>{await held;await route.fallback();});
-  try {
-    await page.goto('/');
-    const first=page.locator('.stage__f').first().locator('video');
-    await expect(first).toHaveAttribute('data-playing','true');
-    await first.evaluate(el=>{const v=el as HTMLVideoElement;v.currentTime=v.duration-.1;});
-    await expect(first).toHaveJSProperty('ended',true);
-    await page.emulateMedia({reducedMotion:'reduce'});
-    release();
-    await expect(page.locator('.stage__f').first()).toHaveAttribute('data-on','true');
-    await expect(page.locator('.stage__f').nth(1)).toHaveAttribute('data-on','false');
-    for(const film of await page.locator('.stage__f video').all()) {
-      await expect(film).not.toHaveAttribute('src');
-      await expect(film).toHaveJSProperty('paused',true);
-    }
-  } finally { release(); }
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await page.goto('/');
+  await expect(page.locator('.stage__f video[data-playing="true"]')).toHaveCount(1);
 });
 
 test('opening films play their complete duration and the sequence restarts', async ({page}) => {

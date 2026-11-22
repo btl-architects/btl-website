@@ -81,8 +81,11 @@ test("legacy project fallback and image-less awards both render safely", async (
   assert.match(legacy, /project-cover\.jpg/);
   const disabled = await container.renderToString(Credit, {props: {item: {...item, useProjectImage: false}, project}});
   assert.doesNotMatch(disabled, /<img/);
-  const award = await container.renderToString(Credit, {props: {item: {...item, kind: "award", url: null}}});
-  assert.match(award, /Award/);
+  const award = await container.renderToString(Credit, {props: {item: {...item, kind: "award", url: null, publication: "IIID Kerala Design Awards 2026", short: "IIID Kerala 2026", title: "Gold, Single Dwelling"}}});
+  // The artwork names the awarding body; screen readers get it in the label.
+  assert.match(award, /aria-label="Award: IIID Kerala Design Awards 2026, Gold, Single Dwelling"/);
+  assert.match(award, /class="pc__m"[^>]*>Award\b/);
+  assert.doesNotMatch(award, /pc__m[^>]*>[^<]*IIID/);
   assert.doesNotMatch(award, /<a\b|<img/);
 });
 
@@ -113,22 +116,22 @@ const text = content => ({_type: "block", style: "normal", children: [{text: con
 test("each Press opening mode has a working native destination", async () => {
   const reader = {...item, id: "stable-id", openingMode: "reader", readerContent: [text("Article text")]};
   const html = await container.renderToString(Credit, {props: {item: reader, project}});
-  assert.match(html, /href="\/press\/stable-id\/"/);
+  assert.match(html, /href="\/recognition\/stable-id\/"/);
   assert.match(html, /data-article/);
   assert.doesNotMatch(html, /target="_blank"/);
   const embedded = await container.renderToString(Credit, {props: {item: {...reader, openingMode: "embed"}, project}});
-  assert.match(embedded, /href="\/press\/stable-id\/"/);
+  assert.match(embedded, /href="\/recognition\/stable-id\/"/);
   const external = await container.renderToString(Credit, {props: {item: {...reader, openingMode: "external"}, project}});
   assert.doesNotMatch(external, /target="_blank"/);
   assert.match(external, /data-article/);
-  assert.equal(press.articlePath({...reader, id: "drafts.stable-id"}), "/press/stable-id/");
+  assert.equal(press.articlePath({...reader, id: "drafts.stable-id"}), "/recognition/stable-id/");
   assert.equal(press.articlePath({...reader, readerContent: [text(" ")]}), null);
-  assert.equal(press.articlePagePath({...reader, openingMode: "external"}), "/press/stable-id/");
+  assert.equal(press.articlePagePath({...reader, openingMode: "external"}), "/recognition/stable-id/");
   for(const openingMode of ['reader','embed','external']) {
     const named={...reader,slug:'elle-decor-nelly-house',openingMode};
-    assert.equal(press.articlePagePath(named),'/press/elle-decor-nelly-house/');
+    assert.equal(press.articlePagePath(named),'/recognition/elle-decor-nelly-house/');
     const namedHtml=await container.renderToString(Credit,{props:{item:named,project}});
-    assert.match(namedHtml,/href="\/press\/elle-decor-nelly-house\/"/);
+    assert.match(namedHtml,/href="\/recognition\/elle-decor-nelly-house\/"/);
   }
   assert.throws(()=>press.articlePagePath({...reader,slug:'../escape'}),/Invalid Press address/);
 });
@@ -163,8 +166,18 @@ test("publisher frames are deferred, sandboxed and retain a visible source link"
   assert.doesNotMatch(html, /<iframe[^>]*\ssrc=/);
   assert.match(html, /sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"/);
   assert.doesNotMatch(html, /allow-top-navigation/);
-  assert.match(html, /If the article does not appear/);
+  assert.match(html, /If it does not appear/);
   assert.match(html, /<noscript>/);
+});
+
+test("an Instagram post is framed through its embed address and offered as a watch link", async () => {
+  const html = await container.renderToString(PressArticle, {props: {item: {...item, kind: "award", title: "Gold, Single Dwelling", openingMode: "embed", url: "https://www.instagram.com/p/DfwpIUPn8R9/"}}});
+  assert.match(html, /data-article-frame="https:\/\/www.instagram.com\/p\/DfwpIUPn8R9\/embed\/"/);
+  assert.match(html, /press-article__frame--post/);
+  assert.match(html, /On Instagram\. If it does not appear/);
+  assert.match(html, /href="https:\/\/www.instagram.com\/p\/DfwpIUPn8R9\/"[^>]*>Watch on Instagram/);
+  assert.equal(press.frameUrl("https://www.instagram.com/reel/abc/"), "https://www.instagram.com/reel/abc/embed/");
+  assert.equal(press.frameUrl("https://example.com/p/abc/"), "https://example.com/p/abc/");
 });
 
 test("source writers are distinguished from the author of a clearly labelled summary", async () => {

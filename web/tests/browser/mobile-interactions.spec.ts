@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const routes=['/','/projects/','/projects/nelly-house/','/press/','/people/','/studio/','/contact/'];
+const routes=['/','/projects/','/projects/nelly-house/','/recognition/','/people/','/studio/','/contact/'];
 
 /* The opening is the whole first screen on a phone: nothing below it shows
    until the reader scrolls, and the social links stay inside the screen. */
@@ -268,7 +268,7 @@ test.describe('phone interactions',()=>{
   });
 
   test('Press opens with one tap and closes without losing the page',async({page})=>{
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     const card=page.locator('a[data-article]').first();
     await card.scrollIntoViewIfNeeded();
     const top=await page.evaluate(()=>scrollY);
@@ -491,7 +491,7 @@ test.describe('phone interactions',()=>{
   });
 
   test('Press opens as a card to look into, put away with a thumb or a tap outside',async({page,browserName})=>{
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     const card=page.locator('a[data-article]').first();
     await card.scrollIntoViewIfNeeded();
     await card.tap();
@@ -506,7 +506,7 @@ test.describe('phone interactions',()=>{
     expect(box.x).toBeGreaterThanOrEqual(8);
     await page.touchscreen.tap(195,box.y/2);
     await expect(reader).toBeHidden();
-    await expect(page).toHaveURL(/\/press\/$/);
+    await expect(page).toHaveURL(/\/recognition\/$/);
     if(browserName!=='chromium') return;
     const input=await page.context().newCDPSession(page);
     // At a finger's pace (about half a pixel a millisecond): injected moves
@@ -583,7 +583,7 @@ test.describe('phone interactions',()=>{
     await going;
     await page.unrouteAll({behavior:'ignoreErrors'});
     // A Press cover opens its card instead of leaving, and must not stay dimmed.
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     const cover=page.locator('a[data-article]').first();
     await cover.tap();
     await expect(page.getByRole('dialog',{name:'Press reader'})).toBeVisible();
@@ -626,7 +626,7 @@ test.describe('phone interactions',()=>{
 
 test('with a mouse, even in a narrow window, the Press card opens raised and scrolls',async({page})=>{
   await page.setViewportSize({width:375,height:812});
-  await page.goto('/press/');
+  await page.goto('/recognition/');
   await page.locator('a[data-article]').first().click();
   const reader=page.getByRole('dialog',{name:'Press reader'});
   await expect(reader.locator('.press-article')).toBeVisible();

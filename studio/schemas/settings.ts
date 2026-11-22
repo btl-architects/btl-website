@@ -25,7 +25,7 @@ export default defineType({
       fields: [
         defineField({name: 'home', title: 'Home', type: 'seo'}),
         defineField({name: 'projects', title: 'Projects index', type: 'seo'}),
-        defineField({name: 'press', title: 'Press index', type: 'seo'}),
+        defineField({name: 'press', title: 'Recognition index', type: 'seo'}),
         defineField({name: 'people', title: 'People index', type: 'seo'}),
         defineField({name: 'studio', title: 'Studio', type: 'seo'}),
         defineField({name: 'contact', title: 'Contact', type: 'seo'}),
@@ -120,7 +120,7 @@ export default defineType({
     }),
     defineField({
       name: "pressLead",
-      title: "Press headline",
+      title: "Recognition headline",
       type: "string",
       group: "copy",
       description: "Default: “See where we’ve been.”",

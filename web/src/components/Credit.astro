@@ -30,6 +30,8 @@ const live = Boolean(reader || original);
 const Tag = live ? "a" : "div";
 const year = item.date ? item.date.slice(0, 4) : "";
 
+// The artwork carries the publication's or awarding body's name, so the
+// caption only says what kind, which work, and when — the same for both.
 const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
   .filter(Boolean)
   .join(" · ");
@@ -45,7 +47,7 @@ const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, year]
   data-original={reader ? original : undefined}
   data-caption-anchor={custom ? center : undefined}
   aria-haspopup={reader ? "dialog" : undefined}
-  aria-label={`${item.publication} · ${meta}`}
+  aria-label={item.kind === "award" ? `Award: ${[item.publication, item.title].filter(Boolean).join(", ")}` : `${item.publication} · ${meta}`}
 >
   {/* Rendered even with nothing in it. One credit here — a Young Practice
       award — has no project behind it, and without the frame its card was

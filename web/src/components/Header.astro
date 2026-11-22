@@ -19,6 +19,13 @@ import { LOGO_WHITE } from "../lib/media";
 interface Props { settings: Settings; current: string }
 const { settings, current } = Astro.props;
 
+/* Press became Recognition on 2026-11-22. Settings that still say "press"
+ * point at the new page and read with its new name, so the menu is right
+ * whether or not the CMS entry has been updated yet. */
+const nav = settings.nav.map((n) => n.href === "press"
+  ? {href: "recognition", label: n.label.trim().toLowerCase() === "press" ? "Recognition" : n.label}
+  : n);
+
 /** Settings still carry the prototype's page keys; routes are directories. */
 const hrefFor = (key: string) => (key === "index" ? "/" : `/${key}/`);
 
@@ -43,7 +50,7 @@ const logo = LOGO_WHITE;
     </a>
     <nav aria-label="Primary">
       <ul class="nav">
-        {settings.nav.map((n) => (
+        {nav.map((n) => (
           <li>
             <a
               class="nav__link"
@@ -69,7 +76,7 @@ const logo = LOGO_WHITE;
         <summary>Menu</summary>
         <nav aria-label="Primary">
           <ul class="container">
-            {settings.nav.map((n) => (
+            {nav.map((n) => (
               <li><a href={hrefFor(n.href)} aria-current={n.href === current ? "page" : undefined}>{n.label}</a></li>
             ))}
           </ul>
@@ -86,7 +93,7 @@ const logo = LOGO_WHITE;
       burger below morphs into a cross rather than being swapped for a
       different control with different words. */}
   <ul class="menu__list">
-    {settings.nav.map((n) => (
+    {nav.map((n) => (
       <li>
         <a
           class="menu__link"

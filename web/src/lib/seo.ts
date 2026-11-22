@@ -6,7 +6,7 @@ export interface PageSearchListings {
 }
 
 const pageKeys: Record<string, keyof PageSearchListings> = {
-  '/': 'home', '/projects/': 'projects', '/press/': 'press',
+  '/': 'home', '/projects/': 'projects', '/recognition/': 'press',
   '/people/': 'people', '/studio/': 'studio', '/contact/': 'contact',
 };
 
@@ -29,7 +29,13 @@ interface BusinessSettings {
   social: {url: string}[];
 }
 
-export function businessStructuredData(settings: BusinessSettings, origin: string, image?: string | null) {
+/** "IIID Kerala Design Awards 2026 · Gold, Single Dwelling" — one award, as
+ *  schema.org's `award` text and the project page's recognition line. */
+export function awardName(item: {publication: string; title: string}) {
+  return [item.publication, item.title].filter(s => s?.trim()).join(' · ');
+}
+
+export function businessStructuredData(settings: BusinessSettings, origin: string, image?: string | null, awards: string[] = []) {
   const postalCode = settings.contact.address.join(', ').match(/\b\d{6}\b/)?.[0];
   const profiles = settings.social.map(s => s.url).filter(url => {
     try {
@@ -54,6 +60,23 @@ export function businessStructuredData(settings: BusinessSettings, origin: strin
     ...(settings.contact.phone ? {telephone: settings.contact.phone} : {}),
     ...(settings.contact.email ? {email: settings.contact.email} : {}),
     ...(profiles.length ? {sameAs: profiles} : {}),
+    ...(awards.length ? {award: awards} : {}),
+  };
+}
+
+/** A project page names the work, its place and what it has won. */
+export function projectStructuredData(project: {title: string; slug: string; location?: string | null; year?: string | number | null; description?: string | null},
+  origin: string, practiceId: string, image?: string | null, awards: string[] = []) {
+  return {
+    '@context': 'https://schema.org', '@type': 'CreativeWork',
+    '@id': new URL(`/projects/${project.slug}/#work`, origin).href,
+    name: project.title, url: new URL(`/projects/${project.slug}/`, origin).href,
+    creator: {'@id': practiceId},
+    ...(project.location ? {locationCreated: {'@type': 'Place', name: project.location}} : {}),
+    ...(project.year ? {dateCreated: String(project.year)} : {}),
+    ...(project.description ? {description: project.description.slice(0, 300)} : {}),
+    ...(image ? {image} : {}),
+    ...(awards.length ? {award: awards} : {}),
   };
 }
 

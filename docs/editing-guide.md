@@ -11,7 +11,7 @@ the tool, not in you, and it is worth saying so rather than working around it.
 ## Getting in
 
 Go to **sanity.io** and sign in with the btl account. You'll land in the Studio:
-Projects, People, Press & awards, Categories, and Site settings down the side.
+Projects, People, Recognition — awards & press, Categories, and Site settings down the side.
 
 Two people can edit at the same time and you'll see each other's changes as they
 happen. There is no "save" button — it saves as you type.
@@ -75,9 +75,18 @@ something to hold.
 
 ### Record a feature or an award
 
-**Press & awards → the pencil icon**
+**Recognition — awards & press → the pencil icon**
 
 One entry type covers both — choose **Press feature** or **Award** at the top.
+Awards appear under **Awards** and features under **Press** on the Recognition
+page (`/recognition/`; old `/press/` links redirect). On Home, two cards at a
+time take turns through every entry, newest date first. An award also appears
+on its project's page when **The work that earned it** names the project. For
+an award, put the awarding body in **Publication or awarding body** (for
+example "IIID Kerala Design Awards 2026"), a short form in **Short name**
+("IIID Kerala 2026"), and what was won in **Headline** ("Gold, Single
+Dwelling"). An Instagram post link with **Embedded publisher page** plays the
+post inside the reader.
 
 Add the publication's name, the headline, the date, and the link. Upload the
 client's complete PNG under **Complete Press artwork**, with the photograph and
@@ -186,14 +195,14 @@ is a wait rather than an opening.
   the Studio introduction and its supporting text, shown only on Home
 - **The practice** — the home page statement, the Studio page introduction and
   paragraphs, the People page introduction, the studio, founders and team photographs
-- **Page wording** — the footer line, the Press headline, the closing lines on
+- **Page wording** — the footer line, the Recognition headline, the closing lines on
   People and Studio, the 404 message
 - **Contact** — address, email, phone, where enquiries are delivered, GSTIN
 - **Navigation** — the menu items and the social links
 
-The current page order is Home → Projects → Press → People → Studio → Contact.
+The current page order is Home → Projects → Recognition → People → Studio → Contact.
 Home follows the same People → Studio sequence. The closing links lead from
-Press to People, People to Studio, and Studio to Contact; edit their wording
+Recognition to People, People to Studio, and Studio to Contact; edit their wording
 under **Page wording**.
 
 Home's People and Studio writing is independent of the full pages. Edit the

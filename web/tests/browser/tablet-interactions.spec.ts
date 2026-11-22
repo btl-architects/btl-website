@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const routes=['/','/projects/','/projects/nelly-house/','/press/','/people/','/studio/','/contact/'];
+const routes=['/','/projects/','/projects/nelly-house/','/recognition/','/people/','/studio/','/contact/'];
 test.use({viewport:{width:820,height:1180},isMobile:true,hasTouch:true,deviceScaleFactor:2});
 test.beforeEach(async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
@@ -28,7 +28,7 @@ for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:10
       if(route==='/'||route==='/contact/') {
         for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
       }
-      if(route==='/'||route==='/press/') {
+      if(route==='/'||route==='/recognition/') {
         const cards=page.locator('.credits .pc');
         const first=(await cards.nth(0).boundingBox())!,second=(await cards.nth(1).boundingBox())!;
         expect(Math.round(first.width*1000)/1000).toBeLessThanOrEqual(256);
@@ -146,7 +146,7 @@ test('tablet onward links draw the green underline when their section appears',a
 
 test('tablet Press uses a wider gesture reader and restores the page',async({page})=>{
   await page.setViewportSize({width:1024,height:768});
-  await page.goto('/press/');
+  await page.goto('/recognition/');
   const card=page.locator('a[data-article]').first();
   await card.scrollIntoViewIfNeeded();
   const position=await page.evaluate(()=>scrollY);
@@ -291,7 +291,7 @@ test.describe('mouse-only windows at tablet widths stay desktop',()=>{
       // Desktop project-preview token, not the tablet one.
       expect(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--project-preview-h').trim())).toBe('clamp(11rem, 27vh, 21rem)');
       if(viewport.width>=1024) {
-        await page.goto('/press/');
+        await page.goto('/recognition/');
         const width=await page.locator('.pc').first().evaluate(el=>el.getBoundingClientRect().width);
         expect(width).toBeGreaterThan(300);
       }
@@ -313,7 +313,7 @@ for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
   test(`tablet Press gestures raise, lower and dismiss the reader at ${viewport.width}px`,async({page,browserName})=>{
     test.skip(browserName!=='chromium','Native touch injection is available through Chromium; all engines run tap and layout checks.');
     await page.setViewportSize(viewport);
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     const card=page.locator('a[data-article]').first();
     await card.scrollIntoViewIfNeeded();
     await card.tap();
@@ -340,7 +340,7 @@ for(const viewport of [{width:820,height:1180},{width:1024,height:768}]) {
     await page.waitForTimeout(450);
     await swipe(viewport.height*.82,viewport.height*.14);
     await expect(reader).toBeHidden();
-    await expect(page).toHaveURL(/\/press\/$/);
+    await expect(page).toHaveURL(/\/recognition\/$/);
     await input.detach();
   });
 }

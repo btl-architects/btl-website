@@ -3,11 +3,12 @@ for(const width of [375,1440]) {
   test(`Press cards have equal space above and below at ${width}px`,async({page})=>{
     await page.setViewportSize({width,height:1000});
     await page.emulateMedia({reducedMotion:'reduce'});
-    await page.goto('/press/');
+    await page.goto('/recognition/');
     const gaps=await page.evaluate(()=>{
       const bottom=(selector:string)=>document.querySelector(selector)!.getBoundingClientRect().bottom;
       const top=(selector:string)=>document.querySelector(selector)!.getBoundingClientRect().top;
-      return {above:top('.credits')-bottom('.index-head__s'),below:top('.onward')-bottom('.credits')};
+      const sets=document.querySelectorAll('.credits');
+      return {above:top('.recognition-sec')-bottom('.index-head__s'),below:top('.onward')-sets[sets.length-1]!.getBoundingClientRect().bottom};
     });
     expect(gaps.above).toBeGreaterThan(20);
     expect(Math.abs(gaps.above-gaps.below)).toBeLessThan(1);
@@ -15,11 +16,11 @@ for(const width of [375,1440]) {
   });
 }
 test('existing Press addresses redirect to readable reader URLs',async({request})=>{
-  for(const [old,slug] of [['placeholder-dezeen','elle-decor-nelly-house'],['publication-architectural-digest-5-august-2026','architectural-digest-nelly-house']]) {
+  for(const [old,slug] of [['placeholder-dezeen','elle-decor-nelly-house'],['publication-architectural-digest-5-august-2026','architectural-digest-nelly-house'],['elle-decor-nelly-house','elle-decor-nelly-house']]) {
     const response=await request.get(`/press/${old}/`,{maxRedirects:0});
     expect(response.status()).toBe(301);
-    expect(response.headers().location).toContain(`/press/${slug}/`);
-    const destination=await request.get(`/press/${slug}/`);
+    expect(response.headers().location).toContain(`/recognition/${slug}/`);
+    const destination=await request.get(`/recognition/${slug}/`);
     expect(destination.status()).toBe(200);
   }
 });
