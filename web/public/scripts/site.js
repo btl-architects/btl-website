@@ -379,8 +379,13 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
        then rejects with NotAllowedError, and until now the opening only ever
        showed its stills there. The stills still carry it; the first tap, click
        or key press starts the film, inside that gesture, which is what those
-       browsers require. Films already given an address are started and paused
-       in the same gesture, so the next one in the sequence may play too. */
+       browsers require.
+       That permission belongs to each video element, not to the page (Chromium
+       and WebKit alike), so a tap that started only the current film left every
+       later one refused, and the opening fell back to stills at the second
+       film. Every film's player is created and started, then paused, inside the
+       same gesture. play() takes the permission before it looks for a source,
+       so a player with no address yet is unlocked without fetching anything. */
     var awaitingGesture = false;
     function startOnGesture() {
       if (awaitingGesture) return;
@@ -389,11 +394,11 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       function go() {
         kinds.forEach(function (kind) { document.removeEventListener(kind, go, true); });
         awaitingGesture = false;
-        sFrames.forEach(function (frame, k) {
-          var v = frame.querySelector("video");
-          if (!v || k === at || !v.getAttribute("src")) return;
-          var started = v.play();
-          if (started && started.then) started.then(function () { if (k !== at) v.pause(); }, function () {});
+        sFrames.forEach(function (f, k) {
+          if (k === at) return;
+          var v = player(k);
+          v.play().catch(function () {});
+          v.pause();
         });
         sync();
       }
