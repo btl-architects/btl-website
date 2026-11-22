@@ -29,7 +29,8 @@ for(const viewport of [{width:768,height:1024},{width:820,height:1180},{width:10
         for(const mark of await page.locator('.copy-mark').all()) await expect(mark).toBeVisible();
       }
       if(route==='/'||route==='/recognition/') {
-        const cards=page.locator('.credits .pc');
+        // One row: Press on /recognition/ (Awards sits above it), the visible pair on Home.
+        const cards=page.locator(route==='/recognition/' ? '#press .credits .pc' : '#recognition .rot[data-rot="on"] .pc');
         const first=(await cards.nth(0).boundingBox())!,second=(await cards.nth(1).boundingBox())!;
         expect(Math.round(first.width*1000)/1000).toBeLessThanOrEqual(256);
         expect(first.width).toBeLessThanOrEqual(viewport.height*.32+1);
