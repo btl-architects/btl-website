@@ -15,7 +15,8 @@ for(const {route} of pages()) {
       await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
-    const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+    // An embedded publisher or Instagram frame is another site's markup.
+    const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).exclude('.press-article__frame').analyze();
     expect(result.violations).toEqual([]);expect(errors).toEqual([]);
   });
 }

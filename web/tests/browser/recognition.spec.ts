@@ -8,17 +8,19 @@ async function threeEntries(page: import('@playwright/test').Page) {
   await page.route(new URL('/', test.info().project.use.baseURL).href, async route => {
     const response = await route.fetch();
     let body = await response.text();
-    const start = body.indexOf('<div class="credits">', body.indexOf('id="recognition"'));
-    const cards = [...body.slice(start).matchAll(/<div class="rot" data-slot="\d" data-rot="on">(<a\b[\s\S]*?<\/a>)<\/div>/g)].slice(0, 2).map(m => m[1]);
+    // The Recognition card block, rotating or not, depending on how many
+    // entries are published.
+    const block = /<div class="credits[^"]*"[^>]*>(?:<div class="rot"[^>]*>[\s\S]*?<\/a><\/div>)+<\/div>/.exec(body.slice(body.indexOf('id="recognition"')));
+    expect(block).not.toBeNull();
+    const cards = [...block![0].matchAll(/<div class="rot"[^>]*>(<a\b[\s\S]*?<\/a>)<\/div>/g)].slice(0, 2).map(m => m[1]);
     expect(cards).toHaveLength(2);
-    const end = body.indexOf(cards[1], start) + cards[1].length + '</div></div>'.length;
     // Published features can share a caption, so each card is labelled.
     const label = (card: string, text: string) => card.replace(/(<span class="pc__m"[^>]*>)[^<]*/, `$1${text}`);
     const three = [label(cards[0], 'Entry one'), label(cards[0], 'Entry two'), label(cards[1], 'Entry three')];
     const list = [...three, ...three];
     const html = '<div class="credits credits--rotate" data-rotate>' + list.map((card, i) =>
       `<div class="rot" data-slot="${i % 2}" data-rot="${i < 2 ? 'on' : 'off'}"${i < 2 ? '' : ' inert'}>${card}</div>`).join('') + '</div>';
-    body = body.slice(0, start) + html + body.slice(end);
+    body = body.replace(block![0], html);
     await route.fulfill({response, body});
   });
 }
@@ -62,7 +64,7 @@ test('the pair holds while it is pointed at', async ({page}) => {
 test('two or fewer entries never rotate', async ({page}) => {
   await page.goto('/');
   const sets = await page.locator('#recognition .rot').count();
-  test.skip(sets > 2, 'Published content has more than two entries.');
+  test.skip(sets > 2, 'Published content has more than two entries; the fixtures above cover rotation.');
   await expect(page.locator('[data-rotate]')).toHaveCount(0);
   await expect(page.locator('#recognition .rot[data-rot="on"]')).toHaveCount(sets);
 });
