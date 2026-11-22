@@ -54,16 +54,26 @@ for (const width of [390,1440])
     await expect(page.locator('.stage__f').nth(1).locator('video')).toHaveAttribute('data-playing','true',{timeout:5000});
   });
 
-/* Android in-app browsers (System WebView) and iPhones in Low Power Mode refuse
-   to start even a muted film without a tap: play() rejects NotAllowedError.
-   The opening shows its stills, and the first tap starts the film. */
-test('a film the browser will not autoplay starts on the first tap', async ({page}) => {
+/* Android in-app browsers (System WebView: Instagram, WhatsApp, Facebook) and
+   iPhones in Low Power Mode refuse to start even a muted film without a tap:
+   play() rejects NotAllowedError. The opening shows its stills, and the first
+   tap starts the film.
+
+   The unlock is per element, in both Chromium (each media element's own
+   autoplay lock) and WebKit (each element's media session): a tap lets only the
+   videos that called play() during it play later. An earlier model unlocked the
+   whole page, so this passed while phones played the first film and fell back
+   to stills at the second. Model the per-element rule. */
+test('a film the browser will not autoplay starts on the first tap and the sequence keeps playing', async ({page}) => {
   await page.addInitScript(() => {
-    const w = window as any; w.__activated = false;
-    document.addEventListener('click', () => { w.__activated = true; }, true);
+    let gesture = false;
+    const unlocked = new WeakSet<HTMLMediaElement>();
+    for (const kind of ['touchend', 'click', 'keydown'])
+      window.addEventListener(kind, () => { gesture = true; setTimeout(() => { gesture = false; }); }, true);
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
-      return w.__activated ? play.call(this) : Promise.reject(new DOMException('needs a gesture', 'NotAllowedError'));
+      if (gesture) unlocked.add(this);
+      return unlocked.has(this) ? play.call(this) : Promise.reject(new DOMException('needs a gesture', 'NotAllowedError'));
     };
   });
   await films(page);
@@ -71,12 +81,20 @@ test('a film the browser will not autoplay starts on the first tap', async ({pag
   await page.setViewportSize({width: 390, height: 844});
   await page.goto('/');
   await page.waitForTimeout(2500);
-  await expect(page.locator('.stage__f video[data-playing="true"]')).toHaveCount(0);
+  const playing = page.locator('.stage__f video[data-playing="true"]');
+  await expect(playing).toHaveCount(0);
   const tapped = Date.now();
   await page.mouse.click(195, 420);
   // The tap itself starts the film, rather than the next stills cycle 6 s later.
-  await expect(page.locator('.stage__f video[data-playing="true"]')).toHaveCount(1, {timeout: 2500});
+  await expect(playing).toHaveCount(1, {timeout: 2500});
   expect(Date.now() - tapped).toBeLessThan(2500);
+  // Every later film plays without another tap, round to the first again.
+  for (const next of [1, 2, 0]) {
+    const frames = page.locator('.stage__f');
+    await page.locator('.stage__f[data-on="true"] video').evaluate(el => { const v = el as HTMLVideoElement; v.currentTime = v.duration - .1; });
+    await expect(frames.nth(next)).toHaveAttribute('data-on', 'true', {timeout: 5000});
+    await expect(frames.nth(next).locator('video')).toHaveAttribute('data-playing', 'true', {timeout: 5000});
+  }
 });
 
 /* Safari before 14 (iOS 13) has only MediaQueryList.addListener. The first

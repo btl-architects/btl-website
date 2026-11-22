@@ -1,10 +1,8 @@
 /* Press is progressive: the links still lead to readable pages without JS. */
-/* Safari before 14 (and so iOS 13) gives MediaQueryList only the older
-   addListener. Without this, the first preference listener threw and stopped
-   the whole script: no opening film, reveals or menu on those phones. */
-if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && MediaQueryList.prototype.addListener) {
-  MediaQueryList.prototype.addEventListener = function (type, listener) { if (type === "change") this.addListener(listener); };
-}
+/* No MediaQueryList shim here. A browser without MediaQueryList's
+   addEventListener (Safari before 14) also has no <dialog> (Safari 15.4), so
+   this script stops at its first line there; and site.js, which loads before
+   it on every page, has already given MediaQueryList the method. */
 (function () {
   "use strict";
   if (!window.HTMLDialogElement || !HTMLDialogElement.prototype.showModal) return;
