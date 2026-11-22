@@ -7,7 +7,7 @@
  * re-learned on /projects.
  *
  * Rhythm alternates release (full-bleed, image-led) and compression (the page
- * stops and speaks) — P5. The order is statement → projects → press → people →
+ * stops and speaks) — P5. The order is statement → projects → recognition → people →
  * studio → contact, matching the navigation's People-before-Studio sequence.
  */
 import Base from "../layouts/Base.astro";
@@ -27,17 +27,23 @@ const home = await getHome();
 const projects = await getProjects();
 const featured = projects.filter((p) => p.featured).slice(0, 3);
 const work = featured.length ? featured : projects.slice(0, 3);
-/* Two, at the practice's request — the latest pair, side by side.
-   Three meant one row of two and a single card stranded under it, because the
-   home grid is two across. Two fills the row exactly. */
-const press = (await getPublications()).slice(0, 2);
+/* Two on screen, at the practice's request — a pair side by side; three left
+   a card stranded under a row of two. Since 2026-11-22 every award and feature
+   takes its turn: the pair rotates through all of them, newest date first.
+
+   The rotation swaps whole pairs. With an odd count the last pair would need
+   one card in both columns at once, so the list is set twice over; the second
+   copy is the same links, never shown at the same time as the first. */
+const recognition = await getPublications();
+const rotates = recognition.length > 2;
+const rotation = rotates && recognition.length % 2 ? [...recognition, ...recognition] : recognition;
 const projectsBySlug = new Map(projects.map((p) => [p.slug, p]));
 // The home preview shows the principals only; the full team lives on /people.
 const principals = (await getPeople()).filter((p) => p.tier === "principal").sort((a,b)=>(a.homeOrder ?? a.order)-(b.homeOrder ?? b.order));
 const c = settings.contact;
 ---
 
-<Base title="btl architects" description={settings.tagline} current="index" ground="media" articleReader={press.some(item => articlePagePath(item))}>
+<Base title="btl architects" description={settings.tagline} current="index" ground="media" articleReader={recognition.some(item => articlePagePath(item))}>
   <main id="main" data-under-header>
     <section class="landing" data-ground="media" data-stage>
       <h1 class="sr-only">btl architects — architecture and interiors, Kozhikode</h1>
@@ -77,7 +83,7 @@ const c = settings.contact;
       </div>
     </section>
 
-    {/* The outside world's verdict, built from the same spread as Studio and
+    {/* Recognition (was Press): the outside world's verdict, built from the same spread as Studio and
         People — which is the point. It read as a bolted-on widget because it
         was one: a bordered two-column box in the middle of a page that is
         otherwise photograph-and-type spreads. Now it is one of them.
@@ -85,23 +91,34 @@ const c = settings.contact;
         The magazine's mark overlaps the work it published. That interlock is
         what a "seen in" credit looks like when it means something; set side by
         side with a gap they are just two objects near each other. */}
-    {press.length > 0 && (
-      <section class="home-sec" id="press" data-ground="dark">
+    {recognition.length > 0 && (
+      <section class="home-sec" id="recognition" data-ground="dark">
         <div class="container">
           <div class="home-sec__head rv">
-            <h2 class="home-sec__k">Press</h2>
+            <h2 class="home-sec__k">Recognition</h2>
           </div>
 
-          <div class="credits">
-            {press.map((item) => (
-              <Credit
-                item={item}
-                project={item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined}
-              />
+          {/* Every card sits in the same grid row, in one of two columns, so
+              the row is always as tall as the tallest card and the page never
+              moves while they change. site.js runs the rotation; without it
+              the first pair is all that shows. */}
+          <div class:list={["credits", rotates && "credits--rotate"]} data-rotate={rotates ? "" : undefined}>
+            {rotation.map((item, i) => (
+              <div
+                class="rot"
+                data-slot={i % 2}
+                data-rot={!rotates || i < 2 ? "on" : "off"}
+                inert={rotates && i >= 2 ? true : undefined}
+              >
+                <Credit
+                  item={item}
+                  project={item.relatedProject ? projectsBySlug.get(item.relatedProject) : undefined}
+                />
+              </div>
             ))}
           </div>
 
-          <Onward href="/press/" quiet>Everywhere btl has appeared</Onward>
+          <Onward href="/recognition/" quiet>Every award and feature</Onward>
         </div>
       </section>
     )}

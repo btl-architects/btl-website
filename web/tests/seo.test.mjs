@@ -1,6 +1,6 @@
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
-import {pageSearchListing, searchMetadata, businessStructuredData, jsonLd} from '../src/lib/seo.ts';
+import {pageSearchListing, searchMetadata, businessStructuredData, projectStructuredData, awardName, jsonLd} from '../src/lib/seo.ts';
 
 test('partial or empty search listings preserve existing fallback fields', () => {
   const fallback = {title: 'Original title', description: 'Client’s existing tagline.'};
@@ -15,7 +15,7 @@ test('main-page overrides never apply to project, article or profile routes', ()
   assert.equal(pageSearchListing('/', listings), listings.home);
   assert.equal(pageSearchListing('/projects', listings), listings.projects);
   assert.equal(pageSearchListing('/projects/', listings), listings.projects);
-  for (const path of ['/projects/nelly-house/', '/people/faizan-hussain/', '/press/elle-decor-nelly-house/', '/contact/thanks/', '/404.html']) {
+  for (const path of ['/projects/nelly-house/', '/people/faizan-hussain/', '/recognition/elle-decor-nelly-house/', '/contact/thanks/', '/404.html']) {
     assert.equal(pageSearchListing(path, listings), undefined);
   }
   assert.equal(pageSearchListing('/studio/'), undefined);
@@ -52,4 +52,21 @@ test('CMS text cannot close a JSON-LD script element', () => {
   const serialized = jsonLd(data);
   assert.doesNotMatch(serialized, /</);
   assert.deepEqual(JSON.parse(serialized), data);
+});
+
+test('awards are named on the practice and on the project that won them', () => {
+  const award = awardName({publication: 'IIID Kerala Design Awards 2026', title: 'Gold, Single Dwelling'});
+  assert.equal(award, 'IIID Kerala Design Awards 2026 · Gold, Single Dwelling');
+  const practice = businessStructuredData({name: 'btl architects', tagline: '', social: [],
+    contact: {address: ['Kozhikode, Kerala 673016'], phone: '', email: ''}}, 'https://btldesigns.in/', null, [award]);
+  assert.deepEqual(practice.award, [award]);
+  const none = businessStructuredData({name: 'btl architects', tagline: '', social: [],
+    contact: {address: ['Kozhikode'], phone: '', email: ''}}, 'https://btldesigns.in/');
+  assert.equal('award' in none, false);
+  const work = projectStructuredData({title: 'Nelly House', slug: 'nelly-house', location: 'Wayanad', year: 2025},
+    'https://btldesigns.in/', 'https://btldesigns.in/#practice', null, [award]);
+  assert.equal(work['@type'], 'CreativeWork');
+  assert.equal(work.url, 'https://btldesigns.in/projects/nelly-house/');
+  assert.deepEqual(work.creator, {'@id': 'https://btldesigns.in/#practice'});
+  assert.deepEqual(work.award, [award]);
 });

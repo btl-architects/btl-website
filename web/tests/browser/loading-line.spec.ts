@@ -73,9 +73,9 @@ test('opening a project that is still on its way shows the line after its place,
 
 test('the press reader says it is opening, and shows the line rather than the words',async({page})=>{
   /* Every article page never answers, from before the index can warm one. */
-  await page.route(/\/press\/[^/]+\/$/,()=>new Promise(()=>{}));
-  await page.goto('/press/');
-  await page.locator('a[href^="/press/"]:not([href="/press/"])').first().click();
+  await page.route(/\/recognition\/[^/]+\/$/,()=>new Promise(()=>{}));
+  await page.goto('/recognition/');
+  await page.locator('a[href^="/recognition/"]:not([href="/recognition/"])').first().click();
   const status=page.locator('.press-reader__status');
   await expect(status).toHaveText('Opening article…');
   await expect(status.locator('.wait')).toBeAttached();

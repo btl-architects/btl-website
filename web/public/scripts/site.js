@@ -255,16 +255,15 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
      stops entirely when it is off-screen so a page nobody is looking at is not
      decoding video.
 
-     Video is fetched lazily and only when it will actually be watched. Under
-     reduced motion, or on a metered connection, the poster frames alone carry
-     the sequence and no video is requested. */
+     Video is fetched lazily and only when it will actually be watched. On a
+     metered connection (Save-Data) the poster frames alone carry the sequence
+     and no video is requested. */
   var stage = document.querySelector("[data-stage-frames]");
   if (stage) {
     var sFrames = [].slice.call(stage.querySelectorAll(".stage__f"));
     /* The opening no longer captions itself, so nothing reads data-label. The
        attribute stays on each frame — it is the clip's name in the CMS. */
     var connection = navigator.connection;
-    var motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     var narrowStage = window.matchMedia("(max-width: 47.99rem)");
     /* No userPaused. The pause control was removed at the practice's request, so
        the only things that stop the sequence are leaving the viewport, the tab
@@ -277,7 +276,13 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
     var pageReady = false;
     function afterPaint() { afterFirstPaint(function () { pageReady = true; sync(); }); }
     if (document.readyState === "complete") afterPaint(); else window.addEventListener("load", afterPaint, { once: true });
-    function stillsOnly() { return motion.matches || !!(connection && connection.saveData); }
+    /* Reduce Motion no longer switches the film off: the practice decided on
+       2026-11-22 that the opening plays for everyone. iPhones with Reduce
+       Motion on were left on a still with nothing that would start the film —
+       the gesture fallback below only answers a refused play(), and with
+       stills-only no play() was ever attempted. Save-Data still gets the
+       stills: it is a request not to download video at all. */
+    function stillsOnly() { return !!(connection && connection.saveData); }
     function source(v) { return v.getAttribute(narrowStage.matches ? "data-src-portrait" : "data-src"); }
     // Inert templates avoid constructing a media player for every clip during
     // HTML parsing. Only the current clip (and its later preload) needs one.
@@ -420,13 +425,51 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener && Media
       show(at);
     }
     document.addEventListener("visibilitychange", sync);
-    motion.addEventListener("change", sync);
     narrowStage.addEventListener("change", sync);
     if (connection && connection.addEventListener) connection.addEventListener("change", sync);
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; sync(); }, {threshold:0.25}).observe(stage);
     } else { visible = true; }
     sync();
+  }
+
+  /* --- 1c. the home Recognition pair ---------------------------------------
+     Two cards at a time, taking turns through every award and feature (the
+     practice's request, 2026-11-22). The motion lives in CSS (.rot); this only
+     moves the pair on. It waits while the pair is off-screen, the tab hidden,
+     the reader open, or the visitor is pointing at, touching or focused in it,
+     so a card never changes under the hand that is reaching for it. */
+  var rotor = document.querySelector("[data-rotate]");
+  if (rotor && window.IntersectionObserver) {
+    var rItems = [].slice.call(rotor.children), rPairs = Math.ceil(rItems.length / 2);
+    var rPage = 0, rTimer = 0, rHold = 0, rHover = matchMedia("(hover: hover)");
+    function rTick() {
+      var now = Date.now();
+      // Anything holding the pair also holds it 2.5 s after it lets go.
+      if (document.hidden || now < rHold || document.querySelector("dialog[open]") ||
+          rotor.matches(":focus-within") || rHover.matches && rotor.matches(":hover")) {
+        rHold = Math.max(rHold, now + 2500);
+        rTimer = setTimeout(rTick, 1000);
+        return;
+      }
+      var was = rPage;
+      rPage = (rPage + 1) % rPairs;
+      rItems.forEach(function (el, k) {
+        var on = (k >> 1) === rPage;
+        if (!on && (k >> 1) !== was) return;
+        el.inert = !on;
+        el.setAttribute("data-rot", on ? "on" : "out");
+      });
+      setTimeout(function () {
+        rItems.forEach(function (el) { if (el.getAttribute("data-rot") === "out") el.setAttribute("data-rot", "off"); });
+      }, 1700);
+      rTimer = setTimeout(rTick, 6500);
+    }
+    rotor.addEventListener("pointerdown", function () { rHold = Date.now() + 6500; }, {passive: true});
+    new IntersectionObserver(function (entries) {
+      clearTimeout(rTimer);
+      if (entries[0].isIntersecting) rTimer = setTimeout(rTick, 6500);
+    }, {threshold: 0.35}).observe(rotor);
   }
 
   /* --- 2. header contrast -------------------------------------------------

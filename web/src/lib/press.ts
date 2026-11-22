@@ -72,15 +72,29 @@ export function articlePath(item: Publication): string | null {
   if (!item.id) return null;
   if (item.openingMode === "reader" && hasArticleContent(item.readerContent) ||
       item.openingMode === "embed" && articleUrl(item.url)?.startsWith("https://")) {
-    return `/press/${encodeURIComponent(articleSlug(item))}/`;
+    return `/recognition/${encodeURIComponent(articleSlug(item))}/`;
   }
   return null;
+}
+
+/** Instagram serves a post's embeddable view at <post>/embed/; the post page
+ *  itself refuses to be framed. Anything else is framed as given. */
+export function frameUrl(url: string): string {
+  const u = new URL(url);
+  if (/(^|\.)instagram\.com$/.test(u.hostname) && /^\/(p|reel)\/[^/]+\/?$/.test(u.pathname))
+    return `https://www.instagram.com${u.pathname.replace(/\/?$/, "/")}embed/`;
+  return url;
+}
+
+/** Where an embedded original lives, for the words around it. */
+export function sourceName(url: string | null | undefined, fallback: string): string {
+  try { return /(^|\.)instagram\.com$/.test(new URL(url!).hostname) ? "Instagram" : fallback; } catch { return fallback; }
 }
 
 /** Keep one destination for the reader, embedded article and feature preview. */
 export function articlePagePath(item: Publication): string | null {
   return item.id && (hasArticleContent(item.readerContent) || articleUrl(item.url)) ?
-    `/press/${encodeURIComponent(articleSlug(item))}/` : null;
+    `/recognition/${encodeURIComponent(articleSlug(item))}/` : null;
 }
 
 export function articleSlug(item: Publication): string {

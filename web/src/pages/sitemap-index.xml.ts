@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ site }) => {
     ...(await getProfiles()).map((p) => `/people/${p.slug}/`),
     "/studio/",
     "/privacy/",
-    "/press/",
+    "/recognition/",
     ...(await getPublications()).filter(item => item.openingMode === "reader").map(articlePath).filter((path): path is string => Boolean(path)),
     "/contact/",
   ];

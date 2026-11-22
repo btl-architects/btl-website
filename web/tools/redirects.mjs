@@ -31,10 +31,14 @@ function walk(dir,base='') {
 walk(dist);
 const publications=await client.fetch('*[_type=="publication" && defined(slug.current)]{_id,"slug":slug.current,previousSlugs}');
 for (const item of publications) {
-  const to=`/press/${item.slug}/`;
+  const to=`/recognition/${item.slug}/`;
   if (!pages.has(to)) continue;
+  /* Articles lived under /press/ until 2026-11-22, so every address an article
+     ever had there — its current slug included — still reaches it. */
+  rows.push({from:`/press/${encodeURIComponent(item.slug)}/`,to,permanent:true});
   for (const old of new Set([item._id.replace(/^drafts\./,''),...(item.previousSlugs || [])])) {
-    if (old !== item.slug) rows.push({from:`/press/${encodeURIComponent(old)}/`,to,permanent:true});
+    if (old === item.slug) continue;
+    for (const base of ['/press/','/recognition/']) rows.push({from:`${base}${encodeURIComponent(old)}/`,to,permanent:true});
   }
 }
 /* Profiles switched off (server/features.js): a person page published while

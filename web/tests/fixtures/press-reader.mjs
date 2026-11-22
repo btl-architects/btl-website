@@ -15,7 +15,7 @@ export async function seedReaderDemo(directory) {
     const Article = (await server.ssrLoadModule("/src/components/PressArticle.astro")).default;
     const {getProjects} = await server.ssrLoadModule("/src/lib/content.ts");
     const project = (await getProjects()).find(p => p.slug === "nelly-house");
-    const template = readFileSync(join(directory, "press/index.html"), "utf8");
+    const template = readFileSync(join(directory, "recognition/index.html"), "utf8");
     // Delivery may wrap the fallback image in a picture with AVIF sources.
     // Keep the real photograph in this fixture instead of silently generating
     // an empty card when the build's markup changes.
@@ -42,7 +42,7 @@ export async function seedReaderDemo(directory) {
     write("__reader-demo", template.replace(/<div class="credits">[\s\S]*?<\/div>/, `<div class="credits">${credits}</div>`));
     for (const item of [reader, embed, external]) {
       const article = await container.renderToString(Article, {props: {item}});
-      write(`press/${item.id}`, template.replace(/<main\b[\s\S]*?<\/main>/, `<main id="main" data-ground="dark" class="container page-end">${article}</main>`));
+      write(`recognition/${item.id}`, template.replace(/<main\b[\s\S]*?<\/main>/, `<main id="main" data-ground="dark" class="container page-end">${article}</main>`));
     }
   } finally {await server.close();}
 }

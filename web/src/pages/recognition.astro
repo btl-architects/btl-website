@@ -1,0 +1,57 @@
+---
+/* Recognition: awards and press features. One content type with a `kind`, so
+ * the page splits it into two sections rather than merging two feeds. Awards
+ * lead; a section with nothing in it is not drawn. Was "Press" until
+ * 2026-11-22; /press/ addresses redirect here. */
+import Base from "../layouts/Base.astro";
+import Credit from "../components/Credit.astro";
+import { getPublications, getProjects, getSettings } from "../lib/content";
+import Onward from "../components/Onward.astro";
+
+const copy = (await getSettings()).copy;
+const items = await getPublications();
+const sections = [
+  {id: "awards", title: "Awards", items: items.filter((i) => i.kind === "award")},
+  {id: "press", title: "Press", items: items.filter((i) => i.kind !== "award")},
+].filter((section) => section.items.length > 0);
+const projects = await getProjects();
+const projectFor = (slug: string | null) =>
+  slug ? projects.find((p) => p.slug === slug) : undefined;
+
+/* Prefer the entry's own cover when sharing the page. */
+const shareImage = items.map((i) => i.image ?? (i.useProjectImage ? projectFor(i.relatedProject)?.hook : null)).find(Boolean);
+---
+
+<Base
+  title="Recognition — btl architects"
+  description="Awards and publications recognising the work of btl architects."
+  current="recognition"
+  share={shareImage}
+>
+  <main id="main" data-ground="dark">
+    <header class="index-head rv">
+      <h1 class="index-head__t">Recognition</h1>
+      <p class="index-head__s">{copy.pressLead}</p>
+    </header>
+
+    <div class="container page-end">
+      {sections.map((section) => (
+        <section class="recognition-sec" id={section.id} aria-labelledby={`${section.id}-title`}>
+          <div class="home-sec__head rv">
+            <h2 class="home-sec__k" id={`${section.id}-title`}>{section.title}</h2>
+          </div>
+          <div class="credits">
+            {section.items.map((item) => (
+              <Credit
+                item={item}
+                project={item.relatedProject ? projectFor(item.relatedProject) : undefined}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <Onward href="/people/" kicker="Next">The people behind the coverage</Onward>
+    </div>
+  </main>
+</Base>

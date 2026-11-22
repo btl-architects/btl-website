@@ -3,13 +3,15 @@ import Figure from "./Figure.astro";
 import ArticleBody from "./ArticleBody.astro";
 import Paragraphs from "./Paragraphs.astro";
 import type {Publication, Project} from "../lib/content";
-import {articleUrl} from "../lib/press";
+import {articleUrl, frameUrl, sourceName} from "../lib/press";
 interface Props {item: Publication; project?: Project}
 const {item, project} = Astro.props;
 const image = item.image ?? (item.useProjectImage ? project?.hook : null);
 const original = articleUrl(item.url);
 const embed = item.openingMode === "embed" && original?.startsWith("https://");
 const managed = item.openingMode === "reader";
+const where = sourceName(original, item.publication);
+const watch = where === "Instagram";
 const openingImage = managed ? item.articleHero ?? project?.hook ?? image : image;
 const credits = managed ? item.articleCredits : undefined;
 const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, item.date?.slice(0, 4)].filter(Boolean).join(" · ");
@@ -29,8 +31,8 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
   </header>
   {embed ? (
     <>
-      <p class="press-article__help">Reading on {item.publication}. If the article does not appear, <a href={original!} target="_blank" rel="noopener noreferrer">open the original <span aria-hidden="true">↗</span></a>.</p>
-      <iframe class="press-article__frame" title={`Article on ${item.publication}`} data-article-frame={original}
+      <p class="press-article__help">{watch ? "On" : "Reading on"} {where}. If it does not appear, <a href={original!} target="_blank" rel="noopener noreferrer">open it on {where} <span aria-hidden="true">↗</span></a>.</p>
+      <iframe class:list={["press-article__frame", watch && "press-article__frame--post"]} title={watch ? `${item.title}, on ${where}` : `Article on ${item.publication}`} data-article-frame={frameUrl(original!)}
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         referrerpolicy="strict-origin-when-cross-origin"></iframe>
       <noscript><p>Read this article <a href={original!} target="_blank" rel="noopener noreferrer">on {item.publication}</a>.</p></noscript>
@@ -48,5 +50,5 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
       </dl>}
     </>
   )}
-  {original && <p class="press-article__source"><a href={original} target="_blank" rel="noopener noreferrer">Read the original on {item.publication} <span aria-hidden="true">↗</span></a></p>}
+  {original && <p class="press-article__source"><a href={original} target="_blank" rel="noopener noreferrer">{watch ? `Watch on ${where}` : `Read the original on ${item.publication}`} <span aria-hidden="true">↗</span></a></p>}
 </article>

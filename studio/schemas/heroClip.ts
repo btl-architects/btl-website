@@ -11,8 +11,8 @@ import {clipVideoMode, muxVideoUrl, type MuxVideoAsset} from "../../shared/video
  *
  * Two encodings per clip, because a phone held upright and a laptop want
  * genuinely different framing, not the same frame letterboxed. The poster is
- * what a visitor sees before any video has loaded, and under reduced motion or
- * Save-Data it is *all* they ever see — so it has to be a frame worth looking
+ * what a visitor sees before any video has loaded (or until an iPhone that
+ * refuses autoplay is first touched), and under Save-Data it is *all* they ever see — so it has to be a frame worth looking
  * at on its own, not an arbitrary grab.
  */
 /* The size limits below were descriptions only, and an 11 MB 4K encode went in

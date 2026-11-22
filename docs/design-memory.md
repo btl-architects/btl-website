@@ -98,8 +98,17 @@ team live in the record, not on the page. Prefer metadata on the image over a ta
 **R8 — Nothing auto-advances except the opening.** No carousels, no slideshows, no timed
 cross-fades inside content. Where a section shows several things, the reader moves between
 them. The one carve-out is the homepage opening sequence: it is ambient rather than
-navigational, it carries no arrows, dots or counter, it pauses off-screen, and under reduced
-motion or Save-Data it is a single still that never downloads the video.
+navigational, it carries no arrows, dots or counter, it pauses off-screen, and under
+Save-Data it is a single still that never downloads the video. (Since 2026-11-22, at the
+practice's decision, it plays under reduced motion too: iPhones with Reduce Motion on were
+left on a still that nothing could start.)
+
+A second carve-out, also the practice's decision (2026-11-22): the home page's Recognition
+pair. Two cards take turns through every award and feature, newest first, as a slow eased
+dissolve with no arrows, dots or counter. It holds while off-screen, while the tab is
+hidden, while the reader is open, and while it is pointed at, touched or focused, so a card
+never changes under the hand reaching for it. Reduced motion keeps the dissolve without
+movement or blur. The Recognition page itself stays a still index.
 
 **R9 — One page, one ending.** A page resolves once. The footer does not repeat what a
 section above it already said.

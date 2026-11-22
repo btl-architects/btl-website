@@ -9,7 +9,7 @@ import {isSafeSlug} from '../../shared/slug.ts';
  */
 export default defineType({
   name: "publication",
-  title: "Press & awards",
+  title: "Recognition (award or press)",
   type: "document",
   fields: [
     defineField({name: 'seo', title: 'Search listing', type: 'seo',
