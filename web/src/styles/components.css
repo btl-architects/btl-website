@@ -2325,6 +2325,36 @@ body[data-preview] .header { top: var(--preview-h); }
   color: var(--on-media); background: linear-gradient(transparent, var(--overlay));
 }
 @media (prefers-reduced-motion: reduce) { .ig-post .press-article__frame { transition: none; } }
+
+/* An embedded post's own carousel (PressArticle, press-reader.js): the
+   browser's own horizontal scroll, snapping one slide at a time. A sideways
+   swipe scrolls it; an up or down one is left to the page, or to the phone
+   card, which decides on the finger's first movement. Every slide is
+   contained in the first slide's shape on Instagram's black. */
+.post-rail { position: relative; width: min(100%, 33rem); margin-inline: auto; }
+.post-rail__track {
+  display: flex; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  scrollbar-width: none; background: var(--instagram-ground);
+}
+.post-rail__track::-webkit-scrollbar { display: none; }
+.post-rail__slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.post-rail__slide > figure, .post-rail__slide > video { display: block; width: 100%; height: 100%; margin: 0; }
+.post-rail__slide img, .post-rail__slide video { width: 100%; height: 100%; object-fit: contain; background: var(--instagram-ground); }
+.post-rail__dots { display: flex; justify-content: center; gap: var(--s-2); margin-top: var(--s-3); }
+.post-rail__dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); transition: background var(--dur-base) var(--ease); }
+.post-rail__dots i[data-on] { background: var(--text-primary); }
+.post-rail__nav {
+  position: absolute; top: calc(50% - var(--s-5)); width: 2.75rem; height: 2.75rem;
+  display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%;
+  font-size: 1.5rem; line-height: 1; color: var(--on-media); background: var(--overlay);
+  cursor: pointer; opacity: .85; transition: opacity var(--dur-hover) var(--ease);
+}
+.post-rail__nav[hidden] { display: none; }
+.post-rail__nav--prev { left: var(--s-3); }
+.post-rail__nav--next { right: var(--s-3); }
+.post-rail__nav:hover, .post-rail__nav:focus-visible { opacity: 1; }
+.post-rail__nav:disabled { opacity: 0; pointer-events: none; }
 /* On a phone the reader is a card to look into, not a page to be inside
    (press-reader.js). It rises part way — a look at the article, nothing
    scrolling, so a thumb swiping down anywhere puts it away — and swipes or

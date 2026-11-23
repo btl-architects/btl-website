@@ -1,4 +1,4 @@
-import { defineField, defineType } from "sanity";
+import { defineArrayMember, defineField, defineType } from "sanity";
 import {isSafeSlug} from '../../shared/slug.ts';
 
 /* Press and awards are ONE type with a `kind`, never two systems.
@@ -76,6 +76,22 @@ export default defineType({
       name: "articleHero", title: "Article opening photograph", type: "figure",
       hidden: ({document}) => document?.openingMode === "external",
       description: "BTL reader: the photograph above the article; if empty, the related project's cover, then the card artwork. Embedded Instagram post: upload the post's first photo. It shows instantly, on the site's own image delivery, while Instagram loads (several seconds on a phone), and stays if Instagram is blocked.",
+    }),
+    defineField({
+      name: "postSlides", title: "Post slides", type: "array",
+      hidden: ({document}) => document?.openingMode !== "embed",
+      description: "For an Instagram post: its photos and videos, in the post's order. With slides here the site shows its own carousel (swipe sideways for the next slide, up or down to move the card on a phone), dark, instant and with no Instagram frame. The link to the post stays below it. Leave empty to show Instagram's own embed. Videos: MP4, ideally under 5 MB each.",
+      of: [
+        defineArrayMember({type: "figure", title: "Photo"}),
+        defineArrayMember({
+          type: "object", name: "postVideo", title: "Video",
+          fields: [
+            defineField({name: "file", title: "Video (MP4)", type: "file", options: {accept: "video/mp4"}, validation: (r) => r.required()}),
+            defineField({name: "poster", title: "First frame", type: "figure", description: "Shown before the video plays."}),
+          ],
+          preview: {select: {media: "poster.asset", name: "file.asset.originalFilename"}, prepare: ({media, name}) => ({title: "Video", subtitle: name, media})},
+        }),
+      ],
     }),
     defineField({
       name: "articleCredits", title: "Article credits", type: "credits",

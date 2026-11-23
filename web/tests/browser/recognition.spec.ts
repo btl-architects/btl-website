@@ -172,3 +172,29 @@ test('script addresses carry a content fingerprint', async ({page}) => {
   expect(srcs.length).toBeGreaterThan(0);
   for (const src of srcs) expect(src).toMatch(/^\/scripts\/[a-z-]+\.js\?v=[0-9a-f]{12}$/);
 });
+
+test('a post carousel steps with its arrows and the keyboard, and pauses a video left behind', async ({page}) => {
+  await page.setViewportSize({width: 1280, height: 900});
+  await page.goto('/recognition/');
+  const href = await page.locator('#awards a[data-article]').first().getAttribute('href').catch(() => null);
+  test.skip(!href, 'No award with a reader page is published.');
+  await page.goto(href!);
+  const rail = page.locator('[data-post-rail]');
+  test.skip(!(await rail.count()), 'The published award has no post slides.');
+  const track = rail.locator('.post-rail__track');
+  const slide = () => track.evaluate(el => Math.round(el.scrollLeft / el.clientWidth));
+  const prev = rail.locator('.post-rail__nav--prev'), next = rail.locator('.post-rail__nav--next');
+  await expect(next).toBeVisible();
+  await expect(prev).toBeDisabled();
+  await next.click();
+  await expect.poll(slide).toBe(1);
+  await track.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(slide).toBe(2);
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(slide).toBe(1);
+  // Every slide fills the rail's frame; nothing scrolls vertically inside it.
+  const {w, h, sh} = await track.evaluate(el => ({w: el.clientWidth, h: el.clientHeight, sh: el.scrollHeight}));
+  expect(sh).toBeLessThanOrEqual(h + 1);
+  expect(h / w).toBeGreaterThan(1);
+});
