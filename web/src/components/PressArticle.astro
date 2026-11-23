@@ -17,6 +17,12 @@ const watch = where === "Instagram";
 // a first photo shaped like the post (as Instagram's are) means no jump.
 const preview = watch && item.articleHero ? resolveImage(item.articleHero) : null;
 const previewShape = preview?.width && preview?.height ? `aspect-ratio: ${preview.width} / ${preview.height};` : undefined;
+// An embedded post with its own slides is shown as the site's carousel, not
+// Instagram's frame: a frame takes the whole of a touch, so on a phone it could
+// not both flip slides sideways and let the card move up and down.
+const slides = embed ? item.postSlides ?? [] : [];
+const firstSlide = slides[0]?._type === "figure" ? resolveImage(slides[0]) : slides[0]?._type === "postVideo" && slides[0].poster ? resolveImage(slides[0].poster) : null;
+const railShape = firstSlide?.width && firstSlide?.height ? `aspect-ratio: ${firstSlide.width} / ${firstSlide.height};` : "aspect-ratio: 4 / 5;";
 const openingImage = managed ? item.articleHero ?? project?.hook ?? image : image;
 const credits = managed ? item.articleCredits : undefined;
 const meta = [item.kind === "award" ? "Award" : "Feature", project?.title, item.date?.slice(0, 4)].filter(Boolean).join(" · ");
@@ -36,7 +42,25 @@ const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") && Number.is
   </header>
   {embed ? (
     <>
-      {watch ? (
+      {slides.length > 0 ? (
+        <div class="post-rail" data-post-rail>
+          <div class="post-rail__track" style={railShape} tabindex="0" role="region" aria-roledescription="carousel"
+            aria-label={`${item.title}: ${slides.length} ${slides.length === 1 ? "slide" : "slides"}. Swipe or use the arrow keys.`}>
+            {slides.map((slide, i) => (
+              <div class="post-rail__slide" role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${slides.length}`}>
+                {slide._type === "postVideo"
+                  ? <video src={slide.src} poster={slide.poster ? resolveImage(slide.poster)?.src : undefined} controls playsinline preload="none"></video>
+                  : <Figure image={slide} fit="contain" sizes="(min-width: 36rem) 33rem, 92vw" priority={i === 0} />}
+              </div>
+            ))}
+          </div>
+          {slides.length > 1 && <>
+            <button class="post-rail__nav post-rail__nav--prev" type="button" data-step="-1" aria-label="Previous slide" hidden><span aria-hidden="true">‹</span></button>
+            <button class="post-rail__nav post-rail__nav--next" type="button" data-step="1" aria-label="Next slide" hidden><span aria-hidden="true">›</span></button>
+            <div class="post-rail__dots" aria-hidden="true">{slides.map((_, i) => <i data-on={i === 0 ? "" : undefined}></i>)}</div>
+          </>}
+        </div>
+      ) : watch ? (
         /* An Instagram post, shown as its photographs or video only. The frame
            is Instagram's page: white header and footer around the media. It
            reports its height (press-reader.js), and this box crops to the

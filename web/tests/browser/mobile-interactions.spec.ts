@@ -719,3 +719,46 @@ test.describe('phone award card', ()=>{
     await expect(frame).not.toHaveCSS('pointer-events','none');
   });
 });
+
+/* An award's own post carousel inside the phone card: sideways swipes flip
+   slides, up and down move the card, as anywhere else on it. */
+test.describe('phone post carousel', ()=>{
+  test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  test('sideways flips the slide; up and down move the card',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','CDP touch input');
+    await page.goto('/recognition/');
+    const award=page.locator('#awards a[data-article]').first();
+    test.skip(!(await award.count()),'No award with a reader page is published.');
+    await award.scrollIntoViewIfNeeded();
+    await award.tap();
+    const reader=page.getByRole('dialog',{name:'Press reader'});
+    const track=reader.locator('.post-rail__track');
+    test.skip(!(await track.count()),'The published award has no post slides.');
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await page.waitForTimeout(500);
+    const input=await page.context().newCDPSession(page);
+    async function swipe(x:number,y:number,dx:number,dy:number){
+      await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+      for(let i=1;i<=20;i++){await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*i/20,y:y+dy*i/20}]});await page.waitForTimeout(16);}
+      await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }
+    const box=(await track.boundingBox())!;
+    const cx=box.x+box.width/2, cy=Math.min(box.y+box.height/2, 800);
+    // Sideways: the next slide, and the card stays where it was.
+    await swipe(cx+100,cy,-220,0);
+    await expect.poll(()=>track.evaluate(el=>Math.round(el.scrollLeft/el.clientWidth))).toBe(1);
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await expect(reader.locator('.post-rail__dots i').nth(1)).toHaveAttribute('data-on','');
+    // Up on the post raises the card; down from the top lowers and puts it away.
+    await swipe(cx,cy,0,-220);
+    await expect(reader).toHaveAttribute('data-detent','full');
+    await page.waitForTimeout(450);
+    // A moderate pull lowers it to the peek; a long one would dismiss it.
+    await swipe(cx,Math.min(((await track.boundingBox())!).y+60,700),0,140);
+    await expect(reader).toHaveAttribute('data-detent','peek');
+    await page.waitForTimeout(450);
+    const now=(await track.boundingBox())!;
+    await swipe(now.x+now.width/2,Math.min(now.y+40,820),0,300);
+    await expect(reader).toBeHidden();
+  });
+});

@@ -87,10 +87,16 @@ export interface Publication {
   readerKind?: "notes" | "summary" | "article";
   intro?: string;
   articleHero?: SiteImage | null;
+  /** An embedded post's own photos and videos, shown as the site's carousel. */
+  postSlides?: PostSlide[];
   articleCredits?: Project["credits"];
   readerPublishedAt?: string;
   readerContent?: ArticleBlock[];
 }
+
+export type PostSlide =
+  | ({_key: string; _type: "figure"} & SiteImage)
+  | {_key: string; _type: "postVideo"; src: string; poster: SiteImage | null};
 
 /** The lines that carry the practice's voice. Each has a default, so an empty
  *  field never leaves a blank page — it just goes back to the written one. */
@@ -333,6 +339,9 @@ export const getPublications = once(async (): Promise<Publication[]> => {
   const rows = await sanity.fetch<PublicationRow[]>(`*[_type == "publication"] | order(date desc) {
     "id": _id, "slug":slug.current, "openingMode": coalesce(openingMode, "external"), byline, sourceAuthor, readerKind, intro, readerPublishedAt, seo{title,description},
     "articleHero": articleHero ${FIGURE},
+    "postSlides": postSlides[]{_key, _type,
+      _type == "figure" => ${FIGURE},
+      _type == "postVideo" => {"src": file.asset->url, "poster": poster ${FIGURE}}},
     "articleCredits": articleCredits{architect, photographer, "collaborators": coalesce(collaborators, [])},
     "readerContent": readerContent[]{
       _type, style, listItem, level, children[]{text, marks}, markDefs[]{_key, _type, href}, text, attribution,
@@ -348,6 +357,9 @@ export const getPublications = once(async (): Promise<Publication[]> => {
     ...x,
     articleCredits: x.articleCredits ? {...x.articleCredits, photographer: optionalPhotographerCredit(x.articleCredits.photographer)} : undefined,
     articleHero: x.articleHero?.source?.asset ? {...x.articleHero, credit: optionalPhotographerCredit(x.articleHero.credit)} : null,
+    // Only complete slides: a photo with its image, a video with its file.
+    postSlides: ((x as any).postSlides ?? []).filter((s: any) => s._type === "postVideo" ? Boolean(s.src) : Boolean(s.source?.asset))
+      .map((s: any) => s._type === "postVideo" ? {...s, poster: s.poster?.source?.asset ? s.poster : null} : s),
     readerContent: x.readerContent?.map(block => block._type === "figure" ? {...block, credit: optionalPhotographerCredit(block.credit)} : block),
     image: x.image?.source?.asset ? {...x.image,artworkBounds:await artworkBounds(urlFor(typeof x.image.source==='object' ? {...x.image.source,crop:undefined,hotspot:undefined} : x.image.source).width(400).format('png').fit('max').url())} : null,
     relatedProject: x.relatedProject ?? null,

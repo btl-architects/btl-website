@@ -21,7 +21,38 @@
     });
   }
 
+  /* An embedded post's own carousel. The scrolling is the browser's; this
+     keeps the dots in step, pauses a video swiped away from, and gives a
+     mouse (and the keyboard) a way to step through. */
+  var canHover = matchMedia("(hover: hover) and (pointer: fine)");
+  function wireRails(root) {
+    root.querySelectorAll("[data-post-rail]").forEach(function (rail) {
+      if (rail.hasAttribute("data-wired")) return;
+      rail.setAttribute("data-wired", "");
+      var track = rail.querySelector(".post-rail__track"), dots = rail.querySelectorAll(".post-rail__dots i");
+      var slides = track.children, navs = rail.querySelectorAll(".post-rail__nav"), last = 0, tick = 0;
+      function at() { return Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); }
+      function go(i) { track.scrollTo({left: Math.max(0, Math.min(slides.length - 1, i)) * track.clientWidth, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); }
+      function sync() {
+        var i = at();
+        dots.forEach(function (d, k) { if (k === i) d.setAttribute("data-on", ""); else d.removeAttribute("data-on"); });
+        navs.forEach(function (b) { b.disabled = +b.getAttribute("data-step") < 0 ? i === 0 : i === slides.length - 1; });
+        if (i !== last) { var v = slides[last] && slides[last].querySelector("video"); if (v) v.pause(); last = i; }
+      }
+      track.addEventListener("scroll", function () { cancelAnimationFrame(tick); tick = requestAnimationFrame(sync); }, {passive: true});
+      track.addEventListener("keydown", function (ev) {
+        if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") { ev.preventDefault(); go(at() + (ev.key === "ArrowRight" ? 1 : -1)); }
+      });
+      navs.forEach(function (b) {
+        b.hidden = !canHover.matches;
+        b.addEventListener("click", function () { go(at() + +b.getAttribute("data-step")); });
+      });
+      sync();
+    });
+  }
+
   function loadFrames(root) {
+    wireRails(root);
     root.querySelectorAll("[data-article-frame]").forEach(function (frame) {
       if (frame.src) return;
       frame.src = frame.getAttribute("data-article-frame");
